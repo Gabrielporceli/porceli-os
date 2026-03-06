@@ -125,7 +125,7 @@ BEGIN
   -- Teste simulando dados do n8n
   SELECT public.process_webhook_message(
     test_user_id,
-    '5500000000000@c.us', -- numero (formato WhatsApp)
+    '5511987654321@c.us', -- numero (formato WhatsApp)
     'Mensagem de teste do n8n',
     false, -- direcao (false = recebida)
     NOW(), -- data_hora

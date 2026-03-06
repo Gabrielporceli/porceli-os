@@ -19,7 +19,7 @@ serve(async (req) => {
     )
 
     const { user_id, numero, mensagem, nome_contato } = await req.json()
-
+    
     console.log('Enviando mensagem:', { user_id, numero, mensagem, nome_contato })
 
     // Validar dados obrigatórios
@@ -131,12 +131,7 @@ serve(async (req) => {
 
     console.log('Enviando para webhook:', webhookData)
 
-    const webhookUrl = Deno.env.get('WEBHOOK_SEND_MESSAGE_URL');
-    if (!webhookUrl) {
-      throw new Error('Variável de ambiente WEBHOOK_SEND_MESSAGE_URL não está configurada nos secrets da Edge Function.');
-    }
-
-    const webhookResponse = await fetch(webhookUrl, {
+    const webhookResponse = await fetch('https://webhook.gabrielporceli.com.br/webhook/crm_goat_envia', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,32 +147,32 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
+      JSON.stringify({ 
+        success: true, 
         message_id: message.id,
         conversation_id: conversation.id,
         webhook_sent: webhookResponse.ok,
         processed_at: data_hora
       }),
-      {
+      { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+        status: 200 
       }
     )
 
   } catch (error: unknown) {
     const err = error as Error;
     console.error('Erro ao enviar mensagem:', err)
-
+    
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         error: err.message || 'Unknown error',
         stack: err.stack || 'No stack trace',
         timestamp: new Date().toISOString()
       }),
-      {
+      { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 400 
       }
     )
   }

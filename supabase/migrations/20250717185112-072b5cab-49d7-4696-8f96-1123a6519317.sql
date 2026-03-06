@@ -143,7 +143,7 @@ BEGIN
   -- Teste: criar contato, conversa e mensagem automaticamente
   SELECT public.process_webhook_message(
     test_user_id,
-    '5500000000000',
+    '5511999887766',
     'Mensagem de teste via webhook atualizado',
     false,
     NOW(),

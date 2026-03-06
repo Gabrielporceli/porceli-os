@@ -153,7 +153,7 @@ BEGIN
   -- Testar via process_webhook_message diretamente
   SELECT public.process_webhook_message(
     test_user_id,
-    '5500000000000',
+    '5511987654321',
     'Teste final da função corrigida',
     false,
     NOW(),
@@ -166,7 +166,7 @@ BEGIN
   -- Testar via webhook_insert_message
   test_webhook_data := jsonb_build_object(
     'user_id', test_user_id,
-    'numero', '5500000000000',
+    'numero', '5511123456789',
     'mensagem', 'Teste via webhook_insert_message',
     'direcao', false,
     'data_hora', NOW(),
