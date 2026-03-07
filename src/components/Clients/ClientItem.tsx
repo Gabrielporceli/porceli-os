@@ -86,7 +86,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
   };
 
   return (
-    <div className="hover:bg-goat-gray-900/50 transition-colors">
+    <div className="hover:bg-white/[0.04] transition-all duration-300 group">
       <div
         className="p-6 cursor-pointer flex items-center justify-between"
         onClick={onToggleExpanded}
@@ -94,9 +94,9 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
         <div className="flex items-center gap-4 flex-1">
           <div className="flex-shrink-0">
             {isExpanded ? (
-              <ChevronDown className="w-5 h-5 text-goat-gray-400" />
+              <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
             ) : (
-              <ChevronRight className="w-5 h-5 text-goat-gray-400" />
+              <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
             )}
           </div>
 
@@ -118,16 +118,16 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-goat-gray-300">
-            <Calendar className="w-4 h-4 text-goat-purple" />
-            <span className="text-sm">Pagamento: dia {client.paymentDay}</span>
+          <div className="flex items-center gap-2 text-white/50">
+            <Calendar className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Pagamento: dia {client.paymentDay}</span>
           </div>
         </div>
 
         <div className="flex gap-2 ml-6">
           <Button
             size="sm"
-            className="btn-primary"
+            className="liquid-glass text-primary hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
@@ -137,7 +137,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
           </Button>
           <Button
             size="sm"
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 border-none"
+            className="liquid-glass text-red-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
@@ -150,83 +150,101 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
       {isExpanded && (
         <div className="px-6 pb-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-9">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Building2 className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">CNPJ:</span>
-                  <span className="text-white font-medium">{client.cnpj}</span>
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">CNPJ</span>
+                    <span className="text-white font-medium">{client.cnpj}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Responsável</span>
+                    <span className="text-white font-medium">{client.responsible}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Telefone</span>
+                    <span className="text-white font-medium">{client.phone}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Hash className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Grupo ID</span>
+                    <span className="text-white font-medium">{client.grupoId || 'Não definido'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Responsável:</span>
-                  <span className="text-white font-medium">{client.responsible}</span>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Email</span>
+                    <span className="text-white font-medium">{client.email}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Telefone:</span>
-                  <span className="text-white font-medium">{client.phone}</span>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Fim do contrato</span>
+                    <span className="text-white font-medium">
+                      {client.contractEnd ? (() => {
+                        const [ano, mes, dia] = client.contractEnd.split('-');
+                        return `${dia}/${mes}/${ano}`;
+                      })() : 'Não definido'}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <Hash className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Grupo ID:</span>
-                  <span className="text-white font-medium">{client.grupoId || 'Não definido'}</span>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Início do contrato</span>
+                    <span className="text-white font-medium">
+                      {client.startDate ? (() => {
+                        const [ano, mes, dia] = client.startDate.split('-');
+                        return `${dia}/${mes}/${ano}`;
+                      })() : 'Não definido'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Email:</span>
-                  <span className="text-white font-medium">{client.email}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Fim do contrato:</span>
-                  <span className="text-white font-medium">
-                    {client.contractEnd ? (() => {
-                      const [ano, mes, dia] = client.contractEnd.split('-');
-                      return `${dia}/${mes}/${ano}`;
-                    })() : 'Não definido'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Início do contrato:</span>
-                  <span className="text-white font-medium">
-                    {client.startDate ? (() => {
-                      const [ano, mes, dia] = client.startDate.split('-');
-                      return `${dia}/${mes}/${ano}`;
-                    })() : 'Não definido'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-goat-purple" />
-                <div className="flex-1">
-                  <span className="text-goat-gray-400 text-sm block">Valor mensal:</span>
-                  <span className="text-white font-medium">
-                    R$ {client.monthlyValue ? parseFloat(client.monthlyValue).toFixed(2).replace('.', ',') : '0,00'}
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Valor mensal</span>
+                    <span className="text-white font-bold tracking-tight text-lg">
+                      R$ {client.monthlyValue ? parseFloat(client.monthlyValue).toFixed(2).replace('.', ',') : '0,00'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

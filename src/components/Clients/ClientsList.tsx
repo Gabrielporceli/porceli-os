@@ -68,12 +68,12 @@ export function ClientsList({
   planColors = {}
 }: ClientsListProps) {
   return (
-    <Card className="bg-goat-gray-800 border-goat-gray-700">
-      <div className="p-6 border-b border-goat-gray-700">
-        <h3 className="text-lg font-semibold text-white">Lista de Clientes</h3>
+    <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+      <div className="p-6 border-b border-white/5">
+        <h3 className="text-xl font-bold text-white tracking-tight">Lista de Clientes</h3>
       </div>
 
-      <div className="divide-y divide-goat-gray-700">
+      <div className="divide-y divide-white/5">
         {clients.map((client) => (
           <ClientItem
             key={client.id}

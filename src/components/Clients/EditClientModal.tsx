@@ -217,7 +217,7 @@ export function EditClientModal({
       onClick={handleOverlayClick}
     >
       <div
-        className="relative bg-goat-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-goat-gray-700 animate-scale-in"
+        className="relative liquid-glass rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <style>{`
@@ -249,7 +249,7 @@ export function EditClientModal({
             width: 8px;
           }
           .custom-scrollbar::-webkit-scrollbar-track {
-            background: #404040;
+            background: rgba(255, 255, 255, 0.02);
             border-radius: 4px;
           }
           .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -266,51 +266,57 @@ export function EditClientModal({
           
           /* Estilos customizados para dropdowns */
           .dropdown-trigger {
-            background-color: #404040 !important;
-            border-color: #525252 !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
             color: white !important;
+            border-radius: 0.75rem !important; /* xl */
+            height: 2.75rem !important; /* 11 */
           }
           
           .dropdown-trigger:hover {
-            background-color: #404040 !important;
+            background-color: rgba(255, 255, 255, 0.05) !important;
             color: white !important;
           }
           
           .dropdown-content {
-            background-color: #404040 !important;
-            border-color: #525252 !important;
+            background-color: rgba(20, 20, 20, 0.9) !important;
+            backdrop-filter: blur(16px) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
             min-width: var(--radix-dropdown-menu-trigger-width) !important;
             width: var(--radix-dropdown-menu-trigger-width) !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
             z-index: 9999999 !important;
+            border-radius: 0.75rem !important;
           }
           
           .dropdown-item {
             color: white !important;
             background-color: transparent !important;
+            border-radius: 0.5rem !important;
+            margin: 0.25rem !important;
           }
           
           .dropdown-item:hover {
-            background-color: #525252 !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
           }
         `}</style>
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-goat-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
               <Edit className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Editar Cliente</h2>
-              <p className="text-goat-gray-400 text-sm">Atualize os dados do cliente</p>
+              <p className="text-white/40 text-sm">Atualize os dados do cliente</p>
             </div>
           </div>
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="text-goat-gray-400 hover:text-white hover:bg-goat-gray-700 rounded-lg"
+            className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -321,7 +327,7 @@ export function EditClientModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
@@ -332,7 +338,7 @@ export function EditClientModal({
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
@@ -344,7 +350,7 @@ export function EditClientModal({
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="00.000.000/0000-00"
                     required
                   />
@@ -356,7 +362,7 @@ export function EditClientModal({
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Nome do responsável"
                     required
                   />
@@ -368,7 +374,7 @@ export function EditClientModal({
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="(11) 99999-9999"
                     required
                   />
@@ -381,7 +387,7 @@ export function EditClientModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="cliente@empresa.com"
                     required
                   />
@@ -394,7 +400,7 @@ export function EditClientModal({
                     type="text"
                     value={formData.grupoId || ""}
                     onChange={(e) => handleChange("grupoId", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="ID do grupo"
                   />
                 </div>
@@ -403,7 +409,7 @@ export function EditClientModal({
 
             {/* Plano e Valores */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                 Plano e Valores
               </h3>
 
@@ -448,7 +454,7 @@ export function EditClientModal({
                         setFormData((prev) => ({ ...prev, monthlyValue: "" }));
                       }
                     }}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="0,00"
                   />
                 </div>
@@ -466,7 +472,7 @@ export function EditClientModal({
                         setFormData(prev => ({ ...prev, paymentDay: 0 }));
                       }
                     }}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="1-31"
                   />
                 </div>
@@ -510,7 +516,7 @@ export function EditClientModal({
 
             {/* Datas e Localização */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                 Datas e Localização
               </h3>
 
@@ -541,7 +547,7 @@ export function EditClientModal({
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white resize-none focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none"
                     rows={3}
                     placeholder="Endereço completo do cliente"
                   />
@@ -550,17 +556,17 @@ export function EditClientModal({
             </div>
 
             {/* Botões */}
-            <div className="flex gap-4 pt-6 border-t border-goat-gray-700">
+            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
               <Button
                 type="submit"
-                className="btn-primary flex-1 h-12 text-lg font-semibold"
+                className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
               >
                 Salvar Alterações
               </Button>
               <Button
                 type="button"
                 onClick={onClose}
-                className="flex-1 h-12 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white border-0 transition-colors duration-200"
+                className="flex-1 h-12 text-base font-bold bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all duration-200"
               >
                 Cancelar
               </Button>

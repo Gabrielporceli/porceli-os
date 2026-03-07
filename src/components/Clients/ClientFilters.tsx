@@ -84,25 +84,25 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
       {/* Filters Panel - Slide from right */}
       <div className="fixed inset-y-0 right-0 z-[1000000] w-full max-w-md animate-slide-in-right">
         <div
-          className="h-full bg-goat-gray-800 shadow-2xl border-l border-goat-gray-700 flex flex-col"
+          className="h-full liquid-glass shadow-2xl border-l border-white/[0.05] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-goat-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
                 <Filter className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Filtros</h2>
-                <p className="text-goat-gray-400 text-sm">Filtre os clientes conforme necessário</p>
+                <p className="text-white/40 text-sm">Filtre os clientes conforme necessário</p>
               </div>
             </div>
             <Button
               onClick={onClose}
               variant="ghost"
               size="icon"
-              className="text-goat-gray-400 hover:text-white hover:bg-goat-gray-700 rounded-lg"
+              className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -115,7 +115,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                 width: 8px;
               }
               .custom-scrollbar::-webkit-scrollbar-track {
-                background: #404040;
+                background: rgba(255, 255, 255, 0.02);
                 border-radius: 4px;
               }
               .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -159,7 +159,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
             <div className="p-6 space-y-8">
               {/* Nome da Empresa */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                   Empresa
                 </h3>
 
@@ -170,14 +170,14 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                     placeholder="Buscar por nome..."
                     value={localFilters.location}
                     onChange={(e) => setLocalFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
               </div>
 
               {/* Status */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                   Status
                 </h3>
 
@@ -188,11 +188,11 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                         id={`status-${status}`}
                         checked={localFilters.status.includes(status)}
                         onCheckedChange={(checked) => handleStatusChange(status, checked as boolean)}
-                        className="border-goat-gray-600 data-[state=checked]:bg-goat-purple data-[state=checked]:border-goat-purple"
+                        className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                       <Label
                         htmlFor={`status-${status}`}
-                        className="text-white cursor-pointer hover:text-goat-purple transition-colors"
+                        className="text-white/70 cursor-pointer hover:text-primary transition-colors"
                       >
                         {status}
                       </Label>
@@ -203,12 +203,12 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
 
               {/* Tipo de Plano */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                   Tipo de Plano
                 </h3>
 
                 {plansLoading ? (
-                  <div className="text-white/70">Carregando planos...</div>
+                  <div className="text-white/40">Carregando planos...</div>
                 ) : (
                   <div className="space-y-3">
                     {planOptions.map((plan) => (
@@ -217,11 +217,11 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                           id={`plan-${plan}`}
                           checked={localFilters.plan.includes(plan)}
                           onCheckedChange={(checked) => handlePlanChange(plan, checked as boolean)}
-                          className="border-goat-gray-600 data-[state=checked]:bg-goat-purple data-[state=checked]:border-goat-purple"
+                          className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <Label
                           htmlFor={`plan-${plan}`}
-                          className="text-white cursor-pointer hover:text-goat-purple transition-colors"
+                          className="text-white/70 cursor-pointer hover:text-primary transition-colors"
                         >
                           {plan}
                         </Label>
@@ -233,7 +233,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
 
               {/* Período do Fim de Contrato */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                   Período do Fim de Contrato
                 </h3>
 
@@ -272,7 +272,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
 
               {/* Cidade/Localização */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-goat-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
                   Cidade/Localização
                 </h3>
 
@@ -283,7 +283,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                     placeholder="Ex: São Paulo, SP"
                     value={localFilters.location}
                     onChange={(e) => setLocalFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="bg-goat-gray-700 border-goat-gray-600 text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
               </div>
@@ -291,17 +291,17 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
           </div>
 
           {/* Botões */}
-          <div className="p-6 border-t border-goat-gray-700">
+          <div className="p-6 border-t border-white/[0.05]">
             <div className="flex gap-4">
               <Button
                 onClick={handleApplyFilters}
-                className="btn-primary flex-1 h-12 text-lg font-semibold"
+                className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
               >
                 Aplicar Filtros
               </Button>
               <Button
                 onClick={handleClearFilters}
-                className="flex-1 h-12 text-lg font-semibold bg-goat-gray-600 hover:bg-goat-gray-500 text-white border-0 transition-colors duration-200"
+                className="flex-1 h-12 text-base font-bold bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all duration-200"
               >
                 Limpar Filtros
               </Button>
