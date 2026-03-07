@@ -11,7 +11,7 @@ export function ClientsHeader({ onNewClient }: ClientsHeaderProps) {
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div className="space-y-1">
         <h1 className="text-4xl font-bold text-white tracking-tight">Clientes</h1>
-        <p className="text-white/40 text-sm">Gestão completa da base de clientes</p>
+
       </div>
       <Button
         className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"

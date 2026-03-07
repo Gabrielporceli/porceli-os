@@ -234,35 +234,40 @@ export function NewClientModal({
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div
-      style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      className="flex items-center justify-center animate-fade-in"
-      onClick={handleOverlayClick}
-    >
+    <>
+      {/* Custom Overlay with blur */}
       <div
-        className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" />
+        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+        className="animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* Modal Container */}
+      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
+                <Plus className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Novo Cliente</h2>
+                <p className="text-white/40 text-sm">Preencha os dados do novo cliente</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">Novo Cliente</h2>
-              <p className="text-goat-gray-400 text-sm">Preencha os dados do novo cliente</p>
-            </div>
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="icon"
+                className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="icon"
-              className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
 
         {/* Content with Custom Scrollbar */}
         <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar">
@@ -656,7 +661,8 @@ export function NewClientModal({
           </form>
         </div>
       </div>
-    </div>,
+      </div>
+    </>,
     document.body
   );
 }

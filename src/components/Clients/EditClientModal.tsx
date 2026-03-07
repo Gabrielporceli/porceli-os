@@ -211,15 +211,20 @@ export function EditClientModal({
   };
 
   return ReactDOM.createPortal(
-    <div
-      style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      className="flex items-center justify-center animate-fade-in"
-      onClick={handleOverlayClick}
-    >
+    <>
+      {/* Custom Overlay with blur */}
       <div
-        className="relative liquid-glass rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
+        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+        className="animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* Modal Container */}
+      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
         <style>{`
           @keyframes fade-in {
             from { opacity: 0; }
@@ -572,9 +577,10 @@ export function EditClientModal({
               </Button>
             </div>
           </form>
+          </div>
         </div>
       </div>
-    </div>,
+    </>,
     document.body
   );
 }
