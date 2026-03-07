@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ interface EditStageModalProps {
   onOpenChange: (open: boolean) => void;
   stage: Stage | null;
   onUpdateStage: (updatedStage: { name: string; color: string }) => void;
+  onDeleteStage: (stageId: string) => void;
 }
 
 const colorOptions = [
@@ -43,6 +45,7 @@ export function EditStageModal({
   onOpenChange,
   stage,
   onUpdateStage,
+  onDeleteStage,
 }: EditStageModalProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState("bg-gray-500");
@@ -79,66 +82,84 @@ export function EditStageModal({
       <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold tracking-tight text-white">Editar Etapa</DialogTitle>
+          <DialogDescription className="text-white/40">
+            Altere as informações e a cor da etapa
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="stageName" className="text-white/70 text-sm font-medium">
-              Nome da Etapa *
-            </Label>
-            <Input
-              id="stageName"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
-              placeholder="Digite o nome da etapa"
-              required
-              disabled={stage.is_default}
-            />
-            {stage.is_default && (
-              <p className="text-xs text-white/30 mt-1">
-                Etapas padrão não podem ter o nome alterado
-              </p>
+
+            <div className="space-y-2">
+              <Label className="text-white/70 text-sm font-medium">Nome da Etapa *</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                placeholder="Digite o nome da etapa"
+                disabled={stage.is_default}
+              />
+              {stage.is_default && (
+                <p className="text-xs text-white/30">
+                  Etapas padrão não podem ter o nome alterado
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/70 text-sm font-medium">Cor da Etapa</Label>
+              <Select value={color} onValueChange={setColor}>
+                <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
+                  <SelectValue>{getColorSelected()}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {colorOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex items-center gap-3 font-medium">
+                        <span className={`w-3 h-3 rounded-full ${option.dot}`} />
+                        {option.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+          <div className="space-y-3 pt-2">
+            <DialogFooter className="gap-3 flex-row-reverse flex">
+              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base"
+                >
+                  Salvar Alterações
+                </Button>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-12 rounded-2xl border border-white/5 font-medium transition-all text-base"
+                >
+                  Cancelar
+                </Button>
+              </motion.div>
+            </DialogFooter>
+
+            {!stage.is_default && (
+              <motion.div className="w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    onDeleteStage(stage.id);
+                    onOpenChange(false);
+                  }}
+                  className="bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 w-full h-12 rounded-2xl font-bold text-base transition-all"
+                >
+                  Excluir Etapa
+                </Button>
+              </motion.div>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="stageColor" className="text-white/70 text-sm font-medium">
-              Cor da Etapa
-            </Label>
-            <Select value={color} onValueChange={setColor}>
-              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                <SelectValue>
-                  {getColorSelected()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {colorOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <span className="flex items-center gap-3 font-medium">
-                      <span className={`w-3 h-3 rounded-full ${option.dot}`} />
-                      {option.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter className="gap-3 pt-2">
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-12 rounded-2xl border border-white/5 font-medium transition-all text-base"
-              >
-                Cancelar
-              </Button>
-            </motion.div>
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base">
-                Salvar Alterações
-              </Button>
-            </motion.div>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
@@ -589,38 +596,15 @@ export default function LeadsKanban() {
                       </Badge>
                     </div>
 
-                    <ContextMenu>
-                      <ContextMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-goat-gray-400 hover:bg-goat-purple/80 hover:text-white w-7 h-7 sm:w-8 sm:h-8"
-                          data-no-pan
-                        >
-                          <EllipsisVertical className="w-3 h-3 sm:w-4 sm:h-4" />
-                        </Button>
-                      </ContextMenuTrigger>
-
-                      <ContextMenuContent className="liquid-glass border-white/[0.05]">
-                        <ContextMenuItem
-                          onClick={() => handleEditStage(stage)}
-                          className="text-white data-[highlighted]:bg-goat-purple/80 data-[highlighted]:text-white"
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar Etapa
-                        </ContextMenuItem>
-
-                        {!stage.is_default && (
-                          <ContextMenuItem
-                            onClick={() => handleDeleteStage(stage.id)}
-                            className="text-red-400 data-[highlighted]:bg-goat-gray-700 data-[highlighted]:text-red-400"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir Etapa
-                          </ContextMenuItem>
-                        )}
-                      </ContextMenuContent>
-                    </ContextMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-goat-gray-400 hover:bg-goat-purple/80 hover:text-white w-7 h-7 sm:w-8 sm:h-8"
+                      onClick={() => handleEditStage(stage)}
+                      data-no-pan
+                    >
+                      <EllipsisVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </Button>
                   </div>
 
                   <Droppable droppableId={stage.id}>
@@ -791,6 +775,7 @@ export default function LeadsKanban() {
           onOpenChange={setIsEditStageModalOpen}
           stage={selectedStage}
           onUpdateStage={handleUpdateStage}
+          onDeleteStage={handleDeleteStage}
         />
       </div>
     </div >
