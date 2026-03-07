@@ -83,34 +83,34 @@ export default function SdrAgent() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Agente SDR</h1>
-                    <p className="text-goat-gray-400">Monitoramento de performance e eficiência do bot</p>
+                    <p className="text-white/40">Monitoramento de performance e eficiência do bot</p>
                 </div>
 
                 <div className="flex items-center gap-2">
                     <Button
                         onClick={() => setPeriod('day')}
-                        className={`${period === 'day' ? 'bg-goat-purple text-white hover:bg-goat-purple/90' : 'bg-transparent text-white border border-goat-gray-600 hover:bg-goat-gray-800'}`}
+                        className={`${period === 'day' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
                         size="sm"
                     >
                         Hoje
                     </Button>
                     <Button
                         onClick={() => setPeriod('week')}
-                        className={`${period === 'week' ? 'bg-goat-purple text-white hover:bg-goat-purple/90' : 'bg-transparent text-white border border-goat-gray-600 hover:bg-goat-gray-800'}`}
+                        className={`${period === 'week' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
                         size="sm"
                     >
                         Semana
                     </Button>
                     <Button
                         onClick={() => setPeriod('month')}
-                        className={`${period === 'month' ? 'bg-goat-purple text-white hover:bg-goat-purple/90' : 'bg-transparent text-white border border-goat-gray-600 hover:bg-goat-gray-800'}`}
+                        className={`${period === 'month' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
                         size="sm"
                     >
                         Mês
                     </Button>
                     <Button
                         onClick={() => setPeriod('all_time')}
-                        className={`${period === 'all_time' ? 'bg-goat-purple text-white hover:bg-goat-purple/90' : 'bg-transparent text-white border border-goat-gray-600 hover:bg-goat-gray-800'}`}
+                        className={`${period === 'all_time' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
                         size="sm"
                     >
                         Total
@@ -135,11 +135,11 @@ export default function SdrAgent() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Coluna Esquerda: Drop-off por Etapa e Impacto no Negócio */}
                 <div className="space-y-6">
-                    <Card className="bg-goat-gray-800 border-goat-gray-700 dashboard-glow p-6">
+                    <Card className="liquid-glass border-white/5 dashboard-glow p-6 group hover:bg-white/[0.02] transition-colors">
                         <div className="flex items-center gap-2 mb-2">
                             <h3 className="text-lg font-semibold text-white">Drop-off por Etapa</h3>
                         </div>
-                        <p className="text-sm text-gray-400 mb-6">% de leads que não avançaram dentro do SLA configurado</p>
+                        <p className="text-sm text-white/40 mb-6">% de leads que não avançaram dentro do SLA configurado</p>
 
                         <div className="space-y-5">
                             {dropoffSteps.map((step: any, idx: number) => (
@@ -147,7 +147,7 @@ export default function SdrAgent() {
                                     <div className="flex justify-between items-center mb-1">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-medium text-white">{step.stage}</span>
-                                            <span className="text-[10px] bg-goat-gray-900 border border-goat-gray-700 px-1.5 py-0.5 rounded text-gray-400">
+                                            <span className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-white/50">
                                                 SLA: {step.slaLabel}
                                             </span>
                                         </div>
@@ -155,9 +155,9 @@ export default function SdrAgent() {
 
                                     <div className="flex items-center gap-3">
                                         {/* Progress Bar Container */}
-                                        <div className="flex-1 h-3 bg-goat-gray-900 rounded-full overflow-hidden relative">
+                                        <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden relative">
                                             {/* Background track */}
-                                            <div className="absolute inset-0 bg-goat-gray-900" />
+                                            <div className="absolute inset-0 bg-white/5" />
 
                                             {/* Fill bar */}
                                             {step.reached > 0 && step.rate > 0 && (
@@ -193,22 +193,22 @@ export default function SdrAgent() {
                     </Card>
 
                     {/* Impacto no Negócio */}
-                    <Card className="bg-goat-gray-800 border-goat-gray-700 dashboard-glow p-6">
+                    <Card className="liquid-glass border-white/5 dashboard-glow p-6 group hover:bg-white/[0.02] transition-colors">
                         <div className="flex items-center gap-2 mb-6">
                             <h3 className="text-lg font-semibold text-white">Impacto no Negócio</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-4 flex flex-col">
-                                <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 h-[90px] flex flex-col justify-between">
-                                    <span className="text-gray-400 text-xs block">Conversão Real</span>
+                                <div className="liquid-glass p-3 rounded-lg border border-white/5 h-[90px] flex flex-col justify-between hover:bg-white/[0.04] transition-colors">
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest block">Conversão Real</span>
                                     <div>
                                         <p className="text-xl font-bold text-white">{inAttendanceToCustomerRate.toFixed(1)}%</p>
-                                        <p className="text-[10px] text-gray-500 mt-1">Em Atend. → Cliente</p>
+                                        <p className="text-[10px] text-white/30 mt-1">Em Atend. → Cliente</p>
                                     </div>
                                 </div>
-                                <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 h-[90px] flex flex-col justify-between">
-                                    <span className="text-gray-400 text-xs block">Qualidade do Lead</span>
+                                <div className="liquid-glass p-3 rounded-lg border border-white/5 h-[90px] flex flex-col justify-between hover:bg-white/[0.04] transition-colors">
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest block">Qualidade do Lead</span>
                                     <div className="flex items-center gap-2">
                                         <div className="flex">
                                             {[1, 2, 3, 4, 5].map(i => (
@@ -224,30 +224,30 @@ export default function SdrAgent() {
                             </div>
 
                             <div className="space-y-4 flex flex-col">
-                                <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 h-[90px] flex flex-col justify-between">
-                                    <span className="text-gray-400 text-xs block">Receita Atribuída</span>
+                                <div className="liquid-glass p-3 rounded-lg border border-white/5 h-[90px] flex flex-col justify-between hover:bg-white/[0.04] transition-colors">
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest block">Receita Atribuída</span>
                                     <div>
-                                        <p className="text-xl font-bold text-white">
+                                        <p className="text-xl font-bold text-white tabular-nums">
                                             {new Intl.NumberFormat('pt-BR', { 
                                                 style: 'currency', 
                                                 currency: 'BRL',
                                                 maximumFractionDigits: 0
                                             }).format(sdrRevenue)}
                                         </p>
-                                        <p className="text-[10px] text-gray-500 mt-1">MRR (Bot SDR)</p>
+                                        <p className="text-[10px] text-white/30 mt-1">MRR (Bot SDR)</p>
                                     </div>
                                 </div>
-                                <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 h-[90px] flex flex-col justify-between">
-                                    <span className="text-gray-400 text-xs block">Receita Atribuída</span>
+                                <div className="liquid-glass p-3 rounded-lg border border-white/5 h-[90px] flex flex-col justify-between hover:bg-white/[0.04] transition-colors">
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest block">Receita Atribuída</span>
                                     <div>
-                                        <p className="text-xl font-bold text-white">
+                                        <p className="text-xl font-bold text-white tabular-nums">
                                             {new Intl.NumberFormat('pt-BR', { 
                                                 style: 'currency', 
                                                 currency: 'BRL',
                                                 maximumFractionDigits: 0
                                             }).format(sdrRevenue * 12)}
                                         </p>
-                                        <p className="text-[10px] text-gray-500 mt-1">ARR (Bot SDR)</p>
+                                        <p className="text-[10px] text-white/30 mt-1">ARR (Bot SDR)</p>
                                     </div>
                                 </div>
                             </div>
@@ -258,51 +258,51 @@ export default function SdrAgent() {
                 {/* Coluna Direita: Entrega e Volume, Engajamento Inicial, Agendamento & Show Rate */}
                 <div className="space-y-6 flex flex-col">
                     {/* 1. Entrega e Volume */}
-                    <Card className="bg-goat-gray-800 border-b border-r border-goat-gray-700 shadow-lg dashboard-glow p-6 pb-8 transition-all hover:bg-goat-gray-800/90 group rounded-xl flex-1">
-                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-goat-gray-700/50">
+                    <Card className="liquid-glass border-white/5 dashboard-glow p-6 pb-8 transition-all hover:bg-white/[0.04] group rounded-xl flex-1">
+                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white/[0.05]">
                         <div>
                             <h3 className="text-xl font-bold text-white leading-tight">Entrega e Volume</h3>
-                            <p className="text-sm text-goat-gray-400">Fluxo de mensagens e novos leads</p>
+                            <p className="text-sm text-white/50">Fluxo de mensagens e novos leads</p>
                         </div>
                     </div>
 
                     {/* KPIs Compactos */}
                     <div className="grid grid-cols-3 gap-4 mb-3">
                         {/* KPI 1 */}
-                        <div className="bg-goat-gray-900/40 p-4 rounded-xl border border-goat-gray-800 hover:border-goat-purple/30 transition-all group/kpi">
-                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-goat-purple-light transition-colors">
+                        <div className="liquid-glass p-4 rounded-xl border border-white/5 hover:border-primary/30 transition-all group/kpi">
+                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-primary transition-colors">
                                 {metrics.scheduled > 0 ? Math.round(outboundCount / metrics.scheduled) : (metrics.totalLeadsContacted > 0 ? "—" : 0)}
                             </p>
-                            <p className="text-xs text-goat-gray-500 font-medium uppercase tracking-wider">Mensagens/Reunião</p>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Mensagens/Reunião</p>
                         </div>
 
                         {/* KPI 2 */}
-                        <div className="bg-goat-gray-900/40 p-4 rounded-xl border border-goat-gray-800 hover:border-goat-purple/30 transition-all group/kpi">
-                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-goat-purple-light transition-colors">
+                        <div className="liquid-glass p-4 rounded-xl border border-white/5 hover:border-primary/30 transition-all group/kpi">
+                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-primary transition-colors">
                                 {new Intl.NumberFormat('pt-BR', { notation: "compact", maximumFractionDigits: 1 }).format(outboundCount)}
                             </p>
-                            <p className="text-xs text-goat-gray-500 font-medium uppercase tracking-wider">Total Mensagens</p>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Total Mensagens</p>
                         </div>
 
                         {/* KPI 3 (Novo: Leads Novos) */}
-                        <div className="bg-goat-gray-900/40 p-4 rounded-xl border border-goat-gray-800 hover:border-goat-purple/30 transition-all group/kpi">
-                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-goat-purple-light transition-colors">
+                        <div className="liquid-glass p-4 rounded-xl border border-white/5 hover:border-primary/30 transition-all group/kpi">
+                            <p className="text-3xl font-bold text-white tracking-tight mb-1 group-hover/kpi:text-primary transition-colors">
                                 {new Intl.NumberFormat('pt-BR', { notation: "compact", maximumFractionDigits: 1 }).format(
                                     volumeData.reduce((acc: number, cur: any) => acc + (cur.leads || 0), 0)
                                 )}
                             </p>
-                            <p className="text-xs text-goat-gray-500 font-medium uppercase tracking-wider">Leads Novos</p>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Leads Novos</p>
                         </div>
                     </div>
 
                     <div className="h-[200px] w-full relative">
                         {volumeData.length === 0 || volumeData.every((d: any) => d.sent === 0 && d.leads === 0) ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-goat-gray-900/20 rounded-xl border border-dashed border-goat-gray-800">
-                                <div className="p-4 bg-goat-gray-900 rounded-full mb-4 shadow-inner">
-                                    <TrendingUp className="w-8 h-8 text-goat-gray-700" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-white/[0.02] rounded-xl border border-dashed border-white/10">
+                                <div className="p-4 bg-white/5 rounded-full mb-4 shadow-inner">
+                                    <TrendingUp className="w-8 h-8 text-white/30" />
                                 </div>
-                                <p className="text-base font-semibold text-goat-gray-400">Sem dados no período</p>
-                                <p className="text-sm text-goat-gray-600 mt-2 max-w-[220px]">
+                                <p className="text-base font-semibold text-white/50">Sem dados no período</p>
+                                <p className="text-sm text-white/30 mt-2 max-w-[220px]">
                                     Ajuste o filtro de período ou verifique a atividade do bot.
                                 </p>
                             </div>
@@ -355,41 +355,41 @@ export default function SdrAgent() {
                     </Card>
 
                     {/* 2. Engajamento Inicial */}
-                    <Card className="bg-goat-gray-800 border-b border-r border-goat-gray-700 shadow-lg dashboard-glow p-6 transition-all hover:bg-goat-gray-800/90 group rounded-xl flex-1">
-                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-goat-gray-700/50">
+                    <Card className="liquid-glass border-white/5 dashboard-glow p-6 transition-all hover:bg-white/[0.04] group rounded-xl flex-1">
+                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white/[0.05]">
                         <div>
                             <h3 className="text-xl font-bold text-white leading-tight">Engajamento Inicial</h3>
-                            <p className="text-sm text-goat-gray-400">Tempo de resposta e qualificação</p>
+                            <p className="text-sm text-white/50">Tempo de resposta e qualificação</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 mb-3">
                         {/* Mini-card 1: Tempo 1ª Resp */}
-                        <div className="bg-goat-gray-900/40 rounded-xl p-4 border border-goat-gray-700/30 hover:border-goat-purple/30 transition-all">
+                        <div className="liquid-glass rounded-xl p-4 border border-white/5 hover:border-primary/30 transition-all">
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]"></div>
-                                <p className="text-xs text-goat-gray-400 font-medium uppercase tracking-wider">Tempo 1ª Resp</p>
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Tempo 1ª Resp</p>
                             </div>
                             <div className="flex items-baseline gap-1">
                                 <p className="text-3xl font-bold text-white tracking-tight">{avgResponseTimeMinutes}</p>
-                                <span className="text-sm text-goat-gray-500 font-medium">min</span>
+                                <span className="text-sm text-white/30 font-medium">min</span>
                             </div>
                         </div>
 
                         {/* Mini-card 2: Opt-out */}
-                        <div className="bg-goat-gray-900/40 rounded-xl p-4 border border-goat-gray-700/30 hover:border-goat-purple/30 transition-all">
+                        <div className="liquid-glass rounded-xl p-4 border border-white/5 hover:border-primary/30 transition-all">
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]"></div>
-                                <p className="text-xs text-goat-gray-400 font-medium uppercase tracking-wider">Recusas</p>
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Recusas</p>
                             </div>
                             <p className="text-3xl font-bold text-white tracking-tight">{optOutRate.toFixed(1)}%</p>
                         </div>
 
                         {/* Mini-card 3: Qualificação */}
-                        <div className="bg-goat-gray-900/40 rounded-xl p-4 border border-goat-gray-700/30 hover:border-goat-purple/30 transition-all">
+                        <div className="liquid-glass rounded-xl p-4 border border-white/5 hover:border-primary/30 transition-all">
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div>
-                                <p className="text-xs text-goat-gray-400 font-medium uppercase tracking-wider">Qualificação</p>
+                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Qualificação</p>
                             </div>
                             <p className="text-3xl font-bold text-white tracking-tight">{qualifiedRate.toFixed(1)}%</p>
                         </div>
@@ -397,12 +397,12 @@ export default function SdrAgent() {
 
                     <div className="h-[200px] w-full relative">
                         {funnelData.length === 0 || funnelData.every((d: any) => d.value === 0) ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-goat-gray-900/20 rounded-xl border border-dashed border-goat-gray-800">
-                                <div className="p-4 bg-goat-gray-900 rounded-full mb-4 shadow-inner">
-                                    <Zap className="w-8 h-8 text-goat-gray-700" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-white/[0.02] rounded-xl border border-dashed border-white/10">
+                                <div className="p-4 bg-white/5 rounded-full mb-4 shadow-inner">
+                                    <Zap className="w-8 h-8 text-white/30" />
                                 </div>
-                                <p className="text-base font-semibold text-goat-gray-400">Sem dados de engajamento</p>
-                                <p className="text-sm text-goat-gray-600 mt-2 max-w-[220px]">
+                                <p className="text-base font-semibold text-white/50">Sem dados de engajamento</p>
+                                <p className="text-sm text-white/30 mt-2 max-w-[220px]">
                                     Aguarde novas interações com leads.
                                 </p>
                             </div>
@@ -439,47 +439,47 @@ export default function SdrAgent() {
                     </Card>
 
                     {/* 4. Agendamento & Show Rate */}
-                    <Card className="bg-goat-gray-800 border-goat-gray-700 dashboard-glow p-5 pb-4">
+                    <Card className="liquid-glass border-white/5 dashboard-glow p-5 pb-4 group hover:bg-white/[0.02] transition-colors">
                     <div className="flex items-center gap-2 mb-4">
                         <h3 className="text-lg font-semibold text-white">Agendamento & Show Rate</h3>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-3">
-                            <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 min-h-[60px]">
+                            <div className="liquid-glass p-3 rounded-lg border border-white/5 min-h-[60px] hover:bg-white/[0.04] transition-colors">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className="text-gray-400 text-xs">Taxa de Agend.</span>
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest">Taxa de Agend.</span>
                                     <CheckCircle2 className="w-4 h-4 text-green-500" />
                                 </div>
                                 <p className="text-xl font-bold text-white">{metrics.totalLeadsContacted > 0 ? (scheduled / metrics.totalLeadsContacted * 100).toFixed(1) : 0}%</p>
                             </div>
-                            <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 min-h-[60px]">
+                            <div className="liquid-glass p-3 rounded-lg border border-white/5 min-h-[60px] hover:bg-white/[0.04] transition-colors">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className="text-gray-400 text-xs">Reagendamentos</span>
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest">Reagendamentos</span>
                                     <Clock className="w-4 h-4 text-yellow-500" />
                                 </div>
                                 <p className="text-xl font-bold text-white">{rescheduledRate.toFixed(1)}%</p>
                             </div>
-                            <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 min-h-[60px]">
+                            <div className="liquid-glass p-3 rounded-lg border border-white/5 min-h-[60px] hover:bg-white/[0.04] transition-colors">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className="text-gray-400 text-xs">Cancelamento</span>
-                                    <XCircle className="w-4 h-4 text-gray-500" />
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest">Cancelamento</span>
+                                    <XCircle className="w-4 h-4 text-white/50" />
                                 </div>
                                 <p className="text-xl font-bold text-white">{cancelRate.toFixed(1)}%</p>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 min-h-[60px]">
+                            <div className="liquid-glass p-3 rounded-lg border border-white/5 min-h-[60px] hover:bg-white/[0.04] transition-colors">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className="text-gray-400 text-xs">Show Rate</span>
-                                    <Users className="w-4 h-4 text-blue-500" />
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest">Show Rate</span>
+                                    <Users className="w-4 h-4 text-primary" />
                                 </div>
                                 <p className="text-xl font-bold text-white">{showRate.toFixed(0)}%</p>
                             </div>
-                            <div className="bg-goat-gray-900/30 p-3 rounded-lg border border-goat-gray-700 min-h-[60px]">
+                            <div className="liquid-glass p-3 rounded-lg border border-white/5 min-h-[60px] hover:bg-white/[0.04] transition-colors">
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className="text-gray-400 text-xs">No-Show</span>
+                                    <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest">No-Show</span>
                                     <XCircle className="w-4 h-4 text-red-500" />
                                 </div>
                                 <p className="text-xl font-bold text-white">{noShowRate.toFixed(0)}%</p>
@@ -487,9 +487,9 @@ export default function SdrAgent() {
                         </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-goat-gray-700 flex justify-between items-center">
-                        <span className="text-sm text-gray-400">Tempo até agendar:</span>
-                        <span className="font-mono text-white">{timeToScheduleStr} (média)</span>
+                    <div className="mt-3 pt-2 border-t border-white/[0.05] flex justify-between items-center">
+                        <span className="text-xs text-white/40 font-bold uppercase tracking-widest">Tempo até agendar:</span>
+                        <span className="font-mono text-white text-sm bg-white/5 px-2 py-1 rounded-md">{timeToScheduleStr} (média)</span>
                     </div>
                     </Card>
                 </div>
