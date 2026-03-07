@@ -125,15 +125,39 @@ export function EditLeadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold tracking-tight">Editar Lead</DialogTitle>
-          <DialogDescription className="text-white/40">
-            Altere as informações do lead
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0 overflow-hidden">
+        <div className="p-6 border-b border-white/[0.05]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold tracking-tight">Editar Lead</DialogTitle>
+            <DialogDescription className="text-white/40">
+              Altere as informações do lead
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-4">
+        <div className="overflow-y-auto max-h-[calc(85vh-100px)] custom-scrollbar p-6 pt-4">
+          <style>{`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 8px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(255, 255, 255, 0.02);
+              border-radius: 4px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #6829c0;
+              border-radius: 4px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #7C3AED;
+            }
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: #6829c0 transparent;
+            }
+          `}</style>
+          
+          <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-white/70 text-sm font-medium">Nome</Label>
             <Input
@@ -257,7 +281,9 @@ export function EditLeadModal({
             />
           </div>
 
-          <div className="flex gap-3 pt-6">
+          </div>
+
+          <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
             <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold">
                 <Save className="w-5 h-5 mr-2" />
