@@ -32,6 +32,7 @@ import { EditLeadModal } from "@/components/Leads/EditLeadModal";
 import { AddStageModal } from "@/components/Leads/AddStageModal";
 import { NewLeadModal } from "@/components/Leads/NewLeadModal";
 import { EditStageModal } from "@/components/Leads/EditStageModal";
+import { DeleteLeadDialog } from "@/components/Leads/DeleteLeadDialog";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLeads, type Lead } from "@/hooks/useLeads";
@@ -86,6 +87,8 @@ export default function LeadsKanban() {
 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
+  const [isDeleteLeadDialogOpen, setIsDeleteLeadDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
@@ -711,7 +714,10 @@ export default function LeadsKanban() {
                                       Editar Lead
                                     </ContextMenuItem>
                                     <ContextMenuItem
-                                      onClick={() => handleDeleteLead(lead.id)}
+                                      onClick={() => {
+                                        setLeadToDelete(lead);
+                                        setIsDeleteLeadDialogOpen(true);
+                                      }}
                                       className="text-red-400 data-[highlighted]:bg-white/[0.05] data-[highlighted]:text-red-400"
                                     >
                                       <Trash2 className="w-4 h-4 mr-2" />
@@ -754,6 +760,11 @@ export default function LeadsKanban() {
           tags={tags}
           stages={stages}
           onUpdateLead={handleUpdateLead}
+          onDeleteLead={(lead) => {
+            setLeadToDelete(lead);
+            setIsDeleteLeadDialogOpen(true);
+            setIsEditLeadModalOpen(false);
+          }}
         />
 
         <AddStageModal
@@ -776,6 +787,18 @@ export default function LeadsKanban() {
           stage={selectedStage}
           onUpdateStage={handleUpdateStage}
           onDeleteStage={handleDeleteStage}
+        />
+
+        <DeleteLeadDialog
+          isOpen={isDeleteLeadDialogOpen}
+          lead={leadToDelete}
+          onClose={() => setIsDeleteLeadDialogOpen(false)}
+          onConfirm={async () => {
+            if (leadToDelete) {
+              await handleDeleteLead(leadToDelete.id);
+              setIsDeleteLeadDialogOpen(false);
+            }
+          }}
         />
       </div>
     </div >

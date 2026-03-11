@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X } from "lucide-react";
+import { Save, X, Trash2 } from "lucide-react";
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -25,6 +25,7 @@ interface EditLeadModalProps {
   tags: Tag[];
   stages: Stage[];
   onUpdateLead: (lead: Lead) => void;
+  onDeleteLead?: (lead: Lead) => void;
 }
 
 export function EditLeadModal({
@@ -34,6 +35,7 @@ export function EditLeadModal({
   tags,
   stages,
   onUpdateLead,
+  onDeleteLead,
 }: EditLeadModalProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -284,7 +286,7 @@ export function EditLeadModal({
           </div>
 
           <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div className="flex-[2]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold">
                 <Save className="w-5 h-5 mr-2" />
                 Salvar
@@ -295,10 +297,27 @@ export function EditLeadModal({
                 onClick={() => onOpenChange(false)}
                 className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-12 rounded-2xl border border-white/5 font-medium transition-all"
               >
-                <X className="w-5 h-5 mr-2" />
                 Cancelar
               </Button>
             </motion.div>
+            {onDeleteLead && (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (lead) {
+                      onDeleteLead(lead);
+                    }
+                  }}
+                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all"
+                  title="Excluir Lead"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
           </div>
         </div>
       </DialogContent>
