@@ -9,6 +9,7 @@ import { Plus, Phone, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactDOM from "react-dom";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface NewConversationModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function NewConversationModal({
   onClose,
   onNewConversation
 }: NewConversationModalProps) {
+  useScrollLock(isOpen);
   const [client, setClient] = useState("");
   const [phone, setPhone] = useState("");
   const { toast } = useToast();

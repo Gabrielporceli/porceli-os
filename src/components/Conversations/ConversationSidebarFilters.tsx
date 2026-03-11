@@ -11,6 +11,7 @@ import ReactDOM from "react-dom";
 import { useStages } from "@/hooks/useStages";
 import { useTags } from "@/hooks/useTags";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface FilterState {
   stages: string[];
@@ -27,6 +28,7 @@ interface ConversationSidebarFiltersProps {
 }
 
 export function ConversationSidebarFilters({ isOpen, onClose, filters, onFiltersChange }: ConversationSidebarFiltersProps) {
+  useScrollLock(isOpen);
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const { stages, isLoading: stagesLoading } = useStages();
   const { tags, isLoading: tagsLoading } = useTags();

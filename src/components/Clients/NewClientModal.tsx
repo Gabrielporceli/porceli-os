@@ -23,6 +23,7 @@ import { usePlansContext } from "@/contexts/PlansContext";
 import ReactDOM from "react-dom";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface NewClientModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export function NewClientModal({
   onPlanColorChange,
   planColors = {}
 }: NewClientModalProps) {
+  useScrollLock(isOpen);
   const { getPlanNames, createPlan, getPlanByName } = usePlansContext();
   const planOptions = getPlanNames();
 

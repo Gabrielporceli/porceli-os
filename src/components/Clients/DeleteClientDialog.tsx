@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Trash2, X, AlertTriangle } from "lucide-react";
 import ReactDOM from "react-dom";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface Client {
   id: string;
@@ -34,6 +35,7 @@ export function DeleteClientDialog({
   onClose, 
   onConfirm 
 }: DeleteClientDialogProps) {
+  useScrollLock(isOpen);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {

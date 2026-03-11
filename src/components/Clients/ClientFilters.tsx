@@ -11,6 +11,7 @@ import { usePlansContext } from "@/contexts/PlansContext";
 import ReactDOM from "react-dom";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface FilterState {
   status: string[];
@@ -27,6 +28,7 @@ interface ClientFiltersProps {
 }
 
 export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: ClientFiltersProps) {
+  useScrollLock(isOpen);
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const { getPlanNames, isLoading: plansLoading } = usePlansContext();
 

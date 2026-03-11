@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ interface RenewContractModalProps {
 }
 
 export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPending }: RenewContractModalProps) {
+    useScrollLock(isOpen);
     const [formData, setFormData] = useState({
         type: '',
         monthlyValue: '0,00',
@@ -116,6 +118,18 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
             }
         }
         handleInputChange('monthlyValue', value);
+    };
+
+    const handlePaymentDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value;
+        value = value.replace(/\D/g, '');
+        const numValue = parseInt(value);
+        if (numValue > 31) {
+            value = '31';
+        } else if (numValue < 1 && value !== '') {
+            value = '1';
+        }
+        handleInputChange('paymentDay', value);
     };
 
     if (!isOpen || !contract) return null;
@@ -221,25 +235,43 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Novo Valor Mensal (R$)</Label>
-                                    <div className="relative group">
-                                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
-                                        <Input
-                                            id="monthlyValue"
-                                            type="text"
-                                            value={formData.monthlyValue}
-                                            onChange={handleMonthlyValueChange}
-                                            onBlur={handleMonthlyValueBlur}
-                                            onFocus={(e) => {
-                                                if (e.target.value === "0,00") {
-                                                    handleInputChange('monthlyValue', "");
-                                                }
-                                            }}
-                                            className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-bold"
-                                            placeholder="0,00"
-                                            required
-                                        />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Novo Valor Mensal (R$)</Label>
+                                        <div className="relative group">
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
+                                            <Input
+                                                id="monthlyValue"
+                                                type="text"
+                                                value={formData.monthlyValue}
+                                                onChange={handleMonthlyValueChange}
+                                                onBlur={handleMonthlyValueBlur}
+                                                onFocus={(e) => {
+                                                    if (e.target.value === "0,00") {
+                                                        handleInputChange('monthlyValue', "");
+                                                    }
+                                                }}
+                                                className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-bold"
+                                                placeholder="0,00"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="paymentDay" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Novo Dia de Pagamento</Label>
+                                        <div className="relative group">
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
+                                            <Input
+                                                id="paymentDay"
+                                                type="text"
+                                                value={formData.paymentDay}
+                                                onChange={handlePaymentDayChange}
+                                                className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-medium"
+                                                placeholder="Ex: 10"
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -265,24 +297,6 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                                     handleInputChange('endDate', format(newDate, "yyyy-MM-dd"));
                                                 }
                                             }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="paymentDay" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Novo Dia de Pagamento</Label>
-                                    <div className="relative group">
-                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
-                                        <Input
-                                            id="paymentDay"
-                                            type="number"
-                                            min="1"
-                                            max="31"
-                                            value={formData.paymentDay}
-                                            onChange={(e) => handleInputChange('paymentDay', e.target.value)}
-                                            className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-medium"
-                                            placeholder="Ex: 10"
-                                            required
                                         />
                                     </div>
                                 </div>

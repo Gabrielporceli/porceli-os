@@ -4,6 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle } from "lucide-react";
 import ReactDOM from "react-dom";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface Contract {
   id: string;
@@ -24,6 +25,7 @@ export function DeleteContractDialog({
   onConfirm,
   contract
 }: DeleteContractDialogProps) {
+  useScrollLock(isOpen);
 
   if (!isOpen || !contract) return null;
 
