@@ -274,9 +274,11 @@ export function NewLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
-                <Plus className="w-5 h-5 mr-2" />
-                Criar Lead
+              <Button
+                onClick={() => onOpenChange(false)}
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+              >
+                Cancelar
               </Button>
             </motion.div>
             <motion.div 
@@ -285,11 +287,9 @@ export function NewLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
-                onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
-              >
-                Cancelar
+              <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+                <Plus className="w-5 h-5 mr-2" />
+                Criar Lead
               </Button>
             </motion.div>
           </div>

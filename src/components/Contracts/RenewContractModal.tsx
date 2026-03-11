@@ -319,11 +319,12 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                 >
                                     <Button
-                                        type="submit"
+                                        type="button"
+                                        onClick={onClose}
                                         disabled={isPending}
-                                        className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50"
+                                        className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
                                     >
-                                        {isPending ? 'Processando...' : 'Confirmar Renovação'}
+                                        Cancelar
                                     </Button>
                                 </motion.div>
                                 <motion.div 
@@ -333,12 +334,11 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                 >
                                     <Button
-                                        type="button"
-                                        onClick={onClose}
+                                        type="submit"
                                         disabled={isPending}
-                                        className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                                        className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50"
                                     >
-                                        Cancelar
+                                        {isPending ? 'Processando...' : 'Confirmar Renovação'}
                                     </Button>
                                 </motion.div>
                             </div>

@@ -176,18 +176,8 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold transition-all">
-                      <Save className="w-4 h-4 mr-2" />
-                      Salvar Tag
-                    </Button>
-                  </motion.div>
-                  <motion.div 
-                    className="flex-1" 
-                    whileHover={{ scale: 1.05, translateY: -2 }} 
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
                     <Button
+                      type="button"
                       onClick={() => {
                         setIsCreating(false);
                         setNewTagName("");
@@ -196,6 +186,17 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                       className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all"
                     >
                       Cancelar
+                    </Button>
+                  </motion.div>
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold transition-all">
+                      <Save className="w-4 h-4 mr-2" />
+                      Salvar Tag
                     </Button>
                   </motion.div>
                 </div>
@@ -243,9 +244,11 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold transition-all">
-                              <Save className="w-4 h-4 mr-2" />
-                              Salvar
+                            <Button
+                              onClick={() => setEditingTag(null)}
+                              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-4 rounded-xl font-bold transition-all"
+                            >
+                              Cancelar
                             </Button>
                           </motion.div>
                           <motion.div 
@@ -253,11 +256,9 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button
-                              onClick={() => setEditingTag(null)}
-                              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-4 rounded-xl font-bold transition-all"
-                            >
-                              Sair
+                            <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold transition-all">
+                              <Save className="w-4 h-4 mr-2" />
+                              Salvar
                             </Button>
                           </motion.div>
                         </div>

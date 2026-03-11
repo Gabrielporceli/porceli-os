@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Stage } from "@/hooks/useStages";
+import { Save, Trash2 } from "lucide-react";
 
 interface EditStageModalProps {
   open: boolean;
@@ -124,40 +125,37 @@ export function EditStageModal({
               </Select>
             </div>
 
-          <div className="space-y-3 pt-2">
-            <DialogFooter className="gap-3 flex-row sm:flex-row !justify-stretch">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-base"
               >
-                <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
-                >
-                  Salvar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                Cancelar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-[2]" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
               >
-                <Button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-            </DialogFooter>
-
+                <Save className="w-4 h-4 mr-2" />
+                Salvar
+              </Button>
+            </motion.div>
             {!stage.is_default && (
               <motion.div 
-                className="w-full" 
                 whileHover={{ scale: 1.05, translateY: -2 }} 
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -168,9 +166,10 @@ export function EditStageModal({
                     onDeleteStage(stage.id);
                     onOpenChange(false);
                   }}
-                  className="liquid-glass hover:bg-white/10 text-red-500 border-white/5 w-full h-11 rounded-2xl font-bold text-base transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  title="Excluir Etapa"
                 >
-                  Excluir Etapa
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </motion.div>
             )}

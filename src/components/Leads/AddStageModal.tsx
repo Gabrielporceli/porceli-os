@@ -105,10 +105,11 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Button
-                type="submit"
-                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
               >
-                Adicionar
+                Cancelar
               </Button>
             </motion.div>
             <motion.div 
@@ -118,11 +119,10 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                type="submit"
+                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
               >
-                Cancelar
+                Adicionar
               </Button>
             </motion.div>
           </DialogFooter>

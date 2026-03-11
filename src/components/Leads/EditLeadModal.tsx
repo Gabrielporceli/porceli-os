@@ -287,17 +287,6 @@ export function EditLeadModal({
 
           <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
             <motion.div 
-              className="flex-[2]" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
-                <Save className="w-4 h-4 mr-2" />
-                Salvar
-              </Button>
-            </motion.div>
-            <motion.div 
               className="flex-1" 
               whileHover={{ scale: 1.05, translateY: -2 }} 
               whileTap={{ scale: 0.95 }}
@@ -308,6 +297,17 @@ export function EditLeadModal({
                 className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
               >
                 Cancelar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-[2]" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+                <Save className="w-4 h-4 mr-2" />
+                Salvar
               </Button>
             </motion.div>
             {onDeleteLead && (

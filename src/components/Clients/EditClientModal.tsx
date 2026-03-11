@@ -572,10 +572,11 @@ export function EditClientModal({
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                  type="button"
+                  onClick={onClose}
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
                 >
-                  Salvar
+                  Cancelar
                 </Button>
               </motion.div>
               <motion.div 
@@ -585,11 +586,10 @@ export function EditClientModal({
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
                 >
-                  Cancelar
+                  Salvar
                 </Button>
               </motion.div>
             </div>
