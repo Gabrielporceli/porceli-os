@@ -20,7 +20,7 @@ export const useContracts = () => {
       // Atualizar tags de clientes baseado no vencimento dos contratos
       // Isso garante que as tags estejam sempre atualizadas
       try {
-        await supabase.rpc('update_client_tags_from_contracts');
+        await (supabase.rpc as any)('update_client_tags_from_contracts');
       } catch (rpcError) {
         // Não falhar a query se a atualização de tags falhar
         console.warn('Erro ao atualizar tags de clientes:', rpcError);
@@ -138,7 +138,19 @@ export const useRenewContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (contractId: string) => {
+    mutationFn: async ({
+      contractId,
+      type,
+      monthlyValue,
+      startDate,
+      endDate
+    }: {
+      contractId: string,
+      type?: string,
+      monthlyValue?: number,
+      startDate?: string,
+      endDate?: string
+    }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -157,19 +169,29 @@ export const useRenewContract = () => {
         throw new Error('Contrato não encontrado');
       }
 
-      // Calcular duração do contrato em dias
-      const startDate = new Date(currentContract.start_date);
-      const endDate = new Date(currentContract.end_date);
-      const diffTime = endDate.getTime() - startDate.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      // Calcular nova data de início (dia seguinte ao término do contrato antigo)
-      const newStartDate = new Date(endDate);
-      newStartDate.setDate(newStartDate.getDate() + 1);
-      
-      // Calcular nova data de término (mesma duração)
-      const newEndDate = new Date(newStartDate);
-      newEndDate.setDate(newEndDate.getDate() + diffDays);
+      // Calcular valores padrão se não fornecidos
+      const currentEndDate = new Date(currentContract.end_date);
+
+      // Calcular duração original se as datas não forem fornecidas
+      const originalStartDate = new Date(currentContract.start_date);
+      const originalEndDate = new Date(currentContract.end_date);
+      const originalDiffTime = originalEndDate.getTime() - originalStartDate.getTime();
+      const originalDiffDays = Math.ceil(originalDiffTime / (1000 * 60 * 60 * 24));
+
+      const finalStartDate = startDate || (() => {
+        const d = new Date(currentEndDate);
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().split('T')[0];
+      })();
+
+      const finalEndDate = endDate || (() => {
+        const d = new Date(finalStartDate);
+        d.setDate(d.getDate() + originalDiffDays);
+        return d.toISOString().split('T')[0];
+      })();
+
+      const finalType = type || currentContract.type;
+      const finalMonthlyValue = monthlyValue !== undefined ? monthlyValue : currentContract.monthly_value;
 
       // Criar novo contrato
       const { data: newContract, error: createError } = await supabase
@@ -177,10 +199,10 @@ export const useRenewContract = () => {
         .insert({
           user_id: user.id,
           client_id: currentContract.client_id,
-          type: currentContract.type,
-          monthly_value: currentContract.monthly_value,
-          start_date: newStartDate.toISOString().split('T')[0],
-          end_date: newEndDate.toISOString().split('T')[0],
+          type: finalType,
+          monthly_value: finalMonthlyValue,
+          start_date: finalStartDate,
+          end_date: finalEndDate,
           status: 'active'
         })
         .select(`
@@ -194,20 +216,16 @@ export const useRenewContract = () => {
         throw createError;
       }
 
-      // Marcar contrato antigo como inactive
-      await supabase
-        .from('contracts')
-        .update({ status: 'inactive' })
-        .eq('id', contractId);
-
       // Atualizar cliente com as novas datas do contrato renovado
       if (newContract.client_id) {
         try {
           await supabase
             .from('clients')
             .update({
-              start_date: newStartDate.toISOString().split('T')[0],
-              contract_end: newEndDate.toISOString().split('T')[0],
+              start_date: finalStartDate,
+              contract_end: finalEndDate,
+              monthly_value: finalMonthlyValue,
+              plan: finalType,
               updated_at: new Date().toISOString()
             })
             .eq('id', newContract.client_id)
@@ -219,11 +237,9 @@ export const useRenewContract = () => {
             console.log('Faturas financeiras geradas para contrato renovado');
           } catch (finError) {
             console.error('Erro ao gerar faturas financeiras:', finError);
-            // Não falhar a renovação se a geração de faturas falhar
           }
         } catch (clientUpdateError) {
           console.error('Erro ao atualizar datas do cliente:', clientUpdateError);
-          // Não falhar a renovação se a atualização do cliente falhar
         }
       }
 
@@ -238,7 +254,7 @@ export const useRenewContract = () => {
               responsible: newContract.client.responsible,
               phone: newContract.client.phone,
               email: newContract.client.email,
-              grupo_id: newContract.client.grupo_id,
+              group_id: newContract.client.group_id,
               plan: newContract.client.plan,
               contract_end: newContract.end_date,
               start_date: newContract.start_date,
@@ -251,15 +267,12 @@ export const useRenewContract = () => {
               updated_at: newContract.updated_at,
               event: 'contract_renewed',
               previous_contract_end: currentContract.end_date,
-              contract_duration_days: diffDays
+              contract_duration_days: originalDiffDays
             }
           });
 
           if (webhookError) {
             console.error('Erro ao enviar webhook:', webhookError);
-            // Não falhar a renovação se o webhook falhar
-          } else {
-            console.log('Webhook de renovação enviado com sucesso');
           }
         } catch (webhookErr) {
           console.error('Erro ao chamar edge function do webhook:', webhookErr);

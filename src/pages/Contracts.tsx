@@ -8,6 +8,7 @@ import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
 import { useContracts, useUpdateContract, useRenewContract } from "@/hooks/useContracts";
+import { RenewContractModal } from "@/components/Contracts/RenewContractModal";
 import { useUpdateClient } from "@/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export default function Contracts() {
   const queryClient = useQueryClient();
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
+  const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
 
   // Transform Supabase contracts to component format
   const contracts: Contract[] = contractsData.map(contract => ({
@@ -237,11 +239,10 @@ export default function Contracts() {
                   </div>
                   <motion.div whileHover={{ scale: 1.05, translateY: -1 }} whileTap={{ scale: 0.95 }}>
                     <Button
-                      onClick={() => renewContractMutation.mutate(contract.id)}
-                      disabled={renewContractMutation.isPending}
+                      onClick={() => setRenewingContract(contract)}
                       className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-8 rounded-2xl transition-all"
                     >
-                      {renewContractMutation.isPending ? 'RENOVANDO...' : 'Renovar Agora'}
+                      Renovar Agora
                     </Button>
                   </motion.div>
                 </div>
@@ -361,6 +362,20 @@ export default function Contracts() {
         contract={deletingContract}
         onClose={() => setDeletingContract(null)}
         onConfirm={handleConfirmCancel}
+      />
+      <RenewContractModal
+        isOpen={!!renewingContract}
+        contract={renewingContract}
+        onClose={() => setRenewingContract(null)}
+        onConfirm={async (data) => {
+          try {
+            await renewContractMutation.mutateAsync(data);
+            setRenewingContract(null);
+          } catch (error) {
+            console.error('Error renewing contract:', error);
+          }
+        }}
+        isPending={renewContractMutation.isPending}
       />
     </div>
   );
