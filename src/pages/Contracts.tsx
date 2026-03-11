@@ -340,6 +340,19 @@ export default function Contracts() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    onClick={() => setRenewingContract(contract)}
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                  >
+                    {contract.status === 'active' ? 'Estender' : 'Renovar'}
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     onClick={() => setDeletingContract(contract)}
                     className="liquid-glass text-red-500 hover:bg-white/10 hover:text-red-400 border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
                   >
