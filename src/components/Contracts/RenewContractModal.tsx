@@ -17,6 +17,7 @@ interface Contract {
     startDate: string;
     endDate: string;
     status: 'active' | 'inactive' | 'expiring';
+    paymentDay?: number;
 }
 
 interface RenewContractModalProps {
@@ -29,6 +30,7 @@ interface RenewContractModalProps {
         monthlyValue: number;
         startDate: string;
         endDate: string;
+        paymentDay: number;
     }) => void;
     isPending: boolean;
 }
@@ -39,6 +41,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
         monthlyValue: '0,00',
         startDate: '',
         endDate: '',
+        paymentDay: '1',
     });
 
     useEffect(() => {
@@ -56,6 +59,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                 monthlyValue: contract.monthlyValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
                 startDate: format(newStartDate, "yyyy-MM-dd"),
                 endDate: format(newEndDate, "yyyy-MM-dd"),
+                paymentDay: (contract.paymentDay || 1).toString(),
             });
         }
     }, [contract]);
@@ -70,7 +74,8 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
         onConfirm({
             contractId: contract.id,
             ...formData,
-            monthlyValue: monthlyValueNumber
+            monthlyValue: monthlyValueNumber,
+            paymentDay: parseInt(formData.paymentDay) || 1
         });
     };
 
@@ -260,6 +265,24 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                                     handleInputChange('endDate', format(newDate, "yyyy-MM-dd"));
                                                 }
                                             }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="paymentDay" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Novo Dia de Pagamento</Label>
+                                    <div className="relative group">
+                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
+                                        <Input
+                                            id="paymentDay"
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            value={formData.paymentDay}
+                                            onChange={(e) => handleInputChange('paymentDay', e.target.value)}
+                                            className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-medium"
+                                            placeholder="Ex: 10"
+                                            required
                                         />
                                     </div>
                                 </div>

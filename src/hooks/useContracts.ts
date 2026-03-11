@@ -143,13 +143,15 @@ export const useRenewContract = () => {
       type,
       monthlyValue,
       startDate,
-      endDate
+      endDate,
+      paymentDay
     }: {
       contractId: string,
       type?: string,
       monthlyValue?: number,
       startDate?: string,
-      endDate?: string
+      endDate?: string,
+      paymentDay?: number
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -231,6 +233,8 @@ export const useRenewContract = () => {
       // Atualizar cliente com as novas datas do contrato renovado
       if (newContract.client_id) {
         try {
+          const finalPaymentDay = paymentDay !== undefined ? paymentDay : (currentContract.client?.payment_day || 1);
+          
           await supabase
             .from('clients')
             .update({
@@ -238,6 +242,7 @@ export const useRenewContract = () => {
               contract_end: finalEndDate,
               monthly_value: finalMonthlyValue,
               plan: finalType,
+              payment_day: finalPaymentDay,
               tags: ['Ativo'],
               updated_at: new Date().toISOString()
             })
@@ -259,6 +264,8 @@ export const useRenewContract = () => {
       // Enviar webhook com dados do cliente renovado
       if (newContract.client) {
         try {
+          const finalPaymentDay = paymentDay !== undefined ? paymentDay : (newContract.client.payment_day || 1);
+          
           const { error: webhookError } = await supabase.functions.invoke('send-client-webhook', {
             body: {
               id: newContract.client.id,
@@ -271,7 +278,7 @@ export const useRenewContract = () => {
               plan: newContract.client.plan,
               contract_end: newContract.end_date,
               start_date: newContract.start_date,
-              payment_day: newContract.client.payment_day,
+              payment_day: finalPaymentDay,
               monthly_value: newContract.monthly_value,
               address: newContract.client.address,
               tags: newContract.client.tags,

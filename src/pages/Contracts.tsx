@@ -23,6 +23,7 @@ interface Contract {
   startDate: string;
   endDate: string;
   status: 'active' | 'inactive' | 'expiring';
+  paymentDay?: number;
 }
 
 export default function Contracts() {
@@ -44,7 +45,8 @@ export default function Contracts() {
     monthlyValue: Number(contract.monthly_value),
     startDate: contract.start_date,
     endDate: contract.end_date,
-    status: contract.status as 'active' | 'inactive' | 'expiring'
+    status: contract.status as 'active' | 'inactive' | 'expiring',
+    paymentDay: contract.client?.payment_day
   }));
 
   const getStatusBadge = (status: Contract['status']) => {
