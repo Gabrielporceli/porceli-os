@@ -3,6 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
 import ReactDOM from "react-dom";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -110,21 +111,34 @@ export function DeleteContractDialog({
           )}
         </div>
         <div className="flex gap-4 p-7 bg-white/[0.01] border-t border-white/5">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="flex-1 h-12 text-white/40 hover:text-white hover:bg-white/5 rounded-xl font-bold transition-all"
+          <motion.div 
+            className="flex-1" 
+            whileHover={{ scale: 1.05, translateY: -2 }} 
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            Voltar
-          </Button>
-          <Button
-            type="button"
-            onClick={onConfirm}
-            className="flex-1 h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-[0_10px_20px_rgba(239,68,68,0.15)]"
+            <Button
+              type="button"
+              onClick={onClose}
+              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all"
+            >
+              Voltar
+            </Button>
+          </motion.div>
+          <motion.div 
+            className="flex-1" 
+            whileHover={{ scale: 1.05, translateY: -2 }} 
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            {isExpired ? 'Sim, Remover' : 'Sim, Cancelar'}
-          </Button>
+            <Button
+              type="button"
+              onClick={onConfirm}
+              className="w-full h-11 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all shadow-[0_10px_20px_rgba(239,68,68,0.15)]"
+            >
+              {isExpired ? 'Remover' : 'Cancelar'}
+            </Button>
+          </motion.div>
         </div>
       </div>
     </div>,

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
@@ -154,21 +155,34 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
             </Select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-6">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="text-white/40 hover:text-white hover:bg-white/5 rounded-xl h-11 px-6 font-bold"
+          <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.05]">
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="bg-white text-black hover:bg-white/90 rounded-xl h-11 px-8 font-bold transition-all shadow-[0_10px_20px_rgba(255,255,255,0.1)]"
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+              >
+                Salvar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              Salvar Alterações
-            </Button>
+              <Button
+                type="button"
+                onClick={onClose}
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+              >
+                Cancelar
+              </Button>
+            </motion.div>
           </div>
         </form>
       </DialogContent>

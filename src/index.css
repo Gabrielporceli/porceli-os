@@ -151,7 +151,7 @@
   .liquid-glass {
     position: relative;
     overflow: hidden;
-    background: rgba(18, 18, 18, 0.7) !important;
+    background: rgba(18, 18, 18, 0.4) !important;
     backdrop-filter: blur(20px) brightness(1.1) !important;
     -webkit-backdrop-filter: blur(20px) brightness(1.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;

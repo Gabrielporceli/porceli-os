@@ -4,6 +4,7 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format, addDays, differenceInDays } from "date-fns";
 import { Calendar, FileText, DollarSign, AlertCircle, X } from "lucide-react";
@@ -311,21 +312,35 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
 
                             {/* Botões */}
                             <div className="flex gap-4 pt-6 mt-6 border-t border-white/[0.05]">
-                                <Button
-                                    type="submit"
-                                    disabled={isPending}
-                                    className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50"
+                                <motion.div 
+                                    className="flex-1" 
+                                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                                    whileTap={{ scale: 0.95 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                 >
-                                    {isPending ? 'Processando...' : 'Confirmar Renovação'}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    onClick={onClose}
-                                    disabled={isPending}
-                                    className="flex-1 h-12 text-base font-bold bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all duration-200"
+                                    <Button
+                                        type="submit"
+                                        disabled={isPending}
+                                        className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50"
+                                    >
+                                        {isPending ? 'Processando...' : 'Confirmar Renovação'}
+                                    </Button>
+                                </motion.div>
+                                <motion.div 
+                                    className="flex-1" 
+                                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                                    whileTap={{ scale: 0.95 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                 >
-                                    Cancelar
-                                </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={onClose}
+                                        disabled={isPending}
+                                        className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                                    >
+                                        Cancelar
+                                    </Button>
+                                </motion.div>
                             </div>
                         </form>
                     </div>

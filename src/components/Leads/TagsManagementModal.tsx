@@ -126,7 +126,11 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-white">Nova Tag</h4>
               {!isCreating && (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div 
+                  whileHover={{ scale: 1.05, translateY: -2 }} 
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
                   <Button
                     size="sm"
                     onClick={() => setIsCreating(true)}
@@ -166,22 +170,31 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                   </div>
                 </div>
                 <div className="flex gap-3 pt-2">
-                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold">
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold transition-all">
                       <Save className="w-4 h-4 mr-2" />
                       Salvar Tag
                     </Button>
                   </motion.div>
-                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
                     <Button
                       onClick={() => {
                         setIsCreating(false);
                         setNewTagName("");
                         setNewTagColor(defaultColors[0]);
                       }}
-                      className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-11 rounded-xl border border-white/5 font-medium"
+                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all"
                     >
-                      <X className="w-4 h-4 mr-2" />
                       Cancelar
                     </Button>
                   </motion.div>
@@ -225,17 +238,28 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                           ))}
                         </div>
                         <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
-                          <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold">
-                            <Save className="w-4 h-4 mr-2" />
-                            Salvar
-                          </Button>
-                          <Button
-                            onClick={() => setEditingTag(null)}
-                            className="bg-white/[0.05] hover:bg-white/10 text-white/70 h-9 px-4 rounded-xl border border-white/5"
+                          <motion.div 
+                            whileHover={{ scale: 1.05, translateY: -2 }} 
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <X className="w-4 h-4 mr-2" />
-                            Sair
-                          </Button>
+                            <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold transition-all">
+                              <Save className="w-4 h-4 mr-2" />
+                              Salvar
+                            </Button>
+                          </motion.div>
+                          <motion.div 
+                            whileHover={{ scale: 1.05, translateY: -2 }} 
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          >
+                            <Button
+                              onClick={() => setEditingTag(null)}
+                              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-4 rounded-xl font-bold transition-all"
+                            >
+                              Sair
+                            </Button>
+                          </motion.div>
                         </div>
                       </div>
                     ) : (
@@ -245,23 +269,31 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                           <span className="font-semibold text-white/90">{tag.name}</span>
                         </div>
                         <div className="flex gap-2 transition-opacity">
-                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <motion.div 
+                            whileHover={{ scale: 1.1, translateY: -2 }} 
+                            whileTap={{ scale: 0.9 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          >
                             <Button
                               onClick={() => handleEditTag(tag)}
                               size="sm"
                               variant="ghost"
-                              className="h-8 px-3 rounded-xl font-semibold text-white/80 hover:bg-transparent hover:text-white/80"
+                              className="h-8 px-3 rounded-xl font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all"
                             >
                               <Edit className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                               Editar
                             </Button>
                           </motion.div>
-                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <motion.div 
+                            whileHover={{ scale: 1.1, translateY: -2 }} 
+                            whileTap={{ scale: 0.9 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          >
                             <Button
                               onClick={() => handleDeleteTag(tag.id)}
                               size="sm"
                               variant="ghost"
-                              className="h-8 px-3 rounded-xl font-semibold text-red-500/80 hover:bg-transparent hover:text-red-500/80"
+                              className="h-8 px-3 rounded-xl font-bold text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all"
                             >
                               <Trash2 className="w-3.5 h-3.5 mr-1.5 text-red-500/80" />
                               Excluir

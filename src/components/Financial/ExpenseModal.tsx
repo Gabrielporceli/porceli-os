@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -204,20 +205,34 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 pt-4">
-            <Button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="liquid-glass hover:bg-white/10 text-white/60 h-12 rounded-xl font-bold transition-all border border-white/5"
+          <div className="grid grid-cols-2 gap-3 pt-4 sm:flex-row !justify-stretch border-t border-white/[0.05]">
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="bg-primary hover:bg-primary/90 text-white h-12 rounded-xl font-bold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+              >
+                Adicionar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              Adicionar Despesa
-            </Button>
+              <Button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+              >
+                Cancelar
+              </Button>
+            </motion.div>
           </div>
         </form>
       </DialogContent>

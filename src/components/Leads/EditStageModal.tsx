@@ -125,20 +125,30 @@ export function EditStageModal({
             </div>
 
           <div className="space-y-3 pt-2">
-            <DialogFooter className="gap-3 flex-row-reverse flex">
-              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <DialogFooter className="gap-3 flex-row sm:flex-row !justify-stretch">
+              <motion.div 
+                className="flex-1" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base"
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
                 >
-                  Salvar Alterações
+                  Salvar
                 </Button>
               </motion.div>
-              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div 
+                className="flex-1" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <Button
                   type="button"
                   onClick={() => onOpenChange(false)}
-                  className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-12 rounded-2xl border border-white/5 font-medium transition-all text-base"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
                 >
                   Cancelar
                 </Button>
@@ -146,14 +156,19 @@ export function EditStageModal({
             </DialogFooter>
 
             {!stage.is_default && (
-              <motion.div className="w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div 
+                className="w-full" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <Button
                   type="button"
                   onClick={() => {
                     onDeleteStage(stage.id);
                     onOpenChange(false);
                   }}
-                  className="bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 w-full h-12 rounded-2xl font-bold text-base transition-all"
+                  className="liquid-glass hover:bg-white/10 text-red-500 border-white/5 w-full h-11 rounded-2xl font-bold text-base transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                 >
                   Excluir Etapa
                 </Button>

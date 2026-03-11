@@ -18,7 +18,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
             className,
             radius = 16,
             depth = 8,
-            blur = 16,
+            blur = 20,
             strength = 40,
             chromaticAberration = 0,
             backgroundColor = "rgba(18, 18, 18, 0.4)",

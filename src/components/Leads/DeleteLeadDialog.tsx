@@ -3,6 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Trash2, X, AlertTriangle, Users } from "lucide-react";
 import ReactDOM from "react-dom";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -153,27 +154,42 @@ export function DeleteLeadDialog({
 
         {/* Footer */}
         <div className="flex gap-3 p-4 border-t border-white/[0.05]">
-          <Button
-            onClick={onClose}
-            className="flex-1 h-11 text-sm font-bold bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all duration-200"
-            disabled={isDeleting}
+          <motion.div 
+            className="flex-1" 
+            whileHover={{ scale: 1.05, translateY: -2 }} 
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isDeleting}
-            className="flex-1 h-11 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50"
+            <Button
+              onClick={onClose}
+              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 text-sm font-bold rounded-2xl transition-all"
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+          </motion.div>
+          
+          <motion.div 
+            className="flex-1" 
+            whileHover={{ scale: 1.05, translateY: -2 }} 
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            {isDeleting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Excluindo...
-              </div>
-            ) : (
-              'Confirmar Exclusão'
-            )}
-          </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={isDeleting}
+              className="w-full h-11 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Excluindo...
+                </div>
+              ) : (
+                'Confirmar Exclusão'
+              )}
+            </Button>
+          </motion.div>
         </div>
       </div>
     </div>,

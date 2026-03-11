@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Plus, Phone, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactDOM from "react-dom";
+import { motion } from "framer-motion";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -122,18 +123,34 @@ export function NewConversationModal({
                   />
                 </div>
               </div>
-              <div className="flex gap-4 justify-end pt-4">
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  variant="outline"
-                  className="h-11 border-white/[0.05] text-white/70 bg-white/[0.02] hover:bg-white/[0.05] hover:text-white rounded-xl transition-all"
+              <div className="flex gap-4 justify-stretch pt-4">
+                <motion.div
+                  className="flex-1"
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  Cancelar
-                </Button>
-                <Button type="submit" className="h-11 bg-primary text-white hover:bg-primary/90 shadow-[0_0_15px_rgba(104,41,192,0.4)] rounded-xl transition-all font-bold px-6">
-                  Iniciar Conversa
-                </Button>
+                  <Button
+                    type="button"
+                    onClick={onClose}
+                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 w-full rounded-2xl font-bold transition-all text-base"
+                  >
+                    Cancelar
+                  </Button>
+                </motion.div>
+                <motion.div
+                  className="flex-1"
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button 
+                    type="submit" 
+                    className="bg-primary hover:bg-primary/90 text-white h-11 w-full rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                  >
+                    Iniciar Conversa
+                  </Button>
+                </motion.div>
               </div>
             </form>
           </div>

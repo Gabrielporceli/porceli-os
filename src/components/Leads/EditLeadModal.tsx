@@ -286,22 +286,36 @@ export function EditLeadModal({
           </div>
 
           <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
-            <motion.div className="flex-[2]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold">
-                <Save className="w-5 h-5 mr-2" />
+            <motion.div 
+              className="flex-[2]" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+                <Save className="w-4 h-4 mr-2" />
                 Salvar
               </Button>
             </motion.div>
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05, translateY: -2 }} 
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
               <Button
                 onClick={() => onOpenChange(false)}
-                className="bg-white/[0.05] hover:bg-white/10 text-white/70 w-full h-12 rounded-2xl border border-white/5 font-medium transition-all"
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
               >
                 Cancelar
               </Button>
             </motion.div>
             {onDeleteLead && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -311,7 +325,7 @@ export function EditLeadModal({
                       onDeleteLead(lead);
                     }
                   }}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all"
+                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                   title="Excluir Lead"
                 >
                   <Trash2 className="w-5 h-5" />

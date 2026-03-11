@@ -15,6 +15,7 @@ import {
     Bot,
     Zap
 } from "lucide-react";
+import { motion } from "framer-motion";
 import {
     BarChart,
     Bar,
@@ -87,34 +88,42 @@ export default function SdrAgent() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button
-                        onClick={() => setPeriod('day')}
-                        className={`${period === 'day' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
-                        size="sm"
-                    >
-                        Hoje
-                    </Button>
-                    <Button
-                        onClick={() => setPeriod('week')}
-                        className={`${period === 'week' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
-                        size="sm"
-                    >
-                        Semana
-                    </Button>
-                    <Button
-                        onClick={() => setPeriod('month')}
-                        className={`${period === 'month' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
-                        size="sm"
-                    >
-                        Mês
-                    </Button>
-                    <Button
-                        onClick={() => setPeriod('all_time')}
-                        className={`${period === 'all_time' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/50 border border-white/5 hover:bg-white/10 hover:text-white'}`}
-                        size="sm"
-                    >
-                        Total
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <Button
+                            onClick={() => setPeriod('day')}
+                            className={`${period === 'day' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
+                            size="sm"
+                        >
+                            Hoje
+                        </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <Button
+                            onClick={() => setPeriod('week')}
+                            className={`${period === 'week' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
+                            size="sm"
+                        >
+                            Semana
+                        </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <Button
+                            onClick={() => setPeriod('month')}
+                            className={`${period === 'month' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
+                            size="sm"
+                        >
+                            Mês
+                        </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <Button
+                            onClick={() => setPeriod('all_time')}
+                            className={`${period === 'all_time' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
+                            size="sm"
+                        >
+                            Total
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
 
