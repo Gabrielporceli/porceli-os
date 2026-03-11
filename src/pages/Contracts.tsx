@@ -81,6 +81,33 @@ export default function Contracts() {
     return diffDays;
   };
 
+  const handleRenewClick = (contract: Contract) => {
+    // Se não tiver ID de cliente, usa o contrato atual por segurança
+    if (!contract.client_id) {
+      setRenewingContract(contract);
+      return;
+    }
+
+    // Buscar todos os contratos deste cliente
+    const clientContracts = contracts.filter(c => c.client_id === contract.client_id);
+    
+    // Tentar encontrar o contrato ativo ou a vencer (dando preferência ao que vence mais tarde)
+    // Isso garante que estamos renovando a partir do contrato mais atual
+    const activeContracts = clientContracts
+      .filter(c => c.status === 'active' || c.status === 'expiring')
+      .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+    
+    if (activeContracts.length > 0) {
+      setRenewingContract(activeContracts[0]);
+    } else {
+      // Se não houver ativos, pega o contrato mais recente desse cliente
+      const lastContract = [...clientContracts].sort((a, b) => 
+        new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+      )[0];
+      setRenewingContract(lastContract || contract);
+    }
+  };
+
   const handleEditContract = (contractData: Omit<Contract, 'id'>) => {
     if (editingContract) {
       setEditingContract(null);
@@ -239,7 +266,7 @@ export default function Contracts() {
                   </div>
                   <motion.div whileHover={{ scale: 1.05, translateY: -1 }} whileTap={{ scale: 0.95 }}>
                     <Button
-                      onClick={() => setRenewingContract(contract)}
+                      onClick={() => handleRenewClick(contract)}
                       className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-8 rounded-2xl transition-all"
                     >
                       Renovar Agora
@@ -340,7 +367,7 @@ export default function Contracts() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setRenewingContract(contract)}
+                    onClick={() => handleRenewClick(contract)}
                     className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
                   >
                     {contract.status === 'active' ? 'Estender' : 'Renovar'}
