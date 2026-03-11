@@ -50,13 +50,13 @@ export default function Contracts() {
   const getStatusBadge = (status: Contract['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20 transition-all font-semibold">Ativo</Badge>;
+        return <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20 transition-all font-bold px-3 py-1 rounded-full">Ativo</Badge>;
       case 'expiring':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20 transition-all font-semibold">A vencer</Badge>;
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/20 transition-all font-bold px-3 py-1 rounded-full">A vencer</Badge>;
       case 'inactive':
-        return <Badge className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all font-semibold">Inativo</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
       default:
-        return <Badge className="bg-white/5 text-white/50 border-white/10 font-semibold">Desconhecido</Badge>;
+        return <Badge variant="outline" className="bg-white/5 text-white/50 border-white/10 font-bold px-3 py-1 rounded-full">Desconhecido</Badge>;
     }
   };
 

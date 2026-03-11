@@ -543,16 +543,6 @@
   color: #ffffff !important;
 }
 
-/* Remove qualquer cor amarela que venha de libs externas */
-.bg-yellow-400,
-.border-yellow-400,
-.text-yellow-400,
-.bg-yellow-500,
-.border-yellow-500,
-.text-yellow-500 {
-  border-color: #6829c0 !important;
-  color: #ffffff !important;
-}
 
 /* Sonner toast específico */
 [data-sonner-toast] {
