@@ -226,6 +226,7 @@ export const useRenewContract = () => {
               contract_end: finalEndDate,
               monthly_value: finalMonthlyValue,
               plan: finalType,
+              tags: ['Ativo'],
               updated_at: new Date().toISOString()
             })
             .eq('id', newContract.client_id)
