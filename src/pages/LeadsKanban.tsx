@@ -33,6 +33,7 @@ import { AddStageModal } from "@/components/Leads/AddStageModal";
 import { NewLeadModal } from "@/components/Leads/NewLeadModal";
 import { EditStageModal } from "@/components/Leads/EditStageModal";
 import { DeleteLeadDialog } from "@/components/Leads/DeleteLeadDialog";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLeads, type Lead } from "@/hooks/useLeads";
@@ -449,59 +450,59 @@ export default function LeadsKanban() {
   return (
     <div className="relative">
       <div
-        className="fixed inset-x-0 top-0 z-30"
+        className="fixed inset-x-0 top-0 z-30 backdrop-blur-3xl bg-[#121212]/50 border-b border-white/[0.08] shadow-2xl"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
         <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-6 pb-4 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
+              <div className="space-y-1">
+                <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline</h1>
+              </div>
+
+              <div className="flex flex-row items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    onClick={() => setIsTagsModalOpen(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {isMobile ? "Tags" : "Gerenciar Tags"}
+                  </Button>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    onClick={() => setIsAddStageModalOpen(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isMobile ? "Etapa" : "Nova Etapa"}
+                  </Button>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"
+                    onClick={() => setIsNewLeadModalOpen(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isMobile ? "Lead" : "Novo Lead"}
+                  </Button>
+                </motion.div>
+              </div>
             </div>
-
-            <div className="flex flex-row items-center gap-3">
-              <motion.div
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
-                  onClick={() => setIsTagsModalOpen(true)}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  {isMobile ? "Tags" : "Gerenciar Tags"}
-                </Button>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
-                  onClick={() => setIsAddStageModalOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {isMobile ? "Etapa" : "Nova Etapa"}
-                </Button>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"
-                  onClick={() => setIsNewLeadModalOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {isMobile ? "Lead" : "Novo Lead"}
-                </Button>
-              </motion.div>
-            </div>
-          </div>
 
           <Card
             className="liquid-glass border-white/[0.05] px-4 py-3 sm:px-6 shadow-2xl"
@@ -554,7 +555,7 @@ export default function LeadsKanban() {
         </div>
       </div>
 
-      <div className="pt-32 pb-6">
+      <div className="pt-44 pb-6">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
