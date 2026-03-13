@@ -130,15 +130,7 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
 
   return (
     <Card className="liquid-glass dashboard-glow border-white/5 p-8 animate-premium-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <div>
-          <h3 className="text-xl font-bold text-white tracking-tight mb-1">Projeção de Faturamento Anual</h3>
-          <p className="text-white/30 text-sm mb-8 leading-relaxed">Previsão de receita com base nos contratos ativos para o ano de {currentYear}.</p>
-        </div>
-        <Badge className="bg-primary/20 text-primary border-primary/20 hover:bg-primary/30 h-fit w-fit">
-          Janeiro - Dezembro {currentYear}
-        </Badge>
-      </div>
+      <h3 className="text-xl font-bold text-white tracking-tight mb-6">Projeção de Faturamento Anual</h3>
 
       {/* KPIs do Gráfico */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 overflow-hidden">
