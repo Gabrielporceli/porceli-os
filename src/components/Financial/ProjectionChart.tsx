@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -45,7 +46,7 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
 
       console.log(`[CHART DEBUG] Contratos válidos: ${validContracts.length}`);
 
-      // Para cada contrato, adiciona seu valor mensal aos meses futuros de sua duração
+      // Para cada contrato, adiciona seu valor mensal aos meses de sua duração
       validContracts.forEach(contract => {
         try {
           const [startYear, startMonthNum] = contract.startMonth.split('-').map(Number);
@@ -58,8 +59,8 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
           for (let i = 0; i < contract.durationInMonths; i++) {
             let monthDate = new Date(startYear, startMonthNum - 1 + i, 1);
 
-            // Consideramos apenas projeções a partir do mês atual
-            if (monthDate.getFullYear() > currentYear || (monthDate.getFullYear() === currentYear && monthDate.getMonth() + 1 >= currentMonth)) {
+            // Consideramos apenas projeções dentro do ano atual
+            if (monthDate.getFullYear() === currentYear) {
               const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
               if (!monthlyProjections[monthKey]) {
                 monthlyProjections[monthKey] = 0;
@@ -75,20 +76,19 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
 
       console.log('[CHART DEBUG] Projeções mensais:', monthlyProjections);
 
-      // Pega os próximos 12 meses a partir do mês atual para exibir no gráfico
+      // Pega os 12 meses do ano atual para exibir no gráfico
       const chartData = [];
       for (let i = 0; i < 12; i++) {
-        let date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        let date = new Date(currentYear, i, 1);
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const key = `${year}-${String(month).padStart(2, '0')}`;
 
-        // Alteração para formatar apenas o nome do mês
         const monthName = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
         const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
         chartData.push({
-          name: capitalizedMonth, // Ex: Jun, Jul, Ago...
+          name: capitalizedMonth, // Jan, Fev, Mar...
           Projeção: monthlyProjections[key] || 0,
         });
       }
@@ -126,15 +126,24 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
 
   // --- FIM DA LÓGICA ---
 
+  const currentYear = new Date().getFullYear();
+
   return (
     <Card className="liquid-glass dashboard-glow border-white/5 p-8 animate-premium-in">
-      <h3 className="text-xl font-bold text-white tracking-tight mb-1">Projeção de Faturamento Anual</h3>
-      <p className="text-white/30 text-sm mb-8 leading-relaxed">Previsão de receita com base nos contratos atuais para os próximos 12 meses.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+          <h3 className="text-xl font-bold text-white tracking-tight mb-1">Projeção de Faturamento Anual</h3>
+          <p className="text-white/30 text-sm mb-8 leading-relaxed">Previsão de receita com base nos contratos ativos para o ano de {currentYear}.</p>
+        </div>
+        <Badge className="bg-primary/20 text-primary border-primary/20 hover:bg-primary/30 h-fit w-fit">
+          Janeiro - Dezembro {currentYear}
+        </Badge>
+      </div>
 
       {/* KPIs do Gráfico */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 overflow-hidden">
         <div className="liquid-glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.04] transition-all">
-          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Projeção Total (12 meses)</p>
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Faturamento Anual ({currentYear})</p>
           <p className="text-3xl font-black text-white tabular-nums tracking-tighter">{formatCurrency(totalProjection)}</p>
         </div>
         <div className="liquid-glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.04] transition-all">
