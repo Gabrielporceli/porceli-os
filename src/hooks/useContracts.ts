@@ -195,16 +195,8 @@ export const useRenewContract = () => {
       const finalType = type || currentContract.type;
       const finalMonthlyValue = monthlyValue !== undefined ? monthlyValue : currentContract.monthly_value;
 
-      // Inativar o contrato anterior
-      const { error: updateOldError } = await supabase
-        .from('contracts')
-        .update({ status: 'inactive' })
-        .eq('id', contractId)
-        .eq('user_id', user.id);
-
-      if (updateOldError) {
-        console.error('Error inactivating previous contract:', updateOldError);
-      }
+      // Note: We no longer inactivate the previous contract immediately upon renewal/extension
+      // as requested by the user, allowing both to remain active until completion.
 
       // Criar novo contrato
       const { data: newContract, error: createError } = await supabase
