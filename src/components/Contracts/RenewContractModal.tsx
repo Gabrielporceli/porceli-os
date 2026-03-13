@@ -18,7 +18,7 @@ interface Contract {
     monthlyValue: number;
     startDate: string;
     endDate: string;
-    status: 'active' | 'inactive' | 'expiring';
+    status: 'active' | 'inactive' | 'expiring' | 'concluded';
     paymentDay?: number;
 }
 
@@ -306,7 +306,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             <div className="flex items-start gap-4 p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/10">
                                 <AlertCircle className="w-5 h-5 text-yellow-500/60 mt-1 shrink-0" />
                                 <p className="text-[11px] text-white/40 leading-relaxed font-medium">
-                                    Esta ação criará um <span className="text-white/70">novo contrato</span>. O contrato atual permanecerá ativo até sua data de término original. A primeira fatura será gerada automaticamente.
+                                    Esta ação criará um <span className="text-white/70">novo contrato ativo</span> e marcará o anterior como <span className="text-white/70">encerrado</span>. Novas faturas financeiras serão geradas automaticamente.
                                 </p>
                             </div>
 

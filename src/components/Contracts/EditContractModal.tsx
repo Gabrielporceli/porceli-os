@@ -18,7 +18,7 @@ interface Contract {
   monthlyValue: number;
   startDate: string;
   endDate: string;
-  status: 'active' | 'inactive' | 'expiring';
+  status: 'active' | 'inactive' | 'expiring' | 'concluded';
 }
 
 interface EditContractModalProps {
@@ -150,6 +150,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
               <SelectContent className="liquid-glass border-white/10">
                 <SelectItem value="active" className="text-white focus:bg-white/10 rounded-lg">Ativo</SelectItem>
                 <SelectItem value="expiring" className="text-white focus:bg-white/10 rounded-lg">A vencer</SelectItem>
+                <SelectItem value="concluded" className="text-white focus:bg-white/10 rounded-lg">Concluído</SelectItem>
                 <SelectItem value="inactive" className="text-white focus:bg-white/10 rounded-lg">Inativo</SelectItem>
               </SelectContent>
             </Select>

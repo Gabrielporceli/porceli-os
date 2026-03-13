@@ -204,7 +204,6 @@ export const useRenewContract = () => {
 
       if (updateOldError) {
         console.error('Error inactivating previous contract:', updateOldError);
-        // Continuamos mesmo se falhar a inativação, mas registramos o erro
       }
 
       // Criar novo contrato

@@ -22,7 +22,7 @@ interface Contract {
   monthlyValue: number;
   startDate: string;
   endDate: string;
-  status: 'active' | 'inactive' | 'expiring';
+  status: 'active' | 'inactive' | 'expiring' | 'concluded';
   paymentDay?: number;
 }
 
@@ -45,7 +45,7 @@ export default function Contracts() {
     monthlyValue: Number(contract.monthly_value),
     startDate: contract.start_date,
     endDate: contract.end_date,
-    status: contract.status as 'active' | 'inactive' | 'expiring',
+    status: contract.status as Contract['status'],
     paymentDay: contract.client?.payment_day
   }));
 
@@ -55,6 +55,8 @@ export default function Contracts() {
         return <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20 transition-all font-bold px-3 py-1 rounded-full">Ativo</Badge>;
       case 'expiring':
         return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/20 transition-all font-bold px-3 py-1 rounded-full">A vencer</Badge>;
+      case 'concluded':
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 transition-all font-bold px-3 py-1 rounded-full">Concluído</Badge>;
       case 'inactive':
         return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
       default:

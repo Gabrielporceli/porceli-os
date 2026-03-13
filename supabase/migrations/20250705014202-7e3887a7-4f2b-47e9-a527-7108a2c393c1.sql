@@ -12,7 +12,11 @@ BEGIN
     ELSE 'active' -- default
   END,
   updated_at = NOW()
-  WHERE client_id = NEW.id;
+  WHERE client_id = NEW.id
+  AND (
+    status NOT IN ('inactive', 'concluded') -- Não reativa o que foi encerrado ou concluído
+    OR 'Inativo' = ANY(NEW.tags)
+  );
   
   RETURN NEW;
 END;
