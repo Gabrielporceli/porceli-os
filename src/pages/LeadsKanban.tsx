@@ -448,97 +448,114 @@ export default function LeadsKanban() {
   }
 
   return (
-    <div className="relative space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline</h1>
-        </div>
-        
-        <div className="flex flex-row items-center gap-3">
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              variant="outline"
-              className="bg-white/[0.03] hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
-              onClick={() => setIsTagsModalOpen(true)}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {isMobile ? "Tags" : "Gerenciar Tags"}
-            </Button>
-          </motion.div>
+    <div className="relative">
+      <div
+        className="fixed inset-x-0 top-0 z-30 backdrop-blur-3xl bg-[#121212]/50 border-b border-white/[0.08] shadow-2xl"
+        style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
+      >
+        <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-6 pb-4 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
+              <div className="space-y-1">
+                <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline</h1>
+              </div>
 
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              variant="outline"
-              className="bg-white/[0.03] hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
-              onClick={() => setIsAddStageModalOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {isMobile ? "Etapa" : "Nova Etapa"}
-            </Button>
-          </motion.div>
+              <div className="flex flex-row items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    onClick={() => setIsTagsModalOpen(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {isMobile ? "Tags" : "Gerenciar Tags"}
+                  </Button>
+                </motion.div>
 
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    onClick={() => setIsAddStageModalOpen(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isMobile ? "Etapa" : "Nova Etapa"}
+                  </Button>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"
+                    onClick={() => setIsNewLeadModalOpen(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isMobile ? "Lead" : "Novo Lead"}
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+
+          <Card
+            className="liquid-glass border-white/[0.05] px-4 py-3 sm:px-6 shadow-2xl"
           >
-            <Button
-              className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
-              onClick={() => setIsNewLeadModalOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {isMobile ? "Lead" : "Novo Lead"}
-            </Button>
-          </motion.div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+              <span className="text-white/60 font-semibold text-xs sm:text-sm uppercase tracking-wider">Filtros:</span>
+              <div className="flex flex-wrap gap-2">
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${activeFilter === "all"
+                      ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
+                      : "bg-white/[0.03] text-white/60 hover:bg-white/[0.03] hover:text-white/60"
+                      }`}
+                    onClick={() => setActiveFilter("all")}
+                  >
+                    Todos os grupos
+                  </Button>
+                </motion.div>
+
+                {tags.map((tag: Tag) => (
+                  <motion.div
+                    key={tag.id}
+                    whileHover={{ scale: 1.05, translateY: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${activeFilter === tag.name
+                        ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
+                        : "bg-white/[0.03] text-white/60 hover:bg-white/[0.03] hover:text-white/60"
+                        }`}
+                      onClick={() => setActiveFilter(tag.name)}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${tag.color} mr-2`} />
+                      {tag.name}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
-      <Card className="bg-white/[0.02] border-white/[0.05] p-4 sm:p-6 rounded-3xl backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-          <span className="text-white/40 font-semibold text-xs sm:text-sm uppercase tracking-widest">Filtros</span>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${
-                activeFilter === "all"
-                ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)]"
-                : "bg-white/[0.03] text-white/60 hover:bg-white/10"
-              }`}
-              onClick={() => setActiveFilter("all")}
-            >
-              Todos os grupos
-            </Button>
-
-            {tags.map((tag: Tag) => (
-              <Button
-                key={tag.id}
-                variant="outline"
-                size="sm"
-                className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${
-                  activeFilter === tag.name
-                  ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)]"
-                  : "bg-white/[0.03] text-white/60 hover:bg-white/10"
-                }`}
-                onClick={() => setActiveFilter(tag.name)}
-              >
-                <div className={`w-2 h-2 rounded-full ${tag.color} mr-2`} />
-                {tag.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      <div className="pb-6">
+      <div className="pt-44 pb-6">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
