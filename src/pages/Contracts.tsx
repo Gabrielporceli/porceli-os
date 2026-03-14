@@ -314,12 +314,14 @@ export default function Contracts() {
                 <div className={cn(
                   "w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center transition-all duration-500",
                   contract.status === 'active' && "group-hover:bg-green-500/10 group-hover:border-green-500/20",
+                  contract.status === 'concluded' && "group-hover:bg-blue-500/10 group-hover:border-blue-500/20",
                   contract.status === 'expiring' && "group-hover:bg-yellow-500/10 group-hover:border-yellow-500/20",
                   contract.status === 'inactive' && "group-hover:bg-red-500/10 group-hover:border-red-500/20"
                 )}>
                   <FileText className={cn(
                     "w-6 h-6 text-white/20 transition-colors duration-500",
                     contract.status === 'active' && "group-hover:text-green-400",
+                    contract.status === 'concluded' && "group-hover:text-blue-400",
                     contract.status === 'expiring' && "group-hover:text-yellow-400",
                     contract.status === 'inactive' && "group-hover:text-red-400"
                   )} />
@@ -329,6 +331,7 @@ export default function Contracts() {
                     <h4 className={cn(
                       "text-white font-bold text-lg mb-1 tracking-tight transition-colors",
                       contract.status === 'active' && "group-hover:text-green-400",
+                      contract.status === 'concluded' && "group-hover:text-blue-400",
                       contract.status === 'expiring' && "group-hover:text-yellow-400",
                       contract.status === 'inactive' && "group-hover:text-red-400"
                     )}>{contract.client}</h4>
@@ -340,6 +343,7 @@ export default function Contracts() {
                       <DollarSign className={cn(
                         "w-3.5 h-3.5 opacity-50",
                         contract.status === 'active' && "text-green-500",
+                        contract.status === 'concluded' && "text-blue-500",
                         contract.status === 'expiring' && "text-yellow-500",
                         contract.status === 'inactive' && "text-red-500"
                       )} />
