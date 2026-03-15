@@ -20,6 +20,7 @@ interface Contract {
     endDate: string;
     status: 'active' | 'inactive' | 'expiring' | 'concluded';
     paymentDay?: number;
+    contract_url?: string;
 }
 
 interface RenewContractModalProps {
@@ -33,6 +34,7 @@ interface RenewContractModalProps {
         startDate: string;
         endDate: string;
         paymentDay: number;
+        contract_url?: string;
     }) => void;
     isPending: boolean;
 }
@@ -45,6 +47,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
         startDate: '',
         endDate: '',
         paymentDay: '1',
+        contract_url: '',
     });
 
     useEffect(() => {
@@ -63,6 +66,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                 startDate: format(newStartDate, "yyyy-MM-dd"),
                 endDate: format(newEndDate, "yyyy-MM-dd"),
                 paymentDay: (contract.paymentDay || 1).toString(),
+                contract_url: '', // Default to empty for new contract
             });
         }
     }, [contract]);
@@ -273,6 +277,21 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                                 required
                                             />
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="contract_url" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Link do Novo Contrato</Label>
+                                    <div className="relative group">
+                                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
+                                        <Input
+                                            id="contract_url"
+                                            type="url"
+                                            value={formData.contract_url}
+                                            onChange={(e) => handleInputChange('contract_url', e.target.value)}
+                                            className="bg-white/[0.04] border-white/5 text-white rounded-2xl h-14 pl-12 focus:bg-white/[0.06] focus:border-white/20 transition-all text-sm font-medium"
+                                            placeholder="https://..."
+                                        />
                                     </div>
                                 </div>
 

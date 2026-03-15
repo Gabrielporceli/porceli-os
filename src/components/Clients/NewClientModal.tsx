@@ -11,11 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
@@ -294,71 +295,9 @@ export function NewClientModal({
               scrollbar-color: #6829c0 #404040;
             }
             
-            /* Estilos customizados para dropdowns */
-            .dropdown-trigger {
-              background-color: rgba(255, 255, 255, 0.03) !important;
-              border-color: rgba(255, 255, 255, 0.05) !important;
-              color: white !important;
-              height: 44px !important;
-              border-radius: 12px !important;
-            }
-            
-            .dropdown-trigger:hover {
-              background-color: rgba(255, 255, 255, 0.05) !important;
-              color: white !important;
-            }
-            
-            .dropdown-content {
-              background-color: rgba(20, 20, 20, 0.8) !important;
-              backdrop-filter: blur(16px) !important;
-              -webkit-backdrop-filter: blur(16px) !important;
-              border-color: rgba(255, 255, 255, 0.05) !important;
-              min-width: var(--radix-dropdown-menu-trigger-width) !important;
-              width: var(--radix-dropdown-menu-trigger-width) !important;
-              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-              position: relative !important;
-              left: 0 !important;
-              right: auto !important;
-              /* margin: 4px 0 0 0 !important; */
-              transform: none !important;
-              z-index: 9999999 !important;
-            }
-            
-            /* Força posicionamento absoluto correto */
-            [data-radix-dropdown-menu-content] {
-              position: absolute !important;
-              top: calc(100% + 4px) !important;
-              left: 0 !important;
-              right: auto !important;
-              transform: none !important;
-              margin: 0 !important;
-            }
-            
-            /* Seletor mais específico para sobrescrever estilos inline */
-            div[data-radix-dropdown-menu-content][data-state="open"] {
-              left: 0 !important;
-              transform: translateX(0px) translateY(0px) !important;
-            }
-            
-            .dropdown-item {
-              color: white !important;
-              background-color: transparent !important;
-              border-radius: 8px !important;
-              margin: 2px !important;
-            }
-            
-            .dropdown-item:hover {
-              background-color: rgba(255, 255, 255, 0.1) !important;
-            }
-            
-            /* Remove o overlay preto do Radix UI */
-            [data-radix-popper-content-wrapper] {
-              background: transparent !important;
-            }
-            
-            /* Remove overlay adicional se existir */
-            .radix-dropdown-overlay {
-              display: none !important;
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: #6829c0 #404040;
             }
           `}</style>
 
@@ -504,30 +443,22 @@ export function NewClientModal({
                     </div>
                   )}
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="dropdown-trigger w-full justify-between !mb-0"
-                      >
-                        {formData.plan}
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dropdown-content mt-0 !mt-0 !mb-0 !p-0">
+                  <Select value={formData.plan} onValueChange={(value) => handleChange("plan", value)}>
+                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
                       {planOptions.map((plan) => (
-                        <DropdownMenuItem
+                        <SelectItem
                           key={plan}
-                          onClick={() => handleChange("plan", plan)}
-                          className="dropdown-item cursor-pointer"
+                          value={plan}
+                          className="cursor-pointer"
                         >
-                          <div className="flex items-center justify-between w-full">
-                            <span>{plan}</span>
-                          </div>
-                        </DropdownMenuItem>
+                          {plan}
+                        </SelectItem>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -569,37 +500,19 @@ export function NewClientModal({
 
                 <div className="space-y-2">
                   <Label className="text-white">Status</Label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="dropdown-trigger w-full justify-between"
-                      >
-                        {formData.tags[0]}
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dropdown-content mt-0 !mt-0 !mb-0 !p-0">
-                      <DropdownMenuItem
-                        onClick={() => handleChange("tags", ["Ativo"])}
-                        className="dropdown-item cursor-pointer"
-                      >
-                        Ativo
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleChange("tags", ["A vencer"])}
-                        className="dropdown-item cursor-pointer"
-                      >
-                        A vencer
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleChange("tags", ["Vencido"])}
-                        className="dropdown-item cursor-pointer"
-                      >
-                        Vencido
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Select 
+                    value={formData.tags[0]} 
+                    onValueChange={(value) => handleChange("tags", [value])}
+                  >
+                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ativo" className="cursor-pointer">Ativo</SelectItem>
+                      <SelectItem value="A vencer" className="cursor-pointer">A vencer</SelectItem>
+                      <SelectItem value="Vencido" className="cursor-pointer">Vencido</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>

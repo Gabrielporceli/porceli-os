@@ -144,14 +144,16 @@ export const useRenewContract = () => {
       monthlyValue,
       startDate,
       endDate,
-      paymentDay
+      paymentDay,
+      contract_url
     }: {
       contractId: string,
       type?: string,
       monthlyValue?: number,
       startDate?: string,
       endDate?: string,
-      paymentDay?: number
+      paymentDay?: number,
+      contract_url?: string
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -208,7 +210,8 @@ export const useRenewContract = () => {
           monthly_value: finalMonthlyValue,
           start_date: finalStartDate,
           end_date: finalEndDate,
-          status: 'active'
+          status: 'active',
+          contract_url: contract_url
         })
         .select(`
           *,

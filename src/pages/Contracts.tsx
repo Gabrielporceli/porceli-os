@@ -3,12 +3,13 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, DollarSign, AlertTriangle, Settings } from "lucide-react";
+import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink } from "lucide-react";
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
-import { useContracts, useUpdateContract, useRenewContract } from "@/hooks/useContracts";
+import { useContracts, useUpdateContract, useRenewContract, useCreateContract } from "@/hooks/useContracts";
 import { RenewContractModal } from "@/components/Contracts/RenewContractModal";
+import { NewContractModal } from "@/components/Contracts/NewContractModal";
 import { useUpdateClient } from "@/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ interface Contract {
   endDate: string;
   status: 'active' | 'inactive' | 'expiring' | 'concluded';
   paymentDay?: number;
+  contract_url?: string;
 }
 
 export default function Contracts() {
@@ -35,6 +37,8 @@ export default function Contracts() {
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
+  const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
+  const createContractMutation = useCreateContract();
 
   // Transform Supabase contracts to component format
   const contracts: Contract[] = contractsData.map(contract => ({
@@ -46,7 +50,8 @@ export default function Contracts() {
     startDate: contract.start_date,
     endDate: contract.end_date,
     status: contract.status as Contract['status'],
-    paymentDay: contract.client?.payment_day
+    paymentDay: contract.client?.payment_day,
+    contract_url: contract.contract_url
   }));
 
   const getStatusBadge = (status: Contract['status']) => {
@@ -112,9 +117,31 @@ export default function Contracts() {
     }
   };
 
-  const handleEditContract = (contractData: Omit<Contract, 'id'>) => {
+  const handleEditContract = async (contractData: Omit<Contract, 'id'>) => {
     if (editingContract) {
-      setEditingContract(null);
+      try {
+        await updateContractMutation.mutateAsync({
+          id: editingContract.id,
+          type: contractData.type,
+          monthly_value: contractData.monthlyValue,
+          start_date: contractData.startDate,
+          end_date: contractData.endDate,
+          status: contractData.status,
+          contract_url: contractData.contract_url
+        } as any);
+        setEditingContract(null);
+      } catch (error) {
+        console.error('Error updating contract:', error);
+      }
+    }
+  };
+
+  const handleCreateContract = async (contractData: any) => {
+    try {
+      await createContractMutation.mutateAsync(contractData);
+      setIsNewContractModalOpen(false);
+    } catch (error) {
+      console.error('Error creating contract:', error);
     }
   };
 
@@ -198,7 +225,7 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ContractsHeader />
+      <ContractsHeader onNewContract={() => setIsNewContractModalOpen(true)} />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -328,13 +355,27 @@ export default function Contracts() {
                 </div>
                 <div className="grid grid-cols-4 gap-8 flex-1 items-center">
                   <div>
-                    <h4 className={cn(
-                      "text-white font-bold text-lg mb-1 tracking-tight transition-colors",
-                      contract.status === 'active' && "group-hover:text-green-400",
-                      contract.status === 'concluded' && "group-hover:text-blue-400",
-                      contract.status === 'expiring' && "group-hover:text-yellow-400",
-                      contract.status === 'inactive' && "group-hover:text-red-400"
-                    )}>{contract.client}</h4>
+                    <div className="flex items-center gap-2 mb-1 min-w-0">
+                      <h4 className={cn(
+                        "text-white font-bold text-lg tracking-tight transition-colors truncate m-0",
+                        contract.status === 'active' && "group-hover:text-green-400",
+                        contract.status === 'concluded' && "group-hover:text-blue-400",
+                        contract.status === 'expiring' && "group-hover:text-yellow-400",
+                        contract.status === 'inactive' && "group-hover:text-red-400"
+                      )} title={contract.client}>{contract.client}</h4>
+                      {contract.contract_url && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(contract.contract_url, '_blank');
+                          }}
+                          className="text-white/20 hover:text-white transition-colors p-1 shrink-0 inline-flex items-center justify-center -translate-y-[3px]"
+                          title="Abrir contrato"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     {getStatusBadge(contract.status)}
                   </div>
                   <div>
@@ -368,6 +409,19 @@ export default function Contracts() {
               </div>
 
               <div className="flex items-center gap-3 ml-12 pr-2">
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditingContract(contract)}
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                  >
+                    Editar
+                  </Button>
+                </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -1 }}
                   whileTap={{ scale: 0.95 }}
@@ -424,6 +478,12 @@ export default function Contracts() {
           }
         }}
         isPending={renewContractMutation.isPending}
+      />
+      <NewContractModal
+        isOpen={isNewContractModalOpen}
+        onClose={() => setIsNewContractModalOpen(false)}
+        onSave={handleCreateContract}
+        isPending={createContractMutation.isPending}
       />
     </div>
   );

@@ -5,81 +5,62 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
-import { parseISO, format } from "date-fns";
+import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X, Edit, DollarSign } from "lucide-react";
+import { X, FilePlus, DollarSign } from "lucide-react";
+import { useClients } from "@/hooks/useClients";
 
-interface Contract {
-  id: string;
-  client: string;
-  client_id: string;
-  type: string;
-  monthlyValue: number;
-  startDate: string;
-  endDate: string;
-  status: 'active' | 'inactive' | 'expiring' | 'concluded';
-  contract_url?: string;
-}
-
-interface EditContractModalProps {
+interface NewContractModalProps {
   isOpen: boolean;
-  contract: Contract | null;
   onClose: () => void;
-  onSave: (contractData: Omit<Contract, 'id'>) => void;
+  onSave: (contractData: {
+    client_id: string;
+    type: string;
+    monthly_value: number;
+    start_date: string;
+    end_date: string;
+    status: string;
+    contract_url?: string;
+  }) => void;
+  isPending?: boolean;
 }
 
-export function EditContractModal({ isOpen, contract, onClose, onSave }: EditContractModalProps) {
+export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewContractModalProps) {
   useScrollLock(isOpen);
+  const { data: clients = [] } = useClients();
+  
   const [formData, setFormData] = useState({
-    client: '',
     client_id: '',
     type: '',
-    monthlyValue: '0,00',
-    startDate: '',
-    endDate: '',
-    status: 'active' as Contract['status'],
+    monthly_value: '0,00',
+    start_date: format(new Date(), "yyyy-MM-dd"),
+    end_date: '',
+    status: 'active',
     contract_url: ''
   });
-  const updateClient = useUpdateClient();
 
-  useEffect(() => {
-    if (contract) {
-      setFormData({
-        client: contract.client,
-        client_id: contract.client_id,
-        type: contract.type,
-        monthlyValue: contract.monthlyValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-        startDate: contract.startDate,
-        endDate: contract.endDate,
-        status: contract.status,
-        contract_url: contract.contract_url || ''
-      });
-    }
-  }, [contract]);
+  const [selectedClientName, setSelectedClientName] = useState('Selecionar Cliente');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.status === 'inactive' && formData.client_id) {
-      // Update client tags to reflect inactive status
-      await updateClient.mutateAsync({
-        id: formData.client_id,
-        tags: ['Inativo']
-      });
-    }
-
-    // Convert monthlyValue from Brazilian format to number
-    const monthlyValueNumber = parseFloat(formData.monthlyValue.replace('.', '').replace(',', '.')) || 0;
+    
+    // Convert monthly_value from Brazilian format to number
+    const monthlyValueNumber = parseFloat(formData.monthly_value.replace('.', '').replace(',', '.')) || 0;
 
     onSave({
-      ...formData,
-      monthlyValue: monthlyValueNumber
+      client_id: formData.client_id,
+      type: formData.type,
+      monthly_value: monthlyValueNumber,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      status: formData.status,
+      contract_url: formData.contract_url
     });
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -96,13 +77,13 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     if (parts[1] && parts[1].length > 2) {
       value = parts[0] + ',' + parts[1].substring(0, 2);
     }
-    handleInputChange('monthlyValue', value);
+    handleChange('monthly_value', value);
   };
 
   const handleMonthlyValueBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     let value = e.target.value;
     if (value === '' || value === '0' || value === '0,') {
-      handleInputChange('monthlyValue', '0,00');
+      handleChange('monthly_value', '0,00');
       return;
     }
     if (!value.includes(',')) {
@@ -115,10 +96,10 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
         value = parts[0] + ',' + parts[1] + '0';
       }
     }
-    handleInputChange('monthlyValue', value);
+    handleChange('monthly_value', value);
   };
 
-  if (!isOpen || !contract) return null;
+  if (!isOpen) return null;
 
   return ReactDOM.createPortal(
     <>
@@ -178,17 +159,22 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
               scrollbar-width: thin;
               scrollbar-color: #6829c0 #404040;
             }
+
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: #6829c0 #404040;
+            }
           `}</style>
 
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
-                <Edit className="w-5 h-5 text-white" />
+                <FilePlus className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Editar Contrato</h2>
-                <p className="text-white/40 text-sm">Atualize os dados do contrato</p>
+                <h2 className="text-2xl font-bold text-white tracking-tight">Novo Contrato</h2>
+                <p className="text-white/40 text-sm">Crie um contrato para um cliente existente</p>
               </div>
             </div>
             <Button
@@ -205,40 +191,61 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
           <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="client" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente</Label>
-                <Input
-                  id="client"
-                  value={formData.client}
-                  onChange={(e) => handleInputChange('client', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
-                  required
-                />
+                <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente *</Label>
+                <Select 
+                  value={formData.client_id} 
+                  onValueChange={(value) => {
+                    handleChange('client_id', value);
+                    const client = clients.find(c => c.id === value);
+                    if (client) setSelectedClientName(client.company);
+                  }}
+                >
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                    <SelectValue placeholder="Selecionar Cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.length === 0 ? (
+                      <div className="p-2 text-white/40 text-sm text-center">Nenhum cliente encontrado</div>
+                    ) : (
+                      clients.map((client) => (
+                        <SelectItem
+                          key={client.id}
+                          value={client.id}
+                          className="cursor-pointer"
+                        >
+                          {client.company}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="type" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Tipo de Serviço</Label>
+                <Label htmlFor="type" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Tipo de Serviço *</Label>
                 <Input
                   id="type"
+                  placeholder="Ex: Gestão de Tráfego"
                   value={formData.type}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
+                  onChange={(e) => handleChange('type', e.target.value)}
+                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all placeholder:text-white/20 font-medium"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
+                <Label htmlFor="monthly_value" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
                 <div className="relative group">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                   <Input
-                    id="monthlyValue"
+                    id="monthly_value"
                     type="text"
-                    value={formData.monthlyValue}
+                    value={formData.monthly_value}
                     onChange={handleMonthlyValueChange}
                     onBlur={handleMonthlyValueBlur}
                     onFocus={(e) => {
                       if (e.target.value === "0,00") {
-                        handleInputChange('monthlyValue', "");
+                        handleChange('monthly_value', "");
                       }
                     }}
                     className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
@@ -255,31 +262,31 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                   type="url"
                   placeholder="https://..."
                   value={formData.contract_url}
-                  onChange={(e) => handleInputChange('contract_url', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
+                  onChange={(e) => handleChange('contract_url', e.target.value)}
+                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all placeholder:text-white/20 font-medium"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Início</Label>
+                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Data de Início *</Label>
                   <DatePicker
-                    date={formData.startDate ? parseISO(formData.startDate) : undefined}
+                    date={formData.start_date ? parseISO(formData.start_date) : undefined}
                     setDate={(newDate) => {
                       if (newDate) {
-                        handleInputChange('startDate', format(newDate, "yyyy-MM-dd"));
+                         handleChange('start_date', format(newDate, "yyyy-MM-dd"));
                       }
                     }}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Término</Label>
+                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Data de Término *</Label>
                   <DatePicker
-                    date={formData.endDate ? parseISO(formData.endDate) : undefined}
+                    date={formData.end_date ? parseISO(formData.end_date) : undefined}
                     setDate={(newDate) => {
                       if (newDate) {
-                        handleInputChange('endDate', format(newDate, "yyyy-MM-dd"));
+                        handleChange('end_date', format(newDate, "yyyy-MM-dd"));
                       }
                     }}
                   />
@@ -288,7 +295,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
               <div className="space-y-2">
                 <Label htmlFor="status" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
                   <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
                     <SelectValue />
                   </SelectTrigger>
@@ -324,9 +331,10 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 >
                   <Button
                     type="submit"
-                    className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                    disabled={isPending || !formData.client_id}
+                    className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Salvar
+                    {isPending ? 'Criando...' : 'Criar Contrato'}
                   </Button>
                 </motion.div>
               </div>
@@ -337,4 +345,10 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     </>,
     document.body
   );
+}
+
+// Helper to parse dates since parseISO import was missing in some contexts
+function parseISO(dateString: string) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
