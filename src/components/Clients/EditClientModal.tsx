@@ -10,20 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { X, ChevronDown, Edit } from "lucide-react";
+import { X, Edit } from "lucide-react";
 import { motion } from "framer-motion";
-import { usePlansContext } from "@/contexts/PlansContext";
 import ReactDOM from "react-dom";
-import { DatePicker } from "@/components/ui/date-picker";
-import { parseISO, format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface Client {
@@ -73,12 +63,8 @@ export function EditClientModal({
   client,
   onClose,
   onSave,
-  onPlanColorChange,
-  planColors,
-}: EditClientModalProps) {
+}: Omit<EditClientModalProps, 'onPlanColorChange' | 'planColors'>) {
   useScrollLock(isOpen);
-  const { getPlanNames } = usePlansContext();
-  const planOptions = getPlanNames();
 
   const [formData, setFormData] = useState<Client>({
     id: "",
@@ -92,7 +78,7 @@ export function EditClientModal({
     paymentDay: 1,
     tags: ["Ativo"],
     address: "",
-    plan: planOptions[0] || "Vendas",
+    plan: "Vendas",
     startDate: "",
     monthlyValue: "0,00",
   });
@@ -106,50 +92,10 @@ export function EditClientModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert monthlyValue from string to number for the callback
-    const monthlyValueNumber = parseFloat(formData.monthlyValue?.replace(',', '.') || '0');
-
-    // Convert empty strings to null for date fields and ensure proper date format
-    const formatDateForDatabase = (dateString: string) => {
-      if (!dateString || dateString.trim() === '') return null;
-      // Ensure the date is in YYYY-MM-DD format
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return null;
-      return date.toISOString().split('T')[0];
-    };
-
-    const contractEnd = formatDateForDatabase(formData.contractEnd || '');
-    const startDate = formatDateForDatabase(formData.startDate || '');
-
     const clientData: ClientData = {
-      company: formData.company,
-      cnpj: formData.cnpj,
-      responsible: formData.responsible,
-      phone: formData.phone,
-      email: formData.email,
-      grupoId: formData.grupoId,
-      contractEnd: contractEnd || '',
-      paymentDay: formData.paymentDay,
-      tags: formData.tags,
-      address: formData.address,
-      plan: formData.plan,
-      startDate: startDate || '',
-      monthlyValue: monthlyValueNumber,
+      ...formData,
+      monthlyValue: parseFloat(formData.monthlyValue?.replace(',', '.') || '0'),
     };
-
-    console.log('DEBUG - Dados do cliente sendo enviados para edição:', clientData);
-    console.log('DEBUG - Tipos dos dados:', {
-      contractEnd: typeof clientData.contractEnd,
-      startDate: typeof clientData.startDate,
-      monthlyValue: typeof clientData.monthlyValue,
-      paymentDay: typeof clientData.paymentDay
-    });
-    console.log('DEBUG - Valores dos dados:', {
-      contractEnd: clientData.contractEnd,
-      startDate: clientData.startDate,
-      monthlyValue: clientData.monthlyValue,
-      paymentDay: clientData.paymentDay
-    });
 
     onSave(clientData);
   };
@@ -158,53 +104,7 @@ export function EditClientModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePaymentDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
 
-    value = value.replace(/\D/g, '');
-
-    const numValue = parseInt(value);
-
-    if (numValue > 31) {
-      value = '31';
-    } else if (numValue < 1 && value !== '') {
-      value = '1';
-    }
-
-    handleChange("paymentDay", value === '' ? 1 : parseInt(value));
-  };
-
-  const handleMonthlyValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    value = value.replace(/[^\d,]/g, '');
-    const parts = value.split(',');
-    if (parts.length > 2) {
-      value = parts[0] + ',' + parts.slice(1).join('');
-    }
-    if (parts[1] && parts[1].length > 2) {
-      value = parts[0] + ',' + parts[1].substring(0, 2);
-    }
-    handleChange("monthlyValue", value);
-  };
-
-  const handleMonthlyValueBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    if (value === '' || value === '0' || value === '0,') {
-      handleChange("monthlyValue", '0,00');
-      return;
-    }
-    if (!value.includes(',')) {
-      value = value + ',00';
-    } else {
-      const parts = value.split(',');
-      if (!parts[1] || parts[1] === '') {
-        value = parts[0] + ',00';
-      } else if (parts[1].length === 1) {
-        value = parts[0] + ',' + parts[1] + '0';
-      }
-    }
-    handleChange("monthlyValue", value);
-  };
 
   if (!isOpen || !client) return null;
 
@@ -385,127 +285,22 @@ export function EditClientModal({
               </div>
             </div>
 
-            {/* Plano e Valores */}
+            {/* Endereço */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
-                Plano e Valores
+                Localização
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="plan" className="text-white">Plano</Label>
-                  <Select value={formData.plan} onValueChange={(value) => handleChange("plan", value)}>
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
-                      <SelectValue placeholder="Selecione um plano" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {planOptions.map((plan) => (
-                        <SelectItem
-                          key={plan}
-                          value={plan}
-                          className="cursor-pointer"
-                        >
-                          {plan}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyValue" className="text-white">Valor Mensal (R$)</Label>
-                  <Input
-                    id="monthlyValue"
-                    type="text"
-                    value={formData.monthlyValue}
-                    onChange={handleMonthlyValueChange}
-                    onBlur={handleMonthlyValueBlur}
-                    onFocus={(e) => {
-                      if (e.target.value === "0,00") {
-                        e.target.value = "";
-                        setFormData((prev) => ({ ...prev, monthlyValue: "" }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
-                    placeholder="0,00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="paymentDay" className="text-white">Dia de Pagamento</Label>
-                  <Input
-                    id="paymentDay"
-                    type="text"
-                    value={formData.paymentDay.toString()}
-                    onChange={handlePaymentDayChange}
-                    onFocus={e => {
-                      if (e.target.value) {
-                        e.target.value = '';
-                        setFormData(prev => ({ ...prev, paymentDay: 0 }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
-                    placeholder="1-31"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white">Status</Label>
-                  <Select 
-                    value={formData.tags[0]} 
-                    onValueChange={(value) => handleChange("tags", [value])}
-                  >
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ativo" className="cursor-pointer">Ativo</SelectItem>
-                      <SelectItem value="A vencer" className="cursor-pointer">A vencer</SelectItem>
-                      <SelectItem value="Inativo" className="cursor-pointer">Inativo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Datas e Localização */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
-                Datas e Localização
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-white">Data de Início</Label>
-                  <DatePicker
-                    date={formData.startDate ? parseISO(formData.startDate) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("startDate", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white">Fim do Contrato</Label>
-                  <DatePicker
-                    date={formData.contractEnd ? parseISO(formData.contractEnd) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("contractEnd", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address" className="text-white">Endereço</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none"
-                    rows={3}
-                    placeholder="Endereço completo do cliente"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-white">Endereço</Label>
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none"
+                  rows={3}
+                  placeholder="Endereço completo do cliente"
+                />
               </div>
             </div>
 
