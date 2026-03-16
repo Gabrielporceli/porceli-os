@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, Trash2 } from "lucide-react";
+import { Save, X, Trash2, CalendarOff } from "lucide-react";
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { parseISO, format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
 
 interface Stage {
   id: string;
@@ -47,6 +49,8 @@ export function EditLeadModal({
     value: "",
     notes: "",
     meeting_date: "",
+    meeting_time: "",
+    reuniao_realizada: false,
   });
 
   useEffect(() => {
@@ -60,7 +64,9 @@ export function EditLeadModal({
         tags: lead.tags || [],
         value: lead.value ? `R$ ${lead.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "",
         notes: lead.notes || "",
-        meeting_date: lead.meeting_date || "",
+        meeting_date: lead.meeting_date ? format(parseISO(lead.meeting_date), "yyyy-MM-dd") : "",
+        meeting_time: lead.meeting_date ? format(parseISO(lead.meeting_date), "HH:mm") : "",
+        reuniao_realizada: lead.reuniao_realizada || false,
       });
     }
   }, [lead]);
@@ -87,7 +93,10 @@ export function EditLeadModal({
       tags: formData.tags.length > 0 ? formData.tags : null,
       value: value,
       notes: formData.notes || null,
-      meeting_date: formData.meeting_date || null,
+      meeting_date: formData.meeting_date && formData.meeting_time 
+        ? new Date(`${formData.meeting_date}T${formData.meeting_time}:00`).toISOString()
+        : formData.meeting_date || null,
+      reuniao_realizada: formData.reuniao_realizada,
       updated_at: new Date().toISOString(),
     };
 
@@ -95,8 +104,17 @@ export function EditLeadModal({
     onOpenChange(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCancelMeeting = () => {
+    setFormData(prev => ({
+      ...prev,
+      meeting_date: "",
+      meeting_time: "",
+      reuniao_realizada: false
+    }));
   };
 
   const formatCurrency = (value: string) => {
@@ -273,14 +291,56 @@ export function EditLeadModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-white/70 text-sm font-medium">Data da Reunião (Agendamento)</Label>
-            <DatePicker
-              date={formData.meeting_date ? parseISO(formData.meeting_date) : undefined}
-              setDate={(newDate) => {
-                handleInputChange("meeting_date", newDate ? format(newDate, "yyyy-MM-dd") : "");
-              }}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-white/70 text-sm font-medium">Data da Reunião</Label>
+              <DatePicker
+                date={formData.meeting_date ? parseISO(formData.meeting_date) : undefined}
+                setDate={(newDate) => {
+                  handleInputChange("meeting_date", newDate ? format(newDate, "yyyy-MM-dd") : "");
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/70 text-sm font-medium">Hora da Reunião</Label>
+              <TimePicker
+                value={formData.meeting_time}
+                onChange={(time) => handleInputChange("meeting_time", time)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+            <div className="space-y-0.5">
+              <Label className="text-white font-medium">Reunião Realizada?</Label>
+              <p className="text-white/40 text-xs text-balance">
+                Marque se a reunião com este lead já aconteceu.
+              </p>
+            </div>
+            <Switch
+              checked={formData.reuniao_realizada}
+              onCheckedChange={(checked) => handleInputChange("reuniao_realizada", checked)}
             />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
+            <div className="space-y-0.5">
+              <Label className="text-red-400 font-medium">Reunião Cancelada?</Label>
+              <p className="text-red-400/40 text-xs text-balance">
+                Clique para limpar os dados de agendamento.
+              </p>
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={handleCancelMeeting}
+              className="border-red-500/30 text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-all rounded-lg gap-2"
+            >
+              <CalendarOff className="w-3.5 h-3.5" />
+              Limpar
+            </Button>
           </div>
 
           </div>

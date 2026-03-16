@@ -38,7 +38,7 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                     {date && isValid(date) ? format(date, "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl" align="start">
+            <PopoverContent className="w-auto p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl" align="start">
                 <Calendar
                     mode="single"
                     selected={date}

@@ -20,6 +20,7 @@ export interface Lead {
   sdr_last_contact_at: string | null;
   sdr_followup_count: number | null;
   meeting_date: string | null;
+  reuniao_realizada: boolean | null;
 }
 
 export interface LeadInput {
@@ -32,6 +33,7 @@ export interface LeadInput {
   value?: number;
   notes?: string;
   meeting_date?: string;
+  reuniao_realizada?: boolean;
 }
 
 export function useLeads() {
@@ -88,6 +90,7 @@ export function useLeads() {
           value: leadData.value || null,
           notes: leadData.notes || null,
           meeting_date: leadData.meeting_date || null,
+          reuniao_realizada: leadData.reuniao_realizada || false,
         })
         .select()
         .single();

@@ -298,6 +298,7 @@ export default function LeadsKanban() {
         value: updatedLead.value,
         notes: updatedLead.notes,
         meeting_date: updatedLead.meeting_date,
+        reuniao_realizada: updatedLead.reuniao_realizada,
       });
     } catch (error) {
       console.error("Erro ao atualizar lead:", error);
@@ -694,11 +695,16 @@ export default function LeadsKanban() {
                                               )
                                               : new Date(lead.updated_at).toLocaleDateString("pt-BR")}
                                           </span>
-                                          {lead.meeting_date ? (
-                                            <span className="text-goat-purple font-semibold uppercase truncate ml-2">
-                                              Reunião: {new Date(lead.meeting_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                                            </span>
-                                          ) : (
+                                           {lead.meeting_date && !lead.reuniao_realizada ? (
+                                             <span className="text-goat-purple font-semibold uppercase truncate ml-2">
+                                               Reunião: {new Date(lead.meeting_date).toLocaleString('pt-BR', { 
+                                                 day: '2-digit', 
+                                                 month: '2-digit',
+                                                 hour: '2-digit',
+                                                 minute: '2-digit'
+                                               })}
+                                             </span>
+                                           ) : (
                                             <span></span>
                                           )}
                                         </div>
