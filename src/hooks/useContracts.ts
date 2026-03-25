@@ -50,14 +50,17 @@ export const useCreateContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (contract: Omit<ContractInsert, 'user_id'>) => {
+    mutationFn: async ({ payment_day, ...contract }: Omit<ContractInsert, 'user_id'> & { payment_day?: number }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('contracts')
         .insert({ ...contract, user_id: user.id })
-        .select()
+        .select(`
+          *,
+          client:clients(*)
+        `)
         .single();
 
       if (error) {
@@ -65,10 +68,59 @@ export const useCreateContract = () => {
         throw error;
       }
 
+      // Sync with client table
+      if (data.client_id) {
+        const updates: any = {
+          start_date: data.start_date,
+          contract_end: data.end_date,
+          monthly_value: data.monthly_value,
+          plan: data.type,
+          updated_at: new Date().toISOString()
+        };
+        
+        if (payment_day !== undefined) {
+          updates.payment_day = payment_day;
+        }
+
+        await supabase
+          .from('clients')
+          .update(updates)
+          .eq('id', data.client_id)
+          .eq('user_id', user.id);
+
+        // Update financial entries
+        try {
+          await generateFinancialEntriesForClient(data.client_id, user.id);
+        } catch (err) {
+          console.error('Error generating financial entries:', err);
+        }
+
+        // Trigger webhook
+        try {
+          const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
+          
+          await supabase.functions.invoke('send-client-webhook', {
+            body: {
+              ...data.client,
+              plan: data.type,
+              contract_end: data.end_date,
+              start_date: data.start_date,
+              payment_day: finalPaymentDay,
+              monthly_value: data.monthly_value,
+              event: 'contract_created',
+              updated_at: new Date().toISOString()
+            }
+          });
+        } catch (webhookErr) {
+          console.error('Erro ao enviar webhook de criação:', webhookErr);
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast.success('Contrato criado com sucesso!');
     },
     onError: (error) => {
@@ -82,12 +134,18 @@ export const useUpdateContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: ContractUpdate & { id: string }) => {
+    mutationFn: async ({ id, payment_day, ...updates }: ContractUpdate & { id: string, payment_day?: number }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('contracts')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          client:clients(*)
+        `)
         .single();
 
       if (error) {
@@ -95,10 +153,60 @@ export const useUpdateContract = () => {
         throw error;
       }
 
+      // Sync with client table if it's the most recent contract or if we want to force update
+      if (data.client_id) {
+        const clientUpdates: any = {
+          start_date: data.start_date,
+          contract_end: data.end_date,
+          monthly_value: data.monthly_value,
+          plan: data.type,
+          updated_at: new Date().toISOString()
+        };
+        
+        if (payment_day !== undefined) {
+          clientUpdates.payment_day = payment_day;
+        }
+
+        await supabase
+          .from('clients')
+          .update(clientUpdates)
+          .eq('id', data.client_id)
+          .eq('user_id', user.id);
+
+        // Refresh financial entries
+        try {
+          const { updateFinancialEntriesForClient } = await import('./useGenerateFinancialEntries');
+          await updateFinancialEntriesForClient(data.client_id, user.id);
+        } catch (err) {
+          console.error('Error updating financial entries:', err);
+        }
+
+        // Trigger webhook
+        try {
+          const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
+          
+          await supabase.functions.invoke('send-client-webhook', {
+            body: {
+              ...data.client,
+              plan: data.type,
+              contract_end: data.end_date,
+              start_date: data.start_date,
+              payment_day: finalPaymentDay,
+              monthly_value: data.monthly_value,
+              event: 'contract_updated',
+              updated_at: new Date().toISOString()
+            }
+          });
+        } catch (webhookErr) {
+          console.error('Erro ao enviar webhook de atualização:', webhookErr);
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast.success('Contrato atualizado com sucesso!');
     },
     onError: (error) => {

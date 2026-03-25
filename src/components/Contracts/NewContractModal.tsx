@@ -21,6 +21,7 @@ interface NewContractModalProps {
     monthly_value: number;
     start_date: string;
     end_date: string;
+    payment_day: number;
     status: string;
     contract_url?: string;
   }) => void;
@@ -37,6 +38,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
     monthly_value: '0,00',
     start_date: format(new Date(), "yyyy-MM-dd"),
     end_date: '',
+    payment_day: '1',
     status: 'active',
     contract_url: ''
   });
@@ -55,6 +57,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       monthly_value: monthlyValueNumber,
       start_date: formData.start_date,
       end_date: formData.end_date,
+      payment_day: parseInt(formData.payment_day) || 1,
       status: formData.status,
       contract_url: formData.contract_url
     });
@@ -113,7 +116,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       {/* Modal Container */}
       <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
+          className="relative flex flex-col liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <style>{`
@@ -188,7 +191,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
           </div>
 
           {/* Content with Custom Scrollbar */}
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente *</Label>
@@ -233,23 +236,49 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="monthly_value" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
-                <div className="relative group">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="monthly_value" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
+                  <div className="relative group">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="monthly_value"
+                      type="text"
+                      value={formData.monthly_value}
+                      onChange={handleMonthlyValueChange}
+                      onBlur={handleMonthlyValueBlur}
+                      onFocus={(e) => {
+                        if (e.target.value === "0,00") {
+                          handleChange('monthly_value', "");
+                        }
+                      }}
+                      className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
+                      placeholder="0,00"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_day" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
                   <Input
-                    id="monthly_value"
-                    type="text"
-                    value={formData.monthly_value}
-                    onChange={handleMonthlyValueChange}
-                    onBlur={handleMonthlyValueBlur}
-                    onFocus={(e) => {
-                      if (e.target.value === "0,00") {
-                        handleChange('monthly_value', "");
+                    id="payment_day"
+                    type="number"
+                    min="1"
+                    max="28"
+                    value={formData.payment_day}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (val > 28) {
+                        handleChange('payment_day', "28");
+                      } else if (val < 1 && e.target.value !== "") {
+                        handleChange('payment_day', "1");
+                      } else {
+                        handleChange('payment_day', e.target.value);
                       }
                     }}
-                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
-                    placeholder="0,00"
+                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="Ex: 10"
                     required
                   />
                 </div>
@@ -283,13 +312,13 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                 <div className="space-y-2">
                   <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Data de Término *</Label>
                   <DatePicker
-                    date={formData.end_date ? parseISO(formData.end_date) : undefined}
-                    setDate={(newDate) => {
-                      if (newDate) {
-                        handleChange('end_date', format(newDate, "yyyy-MM-dd"));
-                      }
-                    }}
-                  />
+                  date={formData.end_date ? parseISO(formData.end_date) : undefined}
+                  setDate={(newDate) => {
+                    if (newDate) {
+                      handleChange('end_date', format(newDate, "yyyy-MM-dd"));
+                    }
+                  }}
+                />
                 </div>
               </div>
 

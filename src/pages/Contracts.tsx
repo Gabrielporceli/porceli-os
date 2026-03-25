@@ -24,7 +24,7 @@ interface Contract {
   startDate: string;
   endDate: string;
   status: 'active' | 'inactive' | 'expiring' | 'concluded';
-  paymentDay?: number;
+  payment_day?: number;
   contract_url?: string;
 }
 
@@ -50,7 +50,7 @@ export default function Contracts() {
     startDate: contract.start_date,
     endDate: contract.end_date,
     status: contract.status as Contract['status'],
-    paymentDay: contract.client?.payment_day,
+    payment_day: contract.client?.payment_day,
     contract_url: contract.contract_url
   }));
 
@@ -127,6 +127,7 @@ export default function Contracts() {
           start_date: contractData.startDate,
           end_date: contractData.endDate,
           status: contractData.status,
+          payment_day: contractData.payment_day,
           contract_url: contractData.contract_url
         } as any);
         setEditingContract(null);

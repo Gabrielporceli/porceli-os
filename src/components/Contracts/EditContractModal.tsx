@@ -21,6 +21,7 @@ interface Contract {
   startDate: string;
   endDate: string;
   status: 'active' | 'inactive' | 'expiring' | 'concluded';
+  payment_day?: number;
   contract_url?: string;
 }
 
@@ -41,6 +42,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     startDate: '',
     endDate: '',
     status: 'active' as Contract['status'],
+    payment_day: '1',
     contract_url: ''
   });
   const updateClient = useUpdateClient();
@@ -55,6 +57,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
         startDate: contract.startDate,
         endDate: contract.endDate,
         status: contract.status,
+        payment_day: (contract.payment_day || 1).toString(),
         contract_url: contract.contract_url || ''
       });
     }
@@ -75,7 +78,8 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
     onSave({
       ...formData,
-      monthlyValue: monthlyValueNumber
+      monthlyValue: monthlyValueNumber,
+      payment_day: parseInt(formData.payment_day) || 1
     });
   };
 
@@ -132,7 +136,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
       {/* Modal Container */}
       <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
+          className="relative flex flex-col liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <style>{`
@@ -202,7 +206,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
           </div>
 
           {/* Content with Custom Scrollbar */}
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="client" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente</Label>
@@ -226,23 +230,49 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
-                <div className="relative group">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
+                  <div className="relative group">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="monthlyValue"
+                      type="text"
+                      value={formData.monthlyValue}
+                      onChange={handleMonthlyValueChange}
+                      onBlur={handleMonthlyValueBlur}
+                      onFocus={(e) => {
+                        if (e.target.value === "0,00") {
+                          handleInputChange('monthlyValue', "");
+                        }
+                      }}
+                      className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
+                      placeholder="0,00"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_day" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
                   <Input
-                    id="monthlyValue"
-                    type="text"
-                    value={formData.monthlyValue}
-                    onChange={handleMonthlyValueChange}
-                    onBlur={handleMonthlyValueBlur}
-                    onFocus={(e) => {
-                      if (e.target.value === "0,00") {
-                        handleInputChange('monthlyValue', "");
+                    id="payment_day"
+                    type="number"
+                    min="1"
+                    max="28"
+                    value={formData.payment_day}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (val > 28) {
+                        handleInputChange('payment_day', "28");
+                      } else if (val < 1 && e.target.value !== "") {
+                        handleInputChange('payment_day', "1");
+                      } else {
+                        handleInputChange('payment_day', e.target.value);
                       }
                     }}
-                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
-                    placeholder="0,00"
+                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="Ex: 10"
                     required
                   />
                 </div>
@@ -300,6 +330,8 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                   </SelectContent>
                 </Select>
               </div>
+
+
 
               <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.05]">
                 <motion.div 
