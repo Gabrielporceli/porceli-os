@@ -1,0 +1,631 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Founders Grotesk Font Family */
+@font-face {
+  font-family: 'Founders Grotesk';
+  src: url('/fonts/FoundersGrotesk-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk';
+  src: url('/fonts/FoundersGrotesk-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk';
+  src: url('/fonts/FoundersGrotesk-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk';
+  src: url('/fonts/FoundersGrotesk-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk';
+  src: url('/fonts/FoundersGrotesk-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk XCond';
+  src: url('/fonts/FoundersGroteskXCond-Lt.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Founders Grotesk XCond';
+  src: url('/fonts/FoundersGroteskXCond-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* GOAT CRM Theme - Dark Mode with Purple Accents */
+@layer base {
+  :root {
+    --background: 240 6% 7%;
+    /* #121212 approximation or direct hex in HSL */
+    --foreground: 0 0% 88%;
+    /* #e1e1e1 */
+
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 88%;
+
+    --popover: 240 6% 7%;
+    --popover-foreground: 0 0% 88%;
+
+    --primary: 265 65% 46%;
+    /* #6829c0 (Official Standard Purple) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+
+    --accent: 0 0% 25%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 15%;
+    --ring: 265 65% 46%;
+
+    --radius: 1rem;
+
+    /* Premium UI Tokens */
+    --glass-bg: rgba(18, 18, 18, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: 16px;
+
+    --premium-purple: 265 65% 46%;
+    --premium-purple-light: 265 65% 55%;
+    --premium-glow: 265 100% 70%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-size: 16px;
+    /* padrão */
+  }
+
+  body {
+    background-color: #121212 !important;
+    color: #e1e1e1 !important;
+    font-family: 'Founders Grotesk', sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #eaeaea !important;
+    @apply font-bold;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-goat-purple to-purple-400 bg-clip-text text-transparent;
+  }
+
+  .glass-effect {
+    background: rgba(18, 18, 18, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .glass-premium {
+    background: rgba(10, 10, 10, 0.98);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .liquid-glass {
+    position: relative;
+    overflow: hidden;
+    background: rgba(18, 18, 18, 0.4) !important;
+    backdrop-filter: blur(20px) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(20px) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 1rem;
+    box-shadow: none !important;
+    /* Removendo sombra que "gruda" os elementos */
+  }
+
+
+  .liquid-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: #121212 !important;
+  }
+
+  .liquid-blob {
+    display: none;
+    /* Desativando os blobs que causavam o tom marrom */
+  }
+
+  .blob-1 {
+    top: -100px;
+    right: -100px;
+    animation-duration: 25s;
+  }
+
+  .blob-2 {
+    bottom: -150px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0) 70%);
+    animation-duration: 30s;
+    animation-delay: -5s;
+  }
+
+  @keyframes liquid-move {
+    0% {
+      transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+      transform: translate(100px, 50px) scale(1.1);
+    }
+
+    66% {
+      transform: translate(-50px, 100px) scale(0.9);
+    }
+
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 30px rgba(83, 21, 203, 0.2);
+  }
+
+  /* Focus border roxo */
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Hide scrollbar for kanban horizontal scroll */
+  .flex.overflow-x-auto::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .flex.overflow-x-auto {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-goat-purple hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+    color: white !important;
+  }
+
+  .btn-primary:hover {
+    color: white !important;
+  }
+
+  .card-dark {
+    @apply bg-goat-gray-800 border border-goat-gray-700 rounded-lg p-4;
+  }
+
+  /* Purple badge hover fix for "Pendente" - only for badges, not messages */
+  .badge.bg-goat-purple:hover,
+  .bg-goat-purple:hover:not(.message-bubble) {
+    background-color: #4c1d95 !important;
+    /* Darker purple for hover */
+  }
+
+  /* Disable hover effects for all message bubbles - keep original colors */
+  .message-bubble.bg-goat-purple:hover,
+  div.message-bubble.bg-goat-purple:hover {
+    background-color: #6829c0 !important;
+    /* Original purple color */
+  }
+
+  .message-bubble.bg-goat-gray-700:hover,
+  div.message-bubble.bg-goat-gray-700:hover {
+    background-color: #404040 !important;
+    /* Original gray-700 color */
+  }
+
+  /* Yellow badge hover fix for "Pendente" status */
+  .bg-yellow-600:hover {
+    background-color: #b45309 !important;
+    /* Darker yellow for hover */
+  }
+
+  /* ===============================================
+     DASHBOARD CARD HOVER ANIMATION
+     =============================================== */
+  .dashboard-glow {
+    @apply transition-all duration-500 ease-in-out;
+    position: relative;
+    /* overflow: hidden; -> Removido para evitar que o bloco suma ao subir no hover */
+    margin-bottom: 2px;
+    isolation: isolate;
+  }
+
+  .dashboard-glow:hover {
+    transform: translateY(-4px);
+    @apply shadow-[0_20px_40px_-15px_#000000b3] border-primary/30 bg-white/[0.05];
+    z-index: 10;
+  }
+
+  /* Enhanced animation for stats cards */
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-soft {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===============================================
+     FIM DO BLOCO DE CORREÇÃO
+     =============================================== */
+
+  /* Botões Outline Globais (Corrige amarelo) */
+  .btn-outline {
+    @apply border-goat-gray-600 text-white transition-all duration-150;
+    color: white !important;
+  }
+
+  .btn-outline:hover {
+    @apply bg-goat-gray-700 text-white;
+    color: white !important;
+  }
+
+  .btn-outline-danger {
+    @apply text-red-400 border-red-800 transition-all duration-150;
+    color: #f87171 !important;
+    /* Vermelho */
+  }
+
+  .btn-outline-danger:hover {
+    @apply bg-red-900/20 text-red-400;
+    color: #f87171 !important;
+  }
+
+  /* ===============================================
+     ✅ DROPDOWN E SELECT STYLING - NOVA SEÇÃO
+     =============================================== */
+  .dropdown-content {
+    @apply liquid-glass;
+    min-width: var(--radix-dropdown-menu-trigger-width) !important;
+    width: var(--radix-dropdown-menu-trigger-width) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4) !important;
+    padding: 6px !important;
+  }
+
+  .dropdown-item {
+    color: white !important;
+    background-color: transparent !important;
+    border-radius: 0.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+
+}
+
+/* ===============================
+✅ Corrige Tooltip Radix (Anti amarelo) - VERSÃO CORRIGIDA
+   Agora o estilo se aplica apenas a tooltips, sem afetar outros componentes.
+=============================== */
+[role='tooltip'] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+}
+
+/* ===============================
+✅ Corrige Radix Select (Dropdown de Status e Plano) - ATUALIZADO
+   Agora usando as novas cores padronizadas
+=============================== */
+[data-radix-select-content-wrapper],
+[data-state="open"]>div[data-radix-popper-content-wrapper],
+.SelectContent,
+[data-radix-dropdown-menu-content] {
+  background: rgba(18, 18, 18, 0.7) !important;
+  backdrop-filter: blur(25px) brightness(1.2) !important;
+  -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 12px !important;
+  overflow: visible !important;
+}
+
+.SelectItem,
+[role="option"],
+[data-radix-dropdown-menu-item],
+.dropdown-menu-item,
+.select-item {
+  color: white !important;
+  background: transparent !important;
+  border-radius: 1rem !important;
+  margin: 4px 0 !important;
+  padding: 12px 14px !important;
+  position: relative;
+  /* Transição mais orgânica e rápida - estilo mola */
+  transition:
+    background 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1.1),
+    border 0.2s ease !important;
+  cursor: pointer;
+  transform: scale(0.98);
+}
+
+.SelectItem:hover,
+.SelectItem:focus,
+.SelectItem[data-state="checked"],
+[role="option"]:hover,
+[role="option"]:focus,
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-dropdown-menu-item]:focus,
+.dropdown-menu-item:hover,
+.select-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+  transform: scale(1.02) !important;
+  outline: none !important;
+  z-index: 10;
+}
+
+.SelectItem[data-state="checked"] {
+  background: rgba(104, 41, 192, 0.15) !important;
+  border: 1px solid rgba(104, 41, 192, 0.3) !important;
+}
+
+/* Para itens de dropdown/select */
+[data-radix-dropdown-menu-item],
+[data-radix-select-item],
+.dropdown-menu-item,
+.select-item {
+  color: white !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+/* Hover state para itens */
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-select-item]:hover,
+.dropdown-menu-item:hover,
+.select-item:hover {
+  background-color: #525252 !important;
+  color: white !important;
+}
+
+/* Focus state removido para evitar borda roxa indesejada */
+
+/* Barra de rolagem para Chrome, Edge e Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #171717;
+  /* Fundo do track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6829c0;
+  /* Roxo GOAT */
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7C3AED;
+  /* Roxo mais claro ao hover */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  /* "auto" ou "thin" */
+  scrollbar-color: #6829c0 #171717;
+  /* thumb, track */
+}
+
+/* ===============================================
+   ✅ MENSAGENS DO SISTEMA - TEMA GOAT ROXO E BRANCO
+   Forçando todas as mensagens de sistema a usar o padrão correto
+   =============================================== */
+
+/* Toast/Notificações genéricas */
+.toast,
+.toast-success,
+.notification,
+.notification-success,
+.alert-success,
+.alert,
+.system-message,
+[data-state="success"],
+[data-state="open"],
+[data-type="success"],
+.Toastify__toast--success,
+.Toastify__toast,
+[data-sonner-toast],
+[data-sonner-toast][data-type="success"] {
+  color: #ffffff !important;
+  /* Texto branco */
+  box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Para texto dentro de toasts */
+.toast *,
+.notification *,
+.alert *,
+[data-sonner-toast] *,
+.Toastify__toast * {
+  color: #ffffff !important;
+}
+
+
+/* Sonner toast específico */
+[data-sonner-toast] {
+  border: 1px solid #6829c0 !important;
+  color: #ffffff !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: #ffffff !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #ffffff !important;
+}
+
+/* Success icons */
+[data-sonner-toast] [data-icon] svg,
+.toast svg,
+.notification svg {
+  color: #6829c0 !important;
+}
+
+/* ===============================================
+   ✅ CALENDAR (React Day Picker) - PREMIUM GOAT THEME
+   =============================================== */
+.rdp {
+  --rdp-cell-size: 38px;
+  --rdp-accent-color: #6829c0;
+  --rdp-background-color: transparent !important;
+  margin: 0;
+  color: white !important;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: #6829c0 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 15px rgba(104, 41, 192, 0.4) !important;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: rgba(104, 41, 192, 0.2) !important;
+  color: white !important;
+  border-radius: 10px !important;
+}
+
+/* Force text white for all days */
+.rdp-day,
+.rdp-day_outside,
+.rdp-day_today {
+  color: white !important;
+}
+
+.rdp-day_today {
+  font-weight: bold !important;
+  text-decoration: underline !important;
+  text-decoration-color: #6829c0 !important;
+}
+
+.rdp-head_cell {
+  color: #9ca3af !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+}
+
+/* Force text white for selection */
+[aria-selected="true"] {
+  color: white !important;
+}
+
+/* Clean navigation buttons without yellow outlines */
+.rdp-nav_button,
+.rdp-button {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.rdp-nav_button:focus,
+.rdp-nav_button:focus-visible {
+  box-shadow: 0 0 0 2px rgba(104, 41, 192, 0.4) !important;
+  border-color: #6829c0 !important;
+}
