@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, RefreshCw, ExternalLink, BookOpen, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -59,6 +60,16 @@ export default function Calendar() {
   const [loadingNotion, setLoadingNotion] = useState(false);
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [connectingNotion, setConnectingNotion] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  
+  // States para novo evento
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState("");
+  const [newEventTime, setNewEventTime] = useState("");
+  const [newEventDate, setNewEventDate] = useState("");
+  const [createMeetLink, setCreateMeetLink] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+
   const { toast } = useToast();
 
   const CARD = "liquid-glass dashboard-glow border-white/[0.05]";
@@ -115,6 +126,68 @@ export default function Calendar() {
       setLoadingGoogle(false);
     }
   }, [currentDate]);
+
+  const handleCreateGoogleEvent = async (isGlobal = false) => {
+    if (!isGlobal && !selectedDay) return;
+    if (isGlobal && !newEventDate) {
+      toast({ title: "Selecione uma data", variant: "destructive" });
+      return;
+    }
+    if (!newEventTitle.trim()) return;
+    
+    setCreatingEvent(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      let startDateTime = "";
+      
+      if (isGlobal) {
+        const timeStr = newEventTime || "12:00"; 
+        startDateTime = `${newEventDate}T${timeStr}:00-03:00`;
+      } else {
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDay).padStart(2, '0');
+        const timeStr = newEventTime || "12:00";
+        startDateTime = `${year}-${month}-${day}T${timeStr}:00-03:00`;
+      }
+      
+      // Assumindo 1 hora de duração padrão
+      const endDate = new Date(new Date(startDateTime).getTime() + 60 * 60 * 1000);
+      const endDateTime = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00-03:00`;
+
+      const { error } = await supabase.functions.invoke("google-calendar-events", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          action: "CREATE_EVENT",
+          title: newEventTitle,
+          start: startDateTime,
+          end: endDateTime,
+          createMeetLink
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Evento criado com sucesso no Google Calendar!" });
+      setNewEventTitle("");
+      setNewEventTime("");
+      setCreateMeetLink(false);
+      
+      if (isGlobal) {
+        setNewEventDate("");
+        setIsCreateModalOpen(false);
+      }
+      
+      fetchGoogleEvents(); // Atualiza a lista
+    } catch (err: any) {
+      toast({ title: "Erro ao criar evento", description: err.message, variant: "destructive" });
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
 
   const fetchNotionTasks = useCallback(async (databaseId?: string) => {
     setLoadingNotion(true);
@@ -235,6 +308,16 @@ export default function Calendar() {
     });
   };
 
+  const getNotionTasksForDay = (day: number) => {
+    return notionTasks.filter((t) => {
+      if (!t.dueDate) return false;
+      const d = new Date(t.dueDate + "T12:00:00");
+      return d.getDate() === day &&
+             d.getMonth() === currentDate.getMonth() &&
+             d.getFullYear() === currentDate.getFullYear();
+    });
+  };
+
   const getEventColor = (colorId?: string) =>
     EVENT_COLORS[colorId ?? "default"] ?? EVENT_COLORS.default;
 
@@ -307,7 +390,10 @@ export default function Calendar() {
             </button>
           )}
 
-          <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(104,41,192,0.3)] text-sm">
+          <button 
+             onClick={() => setIsCreateModalOpen(true)}
+             className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(104,41,192,0.3)] text-sm"
+          >
             <Plus className="w-4 h-4" />
             Novo Evento
           </button>
@@ -358,15 +444,22 @@ export default function Calendar() {
             ))}
             {days.map((day, idx) => {
               const dayEvents = day ? getEventsForDay(day) : [];
+              const dayTasks = day ? getNotionTasksForDay(day) : [];
               const isToday =
                 day === new Date().getDate() &&
                 currentDate.getMonth() === new Date().getMonth() &&
                 currentDate.getFullYear() === new Date().getFullYear();
 
+              const allItems = [
+                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, color: getEventColor(e.colorId), url: e.htmlLink })),
+                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url }))
+              ];
+
               return (
                 <div
                   key={idx}
-                  className={`min-h-[120px] bg-[#121212] p-2 border-t border-white/5 transition-colors hover:bg-white/[0.02] ${day === null ? "opacity-20" : ""}`}
+                  onClick={() => day && setSelectedDay(day)}
+                  className={`min-h-[120px] bg-[#121212] p-2 border-t border-white/5 transition-colors hover:bg-white/[0.04] ${day ? "cursor-pointer" : "opacity-20 cursor-default"}`}
                 >
                   {day && (
                     <div className="flex flex-col h-full">
@@ -378,22 +471,30 @@ export default function Calendar() {
                         {day}
                       </span>
                       <div className="mt-2 space-y-1">
-                        {dayEvents.slice(0, 3).map((event) => (
+                        {allItems.slice(0, 3).map((item) => (
                           <div
-                            key={event.id}
-                            title={`${event.title} • ${formatTime(event.start)}`}
-                            className={`text-[10px] p-1.5 rounded-md border truncate cursor-pointer ${getEventColor(event.colorId)}`}
-                            onClick={() => event.htmlLink && window.open(event.htmlLink, "_blank")}
+                            key={item.id}
+                            title={item.title}
+                            className={`text-[10px] p-1.5 rounded-md border truncate cursor-pointer ${item.color} flex items-center gap-1`}
+                            onClick={(e) => {
+                              if (item.url) {
+                                e.stopPropagation();
+                                window.open(item.url, "_blank");
+                              }
+                            }}
                           >
-                            {!event.allDay && (
-                              <span className="opacity-70 mr-1">{formatTime(event.start)}</span>
+                            {item.type === 'notion' && (
+                              <BookOpen className="w-2.5 h-2.5 opacity-70 flex-shrink-0" />
                             )}
-                            {event.title}
+                            {item.time && (
+                              <span className="opacity-70 mr-0.5">{formatTime(item.time)}</span>
+                            )}
+                            <span className="truncate">{item.title}</span>
                           </div>
                         ))}
-                        {dayEvents.length > 3 && (
-                          <div className="text-[10px] text-goat-gray-400 pl-1">
-                            +{dayEvents.length - 3} mais
+                        {allItems.length > 3 && (
+                          <div className="text-[10px] text-goat-gray-400 pl-1 mt-1 font-medium">
+                            +{allItems.length - 3} mais
                           </div>
                         )}
                       </div>
@@ -542,6 +643,228 @@ export default function Calendar() {
           </Card>
         </div>
       </div>
+
+      {/* Modal do Dia Selecionado */}
+      <Dialog open={selectedDay !== null} onOpenChange={(open) => !open && setSelectedDay(null)}>
+        <DialogContent className="sm:max-w-[500px] bg-[#121212] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-primary" />
+              {selectedDay} de {MONTHS[currentDate.getMonth()]} de {currentDate.getFullYear()}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            {selectedDay && (() => {
+              const dayEvents = getEventsForDay(selectedDay);
+              const dayTasks = getNotionTasksForDay(selectedDay);
+
+              const allItems = [
+                ...dayEvents.map(e => ({ 
+                   type: 'google' as const, 
+                   id: e.id, 
+                   title: e.title, 
+                   time: !e.allDay ? e.start : undefined, 
+                   color: getEventColor(e.colorId).split(' ')[0] || 'bg-primary/20', 
+                   url: e.htmlLink,
+                   status: undefined 
+                })),
+                ...dayTasks.map(t => ({ 
+                   type: 'notion' as const, 
+                   id: t.id, 
+                   title: t.title, 
+                   time: t.dueDate && t.time && t.time !== '00:00' ? `${t.dueDate}T${t.time}` : undefined, 
+                   color: 'bg-white/10', 
+                   url: t.url, 
+                   status: t.status 
+                }))
+              ];
+
+              // Ordenar: Com hora primeiro, sem hora por último
+              const sortedItems = allItems.sort((a, b) => {
+                if (a.time && b.time) {
+                  return new Date(a.time).getTime() - new Date(b.time).getTime();
+                }
+                if (a.time) return -1;
+                if (b.time) return 1;
+                return 0;
+              });
+
+              if (sortedItems.length === 0) {
+                return <p className="text-sm text-goat-gray-400 text-center py-6">Nenhum evento neste dia.</p>;
+              }
+
+              return sortedItems.map((item) => (
+                <div key={item.id} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 relative group hover:bg-white/10 transition-colors">
+                  <div className={`p-2.5 rounded-xl ${item.color}`}>
+                     {item.type === 'notion' ? <BookOpen className="w-5 h-5 text-white/70" /> : <CalendarIcon className="w-5 h-5 text-white/70" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm md:text-base font-medium text-white break-words pr-8">{item.title}</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      {item.time && (
+                         <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md">
+                           {formatTime(item.time)}
+                         </span>
+                      )}
+                      {item.status && (
+                          <span className="text-[10px] text-teal-400 font-medium bg-teal-400/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            {item.status}
+                          </span>
+                      )}
+                    </div>
+                  </div>
+                  {item.url && (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100">
+                      <ExternalLink className="w-4 h-4 text-goat-gray-400 hover:text-white" />
+                    </a>
+                  )}
+                </div>
+              ));
+            })()}
+          </div>
+          
+          {/* Formulário de novo evento dentro do modal */}
+          {googleConnected && (
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+              <h4 className="text-sm font-medium text-white/80">Adicionar Evento no Google Calendar</h4>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Título do evento (ex: Reunião)" 
+                  className="flex-1 bg-black/20 border border-white/10 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-primary/50"
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateGoogleEvent()}
+                />
+                <input
+                  type="time"
+                  className="bg-black/20 border border-white/10 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-primary/50 w-full sm:w-auto"
+                  value={newEventTime}
+                  onChange={(e) => setNewEventTime(e.target.value)}
+                />
+                <button 
+                  disabled={creatingEvent || !newEventTitle.trim()}
+                  onClick={() => handleCreateGoogleEvent(false)}
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl px-4 py-2 text-sm font-bold flex items-center justify-center transition-all shrink-0"
+                >
+                  {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
+                </button>
+              </div>
+              <div className="flex items-center pt-1">
+                <label className="flex items-center gap-2 text-xs text-goat-gray-400 cursor-pointer hover:text-white transition-colors">
+                  <input
+                     type="checkbox"
+                     className="w-3.5 h-3.5 rounded border-white/20 bg-black/50 text-primary accent-primary focus:ring-primary/50 focus:ring-offset-0"
+                     checked={createMeetLink}
+                     onChange={(e) => setCreateMeetLink(e.target.checked)}
+                  />
+                  Gerar link do Google Meet?
+                </label>
+              </div>
+            </div>
+          )}
+          {!googleConnected && selectedDay !== null && (
+            <div className="mt-4 pt-4 border-t border-white/10 text-center">
+              <p className="text-xs text-goat-gray-400">Conecte seu Google Calendar para adicionar eventos diretamente por aqui.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Global de Novo Evento */}
+      <Dialog open={isCreateModalOpen} onOpenChange={(open) => !open && setIsCreateModalOpen(false)}>
+        <DialogContent className="sm:max-w-[450px] bg-[#121212] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+               <Plus className="w-5 h-5 text-primary" />
+               Criar Novo Evento
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-4">
+             {googleConnected ? (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-goat-gray-300 uppercase tracking-wider">Título do Evento</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Reunião com Cliente" 
+                      className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50"
+                      value={newEventTitle}
+                      onChange={(e) => setNewEventTitle(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-goat-gray-300 uppercase tracking-wider">Data</label>
+                      <input 
+                        type="date" 
+                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50"
+                        value={newEventDate}
+                        onChange={(e) => setNewEventDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-goat-gray-300 uppercase tracking-wider">Hora</label>
+                      <input 
+                        type="time" 
+                        className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50"
+                        value={newEventTime}
+                        onChange={(e) => setNewEventTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer group">
+                      <div className="relative flex items-center justify-center w-5 h-5">
+                        <input
+                           type="checkbox"
+                           className="peer absolute w-full h-full opacity-0 cursor-pointer"
+                           checked={createMeetLink}
+                           onChange={(e) => setCreateMeetLink(e.target.checked)}
+                        />
+                        <div className="w-full h-full rounded border-2 border-white/20 bg-black/50 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
+                           {createMeetLink && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                      </div>
+                      <span className="group-hover:text-primary transition-colors">Adicionar videoconferência do Google Meet</span>
+                    </label>
+                  </div>
+
+                  <div className="pt-4 mt-2 border-t border-white/10 flex justify-end gap-3">
+                    <button
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={creatingEvent || !newEventTitle.trim() || !newEventDate}
+                      onClick={() => handleCreateGoogleEvent(true)}
+                      className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 disabled:opacity-50 transition-all flex items-center gap-2"
+                    >
+                       {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Evento"}
+                    </button>
+                  </div>
+                </>
+             ) : (
+                <div className="text-center py-6">
+                   <AlertCircle className="w-10 h-10 text-goat-gray-400 mx-auto mb-3" />
+                   <p className="text-sm text-white">Você precisa conectar seu Google Calendar</p>
+                   <p className="text-xs text-goat-gray-400 mt-1 mb-4">Para criar eventos diretamente por aqui, habilite a integração.</p>
+                   <button 
+                     onClick={handleConnectGoogle}
+                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors inline-block"
+                   >
+                     Conectar agora
+                   </button>
+                </div>
+             )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

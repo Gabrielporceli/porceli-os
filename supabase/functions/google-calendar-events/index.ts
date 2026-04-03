@@ -72,8 +72,71 @@ serve(async (req) => {
           .eq('user_id', user.id)
       }
     }
+    // Usado para saber se é pra criar evento (ação) ou buscar eventos
+    let action = 'FETCH'
+    let requestBody: any = null
 
-    // Buscar parâmetros da query
+    if (req.method === 'POST') {
+      const text = await req.text()
+      if (text) {
+        requestBody = JSON.parse(text)
+        if (requestBody.action === 'CREATE_EVENT' || requestBody.title) {
+          action = 'CREATE_EVENT'
+        }
+      }
+    }
+
+    // Tratamento de POST (Criar novo evento)
+    if (action === 'CREATE_EVENT' && requestBody) {
+      const eventDetails: any = {
+        summary: requestBody.title,
+        start: {
+          dateTime: requestBody.start, // ex: '2026-04-03T15:00:00-03:00'
+          timeZone: 'America/Sao_Paulo'
+        },
+        end: {
+          dateTime: requestBody.end,
+          timeZone: 'America/Sao_Paulo'
+        }
+      }
+
+      if (requestBody.createMeetLink) {
+        eventDetails.conferenceData = {
+          createRequest: {
+            requestId: crypto.randomUUID(),
+            conferenceSolutionKey: {
+              type: "hangoutsMeet"
+            }
+          }
+        }
+      }
+
+      const postUrl = requestBody.createMeetLink 
+        ? "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1"
+        : "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+
+      const createRes = await fetch(
+        postUrl,
+        {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(eventDetails)
+        }
+      )
+
+      const createdEvent = await createRes.json()
+      if (createdEvent.error) throw new Error(createdEvent.error.message)
+
+      return new Response(
+        JSON.stringify({ success: true, event: createdEvent }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Tratamento de GET/Padrão (Buscar eventos)
     const url = new URL(req.url)
     const timeMin = url.searchParams.get('timeMin') ?? new Date().toISOString()
     const timeMax = url.searchParams.get('timeMax') ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
