@@ -14,6 +14,7 @@ import Financial from "./pages/Financial"
 import Contracts from "./pages/Contracts"
 import NotFound from "./pages/NotFound"
 import SdrAgent from "./pages/SdrAgent"
+import CalendarPage from "./pages/Calendar"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -100,6 +101,16 @@ function App() {
                       <ProtectedRoute>
                         <CRMLayout>
                           <SdrAgent />
+                        </CRMLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/calendar"
+                    element={
+                      <ProtectedRoute>
+                        <CRMLayout>
+                          <CalendarPage />
                         </CRMLayout>
                       </ProtectedRoute>
                     }

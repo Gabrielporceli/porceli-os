@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Bot } from "lucide-react";
+import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Bot, CalendarDays } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,6 +11,7 @@ const menuItems = [
   { title: "Conversas", url: "/conversations", icon: MessageSquare },
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Agente SDR", url: "/sdr-agent", icon: Bot },
+  { title: "Calendário", url: "/calendar", icon: CalendarDays },
 ];
 
 export function AppSidebar() {
