@@ -114,36 +114,67 @@ serve(async (req) => {
     console.log('Mensagem inserida:', message.id)
 
     // PASSO 3: Enviar mensagem DIRETAMENTE via Evolution API
-    const evolutionUrl = Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br'
-    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY') || '36C25CBB501B-4ED2-8982-74BF3DAEC624'
-    const evolutionInstance = Deno.env.get('EVOLUTION_INSTANCE') || 'Agencia'
+    const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
+    const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim()
+    const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim()
 
-    console.log(`📤 Enviando via Evolution API: ${evolutionInstance} para ${phone_clean}`)
+    // Limpeza rigorosa do número: apenas dígitos, sem prefixos extras além do DDI
+    let target_number = numero.split('@')[0].replace(/[^0-9]/g, '')
+    
+    // Se o número começar com 00, substituir por + ou apenas remover 00 se o DDI vier depois
+    if (target_number.startsWith('00')) target_number = target_number.substring(2)
 
-    const evolutionResponse = await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {
+    console.log(`📤 Enviando via Evolution API: ${evolutionInstance} para ${target_number}`)
+
+    const evolutionEndpoint = `${evolutionUrl}/message/sendText/${evolutionInstance}`
+    
+    const evolutionResponse = await fetch(evolutionEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': evolutionApiKey
       },
       body: JSON.stringify({
-        number: phone_clean,
+        number: target_number,
         text: mensagem,
         delay: 1200
       })
     })
 
-    const evolutionResult = await evolutionResponse.json()
+    let evolutionResult
+    try {
+      evolutionResult = await evolutionResponse.json()
+    } catch (e) {
+      evolutionResult = { message: 'Erro ao analisar resposta da Evolution API', raw: await evolutionResponse.text() }
+    }
 
     if (!evolutionResponse.ok) {
-      console.error('❌ Erro na Evolution API:', evolutionResult)
-    } else {
-      console.log('✅ Mensagem enviada com sucesso pela Evolution')
+      console.error('❌ Erro na Evolution API:', {
+        status: evolutionResponse.status,
+        statusText: evolutionResponse.statusText,
+        result: evolutionResult,
+        endpoint: evolutionEndpoint
+      })
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: evolutionResult.message || 'Erro na Evolution API',
+          details: evolutionResult,
+          status: evolutionResponse.status
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
     }
+
+    console.log('✅ Mensagem enviada com sucesso pela Evolution')
 
     return new Response(
       JSON.stringify({ 
-        success: evolutionResponse.ok, 
+        success: true, 
         message_id: message.id,
         conversation_id: conversation.id,
         evolution_result: evolutionResult,
