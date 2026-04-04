@@ -59,30 +59,21 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-Porceli-dark relative overflow-hidden flex items-center justify-center">
-      {/* Background gradient effect using Porceli colors */}
-      <div className="absolute inset-0 bg-gradient-to-b from-Porceli-purple/40 via-Porceli-purple/20 to-Porceli-dark" />
-      
+    <div className="min-h-screen w-screen bg-porceli-dark relative overflow-hidden flex items-center justify-center">
+      {/* Custom Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url("/background.png")' }}
+      >
+        {/* Dark blur overlay for better text contrast/glass effect */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      </div>
+
       {/* Subtle noise texture overlay */}
-      <div className="absolute inset-0 opacity-[0.03] mix-blend-soft-light" 
+      <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none" 
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           backgroundSize: '200px 200px'
-        }}
-      />
-
-      {/* Background glows */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-Porceli-purple/20 blur-[80px]" />
-      <motion.div 
-        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[100vh] h-[60vh] rounded-b-full bg-Porceli-purple/15 blur-[60px]"
-        animate={{ 
-          opacity: [0.15, 0.3, 0.15],
-          scale: [0.98, 1.02, 0.98]
-        }}
-        transition={{ 
-          duration: 8, 
-          repeat: Infinity,
-          repeatType: "mirror"
         }}
       />
 
@@ -102,7 +93,7 @@ const Login = () => {
         >
           <div className="relative group">
             {/* Glass card background */}
-            <div className="relative bg-Porceli-dark/60 backdrop-blur-xl rounded-2xl p-6 border border-Porceli-gray-700/30 shadow-2xl overflow-hidden">
+            <div className="liquid-glass p-8 shadow-2xl overflow-hidden border-white/10 group-hover:border-white/20 transition-colors duration-500">
               {/* Logo and header */}
               <div className="text-center space-y-1 mb-5">
                 <motion.div
@@ -113,7 +104,7 @@ const Login = () => {
                 >
                   <img 
                     src="/lovable-uploads/71999d17-6e7e-45ff-bd6d-8c56b9968b1d.png" 
-                    alt="Porceli Logo" 
+                    alt="porceli Logo" 
                     className="w-8 h-8 object-contain"
                   />
                 </motion.div>
@@ -131,7 +122,7 @@ const Login = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-Porceli-gray-400 text-xs"
+                  className="text-porceli-gray-400 text-xs"
                 >
                   Faça login para continuar
                 </motion.p>
@@ -148,18 +139,19 @@ const Login = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Mail className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "email" ? 'text-Porceli-purple' : 'text-Porceli-gray-400'
-                      }`} />
-                      
-                       <Input
+                      <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300 z-10 ${
+                        focusedInput === "email" ? 'text-porceli-purple' : 'text-white/40'
+                      }`}>
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
                         type="email"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedInput("email")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-Porceli-dark/90 border-Porceli-gray-600/40 focus:border-Porceli-purple/60 text-white placeholder:text-Porceli-gray-500 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-Porceli-dark focus:shadow-lg focus:shadow-Porceli-purple/10"
+                        className="w-full bg-white/[0.03] border-white/5 focus:border-porceli-purple/50 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-3 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
                         required
                       />
                     </div>
@@ -173,31 +165,32 @@ const Login = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${
-                        focusedInput === "password" ? 'text-Porceli-purple' : 'text-Porceli-gray-400'
-                      }`} />
-                      
-                       <Input
+                      <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300 z-10 ${
+                        focusedInput === "password" ? 'text-porceli-purple' : 'text-white/40'
+                      }`}>
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         onFocus={() => setFocusedInput("password")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-Porceli-dark/90 border-Porceli-gray-600/40 focus:border-Porceli-purple/60 text-white placeholder:text-Porceli-gray-500 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-Porceli-dark focus:shadow-lg focus:shadow-Porceli-purple/10"
+                        className="w-full bg-white/[0.03] border-white/5 focus:border-porceli-purple/50 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-12 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
                         required
                       />
-                      
-                      <div 
-                        onClick={() => setShowPassword(!showPassword)} 
-                        className="absolute right-3 cursor-pointer"
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none z-10"
                       >
                         {showPassword ? (
-                          <Eye className="w-4 h-4 text-Porceli-gray-400 hover:text-Porceli-purple transition-colors duration-300" />
+                          <Eye className="w-4 h-4 text-white/40 hover:text-porceli-purple transition-colors duration-300" />
                         ) : (
-                          <EyeClosed className="w-4 h-4 text-Porceli-gray-400 hover:text-Porceli-purple transition-colors duration-300" />
+                          <EyeClosed className="w-4 h-4 text-white/40 hover:text-porceli-purple transition-colors duration-300" />
                         )}
-                      </div>
+                      </button>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -211,7 +204,7 @@ const Login = () => {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={() => setRememberMe(!rememberMe)}
-                        className="peer h-4 w-4 cursor-pointer appearance-none rounded border-2 border-Porceli-gray-600/60 bg-Porceli-dark/80 transition-all duration-300 checked:border-Porceli-purple checked:bg-Porceli-purple focus:ring-2 focus:ring-Porceli-purple/30 focus:ring-offset-0"
+                        className="peer h-4 w-4 cursor-pointer appearance-none rounded border-2 border-porceli-gray-600/60 bg-porceli-dark/80 transition-all duration-300 checked:border-porceli-purple checked:bg-porceli-purple focus:ring-2 focus:ring-porceli-purple/30 focus:ring-offset-0"
                       />
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-white opacity-0 transition-opacity duration-200 peer-checked:opacity-100">
                         <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -219,7 +212,7 @@ const Login = () => {
                         </svg>
                       </div>
                     </div>
-                    <label htmlFor="remember-me" className="text-sm text-Porceli-gray-300 cursor-pointer hover:text-white transition-colors duration-200">
+                    <label htmlFor="remember-me" className="text-sm text-porceli-gray-300 cursor-pointer hover:text-white transition-colors duration-200">
                       Lembrar de mim
                     </label>
                   </div>
@@ -234,9 +227,7 @@ const Login = () => {
                   disabled={isLoading}
                   className="w-full relative group/button mt-5"
                 >
-                  <div className="absolute inset-0 bg-Porceli-purple/20 rounded-lg blur-lg opacity-0 group-hover/button:opacity-70 transition-opacity duration-300" />
-                  
-                  <div className="relative overflow-hidden bg-gradient-Porceli text-white font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center glow-purple">
+                  <div className="relative overflow-hidden bg-porceli-purple text-white font-bold h-12 rounded-2xl transition-all duration-300 flex items-center justify-center shadow-[0_0_20px_rgba(104,41,192,0.4)] group-hover:shadow-[0_0_30px_rgba(104,41,192,0.6)]">
                     <AnimatePresence mode="wait">
                       {isLoading ? (
                         <motion.div

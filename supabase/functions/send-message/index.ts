@@ -113,45 +113,40 @@ serve(async (req) => {
 
     console.log('Mensagem inserida:', message.id)
 
-    // PASSO 3: Enviar dados para o webhook externo
-    const webhookData = {
-      conversation: conversation,
-      message: {
-        id: message.id,
-        text: mensagem,
-        numero,
-        nome_contato,
-        data_hora,
-        direcao: true,
-        status: 'sent'
-      },
-      user_id,
-      timestamp: data_hora
-    }
+    // PASSO 3: Enviar mensagem DIRETAMENTE via Evolution API
+    const evolutionUrl = Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br'
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY') || '36C25CBB501B-4ED2-8982-74BF3DAEC624'
+    const evolutionInstance = Deno.env.get('EVOLUTION_INSTANCE') || 'Agencia'
 
-    console.log('Enviando para webhook:', webhookData)
+    console.log(`📤 Enviando via Evolution API: ${evolutionInstance} para ${phone_clean}`)
 
-    const webhookResponse = await fetch('https://webhook.gabrielporceli.com.br/webhook/crm_goat_envia', {
+    const evolutionResponse = await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'apikey': evolutionApiKey
       },
-      body: JSON.stringify(webhookData)
+      body: JSON.stringify({
+        number: phone_clean,
+        text: mensagem,
+        delay: 1200
+      })
     })
 
-    if (!webhookResponse.ok) {
-      console.error('Erro no webhook:', webhookResponse.status, await webhookResponse.text())
-      // Não falhar a operação se o webhook der erro
+    const evolutionResult = await evolutionResponse.json()
+
+    if (!evolutionResponse.ok) {
+      console.error('❌ Erro na Evolution API:', evolutionResult)
     } else {
-      console.log('Webhook enviado com sucesso')
+      console.log('✅ Mensagem enviada com sucesso pela Evolution')
     }
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
+        success: evolutionResponse.ok, 
         message_id: message.id,
         conversation_id: conversation.id,
-        webhook_sent: webhookResponse.ok,
+        evolution_result: evolutionResult,
         processed_at: data_hora
       }),
       { 

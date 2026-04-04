@@ -171,7 +171,55 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const requestBody = await req.json();
+    let requestBody = await req.json();
+    console.log('📦 Payload recebido:', JSON.stringify(requestBody, null, 2));
+
+    // Normalização para Evolution API (Formato Nativo)
+    if (requestBody.event && requestBody.data) {
+      console.log('📱 Detectado formato nativo Evolution API:', requestBody.event);
+      
+      const data = requestBody.data;
+      const message = data.message || {};
+      const key = data.key || {};
+      
+      // Extrair o texto da mensagem baseado nos múltiplos tipos do WA
+      let text = '';
+      if (message.conversation) text = message.conversation;
+      else if (message.extendedTextMessage?.text) text = message.extendedTextMessage.text;
+      else if (message.imageMessage?.caption) text = message.imageMessage.caption;
+      else if (message.videoMessage?.caption) text = message.videoMessage.caption;
+      else if (message.documentWithCaptionMessage?.message?.documentMessage?.caption) text = message.documentWithCaptionMessage.message.documentMessage.caption;
+      else if (message.buttonsResponseMessage?.selectedButtonId) text = message.buttonsResponseMessage.selectedButtonId;
+      else if (message.templateButtonReplyMessage?.selectedId) text = message.templateButtonReplyMessage.selectedId;
+
+      // Detectar tipo de mídia
+      let mediaType = null;
+      if (message.imageMessage) mediaType = 'imageMessage';
+      else if (message.videoMessage) mediaType = 'videoMessage';
+      else if (message.audioMessage) mediaType = 'audioMessage';
+      else if (message.pttMessage) mediaType = 'pttMessage';
+      else if (message.documentMessage) mediaType = 'documentMessage';
+
+      // Normalizar para o formato esperado pela função do banco
+      requestBody = {
+        p_numero: key.remoteJid ? key.remoteJid.split('@')[0] : null,
+        p_mensagem: text,
+        p_direcao: key.fromMe || false,
+        p_data_hora: data.messageTimestamp ? new Date(data.messageTimestamp * 1000).toISOString() : new Date().toISOString(),
+        p_nome_contato: data.pushName || null,
+        p_user_id: Deno.env.get('DEFAULT_USER_ID') || 'bad3abae-951e-49a4-8738-9037661fd5a1',
+        
+        // Dados de mídia para processamento posterior se existirem
+        p_media_type: mediaType,
+        p_media_url: message[mediaType]?.url || null,
+        p_media_key: message[mediaType]?.mediaKey || null,
+        p_media_mime: message[mediaType]?.mimetype || null,
+        p_media_filename: message[mediaType]?.fileName || null,
+        p_media_size: message[mediaType]?.fileLength || null
+      };
+
+      console.log('🔄 Payload normalizado:', JSON.stringify(requestBody, null, 2));
+    }
 
     // Verificar dados obrigatórios
     if (!requestBody.p_numero || !requestBody.p_user_id) {

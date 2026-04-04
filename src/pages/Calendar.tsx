@@ -1,5 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { 
   Calendar as CalendarIcon, 
@@ -108,6 +118,7 @@ export default function Calendar() {
   const { toast } = useToast();
 
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion'; title: string; time?: string; status?: string } | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
@@ -242,10 +253,11 @@ export default function Calendar() {
 
   const handleDeleteActivity = async () => {
     if (!editingItem) return;
+    setIsDeleteDialogOpen(true);
+  };
 
-    if (!confirm(`Tem certeza que deseja excluir esta ${editingItem.type === 'google' ? 'atividade' : 'tarefa'}?`)) {
-      return;
-    }
+  const confirmDeleteActivity = async () => {
+    if (!editingItem) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -276,6 +288,7 @@ export default function Calendar() {
       }
 
       setIsEditActivityModalOpen(false);
+      setIsDeleteDialogOpen(false);
       setEditingItem(null);
     } catch (error: any) {
       console.error(error);
@@ -1398,6 +1411,32 @@ export default function Calendar() {
         </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="liquid-glass border-white/10 shadow-2xl bg-[#121212]/90 backdrop-blur-2xl text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              Tem certeza que deseja excluir esta {editingItem?.type === 'google' ? 'atividade' : 'tarefa'}? 
+              {editingItem?.type === 'google' ? ' Esta ação também removerá o evento do Google Calendar.' : ' Esta ação removerá permanentemente do Notion.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 pt-4">
+            <AlertDialogCancel className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 rounded-xl h-11 h-11 px-6 font-bold transition-all">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteActivity}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl h-11 px-8 font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-wider text-xs"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
