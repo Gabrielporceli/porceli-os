@@ -352,13 +352,13 @@ export default function Financial() {
         <div className="p-6">
           {financialEntriesLoading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-goat-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-goat-gray-400">Carregando lançamentos...</p>
+              <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-Porceli-gray-400">Carregando lançamentos...</p>
             </div>
           ) : normalEntries.length === 0 ? (
             <div className="text-center py-8">
-              <TrendingDown className="w-16 h-16 text-goat-gray-600 mx-auto mb-4" />
-              <p className="text-goat-gray-400">Nenhum lançamento encontrado</p>
+              <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
+              <p className="text-Porceli-gray-400">Nenhum lançamento encontrado</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -449,8 +449,8 @@ export default function Financial() {
         <div className="p-6">
           {expensesLoading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-goat-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-goat-gray-400">Carregando despesas...</p>
+              <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-Porceli-gray-400">Carregando despesas...</p>
             </div>
           ) : (() => {
             // Filtrar despesas conforme o filtro selecionado
@@ -466,8 +466,8 @@ export default function Financial() {
             if (filteredExpenses.length === 0) {
               return (
                 <div className="text-center py-8">
-                  <TrendingDown className="w-16 h-16 text-goat-gray-600 mx-auto mb-4" />
-                  <p className="text-goat-gray-400">Nenhuma despesa encontrada</p>
+                  <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
+                  <p className="text-Porceli-gray-400">Nenhuma despesa encontrada</p>
                 </div>
               );
             }

@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -15,7 +16,10 @@ import {
   Edit,
   Clock,
   MoreVertical,
-  CheckCircle
+  CheckCircle,
+  Save,
+  Lock,
+  Unlock
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -108,6 +112,28 @@ export default function Calendar() {
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [editTime, setEditTime] = useState("");
+  const [lockedDays, setLockedDays] = useState<string[]>(() => {
+    const saved = localStorage.getItem('locked_days');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('locked_days', JSON.stringify(lockedDays));
+  }, [lockedDays]);
+
+  const isDayLocked = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return lockedDays.includes(dateStr);
+  };
+
+  const toggleLockDay = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (lockedDays.includes(dateStr)) {
+      setLockedDays(lockedDays.filter(d => d !== dateStr));
+    } else {
+      setLockedDays([...lockedDays, dateStr]);
+    }
+  };
 
   useEffect(() => {
     if (editingItem) {
@@ -186,6 +212,11 @@ export default function Calendar() {
 
   const handleSaveEdit = async () => {
     if (!editingItem) return;
+
+    if (editingItem.type === 'google' && !editTime) {
+      toast({ title: "Selecione um horário", description: "Eventos do Google Calendar precisam de um horário.", variant: "destructive" });
+      return;
+    }
 
     const newStart = editDate ? new Date(editDate) : new Date();
     if (editTime) {
@@ -299,7 +330,19 @@ export default function Calendar() {
       toast({ title: "Selecione uma data", variant: "destructive" });
       return;
     }
+
+    const dateToCheck = isGlobal ? newEventDate : `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+    if (lockedDays.includes(dateToCheck)) {
+      toast({ title: "Dia trancado", description: "Este dia está trancado para novas atividades.", variant: "destructive" });
+      return;
+    }
+
     if (!newEventTitle.trim()) return;
+    
+    if (createMeetLink && !newEventTime) {
+      toast({ title: "Horário obrigatório", description: "Por favor, selecione um horário para o evento do Google Calendar.", variant: "destructive" });
+      return;
+    }
     
     setCreatingEvent(true);
 
@@ -592,54 +635,78 @@ export default function Calendar() {
             <button
               onClick={handleConnectGoogle}
               disabled={connectingGoogle}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 text-sm disabled:opacity-60"
+              className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm disabled:opacity-60 font-medium"
             >
               {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1.086 14.324l-3.456-3.456 1.414-1.414 2.042 2.042 4.292-4.292 1.414 1.414-5.706 5.706z"/>
                 </svg>
               )}
-              Conectar Google Calendar
-            </button>
-          ) : (
-            <button
-              onClick={fetchGoogleEvents}
-              disabled={loadingGoogle}
-              className="flex items-center gap-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 px-4 py-2 rounded-xl transition-all duration-300 text-sm border border-green-600/30"
-            >
-              {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Google Calendar
             </button>
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <button
+                onClick={fetchGoogleEvents}
+                disabled={loadingGoogle}
+                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
+              >
+                {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Google
+              </button>
+            </motion.div>
           )}
 
           {/* Botão Notion */}
           {!notionConnected ? (
-            <button
-              onClick={handleConnectNotion}
-              disabled={connectingNotion}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white px-4 py-2 rounded-xl transition-all duration-300 text-sm border border-white/20 disabled:opacity-60"
+            <motion.div
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-              Conectar Notion
-            </button>
+              <button
+                onClick={handleConnectNotion}
+                disabled={connectingNotion}
+                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
+              >
+                {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+                Conectar Notion
+              </button>
+            </motion.div>
           ) : (
-            <button
-              onClick={() => fetchNotionTasks()}
-              disabled={loadingNotion}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white px-4 py-2 rounded-xl transition-all duration-300 text-sm border border-white/20"
+            <motion.div
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Notion
-            </button>
+              <button
+                onClick={() => fetchNotionTasks()}
+                disabled={loadingNotion}
+                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
+              >
+                {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Notion
+              </button>
+            </motion.div>
           )}
 
-          <button 
-             onClick={() => setIsCreateModalOpen(true)}
-             className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(104,41,192,0.3)] text-sm"
+          <motion.div
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Plus className="w-4 h-4" />
-            Novo Evento
-          </button>
+            <button 
+               onClick={() => setIsCreateModalOpen(true)}
+               className="liquid-glass flex items-center gap-2 !bg-primary hover:!bg-primary/90 !text-white px-6 h-11 !rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(104,41,192,0.3)] text-sm whitespace-nowrap font-bold !border-primary/20"
+            >
+              <Plus className="w-4 h-4" />
+              Novo Evento
+            </button>
+          </motion.div>
         </div>
       </div>
 
@@ -673,7 +740,7 @@ export default function Calendar() {
           </div>
 
           {loadingGoogle && (
-            <div className="flex items-center justify-center py-4 gap-2 text-goat-gray-400 text-sm mb-4">
+            <div className="flex items-center justify-center py-4 gap-2 text-Porceli-gray-400 text-sm mb-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               Sincronizando eventos...
             </div>
@@ -681,7 +748,7 @@ export default function Calendar() {
 
           <div className="grid grid-cols-7 gap-px bg-white/5 rounded-xl overflow-hidden border border-white/5">
             {DAYS_OF_WEEK.map((day) => (
-              <div key={day} className="bg-black/40 backdrop-blur-md p-4 text-center text-xs font-medium text-goat-gray-400 uppercase tracking-wider">
+              <div key={day} className="bg-black/40 backdrop-blur-md p-4 text-center text-xs font-medium text-Porceli-gray-400 uppercase tracking-wider">
                 {day}
               </div>
             ))}
@@ -694,31 +761,37 @@ export default function Calendar() {
                 currentDate.getFullYear() === new Date().getFullYear();
 
               const allItems = [
-                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, color: getEventColor(e.colorId), url: e.htmlLink })),
-                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url }))
+                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, color: getEventColor(e.colorId), url: e.htmlLink, status: e.status })),
+                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status }))
               ];
 
               return (
                 <div
                   key={idx}
                   onClick={() => day && setSelectedDay(day)}
-                  className={`min-h-[120px] bg-black/20 p-2 transition-colors hover:bg-white/[0.04] ${day ? "cursor-pointer" : "opacity-20 cursor-default"}`}
+                  className={`min-h-[120px] bg-black/20 p-2 transition-colors relative hover:bg-white/[0.04] ${day ? "cursor-pointer" : "opacity-20 cursor-default"} ${day && isDayLocked(day) ? 'ring-1 ring-inset ring-red-500/50' : ''}`}
                 >
                   {day && (
                     <div className="flex flex-col h-full">
-                      <span className={`text-sm font-medium ${
+                      <span className={`text-sm font-medium relative ${
                         isToday
                           ? "bg-primary text-white w-7 h-7 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(104,41,192,0.5)]"
-                          : "text-goat-gray-300 p-1"
+                          : "text-Porceli-gray-300 p-1"
                       }`}>
                         {day}
+                        {isDayLocked(day) && (
+                          <Lock className="w-2.5 h-2.5 text-red-500/70 absolute -top-1 -right-1" />
+                        )}
                       </span>
                       <div className="mt-2 space-y-1">
                         {allItems.slice(0, 3).map((item) => (
                           <div
                             key={item.id}
                             title={item.title}
-                            className={`text-[10px] p-1.5 rounded-md border truncate cursor-pointer ${item.color} flex items-center gap-1`}
+                            className={`text-[10px] p-1.5 rounded-lg border truncate cursor-pointer liquid-glass transition-all hover:brightness-125
+                              ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 
+                                item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'border-white/10'} 
+                              flex items-center gap-1.5`}
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingItem({
@@ -740,7 +813,7 @@ export default function Calendar() {
                           </div>
                         ))}
                         {allItems.length > 3 && (
-                          <div className="text-[10px] text-goat-gray-400 pl-1 mt-1 font-medium">
+                          <div className="text-[10px] text-Porceli-gray-400 pl-1 mt-1 font-medium">
                             +{allItems.length - 3} mais
                           </div>
                         )}
@@ -763,10 +836,10 @@ export default function Calendar() {
 
             {loadingGoogle || loadingNotion ? (
               <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-goat-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-Porceli-gray-400" />
               </div>
             ) : todayItems.length === 0 ? (
-              <p className="text-sm text-goat-gray-400 text-center py-4">Nenhuma atividade hoje</p>
+              <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhuma atividade hoje</p>
             ) : (
               <div className="space-y-3">
                 {todayItems.map((item) => (
@@ -782,7 +855,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 group relative overflow-hidden cursor-pointer hover:bg-white/10 transition-all"
+                    className={`flex items-start gap-3 p-3 rounded-xl bg-white/5 border transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-white/5'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -795,7 +868,7 @@ export default function Calendar() {
                             {(item as any).clients[0]}
                           </span>
                         )}
-                        <p className="text-xs text-goat-gray-400">
+                        <p className="text-xs text-Porceli-gray-400">
                           {item.type === 'google' ? formatTime((item as any).start) : ((item as any).time || "Tarefa do dia")}
                         </p>
                       </div>
@@ -814,10 +887,10 @@ export default function Calendar() {
 
             {loadingGoogle || loadingNotion ? (
               <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-goat-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-Porceli-gray-400" />
               </div>
             ) : tomorrowItems.length === 0 ? (
-              <p className="text-sm text-goat-gray-400 text-center py-4">Nenhuma atividade para amanhã</p>
+              <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhuma atividade para amanhã</p>
             ) : (
               <div className="space-y-3">
                 {tomorrowItems.map((item) => (
@@ -833,7 +906,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 group relative overflow-hidden cursor-pointer hover:bg-white/10 transition-all"
+                    className={`flex items-start gap-3 p-3 rounded-xl bg-white/5 border transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-white/5'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -841,7 +914,7 @@ export default function Calendar() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{item.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-goat-gray-400">
+                        <p className="text-xs text-Porceli-gray-400">
                           {item.type === 'google' ? formatTime((item as any).start) : ((item as any).time || "Tarefa do dia")}
                         </p>
                         {item.type === 'notion' && (item as any).clients && (item as any).clients.length > 0 && (
@@ -851,11 +924,6 @@ export default function Calendar() {
                         )}
                       </div>
                     </div>
-                    {((item as any).htmlLink || (item as any).url) && (
-                      <a href={(item as any).htmlLink || (item as any).url} target="_blank" rel="noopener noreferrer" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ExternalLink className="w-3.5 h-3.5 text-primary hover:text-white transition-colors" />
-                      </a>
-                    )}
                   </div>
                 ))}
               </div>
@@ -935,7 +1003,7 @@ export default function Calendar() {
               });
 
               if (sortedItems.length === 0) {
-                return <p className="text-sm text-goat-gray-400 text-center py-4">Nenhum evento neste dia.</p>;
+                return <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhum evento neste dia.</p>;
               }
 
               return sortedItems.map((item) => (
@@ -945,7 +1013,9 @@ export default function Calendar() {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className="liquid-glass border-white/[0.05] p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer"
+                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border 
+                    ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' : 
+                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                 >
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">
@@ -1015,11 +1085,26 @@ export default function Calendar() {
           <div className="p-6 pt-0 shrink-0">
             {/* Formulário de novo evento dentro do modal */}
             <div className="pt-4 border-t border-white/10 space-y-3">
-              <h4 className="text-sm font-medium text-white/80">
-                {createMeetLink ? "Adicionar Evento no Google Calendar" : "Adicionar Tarefa no Notion"}
-              </h4>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h4 className="text-sm font-medium text-white/80">
+                  {createMeetLink ? "Adicionar Evento no Google Calendar" : "Adicionar Tarefa no Notion"}
+                </h4>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Trancar Dia</span>
+                  <Switch 
+                    checked={selectedDay ? isDayLocked(selectedDay) : false}
+                    onCheckedChange={() => selectedDay && toggleLockDay(selectedDay)}
+                    className="scale-75"
+                  />
+                </div>
+              </div>
               
-              <div className="space-y-3">
+              <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                {selectedDay && isDayLocked(selectedDay) && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[1px] rounded-xl">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20 shadow-2xl">Dia Trancado</p>
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row gap-2 w-full">
                   <input 
                     type="text" 
@@ -1055,7 +1140,7 @@ export default function Calendar() {
                     <button 
                       disabled={creatingEvent || !newEventTitle.trim()}
                       onClick={() => handleCreateActivity(false)}
-                      className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl px-6 h-11 text-xs font-bold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all flex items-center justify-center w-full uppercase tracking-wider"
+                      className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-2xl px-6 h-11 text-xs font-bold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all flex items-center justify-center w-full uppercase tracking-wider"
                     >
                       {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
                     </button>
@@ -1087,6 +1172,9 @@ export default function Calendar() {
                <Plus className="w-5 h-5 text-primary" />
                {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
             </DialogTitle>
+            <DialogDescription className="text-white/40">
+              Preencha os detalhes da nova atividade
+            </DialogDescription>
           </DialogHeader>
           
           <div className="p-6 space-y-4">
@@ -1142,33 +1230,38 @@ export default function Calendar() {
               />
             </div>
 
-            <div className="flex gap-3 pt-4 mt-2">
+            <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
               <motion.div 
                 className="flex-1" 
                 whileHover={{ scale: 1.05, translateY: -2 }} 
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <button
+                <Button
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-xs"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
                 >
                   Cancelar
-                </button>
+                </Button>
               </motion.div>
               <motion.div 
                 className="flex-[2]" 
-                whileHover={!creatingEvent && newEventTitle.trim() && newEventDate ? { scale: 1.02, translateY: -2 } : {}}
-                whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.98 } : {}}
+                whileHover={!creatingEvent && newEventTitle.trim() && newEventDate ? { scale: 1.05, translateY: -2 } : {}}
+                whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <button
-                  disabled={creatingEvent || !newEventTitle.trim() || !newEventDate}
+                <Button
+                  disabled={creatingEvent || !newEventTitle.trim() || !newEventDate || (createMeetLink && !newEventTime)}
                   onClick={() => handleCreateActivity(true)}
-                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2 text-[11px] uppercase tracking-widest"
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2"
                 >
-                   {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Atividade"}
-                </button>
+                   {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                     <>
+                       <Save className="w-4 h-4" />
+                       Salvar
+                     </>
+                   )}
+                </Button>
               </motion.div>
             </div>
           </div>
@@ -1183,6 +1276,9 @@ export default function Calendar() {
               <DialogTitle className="text-xl font-bold tracking-tight">
                  Editar {editingItem?.type === 'google' ? 'Evento' : 'Tarefa'}
               </DialogTitle>
+              <DialogDescription className="text-white/40">
+                Altere os detalhes desta atividade
+              </DialogDescription>
             </DialogHeader>
           </div>
           
@@ -1217,50 +1313,88 @@ export default function Calendar() {
             {editingItem?.type === 'notion' && (
                <div className="space-y-3 pt-1">
                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status no Notion</label>
-                 <div className="grid grid-cols-2 gap-3">
-                    <button 
-                      onClick={() => handleUpdateNotionTask(editingItem.id, { status: "Realizado" })}
-                      className="px-4 h-12 rounded-2xl liquid-glass border-white/5 text-white/50 text-[11px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle className="w-[14px] h-[14px] shrink-0" />
-                      <span>Realizado</span>
-                    </button>
-                    <button 
-                      onClick={() => handleUpdateNotionTask(editingItem.id, { status: "Em andamento" })}
-                      className="px-4 h-12 rounded-2xl liquid-glass border-white/5 text-white/50 text-[11px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Clock className="w-[14px] h-[14px] shrink-0" />
-                      <span>Andamento</span>
-                    </button>
+                 <div className="grid grid-cols-2 gap-3 w-full">
+                   <motion.div
+                     whileHover={{ scale: 1.05, translateY: -2 }}
+                     whileTap={{ scale: 0.95 }}
+                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                     className="w-full"
+                   >
+                     <button 
+                       onClick={() => {
+                         handleUpdateNotionTask(editingItem.id, { status: "Realizado" });
+                         setIsEditActivityModalOpen(false);
+                       }}
+                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                     >
+                       <CheckCircle className="w-4 h-4 text-white/40 group-hover:text-green-500 transition-colors" />
+                       <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Realizado</span>
+                     </button>
+                   </motion.div>
+                   
+                   <motion.div
+                     whileHover={{ scale: 1.05, translateY: -2 }}
+                     whileTap={{ scale: 0.95 }}
+                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                     className="w-full"
+                   >
+                     <button 
+                       onClick={() => {
+                         handleUpdateNotionTask(editingItem.id, { status: "Em andamento" });
+                         setIsEditActivityModalOpen(false);
+                       }}
+                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                     >
+                       <Clock className="w-4 h-4 text-white/40 group-hover:text-blue-500 transition-colors" />
+                       <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Andamento</span>
+                     </button>
+                   </motion.div>
                  </div>
                </div>
             )}
 
-            <div className="flex flex-col gap-3 pt-0">
-               <div className="flex gap-3">
-                <button 
-                  onClick={handleDeleteActivity}
-                  className="flex-1 liquid-glass hover:bg-red-500/10 text-white/40 hover:text-red-400 border border-white/5 hover:border-red-500/20 h-12 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="w-[14px] h-[14px] shrink-0" />
-                  <span>Excluir Atividade</span>
-                </button>
-             </div>
-             <div className="flex gap-3">
-                <button 
+            <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
+              <motion.div 
+                className="flex-1" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Button
                   onClick={() => setIsEditActivityModalOpen(false)}
-                  className="flex-1 liquid-glass hover:bg-white/10 text-white/40 border border-white/5 h-12 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
                 >
                   Cancelar
-                </button>
-                <button 
-                  onClick={handleSaveEdit}
-                  className="flex-[2] bg-primary hover:bg-primary/90 text-white h-12 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(104,41,192,0.4)] transition-all"
+                </Button>
+              </motion.div>
+              <motion.div 
+                className="flex-[2]" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2">
+                  <Save className="w-4 h-4" />
+                  Salvar
+                </Button>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDeleteActivity}
+                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  title="Excluir Atividade"
                 >
-                  Salvar Alterações
-                </button>
-             </div>
-          </div>
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            </div>
         </div>
         </DialogContent>
       </Dialog>

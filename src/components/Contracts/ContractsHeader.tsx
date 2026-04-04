@@ -18,9 +18,9 @@ export function ContractsHeader({ onNewContract }: ContractsHeaderProps) {
       >
         <Button 
           onClick={onNewContract}
-          className="bg-goat-purple hover:bg-goat-purple/90 text-white rounded-xl px-6 h-12 font-bold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all flex items-center gap-2"
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold flex items-center gap-2"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Novo Contrato
         </Button>
       </motion.div>

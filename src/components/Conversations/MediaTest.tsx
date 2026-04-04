@@ -46,9 +46,9 @@ export const MediaTest: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-goat-gray-800 rounded-lg border border-goat-gray-700 mb-4">
+    <div className="p-4 bg-Porceli-gray-800 rounded-lg border border-Porceli-gray-700 mb-4">
       <h3 className="text-white font-semibold mb-2">Teste de Mídia</h3>
-      <p className="text-goat-gray-400 text-sm mb-3">
+      <p className="text-Porceli-gray-400 text-sm mb-3">
         Testar o processamento de mídia do WhatsApp
       </p>
       <Button onClick={testMediaProcessing} className="btn-primary">

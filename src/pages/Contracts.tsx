@@ -203,13 +203,13 @@ export default function Contracts() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="h-8 bg-goat-gray-700 rounded animate-pulse" />
+        <div className="h-8 bg-Porceli-gray-700 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-goat-gray-700 rounded animate-pulse" />
+            <div key={i} className="h-24 bg-Porceli-gray-700 rounded animate-pulse" />
           ))}
         </div>
-        <div className="h-40 bg-goat-gray-700 rounded animate-pulse" />
+        <div className="h-40 bg-Porceli-gray-700 rounded animate-pulse" />
       </div>
     );
   }
@@ -296,7 +296,11 @@ export default function Contracts() {
                     <p className="text-xs text-yellow-500/60 font-bold uppercase tracking-wider">Restam</p>
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
-                  <motion.div whileHover={{ scale: 1.05, translateY: -1 }} whileTap={{ scale: 0.95 }}>
+                  <motion.div 
+                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
                     <Button
                       onClick={() => handleRenewClick(contract)}
                       className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-8 rounded-2xl transition-all"
@@ -412,8 +416,9 @@ export default function Contracts() {
 
               <div className="flex items-center gap-3 ml-12 pr-2">
                 <motion.div
-                  whileHover={{ scale: 1.05, translateY: -1 }}
+                  whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
                     size="sm"
@@ -425,8 +430,9 @@ export default function Contracts() {
                   </Button>
                 </motion.div>
                 <motion.div
-                  whileHover={{ scale: 1.05, translateY: -1 }}
+                  whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
                     size="sm"
@@ -438,8 +444,9 @@ export default function Contracts() {
                   </Button>
                 </motion.div>
                 <motion.div
-                  whileHover={{ scale: 1.05, translateY: -1 }}
+                  whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
                     size="sm"

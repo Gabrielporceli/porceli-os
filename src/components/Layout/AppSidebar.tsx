@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Bot, Calendar } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { motion } from "framer-motion";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: BarChart2 },
@@ -52,23 +53,29 @@ export function AppSidebar() {
             const Icon = item.icon;
 
             return (
-              <Link
+              <motion.div
                 key={item.title}
-                to={item.url}
-                title={item.title}
-                className={`
-                  relative group
-                  flex items-center justify-center
-                  w-12 h-12 rounded-2xl
-                  transition-all duration-300
-                  ${isActive
-                    ? "bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.4)]"
-                    : "text-white/40 hover:text-white hover:bg-white/5"
-                  }
-                `}
+                whileHover={{ scale: 1.1, translateY: -2 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
-              </Link>
+                <Link
+                  to={item.url}
+                  title={item.title}
+                  className={`
+                    relative group
+                    flex items-center justify-center
+                    w-12 h-12 rounded-2xl
+                    transition-all duration-300
+                    ${isActive
+                      ? "bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.4)]"
+                      : "text-white/40 hover:text-white hover:bg-white/5"
+                    }
+                  `}
+                >
+                  <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
+                </Link>
+              </motion.div>
             );
           })}
         </div>
@@ -77,19 +84,25 @@ export function AppSidebar() {
         <div className="flex-1" />
 
         {/* Botão de sair no rodapé da barra */}
-        <button
-          type="button"
-          title="Sair"
-          onClick={handleLogout}
-          className="
-            flex items-center justify-center
-            w-12 h-12 rounded-2xl
-            text-white/40 hover:text-red-400 hover:bg-red-400/10
-            transition-all duration-300
-          "
+        <motion.div
+          whileHover={{ scale: 1.1, translateY: -2 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <LogOut className="w-5 h-5" />
-        </button>
+          <button
+            type="button"
+            title="Sair"
+            onClick={handleLogout}
+            className="
+              flex items-center justify-center
+              w-12 h-12 rounded-2xl
+              text-white/40 hover:text-red-400 hover:bg-red-400/10
+              transition-all duration-300
+            "
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </motion.div>
       </div>
     </>
   );

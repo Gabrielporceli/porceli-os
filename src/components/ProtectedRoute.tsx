@@ -12,8 +12,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Mostrar loading enquanto verifica autenticação
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-goat-dark flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-goat-purple border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-Porceli-dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

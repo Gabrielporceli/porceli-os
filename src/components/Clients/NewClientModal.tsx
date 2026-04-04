@@ -255,7 +255,7 @@ export function NewClientModal({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -315,7 +315,7 @@ export function NewClientModal({
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
@@ -327,7 +327,7 @@ export function NewClientModal({
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="00.000.000/0000-00"
                     required
                   />
@@ -339,7 +339,7 @@ export function NewClientModal({
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="Nome do responsável"
                     required
                   />
@@ -351,7 +351,7 @@ export function NewClientModal({
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="(11) 99999-9999"
                     required
                   />
@@ -364,7 +364,7 @@ export function NewClientModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="cliente@empresa.com"
                     required
                   />
@@ -377,7 +377,7 @@ export function NewClientModal({
                     type="text"
                     value={formData.grupo_id}
                     onChange={(e) => handleChange("grupo_id", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-goat-purple focus:ring-goat-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
                     placeholder="ID do grupo"
                   />
                 </div>
@@ -397,7 +397,7 @@ export function NewClientModal({
                     <Button
                       type="button"
                       size="sm"
-                      className="bg-goat-purple/20 hover:bg-goat-purple/30 text-white border-goat-purple/50 h-6 px-2 text-xs"
+                      className="bg-Porceli-purple/20 hover:bg-Porceli-purple/30 text-white border-Porceli-purple/50 h-6 px-2 text-xs"
                       onClick={() => setShowAddPlan(!showAddPlan)}
                     >
                       <Plus className="w-3 h-3 mr-1" /> <span className="text-white">Novo</span>
@@ -427,7 +427,7 @@ export function NewClientModal({
                           type="button"
                           size="sm"
                           onClick={handleAddCustomPlan}
-                          className="bg-goat-purple hover:bg-goat-purple/80 text-white flex-1"
+                          className="bg-Porceli-purple hover:bg-Porceli-purple/80 text-white flex-1"
                         >
                           Adicionar Plano
                         </Button>

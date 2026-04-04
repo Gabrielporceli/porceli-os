@@ -70,8 +70,8 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// GOAT Brand Colors
-				goat: {
+				// Porceli Brand Colors
+				porceli: {
 					dark: '#000000',
 					purple: '#6829c0',
 					gray: {
@@ -135,7 +135,7 @@ export default {
 				'slide-in': 'slide-in 0.3s ease-out'
 			},
 			backgroundImage: {
-				'gradient-goat': 'linear-gradient(135deg, #6829c0 0%, #8B5CF6 100%)',
+				'gradient-porceli': 'linear-gradient(135deg, #6829c0 0%, #8B5CF6 100%)',
 				'gradient-dark': 'linear-gradient(135deg, #080808 0%, #171717 100%)'
 			}
 		}

@@ -45,7 +45,7 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                     onSelect={setDate}
                     initialFocus
                     locale={ptBR}
-                    className="bg-goat-gray-800 text-white rounded-xl w-full flex justify-center"
+                    className="bg-Porceli-gray-800 text-white rounded-xl w-full flex justify-center"
                 />
             </PopoverContent>
         </Popover>

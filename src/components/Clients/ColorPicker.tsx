@@ -46,7 +46,7 @@ export function ColorPicker({
           */}
           <button
             type="button"
-            className="flex w-full items-center justify-between rounded-md border border-goat-gray-600 bg-goat-gray-700 px-3 py-2 text-sm text-white ring-offset-goat-gray-800 placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-goat-purple focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-between rounded-md border border-Porceli-gray-600 bg-Porceli-gray-700 px-3 py-2 text-sm text-white ring-offset-Porceli-gray-800 placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-Porceli-purple focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <div className="flex items-center gap-2">
               <div className={`w-4 h-4 rounded-full ${selectedColor.split(' ')[0]}`} />
@@ -57,7 +57,7 @@ export function ColorPicker({
         </PopoverTrigger>
         <PopoverContent
           // Aplicamos o estilo correto também no conteúdo do popover.
-          className="w-auto rounded-lg border border-goat-gray-700 bg-goat-gray-800 p-2 shadow-lg"
+          className="w-auto rounded-lg border border-Porceli-gray-700 bg-Porceli-gray-800 p-2 shadow-lg"
           sideOffset={5}
         >
           <div className="grid grid-cols-5 gap-2">

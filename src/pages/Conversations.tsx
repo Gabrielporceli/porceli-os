@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Search, Send, Phone, MessageCircle, Filter } from "lucide-react";
+import { motion } from "framer-motion";
 import { ConversationSidebarFilters } from "@/components/Conversations/ConversationSidebarFilters";
 import { WebhookTester } from "@/components/Conversations/WebhookTester";
 import { MessageMedia } from "@/components/Conversations/MessageMedia";
@@ -214,19 +215,25 @@ export default function Conversations() {
               className="pl-10 h-11 bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/30 rounded-xl transition-all hover:bg-white/[0.05] focus:bg-white/[0.05] focus:border-primary/50"
             />
           </div>
-          <Button
-            onClick={() => setIsFiltersOpen(true)}
-            variant="outline"
-            className="h-11 bg-white/[0.03] border-white/[0.05] text-white hover:bg-white/[0.05] hover:text-white rounded-xl transition-all"
+          <motion.div
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Filter className="w-4 h-4 mr-2" />
-            Filtros
-            {hasActiveFilters && (
-              <Badge className="ml-2 bg-white text-goat-purple text-xs">
-                {filters.stages.length + filters.tags.length + filters.direction.length + (filters.client ? 1 : 0)}
-              </Badge>
-            )}
-          </Button>
+            <Button
+              onClick={() => setIsFiltersOpen(true)}
+              variant="outline"
+              className="h-11 bg-white/[0.03] border-white/[0.05] text-white hover:bg-white/[0.05] hover:text-white rounded-xl transition-all"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filtros
+              {hasActiveFilters && (
+                <Badge className="ml-2 bg-white text-Porceli-purple text-xs">
+                  {filters.stages.length + filters.tags.length + filters.direction.length + (filters.client ? 1 : 0)}
+                </Badge>
+              )}
+            </Button>
+          </motion.div>
         </div>
       </ConversationsHeader>
 
@@ -252,12 +259,18 @@ export default function Conversations() {
                         <MessageSquare className="w-8 h-8 text-white/20" />
                       </div>
                       <p className="text-white/40 mb-4">Nenhuma conversa encontrada</p>
-                      <Button
-                        onClick={() => setIsNewConversationModalOpen(true)}
-                        className="h-11 px-6 text-sm bg-primary hover:bg-primary/90 text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] rounded-xl transition-all font-bold"
+                      <motion.div
+                        whileHover={{ scale: 1.05, translateY: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       >
-                        Iniciar Nova Conversa
-                      </Button>
+                        <Button
+                          onClick={() => setIsNewConversationModalOpen(true)}
+                          className="h-11 px-6 text-sm bg-primary hover:bg-primary/90 text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] rounded-xl transition-all font-bold"
+                        >
+                          Iniciar Nova Conversa
+                        </Button>
+                      </motion.div>
                     </div>
                   </div>
                 ) : (
@@ -276,7 +289,7 @@ export default function Conversations() {
                             <h4 className="text-white font-medium text-sm truncate">
                               {conversation.contact_name || conversation.phone}
                             </h4>
-                            <p className="text-goat-gray-400 text-xs flex items-center gap-1">
+                            <p className="text-Porceli-gray-400 text-xs flex items-center gap-1">
                               <Phone className="w-3 h-3 flex-shrink-0" />
                               {conversation.phone}
                             </p>
@@ -389,13 +402,19 @@ export default function Conversations() {
                         className="flex-1 h-12 rounded-xl bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/30 hover:bg-white/[0.05] focus:bg-white/[0.05] focus:border-primary/50 transition-all"
                         disabled={sendMessageMutation.isPending}
                       />
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                        className="h-12 w-12 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      <motion.div
+                        whileHover={{ scale: 1.05, translateY: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       >
-                        <Send className="w-4 h-4" />
-                      </Button>
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                          className="h-12 w-12 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </motion.div>
                     </div>
                   </>
                 ) : (

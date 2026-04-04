@@ -200,16 +200,16 @@ export default function Clients() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="h-8 bg-goat-gray-700 rounded animate-pulse" />
-        <div className="h-12 bg-goat-gray-700 rounded animate-pulse" />
+        <div className="h-8 bg-Porceli-gray-700 rounded animate-pulse" />
+        <div className="h-12 bg-Porceli-gray-700 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-goat-gray-700 rounded animate-pulse" />
+            <div key={i} className="h-24 bg-Porceli-gray-700 rounded animate-pulse" />
           ))}
         </div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-20 bg-goat-gray-700 rounded animate-pulse" />
+            <div key={i} className="h-20 bg-Porceli-gray-700 rounded animate-pulse" />
           ))}
         </div>
       </div>

@@ -22,14 +22,13 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <Button
-              variant="outline"
               size="icon"
-              className="bg-transparent border-white/10 hover:bg-white/5 text-white h-11 w-11 rounded-2xl transition-all"
+              className="liquid-glass border-white/5 text-white h-11 w-11 !rounded-2xl transition-all hover:bg-white/[0.02]"
               onClick={onSync}
               disabled={isSyncing}
               title="Gerar e Atualizar Lançamentos Faltantes"
             >
-              <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin text-primary' : 'text-white/70'}`} />
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : 'text-white/70'}`} />
             </Button>
           </motion.div>
         )}

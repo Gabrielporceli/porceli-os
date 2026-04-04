@@ -52,18 +52,18 @@ export function ConversationFilters({ onFiltersChange }: ConversationFiltersProp
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className={`btn-outline ${hasActiveFilters ? 'border-goat-purple text-goat-purple' : ''}`}
+          className={`btn-outline ${hasActiveFilters ? 'border-Porceli-purple text-Porceli-purple' : ''}`}
         >
           <Filter className="w-4 h-4" />
           Filtros
           {hasActiveFilters && (
-            <Badge className="ml-2 bg-goat-purple text-white text-xs">
+            <Badge className="ml-2 bg-Porceli-purple text-white text-xs">
               {selectedTags.length + selectedDirections.length}
             </Badge>
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-goat-gray-800 border-goat-gray-700">
+      <DialogContent className="bg-Porceli-gray-800 border-Porceli-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">Filtrar Conversas</DialogTitle>
         </DialogHeader>
@@ -77,8 +77,8 @@ export function ConversationFilters({ onFiltersChange }: ConversationFiltersProp
                   variant={selectedTags.includes(tag) ? "default" : "secondary"}
                   className={`cursor-pointer ${
                     selectedTags.includes(tag)
-                      ? "bg-goat-purple text-white"
-                      : "bg-goat-gray-700 text-goat-gray-300 hover:bg-goat-gray-600"
+                      ? "bg-Porceli-purple text-white"
+                      : "bg-Porceli-gray-700 text-Porceli-gray-300 hover:bg-Porceli-gray-600"
                   }`}
                   onClick={() => toggleTag(tag)}
                 >
@@ -97,8 +97,8 @@ export function ConversationFilters({ onFiltersChange }: ConversationFiltersProp
                   variant={selectedDirections.includes(direction) ? "default" : "secondary"}
                   className={`cursor-pointer ${
                     selectedDirections.includes(direction)
-                      ? "bg-goat-purple text-white"
-                      : "bg-goat-gray-700 text-goat-gray-300 hover:bg-goat-gray-600"
+                      ? "bg-Porceli-purple text-white"
+                      : "bg-Porceli-gray-700 text-Porceli-gray-300 hover:bg-Porceli-gray-600"
                   }`}
                   onClick={() => toggleDirection(direction)}
                 >

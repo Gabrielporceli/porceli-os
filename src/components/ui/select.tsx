@@ -104,7 +104,7 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold text-goat-gray-300", className)}
+    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold text-Porceli-gray-300", className)}
     {...props}
   />
 ))
@@ -133,7 +133,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-goat-gray-600", className)}
+    className={cn("-mx-1 my-1 h-px bg-Porceli-gray-600", className)}
     {...props}
   />
 ))

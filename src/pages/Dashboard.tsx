@@ -645,34 +645,34 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold text-base">Funil de Prospecção</span>
               </div>
-              <p className="text-goat-gray-400 text-sm mt-1">
+              <p className="text-Porceli-gray-400 text-sm mt-1">
                 Acompanhamento operacional (prospecção fria).
               </p>
             </div>
 
-            <span className="text-goat-gray-300 text-sm">{totalLeadsInFunnel} lead(s)</span>
+            <span className="text-Porceli-gray-300 text-sm">{totalLeadsInFunnel} lead(s)</span>
           </div>
 
           {/* KPIs operacionais */}
           <div className={`grid grid-cols-2 md:grid-cols-5 gap-3 mb-3`}>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-goat-gray-400 text-xs mb-1">Sem atendimento</p>
+              <p className="text-Porceli-gray-400 text-xs mb-1">Sem atendimento</p>
               <p className="text-xl font-bold text-white">{semAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-goat-gray-400 text-xs mb-1">Em atendimento</p>
+              <p className="text-Porceli-gray-400 text-xs mb-1">Em atendimento</p>
               <p className="text-xl font-bold text-white">{emAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-goat-gray-400 text-xs mb-1">Reuniões</p>
+              <p className="text-Porceli-gray-400 text-xs mb-1">Reuniões</p>
               <p className="text-xl font-bold text-white">{reunioesAgendadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-goat-gray-400 text-xs mb-1">Propostas</p>
+              <p className="text-Porceli-gray-400 text-xs mb-1">Propostas</p>
               <p className="text-xl font-bold text-white">{propostasEnviadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-goat-gray-400 text-xs mb-1">Follow-up</p>
+              <p className="text-Porceli-gray-400 text-xs mb-1">Follow-up</p>
               <p className="text-xl font-bold text-white">{followUp}</p>
             </div>
           </div>
@@ -724,7 +724,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-goat-gray-400">Nenhum dado disponível para exibir</p>
+                <p className="text-Porceli-gray-400">Nenhum dado disponível para exibir</p>
               </div>
             )}
           </div>
@@ -747,20 +747,20 @@ export default function Dashboard() {
               >
                 <div className="min-w-0">
                   <p className="text-white text-sm font-medium truncate">{client.company}</p>
-                  <p className="text-goat-gray-400 text-xs truncate">Responsável: {client.responsible}</p>
+                  <p className="text-Porceli-gray-400 text-xs truncate">Responsável: {client.responsible}</p>
                 </div>
                 <div className="text-right shrink-0 pl-4">
-                  <span className="text-goat-gray-500 text-xs">
+                  <span className="text-Porceli-gray-500 text-xs">
                     {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
                   </span>
-                  {client.plan && <p className="text-goat-purple text-xs mt-1">{client.plan}</p>}
+                  {client.plan && <p className="text-Porceli-purple text-xs mt-1">{client.plan}</p>}
                 </div>
               </div>
             ))}
 
             {clients.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-goat-gray-400">Nenhum cliente cadastrado ainda</p>
+                <p className="text-Porceli-gray-400">Nenhum cliente cadastrado ainda</p>
               </div>
             )}
           </div>
@@ -769,28 +769,28 @@ export default function Dashboard() {
         {/* Cards Futuros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Ticket Médio</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Ticket Médio</p>
             <p className="text-xl font-bold text-white">{formatCurrency(ticketMedioContratosAtivos)}</p>
-            <p className="text-goat-gray-500 text-xs mt-1">Contratos ativos</p>
+            <p className="text-Porceli-gray-500 text-xs mt-1">Contratos ativos</p>
           </Card>
 
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Churn</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Churn</p>
             <p className="text-xl font-bold text-white">{churnRate.toFixed(1)}%</p>
-            <p className="text-goat-gray-500 text-xs mt-1">Taxa de cancelamento</p>
+            <p className="text-Porceli-gray-500 text-xs mt-1">Taxa de cancelamento</p>
           </Card>
 
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Comparativo mensal</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Comparativo mensal</p>
             <p className={`text-xl font-bold ${variacaoComparativoMensal >= 0 ? "text-green-400" : "text-red-500"}`}>
               {variacaoComparativoMensal >= 0 ? "+" : ""}
               {variacaoComparativoMensal.toFixed(1)}%
             </p>
-            <p className="text-goat-gray-500 text-xs mt-1">vs mês anterior (faturamento geral)</p>
+            <p className="text-Porceli-gray-500 text-xs mt-1">vs mês anterior (faturamento geral)</p>
           </Card>
 
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Margem de lucro</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Margem de lucro</p>
             <p className={`text-xl font-bold ${margemLucro > 40
               ? "text-green-400"
               : margemLucro >= 20 && margemLucro <= 40
@@ -799,24 +799,24 @@ export default function Dashboard() {
               }`}>
               {margemLucro.toFixed(1)}%
             </p>
-            <p className="text-goat-gray-500 text-xs mt-1">Meta ideal: 20-40%</p>
+            <p className="text-Porceli-gray-500 text-xs mt-1">Meta ideal: 20-40%</p>
           </Card>
 
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Receita por hora</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Receita por hora</p>
             <p className="text-xl font-bold text-white">{formatCurrency(receitaPorHora)}</p>
-            <p className="text-goat-gray-500 text-xs mt-1">Produtividade mensal ({horasTrabalhadasMes}h)</p>
+            <p className="text-Porceli-gray-500 text-xs mt-1">Produtividade mensal ({horasTrabalhadasMes}h)</p>
           </Card>
 
           <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-goat-gray-400 text-xs mb-1">Concentração de receita</p>
+            <p className="text-Porceli-gray-400 text-xs mb-1">Concentração de receita</p>
             <p className={`text-xl font-bold ${concentracaoReceita <= 30
               ? "text-green-400"
               : "text-red-500"
               }`}>
               {concentracaoReceita.toFixed(1)}%
             </p>
-            <p className="text-goat-gray-500 text-xs mt-1">
+            <p className="text-Porceli-gray-500 text-xs mt-1">
               {concentracaoReceita > 30 ? "Risco alto (>30%)" : "Diversificado (≤30%)"}
             </p>
           </Card>

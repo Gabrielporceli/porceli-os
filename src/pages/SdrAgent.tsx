@@ -41,7 +41,7 @@ export default function SdrAgent() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen text-white">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-goat-purple"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-Porceli-purple"></div>
                 <span className="ml-2">Carregando dados do agente...</span>
             </div>
         );
@@ -91,8 +91,7 @@ export default function SdrAgent() {
                     <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                         <Button
                             onClick={() => setPeriod('day')}
-                            className={`${period === 'day' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
-                            size="sm"
+                            className={`${period === 'day' ? 'bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-11 px-6 rounded-2xl font-bold transition-all`}
                         >
                             Hoje
                         </Button>
@@ -100,8 +99,7 @@ export default function SdrAgent() {
                     <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                         <Button
                             onClick={() => setPeriod('week')}
-                            className={`${period === 'week' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
-                            size="sm"
+                            className={`${period === 'week' ? 'bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-11 px-6 rounded-2xl font-bold transition-all`}
                         >
                             Semana
                         </Button>
@@ -109,8 +107,7 @@ export default function SdrAgent() {
                     <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                         <Button
                             onClick={() => setPeriod('month')}
-                            className={`${period === 'month' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
-                            size="sm"
+                            className={`${period === 'month' ? 'bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-11 px-6 rounded-2xl font-bold transition-all`}
                         >
                             Mês
                         </Button>
@@ -118,8 +115,7 @@ export default function SdrAgent() {
                     <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                         <Button
                             onClick={() => setPeriod('all_time')}
-                            className={`${period === 'all_time' ? 'bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-9 rounded-xl font-bold transition-all`}
-                            size="sm"
+                            className={`${period === 'all_time' ? 'bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.3)]' : 'liquid-glass text-white/70 border-white/5 hover:bg-white/10 hover:text-white'} h-11 px-6 rounded-2xl font-bold transition-all`}
                         >
                             Total
                         </Button>

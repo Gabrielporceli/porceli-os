@@ -59,7 +59,7 @@
   font-display: swap;
 }
 
-/* GOAT CRM Theme - Dark Mode with Purple Accents */
+/* Porceli Company Theme - Dark Mode with Purple Accents */
 @layer base {
   :root {
     --background: 240 6% 7%;
@@ -132,7 +132,7 @@
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-goat-purple to-purple-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-porceli-purple to-purple-400 bg-clip-text text-transparent;
   }
 
   .glass-effect {
@@ -238,7 +238,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-goat-purple hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+    @apply bg-porceli-purple hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
     color: white !important;
   }
 
@@ -247,25 +247,25 @@
   }
 
   .card-dark {
-    @apply bg-goat-gray-800 border border-goat-gray-700 rounded-lg p-4;
+    @apply bg-porceli-gray-800 border border-porceli-gray-700 rounded-lg p-4;
   }
 
   /* Purple badge hover fix for "Pendente" - only for badges, not messages */
-  .badge.bg-goat-purple:hover,
-  .bg-goat-purple:hover:not(.message-bubble) {
+  .badge.bg-porceli-purple:hover,
+  .bg-porceli-purple:hover:not(.message-bubble) {
     background-color: #4c1d95 !important;
     /* Darker purple for hover */
   }
 
   /* Disable hover effects for all message bubbles - keep original colors */
-  .message-bubble.bg-goat-purple:hover,
-  div.message-bubble.bg-goat-purple:hover {
+  .message-bubble.bg-porceli-purple:hover,
+  div.message-bubble.bg-porceli-purple:hover {
     background-color: #6829c0 !important;
     /* Original purple color */
   }
 
-  .message-bubble.bg-goat-gray-700:hover,
-  div.message-bubble.bg-goat-gray-700:hover {
+  .message-bubble.bg-porceli-gray-700:hover,
+  div.message-bubble.bg-porceli-gray-700:hover {
     background-color: #404040 !important;
     /* Original gray-700 color */
   }
@@ -334,12 +334,12 @@
 
   /* Botões Outline Globais (Corrige amarelo) */
   .btn-outline {
-    @apply border-goat-gray-600 text-white transition-all duration-150;
+    @apply border-porceli-gray-600 text-white transition-all duration-150;
     color: white !important;
   }
 
   .btn-outline:hover {
-    @apply bg-goat-gray-700 text-white;
+    @apply bg-porceli-gray-700 text-white;
     color: white !important;
   }
 
@@ -492,7 +492,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: #6829c0;
-  /* Roxo GOAT */
+  /* Roxo porceli */
   border-radius: 6px;
 }
 
@@ -510,7 +510,7 @@
 }
 
 /* ===============================================
-   ✅ MENSAGENS DO SISTEMA - TEMA GOAT ROXO E BRANCO
+   ✅ MENSAGENS DO SISTEMA - TEMA porceli ROXO E BRANCO
    Forçando todas as mensagens de sistema a usar o padrão correto
    =============================================== */
 
@@ -566,7 +566,7 @@
 }
 
 /* ===============================================
-   ✅ CALENDAR (React Day Picker) - PREMIUM GOAT THEME
+   ✅ CALENDAR (React Day Picker) - PREMIUM porceli THEME
    =============================================== */
 .rdp {
   --rdp-cell-size: 38px;

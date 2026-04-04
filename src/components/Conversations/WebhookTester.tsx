@@ -29,14 +29,14 @@ export function WebhookTester() {
   };
 
   return (
-    <Card className="bg-goat-gray-800 border-goat-gray-700 p-4">
+    <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 bg-goat-purple rounded-lg flex items-center justify-center">
+        <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-white">Webhook Tester</h3>
-          <p className="text-goat-gray-400 text-sm">Teste o processamento automático de mensagens</p>
+          <p className="text-Porceli-gray-400 text-sm">Teste o processamento automático de mensagens</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export function WebhookTester() {
           </Badge>
         </div>
 
-        <p className="text-goat-gray-300 text-sm">
+        <p className="text-Porceli-gray-300 text-sm">
           O sistema processa mensagens automaticamente criando contatos e conversas quando necessário. 
           Teste os dois métodos disponíveis:
         </p>
@@ -101,9 +101,9 @@ export function WebhookTester() {
           </div>
         )}
 
-        <div className="mt-4 p-3 bg-goat-gray-900/50 rounded-lg">
+        <div className="mt-4 p-3 bg-Porceli-gray-900/50 rounded-lg">
           <h4 className="text-sm font-medium text-white mb-2">Como funciona:</h4>
-          <ul className="text-xs text-goat-gray-400 space-y-1">
+          <ul className="text-xs text-Porceli-gray-400 space-y-1">
             <li>• <strong>Teste Direto:</strong> Usa a função SQL process_webhook_message</li>
             <li>• <strong>Teste Edge Function:</strong> Simula webhook via Edge Function</li>
             <li>• Cria contatos automaticamente se não existirem</li>

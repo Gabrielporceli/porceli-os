@@ -269,7 +269,7 @@ export default function LeadsKanban() {
   // ===== Helpers =====
   const tagColorClass = (tagName: string) => {
     const t = tags.find((x) => x.name === tagName);
-    return t?.color ?? "bg-goat-gray-600";
+    return t?.color ?? "bg-Porceli-gray-600";
   };
 
   const getLeadsByStage = (stageId: string) =>
@@ -467,7 +467,7 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
                     onClick={() => setIsTagsModalOpen(true)}
                   >
                     <Settings className="w-4 h-4 mr-2" />
@@ -481,7 +481,7 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
                     onClick={() => setIsAddStageModalOpen(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -601,15 +601,21 @@ export default function LeadsKanban() {
                       </Badge>
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white/20 hover:bg-white/5 hover:text-white w-8 h-8 rounded-lg"
-                      onClick={() => handleEditStage(stage)}
-                      data-no-pan
+                    <motion.div
+                      whileHover={{ scale: 1.1, translateY: -2 }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                      <EllipsisVertical className="w-4 h-4" />
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/20 hover:bg-white/5 hover:text-white w-8 h-8 rounded-lg"
+                        onClick={() => handleEditStage(stage)}
+                        data-no-pan
+                      >
+                        <EllipsisVertical className="w-4 h-4" />
+                      </Button>
+                    </motion.div>
                   </div>
 
                   <Droppable droppableId={stage.id}>
@@ -644,7 +650,7 @@ export default function LeadsKanban() {
                                             data-dnd-handle
                                             // ✅ garante que o browser não tente “interpretar gesto” e travar eixo
                                             style={{ touchAction: "none" }}
-                                            className="touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-goat-gray-400 hover:bg-goat-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+                                            className="touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-Porceli-gray-400 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
                                             title="Arrastar"
                                           >
                                             <GripVertical className="w-4 h-4" />
@@ -654,20 +660,26 @@ export default function LeadsKanban() {
                                             <h4 className="font-semibold text-white text-sm truncate">
                                               {lead.name}
                                             </h4>
-                                            <p className="text-goat-gray-400 text-xs truncate">
+                                            <p className="text-Porceli-gray-400 text-xs truncate">
                                               {lead.company}
                                             </p>
                                           </div>
 
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-goat-gray-400 hover:bg-goat-purple/80 hover:text-white h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0"
-                                            onClick={() => handleEditLead(lead)}
-                                            data-no-pan
+                                          <motion.div
+                                            whileHover={{ scale: 1.1, translateY: -2 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                                           >
-                                            <EllipsisVertical className="w-4 h-4" />
-                                          </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="text-Porceli-gray-400 hover:bg-Porceli-purple/80 hover:text-white h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0"
+                                              onClick={() => handleEditLead(lead)}
+                                              data-no-pan
+                                            >
+                                              <EllipsisVertical className="w-4 h-4" />
+                                            </Button>
+                                          </motion.div>
                                         </div>
 
                                         {lead.tags && lead.tags.length > 0 && (
@@ -681,13 +693,13 @@ export default function LeadsKanban() {
                                         )}
 
                                         {lead.value != null && (
-                                          <div className="text-goat-purple font-semibold text-xs sm:text-sm">
+                                          <div className="text-Porceli-purple font-semibold text-xs sm:text-sm">
                                             R$ {lead.value.toLocaleString("pt-BR")}
                                           </div>
                                         )}
 
-                                        <div className="flex items-center justify-between text-xs pt-2 border-t border-goat-gray-700 mt-2">
-                                          <span className="text-goat-gray-500 flex-shrink-0">
+                                        <div className="flex items-center justify-between text-xs pt-2 border-t border-Porceli-gray-700 mt-2">
+                                          <span className="text-Porceli-gray-500 flex-shrink-0">
                                             Atualizado: {isMobile
                                               ? new Date(lead.updated_at).toLocaleDateString(
                                                 "pt-BR",
@@ -696,7 +708,7 @@ export default function LeadsKanban() {
                                               : new Date(lead.updated_at).toLocaleDateString("pt-BR")}
                                           </span>
                                            {lead.meeting_date && !lead.reuniao_realizada ? (
-                                             <span className="text-goat-purple font-semibold uppercase truncate ml-2">
+                                             <span className="text-Porceli-purple font-semibold uppercase truncate ml-2">
                                                Reunião: {new Date(lead.meeting_date).toLocaleString('pt-BR', { 
                                                  day: '2-digit', 
                                                  month: '2-digit',
@@ -715,7 +727,7 @@ export default function LeadsKanban() {
                                   <ContextMenuContent className="liquid-glass border-white/[0.05]">
                                     <ContextMenuItem
                                       onClick={() => handleEditLead(lead)}
-                                      className="text-white data-[highlighted]:bg-goat-purple/80 data-[highlighted]:text-white"
+                                      className="text-white data-[highlighted]:bg-Porceli-purple/80 data-[highlighted]:text-white"
                                     >
                                       <Edit className="w-4 h-4 mr-2" />
                                       Editar Lead
@@ -741,7 +753,7 @@ export default function LeadsKanban() {
 
                         {filteredLeads.length === 0 && (
                           <div className="border-2 border-dashed border-white/[0.05] rounded-2xl p-4 sm:p-6 text-center">
-                            <p className="text-goat-gray-400 text-xs sm:text-sm">
+                            <p className="text-Porceli-gray-400 text-xs sm:text-sm">
                               {isMobile ? "Arraste leads" : "Arraste leads para cá"}
                             </p>
                           </div>

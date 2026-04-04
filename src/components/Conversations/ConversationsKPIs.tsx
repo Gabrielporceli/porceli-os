@@ -23,50 +23,50 @@ export function ConversationsKPIs({ conversations }: ConversationsKPIsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <Card className="bg-goat-gray-800 border-goat-gray-700 p-6">
+      <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-goat-purple/20 rounded-lg flex items-center justify-center">
-            <MessageCircle className="w-6 h-6 text-goat-purple" />
+          <div className="w-12 h-12 bg-Porceli-purple/20 rounded-lg flex items-center justify-center">
+            <MessageCircle className="w-6 h-6 text-Porceli-purple" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{conversations.length}</p>
-            <p className="text-goat-gray-400 text-sm">Total de Conversas</p>
+            <p className="text-Porceli-gray-400 text-sm">Total de Conversas</p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-goat-gray-800 border-goat-gray-700 p-6">
+      <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center">
             <Users className="w-6 h-6 text-green-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{activeConversations}</p>
-            <p className="text-goat-gray-400 text-sm">Conversas Ativas</p>
+            <p className="text-Porceli-gray-400 text-sm">Conversas Ativas</p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-goat-gray-800 border-goat-gray-700 p-6">
+      <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-yellow-600/20 rounded-lg flex items-center justify-center">
             <Clock className="w-6 h-6 text-yellow-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{pendingConversations}</p>
-            <p className="text-goat-gray-400 text-sm">Aguardando Resposta</p>
+            <p className="text-Porceli-gray-400 text-sm">Aguardando Resposta</p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-goat-gray-800 border-goat-gray-700 p-6">
+      <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-red-600/20 rounded-lg flex items-center justify-center">
             <MessageCircle className="w-6 h-6 text-red-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{totalUnread}</p>
-            <p className="text-goat-gray-400 text-sm">Mensagens Não Lidas</p>
+            <p className="text-Porceli-gray-400 text-sm">Mensagens Não Lidas</p>
           </div>
         </div>
       </Card>

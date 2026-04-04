@@ -139,7 +139,7 @@ export function SalesFunnelHorizontalChart({
             <TrendingUp className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-white">{title}</h3>
           </div>
-          <p className="text-goat-gray-400 text-sm leading-relaxed">{description}</p>
+          <p className="text-Porceli-gray-400 text-sm leading-relaxed">{description}</p>
         </div>
         <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
           <span className="text-white text-xs font-bold">{totalLeads} lead(s)</span>
@@ -309,7 +309,7 @@ export function SalesFunnelHorizontalChart({
                     color: "#FFFFFF",
                   }}
                 >
-                  <div className="text-goat-gray-400 text-xs mb-1">{tip.name}</div>
+                  <div className="text-Porceli-gray-400 text-xs mb-1">{tip.name}</div>
                   <div className="text-white text-sm font-semibold">
                     {tip.value} lead(s)
                   </div>
@@ -319,7 +319,7 @@ export function SalesFunnelHorizontalChart({
           </>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-goat-gray-400">Nenhum dado disponível para exibir</p>
+            <p className="text-Porceli-gray-400">Nenhum dado disponível para exibir</p>
           </div>
         )}
       </div>

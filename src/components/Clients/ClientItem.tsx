@@ -42,13 +42,13 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
       case "vencido":
         return "bg-red-600 text-white hover:bg-red-700";
       case "premium":
-        return "bg-goat-purple text-white hover:bg-goat-purple";
+        return "bg-Porceli-purple text-white hover:bg-Porceli-purple";
       case "gold":
         return "bg-yellow-700 text-white hover:bg-yellow-800";
       case "standard":
-        return "bg-goat-gray-600 text-white hover:bg-goat-gray-700";
+        return "bg-Porceli-gray-600 text-white hover:bg-Porceli-gray-700";
       default:
-        return "bg-goat-gray-600 text-white hover:bg-goat-gray-700";
+        return "bg-Porceli-gray-600 text-white hover:bg-Porceli-gray-700";
     }
   };
 
@@ -75,13 +75,13 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
       case "landing page":
         return "bg-green-600 text-white hover:bg-green-700";
       case "premium":
-        return "bg-goat-purple text-white hover:bg-goat-purple";
+        return "bg-Porceli-purple text-white hover:bg-Porceli-purple";
       case "gold":
         return "bg-yellow-700 text-white hover:bg-yellow-800";
       case "standard":
-        return "bg-goat-gray-600 text-white hover:bg-goat-gray-700";
+        return "bg-Porceli-gray-600 text-white hover:bg-Porceli-gray-700";
       default:
-        return "bg-goat-gray-600 text-white hover:bg-goat-gray-700";
+        return "bg-Porceli-gray-600 text-white hover:bg-Porceli-gray-700";
     }
   };
 
