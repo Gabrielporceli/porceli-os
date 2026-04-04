@@ -28,8 +28,49 @@ function extractStatus(properties: any): string | null {
 function extractDate(properties: any): string | null {
   for (const key of Object.keys(properties)) {
     const prop = properties[key]
-    if (prop.type === 'date' && prop.date?.start) return prop.date.start
+    if (prop.type === 'date' && prop.date?.start) {
+      return prop.date.start
+    }
   }
+  return null
+}
+
+function extractTime(properties: any): string | null {
+  // 1. Procurar em propriedades específicas de data que possam ter o tempo embutido
+  for (const key of Object.keys(properties)) {
+    const prop = properties[key]
+    if (prop.type === 'date' && prop.date?.start && prop.date.start.includes('T')) {
+      return prop.date.start.split('T')[1].substring(0, 5)
+    }
+  }
+
+  // 2. Procurar por propriedades com nomes comuns de hora
+  const timeKeys = ['Hora', 'Time', 'Horário', 'Horario', 'When']
+  for (const key of timeKeys) {
+    const prop = properties[key]
+    if (!prop) continue
+    
+    if (prop.type === 'rich_text' && prop.rich_text?.length > 0) {
+      return prop.rich_text[0].plain_text
+    }
+    if (prop.type === 'title' && prop.title?.length > 0) {
+      return prop.title[0].plain_text
+    }
+    if (prop.type === 'select' && prop.select) {
+      return prop.select.name
+    }
+  }
+
+  // 3. Busca exaustiva por qualquer campo que pareça uma hora (HH:mm)
+  for (const key of Object.keys(properties)) {
+    const prop = properties[key]
+    let text = ''
+    if (prop.type === 'rich_text' && prop.rich_text?.length > 0) text = prop.rich_text[0].plain_text
+    else if (prop.type === 'select' && prop.select) text = prop.select.name
+    
+    if (text && /^([01]\d|2[0-3]):[0-5]\d$/.test(text)) return text
+  }
+
   return null
 }
 
@@ -41,24 +82,60 @@ function extractPriority(properties: any): string | null {
   return null
 }
 
+function extractClients(properties: any): string[] {
+  for (const key of ['Clientes', 'Cliente', 'Clients', 'Client']) {
+    const prop = properties[key]
+    if (prop?.type === 'multi_select') return prop.multi_select.map((s: any) => s.name)
+    if (prop?.type === 'relation') return prop.relation.map((r: any) => r.id) // Simplificado
+    if (prop?.type === 'select' && prop.select) return [prop.select.name]
+    if (prop?.type === 'rich_text' && prop.rich_text?.length > 0) return [prop.rich_text[0].plain_text]
+  }
+  return []
+}
+
+function extractResponsible(properties: any): string[] {
+  for (const key of ['Responsável', 'Responsavel', 'Responsible', 'Assignee']) {
+    const prop = properties[key]
+    if (prop?.type === 'people') return prop.people.map((p: any) => p.name || p.id)
+    if (prop?.type === 'multi_select') return prop.multi_select.map((s: any) => s.name)
+  }
+  return []
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const notionToken = Deno.env.get('NOTION_TOKEN')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const adminSupabase = createClient(supabaseUrl, serviceKey)
+
+    // Identificar o usuário pelo JWT no header
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token)
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), { status: 401, headers: corsHeaders })
+    }
+
+    // Buscar o token do Notion para este usuário
+    const { data: notionTokenRecord } = await adminSupabase
+      .from('notion_tokens')
+      .select('access_token')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const notionToken = notionTokenRecord?.access_token
 
     if (!notionToken) {
       return new Response(
-        JSON.stringify({ connected: false, tasks: [], message: 'NOTION_TOKEN não configurado' }),
+        JSON.stringify({ connected: false, tasks: [], message: 'Notion não conectado' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    const adminSupabase = createClient(supabaseUrl, serviceKey)
 
     // Buscar database_id configurado
     const url = new URL(req.url)
@@ -72,9 +149,169 @@ serve(async (req) => {
       databaseId = config?.database_id
     }
 
-    // Se veio um POST com database_id, salvar configuração
+    // Se veio um POST com database_id ou ação
     if (req.method === 'POST') {
       const body = await req.json()
+      
+      // Ação de criar tarefa
+      if (body.action === 'CREATE_TASK') {
+        try {
+          const dbRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+            headers: {
+              'Authorization': `Bearer ${notionToken}`,
+              'Notion-Version': '2022-06-28',
+            }
+          })
+          const dbDetails = await dbRes.json()
+          if (dbDetails.object === 'error') throw new Error(dbDetails.message)
+
+          const properties: any = {}
+          const dbProps = dbDetails.properties
+
+          // Título
+          const titleKey = Object.keys(dbProps).find(k => dbProps[k].type === 'title')
+          if (titleKey) properties[titleKey] = { title: [{ text: { content: body.title } }] }
+
+          // Data
+          const dateKey = Object.keys(dbProps).find(k => dbProps[k].type === 'date')
+          if (dateKey && body.dueDate) properties[dateKey] = { date: { start: body.dueDate } }
+
+          // Cliente
+          if (body.client) {
+            const clientKey = Object.keys(dbProps).find(k => 
+              ['Clientes', 'Cliente', 'Clients', 'Client'].includes(k)
+            )
+            if (clientKey) {
+              const type = dbProps[clientKey].type
+              if (type === 'multi_select') properties[clientKey] = { multi_select: [{ name: body.client }] }
+              else if (type === 'select') properties[clientKey] = { select: { name: body.client } }
+              else if (type === 'rich_text') properties[clientKey] = { rich_text: [{ text: { content: body.client } }] }
+            }
+          }
+
+          const createRes = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${notionToken}`,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              parent: { database_id: databaseId },
+              properties
+            })
+          })
+          const createData = await createRes.json()
+          if (createData.object === 'error') throw new Error(createData.message)
+
+          return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        } catch (e: any) {
+          return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+      }
+
+      // Ação de atualizar tarefa
+      if (body.action === 'UPDATE_TASK' && body.task_id) {
+        let updateRes;
+        
+        try {
+          // Busca a pagina primeiro pra descobrir nomes e tipos de colunas de status e data
+          const pageRes = await fetch(`https://api.notion.com/v1/pages/${body.task_id}`, {
+            headers: {
+              'Authorization': `Bearer ${notionToken}`,
+              'Notion-Version': '2022-06-28',
+            }
+          })
+          const page = await pageRes.json()
+          if (page.object === 'error') throw new Error(page.message)
+          
+          const updates: any = {}
+          
+          // Atualiza status
+          if (body.status !== undefined) {
+             let statusPropName = null
+             let isStatusType = false
+             for (const [key, prop] of Object.entries<any>(page.properties)) {
+                if (prop.type === 'status') { statusPropName = key; isStatusType = true; break; }
+                if (prop.type === 'select' && !statusPropName) { statusPropName = key; }
+             }
+             if (statusPropName) {
+                if (isStatusType) {
+                   updates[statusPropName] = { status: { name: body.status } }
+                } else {
+                   updates[statusPropName] = { select: { name: body.status } }
+                }
+             }
+          }
+          
+          // Atualiza Título
+          if (body.title !== undefined) {
+             let titlePropName = null
+             for (const [key, prop] of Object.entries<any>(page.properties)) {
+                if (prop.type === 'title') { titlePropName = key; break; }
+             }
+             if (titlePropName) {
+                updates[titlePropName] = { title: [{ text: { content: body.title } }] }
+             }
+          }
+          
+          // Atualiza dueDate (jogar pra outro dia)
+          if (body.dueDate !== undefined) {
+             let datePropName = null
+             for (const [key, prop] of Object.entries<any>(page.properties)) {
+                if (prop.type === 'date') { datePropName = key; break; }
+             }
+             if (datePropName) {
+                updates[datePropName] = { date: body.dueDate ? { start: body.dueDate } : null }
+             }
+          }
+          
+          Object.keys(updates).length > 0 && console.log("Atualizando Notion:", body.task_id, updates);
+          
+          if (Object.keys(updates).length > 0) {
+            updateRes = await fetch(`https://api.notion.com/v1/pages/${body.task_id}`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${notionToken}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ properties: updates })
+            })
+            
+            const updateData = await updateRes.json()
+            if (updateData.object === 'error') throw new Error(updateData.message)
+          }
+          
+          return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        } catch (e: any) {
+          return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+      }
+      
+      // Ação de excluir tarefa (arquivar)
+      if (body.action === 'DELETE_TASK' && body.task_id) {
+        try {
+          const deleteRes = await fetch(`https://api.notion.com/v1/pages/${body.task_id}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${notionToken}`,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ archived: true })
+          })
+          
+          const deleteData = await deleteRes.json()
+          if (deleteData.object === 'error') throw new Error(deleteData.message)
+          
+          return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        } catch (e: any) {
+          return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+      }
+      
+      // Ação de configurar database
       if (body.database_id) {
         await adminSupabase
           .from('notion_config')
@@ -110,15 +347,22 @@ serve(async (req) => {
       throw new Error(notionData.message)
     }
 
-    const tasks = (notionData.results ?? []).map((page: any) => ({
-      id: page.id,
-      title: extractTitle(page.properties),
-      status: extractStatus(page.properties),
-      dueDate: extractDate(page.properties),
-      priority: extractPriority(page.properties),
-      url: page.url,
-      lastEdited: page.last_edited_time,
-    }))
+    const tasks = (notionData.results ?? []).map((page: any) => {
+      const dueDate = extractDate(page.properties)
+      const time = extractTime(page.properties)
+      return {
+        id: page.id,
+        title: extractTitle(page.properties),
+        status: extractStatus(page.properties),
+        dueDate,
+        time,
+        priority: extractPriority(page.properties),
+        clients: extractClients(page.properties),
+        responsible: extractResponsible(page.properties),
+        url: page.url,
+        lastEdited: page.last_edited_time,
+      }
+    })
 
     return new Response(
       JSON.stringify({ connected: true, tasks }),

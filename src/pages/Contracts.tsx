@@ -365,16 +365,17 @@ export default function Contracts() {
                         contract.status === 'inactive' && "group-hover:text-red-400"
                       )} title={contract.client}>{contract.client}</h4>
                       {contract.contract_url && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(contract.contract_url, '_blank');
-                          }}
-                          className="text-white/20 hover:text-white transition-colors p-1 shrink-0 inline-flex items-center justify-center -translate-y-[3px]"
+                        <motion.a
+                          href={contract.contract_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.15, color: '#6829c0' }}
+                          whileTap={{ scale: 0.9 }}
+                          className="text-white/20 hover:text-primary transition-all p-1 shrink-0 flex items-center justify-center mb-1"
                           title="Abrir contrato"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                        </button>
+                        </motion.a>
                       )}
                     </div>
                     {getStatusBadge(contract.status)}

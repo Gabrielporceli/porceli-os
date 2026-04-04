@@ -80,10 +80,67 @@ serve(async (req) => {
       const text = await req.text()
       if (text) {
         requestBody = JSON.parse(text)
-        if (requestBody.action === 'CREATE_EVENT' || requestBody.title) {
+        if (requestBody.action === 'CREATE_EVENT') {
+          action = 'CREATE_EVENT'
+        } else if (requestBody.action === 'UPDATE_EVENT') {
+          action = 'UPDATE_EVENT'
+        } else if (requestBody.action === 'DELETE_EVENT') {
+          action = 'DELETE_EVENT'
+        } else if (requestBody.title) {
           action = 'CREATE_EVENT'
         }
       }
+    }
+
+    // DELETE_EVENT logic
+    if (action === 'DELETE_EVENT' && requestBody) {
+      if (!requestBody.eventId) throw new Error('Event ID obrigatório para exclusão')
+      
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${requestBody.eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+      })
+
+      if (!res.ok && res.status !== 204) {
+        const error = await res.json()
+        throw new Error(error.error?.message || 'Erro ao excluir evento no Google')
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // UPDATE_EVENT logic
+    if (action === 'UPDATE_EVENT' && requestBody) {
+      if (!requestBody.eventId) throw new Error('Event ID obrigatório para atualização')
+      
+      const updateDetails: any = {}
+      if (requestBody.title) updateDetails.summary = requestBody.title
+      if (requestBody.start) {
+        updateDetails.start = { dateTime: requestBody.start, timeZone: 'America/Sao_Paulo' }
+        updateDetails.end = { dateTime: requestBody.end || requestBody.start, timeZone: 'America/Sao_Paulo' }
+      }
+
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${requestBody.eventId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateDetails)
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error?.message || 'Erro ao atualizar evento no Google')
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
     // Tratamento de POST (Criar novo evento)
@@ -171,6 +228,7 @@ serve(async (req) => {
       allDay: !item.start?.dateTime,
       location: item.location,
       htmlLink: item.htmlLink,
+      hangoutLink: item.hangoutLink,
       status: item.status,
       colorId: item.colorId,
     }))

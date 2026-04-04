@@ -21,7 +21,7 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-ip_version = "ipv6"
+ip_version = "IPv6"
 
 [studio]
 enabled = true
@@ -31,7 +31,7 @@ api_url = "http://127.0.0.1:54321"
 [inbucket]
 enabled = true
 port = 54324
-api_port = 54325
+
 smtp_port = 54326
 
 [storage]
@@ -43,7 +43,7 @@ enabled = true
 additional_redirect_urls = ["https://127.0.0.1:3000/**"]
 site_url = "http://127.0.0.1:3000"
 enable_signup = true
-email_double_confirm_changes = true
+
 enable_manual_linking = false
 
 [auth.email]
@@ -51,13 +51,13 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
-[edge-runtime]
-enabled = true
-ip_version = "ipv6"
+# [edge-runtime]
+# enabled = true
+# ip_version = "IPv6"
 
-[[edge-runtime.policy]]
-resources = ["*"]
-allowed_origins = ["https://127.0.0.1:3000", "http://127.0.0.1:3000"]
+# [[edge-runtime.policy]]
+# resources = ["*"]
+# allowed_origins = ["https://127.0.0.1:3000", "http://127.0.0.1:3000"]
 
 [functions.webhook-messages]
 verify_jwt = false
