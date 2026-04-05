@@ -364,6 +364,25 @@ serve(async (req) => {
       }
     })
 
+    // Sincronizar com o banco de dados interno
+    const tasksToUpsert = tasks.map(t => ({
+      notion_page_id: t.id,
+      title: t.title,
+      status: t.status,
+      due_date: (t.dueDate && t.time) ? `${t.dueDate}T${t.time}:00Z` : (t.dueDate ? `${t.dueDate}T00:00:00Z` : null),
+      priority: t.priority,
+      url: t.url,
+      synced_at: new Date().toISOString()
+    })).filter(t => t.due_date !== null) // Apenas tarefas com data interessam ao lembrete
+
+    if (tasksToUpsert.length > 0) {
+      const { error: upsertError } = await adminSupabase
+        .from('notion_tasks')
+        .upsert(tasksToUpsert, { onConflict: 'notion_page_id' })
+      
+      if (upsertError) console.error("Erro ao sincronizar Notion tasks:", upsertError.message)
+    }
+
     return new Response(
       JSON.stringify({ connected: true, tasks }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
