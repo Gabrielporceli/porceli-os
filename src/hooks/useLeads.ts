@@ -21,6 +21,7 @@ export interface Lead {
   sdr_followup_count: number | null;
   meeting_date: string | null;
   reuniao_realizada: boolean | null;
+  photo_url: string | null;
 }
 
 export interface LeadInput {

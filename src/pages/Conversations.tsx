@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Search, Send, Phone, MessageCircle, Filter } from "lucide-react";
+import { MessageSquare, Search, Send, Phone, MessageCircle, Filter, Users, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { ConversationSidebarFilters } from "@/components/Conversations/ConversationSidebarFilters";
 import { WebhookTester } from "@/components/Conversations/WebhookTester";
@@ -284,31 +285,28 @@ export default function Conversations() {
                           : 'bg-white/[0.02] border-white/5 hover:border-white/20 hover:bg-white/[0.04]'
                           }`}
                       >
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start gap-3 mb-2">
+                          <Avatar className="w-10 h-10 border border-white/10">
+                            <AvatarImage src={conversation.contact_photo} alt={conversation.contact_name} />
+                            <AvatarFallback className="bg-white/[0.05] text-white/40">
+                              {conversation.is_group ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-white font-medium text-sm truncate">
-                              {conversation.contact_name || conversation.phone}
-                            </h4>
-                            <p className="text-Porceli-gray-400 text-xs flex items-center gap-1">
-                              <Phone className="w-3 h-3 flex-shrink-0" />
-                              {conversation.phone}
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-white font-medium text-sm truncate flex items-center gap-1.5">
+                                {conversation.is_group && <Users className="w-3 h-3 text-primary" />}
+                                {conversation.contact_name || conversation.phone}
+                              </h4>
+                              {(conversation.unread_count || 0) > 0 && (
+                                <Badge className="bg-green-500 text-white text-[10px] min-w-[18px] h-4 flex items-center justify-center p-0">
+                                  {conversation.unread_count}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-Porceli-gray-400 text-[11px] flex items-center gap-1">
+                              {conversation.is_group ? "Grupo" : conversation.phone}
                             </p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                            <Badge
-                              variant={conversation.tag === "Cliente" ? "default" : "outline"}
-                              className={`text-[10px] px-2 py-0 h-5 font-medium border ${conversation.tag === "Cliente"
-                                ? "bg-primary/20 text-white border-primary/30"
-                                : "bg-white/[0.03] text-white/40 border-white/5"
-                                }`}
-                            >
-                              {conversation.tag || "Lead"}
-                            </Badge>
-                            {(conversation.unread_count || 0) > 0 && (
-                              <Badge className="bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center">
-                                {conversation.unread_count}
-                              </Badge>
-                            )}
                           </div>
                         </div>
                         <p className="text-white/60 text-sm mb-2 line-clamp-2 pr-4 leading-relaxed">
@@ -342,11 +340,18 @@ export default function Conversations() {
                   <>
                     <div className="border-b border-white/[0.05] pb-4 mb-4 flex-shrink-0">
                       <div className="flex items-center gap-3">
+                        <Avatar className="w-12 h-12 border border-white/10 shadow-lg">
+                          <AvatarImage src={selectedConversation.contact_photo} />
+                          <AvatarFallback className="bg-white/[0.05] text-white/40 text-xl">
+                            {selectedConversation.is_group ? <Users /> : <User />}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
-                          <h3 className="text-lg font-bold text-white tracking-tight">
-                            {selectedConversation.contact_name || selectedConversation.phone}
+                          <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                             {selectedConversation.is_group && <Users className="w-4 h-4 text-primary" />}
+                             {selectedConversation.contact_name || selectedConversation.phone}
                           </h3>
-                          <p className="text-white/40 text-sm">{selectedConversation.phone}</p>
+                          <p className="text-white/40 text-sm">{selectedConversation.is_group ? "Grupo de WhatsApp" : selectedConversation.phone}</p>
                         </div>
                       </div>
                     </div>

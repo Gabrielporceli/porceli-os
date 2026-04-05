@@ -13,6 +13,8 @@ export interface Conversation {
   tag?: string;
   direction?: string;
   unread_count?: number;
+  contact_photo?: string;
+  is_group?: boolean;
   created_at?: string;
   updated_at?: string;
 }

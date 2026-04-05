@@ -11,6 +11,7 @@ import {
   Plus,
   Settings,
   Trash2,
+  User,
 } from "lucide-react";
 
 import {
@@ -19,6 +20,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 
 import {
   ContextMenu,
@@ -656,13 +663,21 @@ export default function LeadsKanban() {
                                             <GripVertical className="w-4 h-4" />
                                           </div>
 
-                                          <div className="flex-1 min-w-0 pt-1.5">
-                                            <h4 className="font-semibold text-white text-sm truncate">
-                                              {lead.name}
-                                            </h4>
-                                            <p className="text-Porceli-gray-400 text-xs truncate">
-                                              {lead.company}
-                                            </p>
+                                          <div className="flex items-center gap-2 flex-1 min-w-0 pt-1.5">
+                                            <Avatar className="w-8 h-8 border border-white/10 flex-shrink-0">
+                                              <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
+                                              <AvatarFallback className="bg-white/[0.05] text-white/40 text-[10px]">
+                                                <User className="w-4 h-4" />
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                              <h4 className="font-semibold text-white text-sm truncate">
+                                                {lead.name}
+                                              </h4>
+                                              <p className="text-Porceli-gray-400 text-[11px] truncate">
+                                                {lead.company || lead.phone}
+                                              </p>
+                                            </div>
                                           </div>
 
                                           <motion.div

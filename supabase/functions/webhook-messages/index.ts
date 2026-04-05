@@ -200,9 +200,13 @@ serve(async (req) => {
       else if (message.pttMessage) mediaType = 'pttMessage';
       else if (message.documentMessage) mediaType = 'documentMessage';
 
+      // Identificar se é grupo
+      const isGroup = key.remoteJid?.endsWith('@g.us') || false;
+
       // Normalizar para o formato esperado pela função do banco
       requestBody = {
-        p_numero: key.remoteJid ? key.remoteJid.split('@')[0] : null,
+        p_numero: key.remoteJid || null, // Usar o JID completo para garantir unicidade (incluindo grupos)
+        p_is_group: isGroup,
         p_mensagem: text,
         p_direcao: key.fromMe || false,
         p_data_hora: data.messageTimestamp ? new Date(data.messageTimestamp * 1000).toISOString() : new Date().toISOString(),
@@ -211,11 +215,11 @@ serve(async (req) => {
         
         // Dados de mídia para processamento posterior se existirem
         p_media_type: mediaType,
-        p_media_url: message[mediaType]?.url || null,
-        p_media_key: message[mediaType]?.mediaKey || null,
-        p_media_mime: message[mediaType]?.mimetype || null,
-        p_media_filename: message[mediaType]?.fileName || null,
-        p_media_size: message[mediaType]?.fileLength || null
+        p_media_url: mediaType ? message[mediaType]?.url || null : null,
+        p_media_key: mediaType ? message[mediaType]?.mediaKey || null : null,
+        p_media_mime: mediaType ? message[mediaType]?.mimetype || null : null,
+        p_media_filename: mediaType ? message[mediaType]?.fileName || null : null,
+        p_media_size: mediaType ? message[mediaType]?.fileLength || null : null
       };
 
       console.log('🔄 Payload normalizado:', JSON.stringify(requestBody, null, 2));
@@ -337,7 +341,9 @@ serve(async (req) => {
       p_media_url: finalMediaUrl || null,
       p_media_filename: finalMediaFilename || null,
       p_media_size: finalMediaSize || null,
-      p_media_key: requestBody.p_media_key || null // Incluindo o parâmetro que estava faltando
+      p_media_key: requestBody.p_media_key || null,
+      p_is_group: requestBody.p_is_group || false,
+      p_contact_photo: requestBody.p_contact_photo || null
     };
 
     console.log('🎯 Chamando process_webhook_message com parâmetros:', JSON.stringify(functionParams, null, 2));
