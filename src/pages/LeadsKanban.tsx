@@ -548,14 +548,13 @@ export default function LeadsKanban() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${activeFilter === tag.name
-                        ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
+                      className={`h-9 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center transition-all duration-300 border-white/5 ${activeFilter === tag.name
+                        ? "bg-primary text-white border-primary shadow-[0_0_10px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
                         : "bg-white/[0.03] text-white/60 hover:bg-white/[0.03] hover:text-white/60"
                         }`}
                       onClick={() => setActiveFilter(tag.name)}
                     >
-                      <div className={`w-2 h-2 rounded-full ${tag.color} mr-2`} />
-                      {tag.name}
+                      <span className="translate-y-[1.5px] leading-none">{tag.name}</span>
                     </Button>
                   </motion.div>
                 ))}
@@ -711,15 +710,7 @@ export default function LeadsKanban() {
                                           </motion.div>
                                         </div>
 
-                                        {lead.tags && lead.tags.length > 0 && (
-                                          <Badge
-                                            className={`text-xs text-white truncate max-w-full ${tagColorClass(
-                                              lead.tags[0]
-                                            )} hover:opacity-90`}
-                                          >
-                                            {lead.tags[0]}
-                                          </Badge>
-                                        )}
+
 
                                         {lead.value != null && (
                                           <div className="text-Porceli-purple font-semibold text-xs sm:text-sm">

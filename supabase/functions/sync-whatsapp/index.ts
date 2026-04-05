@@ -24,7 +24,28 @@ serve(async (req) => {
 
     console.log(`🔄 Iniciando sincronização WhatsApp para instância: ${evolutionInstance}`)
 
-    // 1. Buscar Chats (Conversas ativas)
+    // 1. Buscar Grupos Ativos Primeiro (para servir de filtro)
+    const groupsResponse = await fetch(`${evolutionUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`, {
+      method: 'GET',
+      headers: { 'apikey': evolutionApiKey }
+    })
+    
+    const activeGroupIds = new Set<string>()
+    let groupsSyncedCount = 0
+    let groupsData: any[] = []
+
+    if (groupsResponse.ok) {
+       groupsData = await groupsResponse.json()
+       groupsSyncedCount = groupsData.length
+       groupsData.forEach((g: any) => {
+         const id = g.id || g.remoteJid || g.jid
+         if (id) activeGroupIds.add(id)
+       })
+    }
+
+    console.log(`👥 Encontrados ${groupsSyncedCount} grupos ativos na Evolution.`)
+
+    // 2. Buscar Chats (Conversas na história)
     const chatsResponse = await fetch(`${evolutionUrl}/chat/findChats/${evolutionInstance}`, {
       method: 'POST',
       headers: { 
@@ -44,19 +65,23 @@ serve(async (req) => {
     
     const chatsData = await chatsResponse.json()
     const chats = chatsData.chats || chatsData || []
-    console.log(`📦 Encontrados ${chats.length} chats para sincronizar.`)
+    console.log(`📦 Verificando ${chats.length} chats para limpeza...`)
 
     for (const chat of chats) {
       const remoteJid = chat.id || chat.remoteJid || chat.jid
-      if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) {
-        console.log(`⏩ Ignorando chat inválido/metadata: ${remoteJid}`)
+      if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) continue
+
+      const isGroup = chat.isGroup || remoteJid.endsWith('@g.us')
+      
+      // FILTRO DE LIMPEZA: Se for grupo mas não estiver na lista de ativos, remover do dashboard
+      if (isGroup && !activeGroupIds.has(remoteJid)) {
+        console.log(`🗑️ Removendo grupo 'fantasma' (saído): ${remoteJid}`)
+        await supabaseClient.from('conversations').delete().eq('remote_jid', remoteJid).eq('user_id', defaultUserId)
         continue
       }
 
-      const isGroup = chat.isGroup || remoteJid.endsWith('@g.us')
       const name = chat.name || chat.pushName || (isGroup ? 'Grupo sem nome' : 'Contato sem nome')
       
-      // Upsert na tabela de conversas usando RPC
       await supabaseClient.rpc('process_webhook_message', {
         p_user_id: defaultUserId,
         p_numero: remoteJid,
@@ -69,7 +94,25 @@ serve(async (req) => {
       })
     }
 
-    // 2. Buscar Contatos
+    // 3. Sincronizar Grupos Ativos
+    console.log(`👤 Atualizando grupos ativos...`)
+    for (const group of groupsData) {
+      const groupId = group.id || group.remoteJid || group.jid
+      if (!groupId) continue
+      
+      await supabaseClient.rpc('process_webhook_message', {
+        p_user_id: defaultUserId,
+        p_numero: groupId,
+        p_mensagem: 'Grupo sincronizado',
+        p_direcao: false,
+        p_data_hora: new Date().toISOString(),
+        p_nome_contato: group.subject || group.name || 'Grupo sem nome',
+        p_is_group: true,
+        p_contact_photo: group.profilePicUrl || null
+      })
+    }
+
+    // 4. Buscar Contatos (Para fotos de perfil)
     const contactsResponse = await fetch(`${evolutionUrl}/chat/findContacts/${evolutionInstance}`, {
       method: 'POST',
       headers: { 
@@ -82,12 +125,11 @@ serve(async (req) => {
     })
     
     if (contactsResponse.ok) {
-       const contactsData = await contactsResponse.json()
-       const contacts = contactsData.contacts || contactsData || []
-       console.log(`👤 Sincronizando ${contacts.length} contatos...`)
+       const contactsDataRaw = await contactsResponse.json()
+       const contacts = contactsDataRaw.contacts || contactsDataRaw || []
        for (const contact of contacts) {
          const contactId = contact.id || contact.remoteJid || contact.jid
-         if (!contactId) continue
+         if (!contactId || contactId.endsWith('@g.us')) continue
          const phone_clean = contactId.split('@')[0].replace(/[^0-9]/g, '')
          
          await supabaseClient.from('contatos').upsert({
@@ -98,7 +140,6 @@ serve(async (req) => {
            updated_at: new Date().toISOString()
          }, { onConflict: 'user_id,numero' })
 
-         // Também tenta atualizar o lead se existir
          await supabaseClient.from('leads').update({
            photo_url: contact.profilePicUrl || null,
            name: contact.name || contact.pushName || contact.verifiedName
@@ -106,38 +147,10 @@ serve(async (req) => {
        }
     }
 
-    // 3. Buscar Grupos (Garante que todos os grupos apareçam)
-    const groupsResponse = await fetch(`${evolutionUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`, {
-      method: 'GET',
-      headers: { 'apikey': evolutionApiKey }
-    })
-    
-    let groupsSyncedCount = 0
-    if (groupsResponse.ok) {
-       const groups = await groupsResponse.json()
-       groupsSyncedCount = groups.length
-       console.log(`👥 Sincronizando ${groupsSyncedCount} grupos...`)
-       for (const group of groups) {
-         const groupId = group.id || group.remoteJid || group.jid
-         if (!groupId) continue
-         
-         await supabaseClient.rpc('process_webhook_message', {
-           p_user_id: defaultUserId,
-           p_numero: groupId,
-           p_mensagem: 'Grupo sincronizado',
-           p_direcao: false,
-           p_data_hora: new Date().toISOString(),
-           p_nome_contato: group.subject || group.name || 'Grupo sem nome',
-           p_is_group: true,
-           p_contact_photo: group.profilePicUrl || null
-         })
-       }
-    }
-
     return new Response(JSON.stringify({ 
       success: true, 
-      chats_synced: chats.length,
-      groups_synced: groupsSyncedCount 
+      chats_checked: chats.length,
+      groups_active: groupsSyncedCount 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200

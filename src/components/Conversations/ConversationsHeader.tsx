@@ -14,7 +14,7 @@ export function ConversationsHeader({ onNewConversation, children }: Conversatio
       <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-5 pb-4 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Conversas WhatsApp</h1>
+            <h1 className="text-4xl font-bold text-white tracking-tight">Atendimentos</h1>
           </div>
 
           <motion.div

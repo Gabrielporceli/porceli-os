@@ -102,20 +102,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
           <div className="flex items-center gap-3 flex-1">
             <h4 className="text-lg font-semibold text-white">{client.company}</h4>
-            <div className="flex gap-2">
-              {/* Sempre mostrar o plano primeiro */}
-              {client.plan && (
-                <Badge className={`text-xs ${getPlanColor(client.plan)}`}>
-                  {client.plan}
-                </Badge>
-              )}
-              {/* Depois mostrar as outras tags */}
-              {client.tags.map((tag, index) => (
-                <Badge key={index} className={`text-xs ${getTagColor(tag)}`}>
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+
           </div>
 
           <div className="flex items-center gap-2 text-white/50">

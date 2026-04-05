@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConversationsHeader } from "@/components/Conversations/ConversationsHeader";
 import { NewConversationModal } from "@/components/Conversations/NewConversationModal";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { useTags } from "@/hooks/useTags";
 import { useConversations, useMessages, useCreateConversation, type Conversation } from "@/hooks/useConversations";
 import { useSendMessage } from "@/hooks/useSendMessage";
 import { useStages } from "@/hooks/useStages";
@@ -35,6 +36,7 @@ export default function Conversations() {
 
   const { data: conversations = [], isLoading: conversationsLoading, refetch: refetchConversations } = useConversations();
   const { data: messages = [], refetch: refetchMessages } = useMessages(selectedConversation?.id || "");
+  const { tags: formalTags } = useTags();
   const sendMessageMutation = useSendMessage();
   const createConversationMutation = useCreateConversation();
   const { stages } = useStages();
@@ -82,6 +84,16 @@ export default function Conversations() {
       supabase.removeChannel(channel);
     };
   }, [refetchConversations]);
+
+  // Sincronizar conversa selecionada com a lista (para refletir edições de nome)
+  useEffect(() => {
+    if (selectedConversation && conversations.length > 0) {
+      const updated = conversations.find(c => c.id === selectedConversation.id);
+      if (updated && (updated.contact_name !== selectedConversation.contact_name || updated.contact_photo !== selectedConversation.contact_photo)) {
+        setSelectedConversation(updated);
+      }
+    }
+  }, [conversations, selectedConversation]);
 
   // Configurar tempo real para mensagens da conversa selecionada
   useEffect(() => {
@@ -227,53 +239,79 @@ export default function Conversations() {
   return (
     <div className="relative">
       {/* HEADER FIXO - div totalmente separada do conteúdo */}
-      <ConversationsHeader onNewConversation={() => setIsNewConversationModalOpen(true)}>
-        {/* Busca e Filtros integrados ao Header para simetria perfeita com o Kanban! */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
-            <Input
-              placeholder="Buscar conversas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11 bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/30 rounded-xl transition-all hover:bg-white/[0.05] focus:bg-white/[0.05] focus:border-primary/50"
-            />
-          </div>
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              onClick={() => setIsFiltersOpen(true)}
-              variant="outline"
-              className="h-11 bg-white/[0.03] border-white/[0.05] text-white hover:bg-white/[0.05] hover:text-white rounded-xl transition-all"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filtros
-              {hasActiveFilters && (
-                <Badge className="ml-2 bg-white text-Porceli-purple text-xs">
-                  {filters.stages.length + filters.tags.length + filters.direction.length + (filters.client ? 1 : 0)}
-                </Badge>
-              )}
-            </Button>
-          </motion.div>
-        </div>
-      </ConversationsHeader>
+      <ConversationsHeader onNewConversation={() => setIsNewConversationModalOpen(true)} />
 
       {/* CONTEÚDO DA PÁGINA (Grid de conversas e chat) */}
       <div
         className="w-full flex flex-col"
-        style={{ marginTop: '112px', height: 'calc(100vh - 160px)' }}
+        style={{ marginTop: '80px', height: 'calc(100vh - 130px)' }}
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 relative">
           {/* Lista de Conversas */}
           <div className="lg:col-span-1 relative">
             <LiquidGlass className={`border-white/[0.05] rounded-xl shadow-2xl absolute inset-0`}>
               <div className="absolute inset-0 p-4 flex flex-col min-h-0">
-                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                  <MessageSquare className="w-5 h-5 text-white/80" />
-                  <h3 className="text-lg font-bold text-white tracking-tight">Conversas ({filteredConversations.length})</h3>
+                <div className="flex items-center justify-between gap-2 mb-4 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-white/80" />
+                    <h3 className="text-lg font-bold text-white tracking-tight">Conversas ({filteredConversations.length})</h3>
+                  </div>
+                  
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={() => setIsFiltersOpen(true)}
+                      variant="ghost"
+                      size="icon"
+                      className={`h-9 w-9 rounded-lg border border-white/5 transition-all ${hasActiveFilters ? 'bg-primary text-white border-primary' : 'bg-white/5 text-white/40'}`}
+                    >
+                      <Filter className="w-4 h-4" />
+                    </Button>
+                  </motion.div>
+                </div>
+
+                <div className="relative mb-3 flex-shrink-0">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                  <Input
+                    placeholder="Buscar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 h-9 bg-white/[0.02] border-white/5 text-white text-xs placeholder:text-white/20 rounded-lg focus:border-primary/30"
+                  />
+                </div>
+
+                {/* Quick Tags Filter */}
+                <div className="flex gap-1.5 mb-4 flex-shrink-0 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {formalTags.map(tag => {
+                    const isActive = filters.tags.includes(tag.name);
+                    return (
+                      <motion.div
+                        key={tag.id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Badge
+                          onClick={() => {
+                            setFilters(prev => ({
+                              ...prev,
+                              tags: isActive 
+                                ? prev.tags.filter(t => t !== tag.name)
+                                : [...prev.tags, tag.name]
+                            }));
+                          }}
+                          className={`cursor-pointer text-[10px] px-2.5 h-6 rounded-full border transition-all whitespace-nowrap flex items-center justify-center ${
+                            isActive 
+                              ? 'bg-primary text-white border-primary shadow-[0_0_10px_rgba(104,41,192,0.3)]' 
+                              : 'bg-white/5 text-white/40 border-white/5 hover:border-white/10 hover:text-white/60'
+                          }`}
+                        >
+                          <span className="translate-y-[1px] leading-none">{tag.name}</span>
+                        </Badge>
+                      </motion.div>
+                    );
+                  })}
                 </div>
 
                 {filteredConversations.length === 0 ? (
@@ -378,8 +416,8 @@ export default function Conversations() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
-                      {messages.map((message) => (
+                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2 flex flex-col-reverse">
+                      {messages.slice().reverse().map((message) => (
                         <div key={message.id} className={`flex ${isUserMessage(message) ? "justify-end" : "justify-start"}`}>
                           <div className={`message-bubble flex flex-col relative rounded-2xl w-auto ${message.media_type
                             ? 'p-1.5'

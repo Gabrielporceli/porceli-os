@@ -126,22 +126,24 @@ export function ConversationSidebarFilters({ isOpen, onClose, filters, onFilters
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
-                width: 8px;
+                width: 6px;
               }
               .custom-scrollbar::-webkit-scrollbar-track {
-                background: #404040;
-                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.02);
+                border-radius: 10px;
               }
               .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #6829c0;
-                border-radius: 4px;
+                background: rgba(104, 41, 192, 0.5);
+                border-radius: 10px;
+                transition: background 0.3s;
               }
               .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #6B21D3;
+                background: rgba(104, 41, 192, 0.8);
               }
               .custom-scrollbar {
                 scrollbar-width: thin;
-                scrollbar-color: #6829c0 #404040;
+                scrollbar-color: rgba(104, 41, 192, 0.5) transparent;
+                overflow-y: overlay; /* Faz a barra flutuar sobre o conteúdo se o browser suportar */
               }
 
               /* Animações */
@@ -170,114 +172,84 @@ export function ConversationSidebarFilters({ isOpen, onClose, filters, onFilters
               }
             `}</style>
 
-            <div className="p-6 space-y-8">
-              {/* Nome do Cliente */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
-                  Cliente
-                </h3>
+            <div className="p-6 pt-2 space-y-8">
 
-                <div className="space-y-2">
-                  <Label htmlFor="clientName" className="text-white/70">Nome do Cliente</Label>
-                  <Input
-                    id="clientName"
-                    placeholder="Buscar por nome..."
-                    value={localFilters.client}
-                    onChange={(e) => setLocalFilters(prev => ({ ...prev, client: e.target.value }))}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/30 hover:bg-white/[0.05] transition-all h-11 rounded-xl"
-                  />
-                </div>
-              </div>
 
               {/* Etapas do Kanban */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
                   Etapa do Funil
                 </h3>
 
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-2.5">
                   {stagesLoading ? (
                     <div className="text-white/40 text-sm">Carregando etapas...</div>
                   ) : stages.length === 0 ? (
-                    <div className="text-white/40 text-sm">Nenhuma etapa encontrada</div>
+                    <div className="text-white/40 text-sm italic">Nenhuma etapa encontrada</div>
                   ) : (
                     stages.map((stage) => (
-                      <div key={stage.id} className="flex items-center space-x-3">
+                      <label
+                        key={stage.id}
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer group ${
+                          localFilters.stages.includes(stage.name)
+                            ? 'bg-primary/10 border-primary/40 shadow-[0_0_15px_rgba(104,41,192,0.1)]'
+                            : 'bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 rounded-full ${stage.color} shadow-[0_0_8px_rgba(var(--primary-rgb),0.3)]`} />
+                          <span className={`text-sm tracking-tight ${localFilters.stages.includes(stage.name) ? 'text-white' : 'text-white/60'}`}>
+                            {stage.name}
+                          </span>
+                        </div>
                         <Checkbox
                           id={`stage-${stage.id}`}
                           checked={localFilters.stages.includes(stage.name)}
                           onCheckedChange={(checked) => handleStageChange(stage.name, checked as boolean)}
-                          className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary w-5 h-5 rounded-full"
                         />
-                        <Label
-                          htmlFor={`stage-${stage.id}`}
-                          className="text-white/80 cursor-pointer hover:text-white transition-colors"
-                        >
-                          {stage.name}
-                        </Label>
-                      </div>
+                      </label>
                     ))
                   )}
                 </div>
               </div>
 
               {/* Tags */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
                   Tags
                 </h3>
 
-                <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
                   {tagsLoading ? (
                     <div className="text-white/40 text-sm">Carregando tags...</div>
                   ) : tags.length === 0 ? (
-                    <div className="text-white/40 text-sm">Nenhuma tag encontrada</div>
+                    <div className="text-white/40 text-sm italic">Nenhuma tag encontrada</div>
                   ) : (
                     tags.map((tag) => (
-                      <div key={tag.id} className="flex items-center space-x-3">
-                        <Checkbox
+                      <label
+                        key={tag.id}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all cursor-pointer text-xs font-medium ${
+                          localFilters.tags.includes(tag.name)
+                            ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.3)]'
+                            : 'bg-white/5 border-white/5 text-white/40 hover:border-white/20 hover:text-white/60'
+                        }`}
+                      >
+                         <Checkbox
                           id={`tag-${tag.id}`}
                           checked={localFilters.tags.includes(tag.name)}
                           onCheckedChange={(checked) => handleTagChange(tag.name, checked as boolean)}
-                          className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="hidden"
                         />
-                        <Label
-                          htmlFor={`tag-${tag.id}`}
-                          className="text-white/80 cursor-pointer hover:text-white transition-colors"
-                        >
-                          {tag.name}
-                        </Label>
-                      </div>
+                        <div className={`w-1.5 h-1.5 rounded-full ${tag.color}`} />
+                        {tag.name}
+                      </label>
                     ))
                   )}
                 </div>
               </div>
 
-              {/* Direção */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
-                  Direção
-                </h3>
 
-                <div className="space-y-3">
-                  {directionOptions.map((direction) => (
-                    <div key={direction.value} className="flex items-center space-x-3">
-                      <Checkbox
-                        id={`direction-${direction.value}`}
-                        checked={localFilters.direction.includes(direction.value)}
-                        onCheckedChange={(checked) => handleDirectionChange(direction.value, checked as boolean)}
-                        className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <Label
-                        htmlFor={`direction-${direction.value}`}
-                        className="text-white/80 cursor-pointer hover:text-white transition-colors"
-                      >
-                        {direction.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 
