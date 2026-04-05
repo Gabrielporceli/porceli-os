@@ -63,7 +63,9 @@ export function EditClientModal({
   client,
   onClose,
   onSave,
-}: Omit<EditClientModalProps, 'onPlanColorChange' | 'planColors'>) {
+  onPlanColorChange,
+  planColors,
+}: EditClientModalProps) {
   useScrollLock(isOpen);
 
   const [formData, setFormData] = useState<Client>({

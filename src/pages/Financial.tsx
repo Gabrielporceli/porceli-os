@@ -241,7 +241,7 @@ export default function Financial() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       <FinancialHeader
         onNewTransaction={() => setIsExpenseModalOpen(true)}
         onSync={() => generateMissingEntries()}

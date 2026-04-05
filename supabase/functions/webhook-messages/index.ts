@@ -210,6 +210,35 @@ serve(async (req) => {
       // Identificar se é grupo
       const isGroup = remoteJid.endsWith('@g.us') || false;
 
+      // 📸 Tentar capturar a foto de perfil se não vier no webhook
+      let contactPhoto = data.profilePicUrl || null;
+      if (!contactPhoto && !isGroup) {
+        try {
+          const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim();
+          const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim();
+          const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim();
+
+          console.log(`📸 Buscando foto de perfil para: ${remoteJid}`);
+          // Buscar a foto via Evolution API (v2 recomenda POST para este endpoint)
+          const photoResponse = await fetch(`${evolutionUrl}/chat/fetchProfilePictureUrl/${evolutionInstance}`, {
+            method: 'POST',
+            headers: { 
+              'apikey': evolutionApiKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ number: remoteJid })
+          });
+          
+          if (photoResponse.ok) {
+            const photoData = await photoResponse.json();
+            contactPhoto = photoData.profilePicUrl || photoData.url || null;
+            console.log(contactPhoto ? `✅ Foto obtida: ${contactPhoto}` : `ℹ️ Contato sem foto pública.`);
+          }
+        } catch (photoErr) {
+          console.warn('⚠️ Erro ao buscar foto de perfil:', photoErr);
+        }
+      }
+
       // Normalizar para o formato esperado pela função do banco
       requestBody = {
         p_numero: remoteJid, 
@@ -219,6 +248,7 @@ serve(async (req) => {
         p_data_hora: data.messageTimestamp ? new Date(data.messageTimestamp * 1000).toISOString() : new Date().toISOString(),
         p_nome_contato: data.pushName || null,
         p_user_id: Deno.env.get('DEFAULT_USER_ID') || 'bad3abae-951e-49a4-8738-9037661fd5a1',
+        p_contact_photo: contactPhoto,
         
         // Dados de mídia para processamento posterior se existirem
         p_media_type: mediaType,

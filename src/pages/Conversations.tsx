@@ -182,7 +182,14 @@ export default function Conversations() {
     const matchesSearch = (conversation.contact_name || conversation.phone).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClient = !filters.client || (conversation.contact_name || "").toLowerCase().includes(filters.client.toLowerCase());
     const matchesStages = filters.stages.length === 0 || filters.stages.includes(conversation.stage || "");
-    const matchesTags = filters.tags.length === 0 || filters.tags.includes(conversation.tag || "");
+    
+    // Tratamento especial para grupos: se o filtro 'Grupos' ou 'Grupo' estiver ativo, 
+    // deve mostrar conversas que são grupos (is_group === true) MESMO que não tenham a tag no banco.
+    const hasGroupFilter = filters.tags.includes("Grupos") || filters.tags.includes("Grupo");
+    const matchesTags = filters.tags.length === 0 || 
+                       filters.tags.includes(conversation.tag || "") || 
+                       (hasGroupFilter && conversation.is_group);
+                       
     const matchesDirection = filters.direction.length === 0 || filters.direction.includes(conversation.direction || "");
     return matchesSearch && matchesClient && matchesStages && matchesTags && matchesDirection;
   });
@@ -223,12 +230,10 @@ export default function Conversations() {
 
   if (conversationsLoading) {
     return (
-      <div className="relative">
+      <div className="space-y-6 md:space-y-8 animate-fade-in relative flex flex-col h-[calc(100vh-48px)]">
         <ConversationsHeader onNewConversation={() => setIsNewConversationModalOpen(true)} />
-        <div className="pt-[122px] w-full pb-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-white/40">Carregando conversas...</div>
-          </div>
+        <div className="w-full flex-1 flex items-center justify-center min-h-0">
+          <div className="text-white/40">Carregando conversas...</div>
         </div>
       </div>
     );
@@ -237,23 +242,18 @@ export default function Conversations() {
   const cardHeightClasses = "h-full";
 
   return (
-    <div className="relative">
-      {/* HEADER FIXO - div totalmente separada do conteúdo */}
+    <div className="space-y-6 md:space-y-8 animate-fade-in relative flex flex-col h-[calc(100vh-48px)]">
       <ConversationsHeader onNewConversation={() => setIsNewConversationModalOpen(true)} />
 
       {/* CONTEÚDO DA PÁGINA (Grid de conversas e chat) */}
-      <div
-        className="w-full flex flex-col"
-        style={{ marginTop: '80px', height: 'calc(100vh - 130px)' }}
-      >
+      <div className="w-full flex-1 flex flex-col min-h-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 relative">
           {/* Lista de Conversas */}
-          <div className="lg:col-span-1 relative">
+          <div className="lg:col-span-1 relative h-full">
             <LiquidGlass className={`border-white/[0.05] rounded-xl shadow-2xl absolute inset-0`}>
               <div className="absolute inset-0 p-4 flex flex-col min-h-0">
                 <div className="flex items-center justify-between gap-2 mb-4 flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-white/80" />
                     <h3 className="text-lg font-bold text-white tracking-tight">Conversas ({filteredConversations.length})</h3>
                   </div>
                   

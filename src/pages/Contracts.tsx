@@ -202,7 +202,7 @@ export default function Contracts() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 md:space-y-8 animate-fade-in">
         <div className="h-8 bg-Porceli-gray-700 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
@@ -216,7 +216,7 @@ export default function Contracts() {
 
   if (error) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 md:space-y-8 animate-fade-in">
         <div className="text-center py-12">
           <p className="text-red-400">Erro ao carregar contratos: {error.message}</p>
         </div>
@@ -225,7 +225,7 @@ export default function Contracts() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       <ContractsHeader onNewContract={() => setIsNewContractModalOpen(true)} />
 
       {/* Summary Cards */}

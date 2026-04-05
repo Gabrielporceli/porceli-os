@@ -199,7 +199,7 @@ export default function Clients() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 md:space-y-8 animate-fade-in">
         <div className="h-8 bg-Porceli-gray-700 rounded animate-pulse" />
         <div className="h-12 bg-Porceli-gray-700 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -218,7 +218,7 @@ export default function Clients() {
 
   if (error) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 md:space-y-8 animate-fade-in">
         <div className="text-center py-12">
           <p className="text-red-400">Erro ao carregar clientes: {error.message}</p>
         </div>
@@ -227,7 +227,7 @@ export default function Clients() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       <ClientsHeader onNewClient={() => setIsNewClientModalOpen(true)} />
       
       <ClientsSearch 
