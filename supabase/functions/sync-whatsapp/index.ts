@@ -48,7 +48,10 @@ serve(async (req) => {
 
     for (const chat of chats) {
       const remoteJid = chat.id || chat.remoteJid || chat.jid
-      if (!remoteJid) continue
+      if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) {
+        console.log(`⏩ Ignorando chat inválido/metadata: ${remoteJid}`)
+        continue
+      }
 
       const isGroup = chat.isGroup || remoteJid.endsWith('@g.us')
       const name = chat.name || chat.pushName || (isGroup ? 'Grupo sem nome' : 'Contato sem nome')

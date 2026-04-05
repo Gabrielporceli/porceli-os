@@ -200,12 +200,19 @@ serve(async (req) => {
       else if (message.pttMessage) mediaType = 'pttMessage';
       else if (message.documentMessage) mediaType = 'documentMessage';
 
+      // Ignorar IDs inválidos (Label/Metadata sem @)
+      const remoteJid = key.remoteJid || null;
+      if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) {
+        console.log(`⏩ Ignorando webhook de ID inválido/metadata: ${remoteJid}`);
+        return new Response(JSON.stringify({ success: true, message: 'Skipped metadata' }), { headers: corsHeaders });
+      }
+
       // Identificar se é grupo
-      const isGroup = key.remoteJid?.endsWith('@g.us') || false;
+      const isGroup = remoteJid.endsWith('@g.us') || false;
 
       // Normalizar para o formato esperado pela função do banco
       requestBody = {
-        p_numero: key.remoteJid || null, // Usar o JID completo para garantir unicidade (incluindo grupos)
+        p_numero: remoteJid, 
         p_is_group: isGroup,
         p_mensagem: text,
         p_direcao: key.fromMe || false,

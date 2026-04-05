@@ -868,7 +868,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`flex items-start gap-3 p-3 rounded-xl bg-white/5 border transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-white/5'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -919,7 +919,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`flex items-start gap-3 p-3 rounded-xl bg-white/5 border transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-white/5'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}

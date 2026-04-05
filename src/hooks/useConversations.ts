@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatToJID, cleanPhone } from "@/lib/utils";
 
 export interface Conversation {
   id: string;
@@ -145,24 +146,31 @@ export const useCreateConversation = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ phone, contactName }: { phone: string; contactName: string }) => {
+    mutationFn: async ({ phone, contactName, remoteJid }: { phone: string; contactName: string; remoteJid?: string }) => {
       const { data: userData } = await supabase.auth.getUser();
       
       if (!userData.user) {
         throw new Error("Usuário não autenticado");
       }
 
+      const derivedJid = remoteJid || formatToJID(phone);
+      const cleanedPhone = cleanPhone(phone);
+
       const { data, error } = await supabase
         .from("conversations")
-        .insert({
+        .upsert({
           user_id: userData.user.id,
-          phone,
+          phone: cleanedPhone,
+          remote_jid: derivedJid,
           contact_name: contactName,
           last_message: "Conversa iniciada",
           stage: "Sem atendimento",
           tag: "Lead",
           direction: "outbound",
           unread_count: 0,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,remote_jid'
         })
         .select()
         .single();

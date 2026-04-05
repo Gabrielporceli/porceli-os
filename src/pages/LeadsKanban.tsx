@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,7 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
 };
 
 export default function LeadsKanban() {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -645,12 +647,12 @@ export default function LeadsKanban() {
                                 <ContextMenu>
                                   <ContextMenuTrigger asChild>
                                     <Card
-                                      className={`liquid-glass border-white/[0.05] p-3 sm:p-5 rounded-2xl dashboard-glow relative group ${snapshot.isDragging
+                                      className={`liquid-glass border-white/[0.05] p-2.5 sm:p-3 rounded-2xl dashboard-glow relative group ${snapshot.isDragging
                                         ? "border-primary/50 shadow-2xl scale-[1.02]"
                                         : ""
                                         }`}
                                     >
-                                      <div className="space-y-2 sm:space-y-3">
+                                      <div className="space-y-1.5">
                                         <div className="flex items-center gap-2">
                                           <div
                                             {...provided.dragHandleProps}
@@ -663,18 +665,30 @@ export default function LeadsKanban() {
                                             <GripVertical className="w-4 h-4" />
                                           </div>
 
-                                          <div className="flex items-center gap-2 flex-1 min-w-0 pt-1.5">
-                                            <Avatar className="w-8 h-8 border border-white/10 flex-shrink-0">
-                                              <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
-                                              <AvatarFallback className="bg-white/[0.05] text-white/40 text-[10px]">
-                                                <User className="w-4 h-4" />
-                                              </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1 min-w-0">
-                                              <h4 className="font-semibold text-white text-sm truncate">
+                                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div
+                                              className="relative cursor-pointer flex-shrink-0 group/avatar"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const param = (lead.remotejid && lead.remotejid.includes('@')) ? `jid=${lead.remotejid}` : `phone=${lead.phone}`;
+                                                navigate(`/conversations?${param}`);
+                                              }}
+                                              title="Abrir Conversa"
+                                              data-no-pan
+                                            >
+                                              <Avatar className="w-10 h-10 border-2 border-primary/40 group-hover/avatar:border-primary shadow-md transition-all">
+                                                <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
+                                                <AvatarFallback className="bg-primary/5 text-primary">
+                                                  <User className="w-5 h-5" />
+                                                </AvatarFallback>
+                                              </Avatar>
+                                            </div>
+
+                                            <div className="flex-1 min-w-0 py-1.5">
+                                              <h4 className="font-semibold text-white text-sm truncate leading-snug mb-1">
                                                 {lead.name}
                                               </h4>
-                                              <p className="text-Porceli-gray-400 text-[11px] truncate">
+                                              <p className="text-Porceli-gray-400 text-[11px] truncate leading-snug">
                                                 {lead.company || lead.phone}
                                               </p>
                                             </div>

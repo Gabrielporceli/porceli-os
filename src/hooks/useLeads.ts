@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { formatToJID, cleanPhone } from '@/lib/utils';
 
 export interface Lead {
   id: string;
@@ -22,6 +23,7 @@ export interface Lead {
   meeting_date: string | null;
   reuniao_realizada: boolean | null;
   photo_url: string | null;
+  remotejid: string | null;
 }
 
 export interface LeadInput {
@@ -35,6 +37,7 @@ export interface LeadInput {
   notes?: string;
   meeting_date?: string;
   reuniao_realizada?: boolean;
+  remotejid?: string;
 }
 
 export function useLeads() {
@@ -78,13 +81,17 @@ export function useLeads() {
         throw new Error('Usuário não autenticado');
       }
 
+      // Derivar o remotejid do telefone, se não fornecido
+      const derivedJid = leadData.remotejid || formatToJID(leadData.phone);
+      const cleanedPhone = cleanPhone(leadData.phone);
+
       const { data, error } = await supabase
         .from('leads')
-        .insert({
+        .upsert({
           user_id: user.id,
           name: leadData.name,
           company: leadData.company,
-          phone: leadData.phone,
+          phone: cleanedPhone,
           email: leadData.email || null,
           stage: leadData.stage,
           tags: leadData.tags || [],
@@ -92,16 +99,26 @@ export function useLeads() {
           notes: leadData.notes || null,
           meeting_date: leadData.meeting_date || null,
           reuniao_realizada: leadData.reuniao_realizada || false,
+          remotejid: derivedJid,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,remotejid'
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setLeads(prev => [data as unknown as Lead, ...prev]);
+      // Se o data já existia, a query .select().single() retorna o atualizado.
+      // Precisamos atualizar o estado local removendo o antigo se existir ou atualizando.
+      setLeads(prev => {
+        const filtered = prev.filter(l => l.remotejid !== derivedJid);
+        return [data as unknown as Lead, ...filtered];
+      });
+
       toast({
         title: 'Sucesso',
-        description: 'Lead criado com sucesso',
+        description: 'Lead processado com sucesso (criado ou atualizado).',
       });
       return data;
     } catch (error) {

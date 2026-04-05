@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,28 @@ export default function Conversations() {
   const sendMessageMutation = useSendMessage();
   const createConversationMutation = useCreateConversation();
   const { stages } = useStages();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Efeito para selecionar conversa via query param (jid ou phone)
+  useEffect(() => {
+    const jid = searchParams.get('jid');
+    const phone = searchParams.get('phone');
+    
+    if (jid || phone) {
+      const target = conversations.find(c => 
+        (jid && c.remote_jid === jid) || 
+        (phone && c.phone === phone)
+      );
+      
+      if (target && selectedConversation?.id !== target.id) {
+        handleSelectConversation(target);
+        // Limpar os params para não ficar re-selecionando se o usuário fechar
+        searchParams.delete('jid');
+        searchParams.delete('phone');
+        setSearchParams(searchParams);
+      }
+    }
+  }, [searchParams, conversations]);
 
   // Configurar tempo real para conversas
   useEffect(() => {
