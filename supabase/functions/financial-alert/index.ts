@@ -29,14 +29,13 @@ serve(async () => {
     const today = new Date().toISOString().split('T')[0]
     const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-    // 1. Clientes com pagamentos pendentes/atrasados (receitas não pagas com data já vencida)
+    // 1. Clientes com pagamentos pendentes/atrasados (faturas não pagas com vencimento já passado)
     const { data: overdueFinances } = await supabase
-      .from('finances')
-      .select('description, amount, date, status, client_id, clients(company, responsible, phone)')
-      .eq('type', 'income')
+      .from('financial_entries')
+      .select('name, amount, due_date, status, reference, client_id, clients(company, responsible, phone)')
       .in('status', ['pending', 'overdue'])
-      .lt('date', today)
-      .order('date', { ascending: true })
+      .lt('due_date', today)
+      .order('due_date', { ascending: true })
 
     // 2. Contratos vencendo nos próximos 30 dias
     const { data: expiringContracts } = await supabase
@@ -72,7 +71,7 @@ serve(async () => {
             entries: []
           }
         }
-        byClient[key].entries.push({ desc: f.description, amount: Number(f.amount), date: f.date })
+        byClient[key].entries.push({ desc: f.reference || f.name, amount: Number(f.amount), date: f.due_date })
       }
 
       message += `🔴 *CLIENTES INADIMPLENTES (${Object.keys(byClient).length}):*\n`

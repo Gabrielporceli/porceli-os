@@ -16,6 +16,7 @@ export interface Automation {
   last_triggered_at: string | null;
   is_scheduled: boolean;
   updated_at: string;
+  config: Record<string, string> | null;
 }
 
 async function callManageAutomations(body: object) {
@@ -74,6 +75,45 @@ export function useUpdateAutomationSchedule() {
     },
     onError: (err: any) => {
       toast.error('Erro ao atualizar horário: ' + err.message);
+    },
+  });
+}
+
+export function useUpdateAutomationInfo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, description }: { id: string; description: string }) => {
+      const { error } = await supabase
+        .from('automations')
+        .update({ description, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['automations'] });
+    },
+    onError: (err: any) => {
+      toast.error('Erro ao atualizar descrição: ' + err.message);
+    },
+  });
+}
+
+export function useUpdateAutomationConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, config }: { id: string; config: Record<string, string> }) => {
+      const { error } = await supabase
+        .from('automations')
+        .update({ config, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['automations'] });
+      toast.success('Textos da mensagem atualizados!');
+    },
+    onError: (err: any) => {
+      toast.error('Erro ao atualizar textos: ' + err.message);
     },
   });
 }
