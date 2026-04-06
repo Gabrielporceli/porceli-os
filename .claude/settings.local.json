@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -maxdepth 3 -name .env* -o -name supabase.json -o -name *.env)",
+      "Bash(find ./.claude -type f -not -path */worktrees/*)",
+      "Bash(git log:*)",
+      "Bash(grep -r \"schedule\\\\|cron\\\\|interval\\\\|daily\\\\|reminder\" ./src --include=*.ts --include=*.tsx)",
+      "mcp__8451742d-7798-4568-87cc-7ad0ecc5456b__get_logs",
+      "Bash(xargs grep:*)"
+    ]
+  }
+}

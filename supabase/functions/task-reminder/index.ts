@@ -12,12 +12,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 serve(async (req) => {
   try {
-    // 0. Sincronizar o Notion agora para garantir que temos as tarefas mais recentes
-    console.log("Forçando sincronismo com o Notion antes de checar alertas...")
-    await fetch(`${SUPABASE_URL}/functions/v1/notion-tasks`, {
-      headers: { "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
-    }).catch(e => console.error("Erro no sincronismo pré-alerta:", e.message))
-
     // 1. Calcular a janela de 10 minutos a partir de agora
     const now = new Date()
     const targetTime = new Date(now.getTime() + 10 * 60000) // Agora + 10 min
@@ -57,7 +51,7 @@ serve(async (req) => {
     // 5. Disparar notificações do Notion
     if (tasks && tasks.length > 0) {
       for (const task of tasks) {
-        const text = `⏳ *LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo vence em *10 minutos!*`
+        const text = `⏳ *LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo começa em *10 minutos!*`
         await sendWhatsApp(text)
         notificationsSent++
       }

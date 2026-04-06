@@ -243,7 +243,7 @@ export default function Calendar() {
     } else {
       await handleUpdateNotionTask(editingItem.id, {
         title: editTitle,
-        dueDate: format(newStart, "yyyy-MM-dd"),
+        dueDate: editTime ? `${format(newStart, "yyyy-MM-dd")}T${editTime}:00-03:00` : format(newStart, "yyyy-MM-dd"),
       });
     }
 
@@ -403,7 +403,7 @@ export default function Calendar() {
           body: {
             action: "CREATE_TASK",
             title: newEventTitle,
-            dueDate: dateStr + (newEventTime ? `T${newEventTime}:00` : ""),
+            dueDate: dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : ""),
             client: newEventClient
           },
         });

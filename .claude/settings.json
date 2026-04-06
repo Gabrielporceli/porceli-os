@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -l \"contracts\\\\|payments\\\\|invoices\\\\|faturas\\\\|pagamentos\" \"c:/Users/gabri/.gemini/antigravity/scratch/lead-goat-flow/supabase/migrations/\"*.sql)",
+      "Bash(supabase --version)",
+      "Bash(npx supabase:*)"
+    ]
+  }
+}

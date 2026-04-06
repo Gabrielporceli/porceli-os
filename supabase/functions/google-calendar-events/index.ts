@@ -233,6 +233,30 @@ serve(async (req) => {
       colorId: item.colorId,
     }))
 
+    // Sync to DB for daily-summary/task-reminder
+    const eventsToUpsert = events
+      .filter(e => e.start)
+      .map(e => ({
+        user_id: user.id,
+        google_event_id: e.id,
+        title: e.title,
+        description: e.description ?? null,
+        start_time: e.start,
+        end_time: e.end ?? null,
+        all_day: e.allDay,
+        location: e.location ?? null,
+        html_link: e.htmlLink ?? null,
+        status: e.status ?? null,
+        color_id: e.colorId ?? null,
+        synced_at: new Date().toISOString(),
+      }))
+
+    if (eventsToUpsert.length > 0) {
+      await adminSupabase
+        .from('google_calendar_events')
+        .upsert(eventsToUpsert, { onConflict: 'google_event_id' })
+    }
+
     return new Response(
       JSON.stringify({ connected: true, events }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

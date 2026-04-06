@@ -369,7 +369,17 @@ serve(async (req) => {
       notion_page_id: t.id,
       title: t.title,
       status: t.status,
-      due_date: (t.dueDate && t.time) ? `${t.dueDate}T${t.time}:00Z` : (t.dueDate ? `${t.dueDate}T00:00:00Z` : null),
+      due_date: (() => {
+        if (!t.dueDate) return null
+        if (t.dueDate.includes('T')) {
+          // datetime com timezone (-03:00, +00:00, Z) → usa direto; sem timezone → assume Brasil
+          const hasTimezone = /([+-]\d{2}:\d{2}|Z)$/.test(t.dueDate)
+          return hasTimezone ? t.dueDate : `${t.dueDate}-03:00`
+        }
+        // só data: appenda horário com timezone Brasil
+        if (t.time) return `${t.dueDate}T${t.time}:00-03:00`
+        return `${t.dueDate}T00:00:00Z`
+      })(),
       priority: t.priority,
       url: t.url,
       synced_at: new Date().toISOString()
