@@ -6,6 +6,9 @@ interface SendMessageData {
   numero: string;
   mensagem: string;
   nome_contato?: string;
+  media_base64?: string;
+  media_mimetype?: string;
+  media_filename?: string;
 }
 
 export const useSendMessage = () => {
@@ -21,7 +24,10 @@ export const useSendMessage = () => {
           user_id: user.id,
           numero: data.numero,
           mensagem: data.mensagem,
-          nome_contato: data.nome_contato
+          nome_contato: data.nome_contato,
+          media_base64: data.media_base64,
+          media_mimetype: data.media_mimetype,
+          media_filename: data.media_filename,
         }
       });
 

@@ -18,13 +18,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { user_id, numero, mensagem, nome_contato } = await req.json()
-    
-    console.log('Enviando mensagem:', { user_id, numero, mensagem, nome_contato })
+    const { user_id, numero, mensagem, nome_contato, media_base64, media_mimetype, media_filename } = await req.json()
+
+    console.log('Enviando mensagem:', { user_id, numero, mensagem: mensagem || '[mídia]', media_mimetype })
 
     // Validar dados obrigatórios
-    if (!user_id || !numero || !mensagem) {
-      throw new Error('Dados obrigatórios ausentes: user_id, numero, mensagem')
+    if (!user_id || !numero || (!mensagem && !media_base64)) {
+      throw new Error('Dados obrigatórios ausentes: user_id, numero e mensagem ou mídia')
     }
 
     const phone_clean = numero.replace(/[^0-9+]/g, '')
@@ -74,10 +74,11 @@ serve(async (req) => {
       console.log('Nova conversa criada:', conversation.id)
     } else {
       // Atualizar conversa existente
+      const displayText = mensagem || (media_mimetype?.startsWith('audio/') ? '🎤 Áudio' : media_filename || '📎 Arquivo')
       const { error: updateError } = await supabaseClient
         .from('conversations')
         .update({
-          last_message: mensagem,
+          last_message: displayText,
           contact_name,
           updated_at: data_hora
         })
@@ -89,17 +90,53 @@ serve(async (req) => {
       }
     }
 
-    // PASSO 2: Inserir mensagem como SENT
+    // PASSO 2: Upload de mídia para o Supabase Storage (se houver)
+    let stored_media_url: string | null = null
+
+    if (media_base64) {
+      try {
+        const base64Clean = media_base64.includes(',') ? media_base64.split(',')[1] : media_base64
+        const binaryStr = atob(base64Clean)
+        const bytes = new Uint8Array(binaryStr.length)
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i)
+
+        const ext = media_filename?.split('.').pop() || (media_mimetype?.split('/')[1]) || 'bin'
+        const storagePath = `${user_id}/${Date.now()}_${media_filename || `media.${ext}`}`
+
+        // Garantir que o bucket existe
+        await supabaseClient.storage.createBucket('messages-media', { public: true }).catch(() => {})
+
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('messages-media')
+          .upload(storagePath, bytes, { contentType: media_mimetype || 'application/octet-stream', upsert: false })
+
+        if (uploadError) {
+          console.error('Erro no upload de mídia:', uploadError)
+        } else if (uploadData) {
+          const { data: { publicUrl } } = supabaseClient.storage.from('messages-media').getPublicUrl(uploadData.path)
+          stored_media_url = publicUrl
+          console.log('✅ Mídia salva:', stored_media_url)
+        }
+      } catch (uploadErr) {
+        console.error('Falha no upload de mídia (não crítico):', uploadErr)
+      }
+    }
+
+    // PASSO 3: Inserir mensagem como SENT
+    const messageText = mensagem || (media_mimetype?.startsWith('audio/') ? 'Mensagem de voz' : 'Mídia enviada')
     const { data: message, error: messageError } = await supabaseClient
       .from('messages')
       .insert({
         conversation_id: conversation.id,
-        text: mensagem,
+        text: messageText,
         numero,
-        mensagem,
-        direcao: true, // true = mensagem enviada pelo usuário
+        mensagem: messageText,
+        direcao: true,
         data_hora,
         nome_contato,
+        media_type: media_mimetype || null,
+        media_filename: media_filename || null,
+        media_url: stored_media_url,
         created_at: data_hora,
         updated_at: data_hora
       })
@@ -113,60 +150,86 @@ serve(async (req) => {
 
     console.log('Mensagem inserida:', message.id)
 
-    // PASSO 3: Enviar mensagem DIRETAMENTE via Evolution API
+    // PASSO 4: Enviar mensagem DIRETAMENTE via Evolution API
     const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
     const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim()
     const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim()
 
-    // Limpeza rigorosa do número: apenas dígitos, sem prefixos extras além do DDI
+    // Limpeza do número: apenas dígitos
     let target_number = numero.split('@')[0].replace(/[^0-9]/g, '')
-    
-    // Se o número começar com 00, substituir por + ou apenas remover 00 se o DDI vier depois
     if (target_number.startsWith('00')) target_number = target_number.substring(2)
+
+    // Garantir código do país brasileiro (55) se o número não tiver
+    // Números BR: 10 dígitos (sem 9) ou 11 dígitos (com 9), ex: 65981099630
+    if (target_number.length <= 11 && !target_number.startsWith('55')) {
+      target_number = '55' + target_number
+    }
 
     console.log(`📤 Enviando via Evolution API: ${evolutionInstance} para ${target_number}`)
 
-    const evolutionEndpoint = `${evolutionUrl}/message/sendText/${evolutionInstance}`
-    
+    let evolutionEndpoint: string
+    let evolutionBody: object
+
+    if (media_base64) {
+      // Remover prefixo data URL se presente
+      const base64Clean = media_base64.includes(',') ? media_base64.split(',')[1] : media_base64
+
+      if (media_mimetype?.startsWith('audio/')) {
+        // Áudio como PTT (Push-to-Talk)
+        evolutionEndpoint = `${evolutionUrl}/message/sendWhatsAppAudio/${evolutionInstance}`
+        evolutionBody = { number: target_number, audio: base64Clean, encoding: true }
+      } else {
+        // Imagem, vídeo ou documento
+        const mediatype = media_mimetype?.startsWith('image/') ? 'image'
+          : media_mimetype?.startsWith('video/') ? 'video'
+          : 'document'
+
+        evolutionEndpoint = `${evolutionUrl}/message/sendMedia/${evolutionInstance}`
+        evolutionBody = {
+          number: target_number,
+          mediatype,
+          mimetype: media_mimetype,
+          media: base64Clean,
+          fileName: media_filename || 'arquivo',
+          caption: mensagem || undefined,
+          delay: 1200
+        }
+      }
+    } else {
+      // Texto puro
+      evolutionEndpoint = `${evolutionUrl}/message/sendText/${evolutionInstance}`
+      evolutionBody = { number: target_number, text: mensagem, delay: 1200 }
+    }
+
+    console.log(`📤 Endpoint: ${evolutionEndpoint}`)
+    console.log(`📤 Body keys: ${Object.keys(evolutionBody).join(', ')}`)
+
     const evolutionResponse = await fetch(evolutionEndpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': evolutionApiKey
-      },
-      body: JSON.stringify({
-        number: target_number,
-        text: mensagem,
-        delay: 1200
-      })
+      headers: { 'Content-Type': 'application/json', 'apikey': evolutionApiKey },
+      body: JSON.stringify(evolutionBody)
     })
+
+    const rawText = await evolutionResponse.text()
+    console.log(`📥 Evolution status: ${evolutionResponse.status}`)
+    console.log(`📥 Evolution response: ${rawText.substring(0, 500)}`)
 
     let evolutionResult
     try {
-      evolutionResult = await evolutionResponse.json()
+      evolutionResult = JSON.parse(rawText)
     } catch (e) {
-      evolutionResult = { message: 'Erro ao analisar resposta da Evolution API', raw: await evolutionResponse.text() }
+      evolutionResult = { message: rawText }
     }
 
     if (!evolutionResponse.ok) {
-      console.error('❌ Erro na Evolution API:', {
-        status: evolutionResponse.status,
-        statusText: evolutionResponse.statusText,
-        result: evolutionResult,
-        endpoint: evolutionEndpoint
-      })
-      
+      console.error('❌ Erro na Evolution API:', evolutionResponse.status, rawText.substring(0, 300))
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: evolutionResult.message || 'Erro na Evolution API',
-          details: evolutionResult,
+        JSON.stringify({
+          success: false,
+          error: evolutionResult?.message || rawText || 'Erro na Evolution API',
           status: evolutionResponse.status
         }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 

@@ -59,6 +59,15 @@
   font-display: swap;
 }
 
+
+/* Remove foco visual do browser em inputs customizados */
+.chat-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-appearance: none !important;
+}
+
 /* Porceli Company Theme - Dark Mode with Purple Accents */
 @layer base {
   :root {

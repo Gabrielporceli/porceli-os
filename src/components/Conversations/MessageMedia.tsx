@@ -46,9 +46,8 @@ export const MessageMedia: React.FC<MessageMediaProps> = ({
   // Renderizar imagens com preview inline
   if (mediaType?.startsWith('image/') || mediaType === 'imageMessage') {
     return (
-      <div className="mt-1">
-        <div className="relative group w-full">
-          {(!mediaUrl || imageError) ? (
+      <div className="w-full">
+        {(!mediaUrl || imageError) ? (
             <div
               className={`flex flex-col items-center justify-center w-[200px] h-32 rounded-xl border-2 border-dashed ${isUserMessage ? 'border-primary/40 bg-primary/20' : 'border-white/20 bg-white/[0.03]'
                 }`}
@@ -68,12 +67,11 @@ export const MessageMedia: React.FC<MessageMediaProps> = ({
             <img
               src={mediaUrl}
               alt="Imagem compartilhada"
-              className="max-w-[280px] rounded-xl cursor-pointer hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="block w-full cursor-pointer"
               onClick={openInNewTab}
               onError={() => setImageError(true)}
             />
           )}
-        </div>
       </div>
     );
   }
