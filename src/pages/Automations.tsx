@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Zap, CalendarDays, Bell, DollarSign, Trash2, Play, Clock, Edit2,
-  X, Save, ChevronRight, CheckCircle2, AlertCircle, Loader2, Plus
+  CalendarDays, Bell, DollarSign, Trash2, Play, Clock, Edit2, Zap,
+  X, Save, CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { cn } from "@/lib/utils";
 import {
   useAutomations,
   useToggleAutomation,
@@ -23,24 +25,27 @@ const ICONS: Record<string, React.ElementType> = {
 };
 
 // Cores por categoria
-const CATEGORY_COLORS: Record<string, { bg: string; border: string; badge: string; icon: string }> = {
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; badge: string; icon: string; dot: string }> = {
   financeiro: {
     bg: 'rgba(34,197,94,0.08)',
     border: 'rgba(34,197,94,0.2)',
     badge: 'bg-green-500/15 text-green-400 border-green-500/20',
     icon: 'text-green-400',
+    dot: 'bg-green-400',
   },
   atividades: {
     bg: 'rgba(104,41,192,0.12)',
     border: 'rgba(104,41,192,0.25)',
     badge: 'bg-primary/15 text-primary border-primary/20',
     icon: 'text-primary',
+    dot: 'bg-primary',
   },
   sistema: {
     bg: 'rgba(148,163,184,0.06)',
     border: 'rgba(148,163,184,0.15)',
     badge: 'bg-white/10 text-white/50 border-white/10',
     icon: 'text-white/40',
+    dot: 'bg-white/30',
   },
 };
 
@@ -64,14 +69,9 @@ function formatLastRun(dateStr: string | null): string {
   return `Há ${days} dia${days > 1 ? 's' : ''}`;
 }
 
-// Modal de edição de automação
-function EditModal({
-  automation,
-  onClose,
-}: {
-  automation: Automation;
-  onClose: () => void;
-}) {
+// ─── Modal de edição ────────────────────────────────────────────────────────
+
+function EditModal({ automation, onClose }: { automation: Automation; onClose: () => void }) {
   const isEveryMinute = automation.schedule === '* * * * *';
   const [time, setTime] = useState(isEveryMinute ? '00:00' : cronToBRTTime(automation.schedule));
   const updateSchedule = useUpdateAutomationSchedule();
@@ -104,16 +104,17 @@ function EditModal({
       >
         <LiquidGlass className="border-white/10 rounded-2xl">
           <div className="p-6 space-y-5">
-            {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors.icon}`}
-                  style={{ background: colors.bg, border: `1px solid ${colors.border}` }}>
+                <div
+                  className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}
+                  style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
+                >
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-white font-semibold text-sm">{automation.display_name}</h3>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${colors.badge}`}>
+                  <span className={cn('text-[10px] px-2 py-0.5 rounded-full border', colors.badge)}>
                     {CATEGORY_LABELS[automation.category] ?? automation.category}
                   </span>
                 </div>
@@ -123,10 +124,8 @@ function EditModal({
               </button>
             </div>
 
-            {/* Descrição */}
             <p className="text-white/50 text-sm leading-relaxed">{automation.description}</p>
 
-            {/* Horário */}
             <div className="space-y-2">
               <label className="text-white/60 text-xs font-medium flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" /> Horário de execução (Horário de Brasília)
@@ -152,7 +151,6 @@ function EditModal({
               )}
             </div>
 
-            {/* Ações */}
             <div className="flex gap-2 pt-1">
               <Button
                 variant="ghost"
@@ -166,11 +164,10 @@ function EditModal({
                 onClick={handleSave}
                 disabled={updateSchedule.isPending || isEveryMinute}
               >
-                {updateSchedule.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <><Save className="w-4 h-4 mr-1.5" /> Salvar</>
-                )}
+                {updateSchedule.isPending
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <><Save className="w-4 h-4 mr-1.5" /> Salvar</>
+                }
               </Button>
             </div>
           </div>
@@ -180,8 +177,9 @@ function EditModal({
   );
 }
 
-// Card de automação
-function AutomationCard({ automation }: { automation: Automation }) {
+// ─── Linha de automação (estilo Financial) ──────────────────────────────────
+
+function AutomationRow({ automation, index }: { automation: Automation; index: number }) {
   const [editing, setEditing] = useState(false);
   const toggle = useToggleAutomation();
   const trigger = useTriggerAutomation();
@@ -192,100 +190,93 @@ function AutomationCard({ automation }: { automation: Automation }) {
   return (
     <>
       <motion.div
-        layout
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        transition={{ delay: index * 0.04 }}
+        className={cn(
+          "flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all group",
+          !automation.enabled && "opacity-55"
+        )}
       >
-        <LiquidGlass
-          className="border-white/[0.06] rounded-2xl transition-all duration-300"
-          style={{
-            borderColor: automation.enabled ? colors.border : 'rgba(255,255,255,0.04)',
-            opacity: automation.enabled ? 1 : 0.65,
-          }}
-        >
-          <div className="p-5">
-            <div className="flex items-start gap-4">
-              {/* Ícone */}
-              <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${colors.icon}`}
-                style={{ background: automation.enabled ? colors.bg : 'rgba(255,255,255,0.04)', border: `1px solid ${automation.enabled ? colors.border : 'rgba(255,255,255,0.06)'}` }}
-              >
-                <Icon className="w-5 h-5" />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-white font-semibold text-sm truncate">{automation.display_name}</h3>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${colors.badge}`}>
-                    {CATEGORY_LABELS[automation.category] ?? automation.category}
-                  </span>
-                </div>
-                <p className="text-white/40 text-xs leading-relaxed line-clamp-2 mb-3">
-                  {automation.description}
-                </p>
-
-                {/* Meta */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-white/25 flex-shrink-0" />
-                    <span className="text-white/40 text-xs">{automation.schedule_human}</span>
-                  </div>
-                  {automation.last_triggered_at && (
-                    <>
-                      <span className="text-white/10">·</span>
-                      <div className="flex items-center gap-1.5">
-                        {automation.enabled
-                          ? <CheckCircle2 className="w-3 h-3 text-green-400/70 flex-shrink-0" />
-                          : <AlertCircle className="w-3 h-3 text-white/20 flex-shrink-0" />
-                        }
-                        <span className="text-white/30 text-xs">{formatLastRun(automation.last_triggered_at)}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Controles */}
-              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                {/* Editar */}
-                <motion.button
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => setEditing(true)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all"
-                  title="Editar"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </motion.button>
-
-                {/* Executar agora */}
-                <motion.button
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => trigger.mutate(automation.id)}
-                  disabled={isRunning}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-green-400 hover:bg-green-400/[0.08] transition-all disabled:opacity-50"
-                  title="Executar agora"
-                >
-                  {isRunning
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    : <Play className="w-3.5 h-3.5" />
-                  }
-                </motion.button>
-
-                {/* Toggle */}
-                <Switch
-                  checked={automation.enabled}
-                  onCheckedChange={(checked) => toggle.mutate({ id: automation.id, enabled: checked })}
-                  disabled={toggle.isPending}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </div>
-            </div>
+        {/* Ícone + Info */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div
+            className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all", colors.icon)}
+            style={{
+              background: automation.enabled ? colors.bg : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${automation.enabled ? colors.border : 'rgba(255,255,255,0.06)'}`,
+            }}
+          >
+            <Icon className="w-5 h-5" />
           </div>
-        </LiquidGlass>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h4 className="text-white font-bold tracking-tight">{automation.display_name}</h4>
+              <span className={cn("text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 font-medium", colors.badge)}>
+                {CATEGORY_LABELS[automation.category] ?? automation.category}
+              </span>
+            </div>
+            <p className="text-white/40 text-sm leading-relaxed line-clamp-1">
+              {automation.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Frequência */}
+        <div className="hidden md:block text-center px-6 flex-shrink-0 w-52">
+          <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Frequência</p>
+          <div className="flex items-center justify-center gap-1.5">
+            <Clock className="w-3 h-3 text-white/25" />
+            <p className="text-white/70 font-medium text-sm">{automation.schedule_human}</p>
+          </div>
+        </div>
+
+        {/* Último disparo */}
+        <div className="hidden lg:block text-center px-6 flex-shrink-0 w-44">
+          <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Último envio</p>
+          <div className="flex items-center justify-center gap-1.5">
+            {automation.enabled
+              ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400/70" />
+              : <AlertCircle className="w-3.5 h-3.5 text-white/20" />
+            }
+            <p className="text-white/60 font-medium text-sm">{formatLastRun(automation.last_triggered_at)}</p>
+          </div>
+        </div>
+
+        {/* Ações */}
+        <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setEditing(true)}
+            title="Editar horário"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-all"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => trigger.mutate(automation.id)}
+            disabled={isRunning}
+            title="Executar agora"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-green-400 hover:bg-green-400/[0.08] border border-transparent hover:border-green-400/20 transition-all disabled:opacity-50"
+          >
+            {isRunning
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Play className="w-3.5 h-3.5" />
+            }
+          </motion.button>
+
+          <Switch
+            checked={automation.enabled}
+            onCheckedChange={(checked) => toggle.mutate({ id: automation.id, enabled: checked })}
+            disabled={toggle.isPending}
+            className="data-[state=checked]:bg-primary"
+          />
+        </div>
       </motion.div>
 
       <AnimatePresence>
@@ -294,6 +285,8 @@ function AutomationCard({ automation }: { automation: Automation }) {
     </>
   );
 }
+
+// ─── Página principal ───────────────────────────────────────────────────────
 
 export default function Automations() {
   const { data: automations = [], isLoading } = useAutomations();
@@ -305,41 +298,19 @@ export default function Automations() {
   }, {});
 
   const categoryOrder = ['financeiro', 'atividades', 'sistema'];
-
   const enabledCount = automations.filter((a) => a.enabled).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-            <Zap className="w-6 h-6 text-primary" />
-            Automações
-          </h1>
-          <p className="text-white/40 text-sm mt-1">
-            Gerencie e monitore todas as automações do sistema
-          </p>
+          <h1 className="text-3xl font-bold text-white mb-2">Automações</h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Status geral */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-            <div className={`w-2 h-2 rounded-full ${enabledCount > 0 ? 'bg-green-400 animate-pulse' : 'bg-white/20'}`} />
-            <span className="text-white/50 text-xs">{enabledCount} ativa{enabledCount !== 1 ? 's' : ''}</span>
-          </div>
-
-          {/* Botão nova automação (placeholder) */}
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button
-              disabled
-              className="h-9 px-4 text-xs font-semibold bg-primary/20 text-primary/60 border border-primary/20 rounded-xl cursor-not-allowed"
-              title="Em breve"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Nova automação
-            </Button>
-          </motion.div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+          <div className={cn("w-2 h-2 rounded-full", enabledCount > 0 ? 'bg-green-400 animate-pulse' : 'bg-white/20')} />
+          <span className="text-white/50 text-xs">{enabledCount} ativa{enabledCount !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -352,38 +323,44 @@ export default function Automations() {
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {categoryOrder
             .filter((cat) => grouped[cat]?.length > 0)
-            .map((category) => (
-              <div key={category} className="space-y-3">
-                {/* Título da categoria */}
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold uppercase tracking-wider ${CATEGORY_COLORS[category]?.icon ?? 'text-white/40'}`}>
-                    {CATEGORY_LABELS[category] ?? category}
-                  </span>
-                  <div className="flex-1 h-px bg-white/[0.04]" />
-                  <span className="text-white/20 text-xs">{grouped[category].length}</span>
-                </div>
+            .map((category) => {
+              const colors = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.sistema;
+              const items = grouped[category];
 
-                {/* Cards */}
-                <div className="grid gap-3">
-                  {grouped[category].map((automation) => (
-                    <AutomationCard key={automation.id} automation={automation} />
-                  ))}
-                </div>
-              </div>
-            ))}
+              return (
+                <Card key={category} className="liquid-glass border-white/5 dashboard-glow overflow-hidden">
+                  {/* Card header */}
+                  <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">
+                        {CATEGORY_LABELS[category] ?? category}
+                      </h3>
+                      <p className="text-white/30 text-sm mt-0.5">
+                        {items.length} automação{items.length !== 1 ? 'ões' : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={cn("w-2 h-2 rounded-full", colors.dot)} />
+                      <span className={cn("text-xs font-semibold uppercase tracking-wider", colors.icon)}>
+                        {items.filter(a => a.enabled).length}/{items.length} ativas
+                      </span>
+                    </div>
+                  </div>
 
-          {automations.length === 0 && (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-white/15" />
-              </div>
-              <p className="text-white/30 text-sm">Nenhuma automação configurada.</p>
-              <p className="text-white/20 text-xs mt-1">Execute a migration para carregar as automações padrão.</p>
-            </div>
-          )}
+                  {/* Card body */}
+                  <div className="p-6">
+                    <div className="space-y-3">
+                      {items.map((automation, i) => (
+                        <AutomationRow key={automation.id} automation={automation} index={i} />
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
         </div>
       )}
     </div>

@@ -6,7 +6,9 @@
       "Bash(npx supabase:*)",
       "Bash(grep -h \"cron.schedule\\\\|cron.unschedule\\\\|jobname\" /c/Users/gabri/.gemini/antigravity/scratch/lead-goat-flow/supabase/migrations/*.sql)",
       "Bash(grep -h -A 6 \"cron.schedule\\(\" /c/Users/gabri/.gemini/antigravity/scratch/lead-goat-flow/supabase/migrations/*.sql)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }
