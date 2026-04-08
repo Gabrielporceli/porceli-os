@@ -93,6 +93,15 @@ function extractClients(properties: any): string[] {
   return []
 }
 
+function extractRecurrence(properties: any): string | null {
+  for (const key of ['Recorrência', 'Recorrencia', 'Recurrence', 'Repetição']) {
+    const prop = properties[key]
+    if (prop?.type === 'select') return prop.select?.name ?? null
+    if (prop?.type === 'rich_text' && prop.rich_text?.length > 0) return prop.rich_text[0].plain_text
+  }
+  return null
+}
+
 function extractResponsible(properties: any): string[] {
   for (const key of ['Responsável', 'Responsavel', 'Responsible', 'Assignee']) {
     const prop = properties[key]
@@ -186,6 +195,18 @@ serve(async (req) => {
               if (type === 'multi_select') properties[clientKey] = { multi_select: [{ name: body.client }] }
               else if (type === 'select') properties[clientKey] = { select: { name: body.client } }
               else if (type === 'rich_text') properties[clientKey] = { rich_text: [{ text: { content: body.client } }] }
+            }
+          }
+
+          // Recorrência
+          if (body.recurrence) {
+            const recKey = Object.keys(dbProps).find(k => 
+              ['Recorrência', 'Recorrencia', 'Recurrence', 'Repetição'].includes(k)
+            )
+            if (recKey) {
+              const type = dbProps[recKey].type
+              if (type === 'select') properties[recKey] = { select: { name: body.recurrence } }
+              else if (type === 'rich_text') properties[recKey] = { rich_text: [{ text: { content: body.recurrence } }] }
             }
           }
 
@@ -358,6 +379,7 @@ serve(async (req) => {
         time,
         priority: extractPriority(page.properties),
         clients: extractClients(page.properties),
+        recurrence: extractRecurrence(page.properties),
         responsible: extractResponsible(page.properties),
         url: page.url,
         lastEdited: page.last_edited_time,

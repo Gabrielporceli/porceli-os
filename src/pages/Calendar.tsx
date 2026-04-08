@@ -29,7 +29,9 @@ import {
   CheckCircle,
   Save,
   Lock,
-  Unlock
+  Unlock,
+  Repeat,
+  Tag
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -48,6 +50,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface GoogleEvent {
   id: string;
@@ -71,9 +80,29 @@ interface NotionTask {
   time?: string;
   clients?: string[];
   responsible?: string[];
+  recurrence?: string;
   url?: string;
   lastEdited?: string;
 }
+
+const TASK_COLORS: Record<string, string> = {
+  purple: "bg-primary/20 text-purple-300 border-primary/30",
+  blue:   "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  green:  "bg-green-500/20 text-green-300 border-green-500/30",
+  orange: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  pink:   "bg-pink-500/20 text-pink-300 border-pink-500/30",
+};
+
+function nextOccurrence(date: string, type: "weekly" | "biweekly" | "monthly"): string {
+  const d = new Date(date + "T12:00:00");
+  if (type === "weekly") d.setDate(d.getDate() + 7);
+  else if (type === "biweekly") d.setDate(d.getDate() + 14);
+  else d.setMonth(d.getMonth() + 1);
+  return d.toISOString().split("T")[0];
+}
+
+const toDateKey = (y: number, m: number, d: number) =>
+  `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 const EVENT_COLORS: Record<string, string> = {
   "1": "bg-blue-500/20 text-blue-300 border-blue-500/30",
@@ -96,6 +125,7 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [googleEvents, setGoogleEvents] = useState<GoogleEvent[]>([]);
   const [notionTasks, setNotionTasks] = useState<NotionTask[]>([]);
+  const [recurringTasks, setRecurringTasks] = useState<RecurringTask[]>([]);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [notionConnected, setNotionConnected] = useState(false);
   const [notionDatabaseId, setNotionDatabaseId] = useState("");
@@ -114,13 +144,55 @@ export default function Calendar() {
   const [createMeetLink, setCreateMeetLink] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [newEventClient, setNewEventClient] = useState("");
+  const [recurrenceType, setRecurrenceType] = useState<"" | "single" | "weekly" | "biweekly" | "monthly">("");
+  const [taskColor, setTaskColor] = useState("purple");
+  const [createAsCRMTask, setCreateAsCRMTask] = useState(false);
 
   const { toast } = useToast();
 
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion'; title: string; time?: string; status?: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion' | 'crm'; title: string; time?: string; status?: string; recurrence_type?: string; client?: string; color?: string; description?: string; due_date?: string; due_time?: string } | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [dbStatus, setDbStatus] = useState<"checking" | "ok" | "error">("checking");
+  const [dbError, setDbError] = useState("");
+
+  const checkDb = async () => {
+    console.log("Checando banco...");
+    try {
+      const { data, error } = await supabase.from('recurring_tasks').select('id').limit(1);
+      if (error) {
+        setDbStatus("error");
+        setDbError(error.message);
+      } else {
+        setDbStatus("ok");
+      }
+    } catch (e: any) {
+      setDbStatus("error");
+      setDbError(e.message);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Calendário montado com sucesso!");
+    checkDb();
+  }, []);
+
+  const handleTestInsert = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { error } = await supabase.from('recurring_tasks').insert({
+        user_id: session.user.id,
+        title: "TESTE RAPIDO",
+        due_date: new Date().toISOString().split('T')[0],
+        status: 'pending'
+      });
+      if (!error) fetchRecurringTasks();
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [editTime, setEditTime] = useState("");
   const [lockedDays, setLockedDays] = useState<string[]>(() => {
@@ -240,7 +312,7 @@ export default function Calendar() {
         title: editTitle,
         start: newStart.toISOString(),
       });
-    } else {
+    } else if (editingItem.type === 'notion') {
       await handleUpdateNotionTask(editingItem.id, {
         title: editTitle,
         dueDate: editTime ? `${format(newStart, "yyyy-MM-dd")}T${editTime}:00-03:00` : format(newStart, "yyyy-MM-dd"),
@@ -255,6 +327,8 @@ export default function Calendar() {
     if (!editingItem) return;
     setIsDeleteDialogOpen(true);
   };
+
+
 
   const confirmDeleteActivity = async () => {
     if (!editingItem) return;
@@ -274,7 +348,7 @@ export default function Calendar() {
         if (error) throw error;
         toast({ title: "Evento excluído com sucesso!" });
         fetchGoogleEvents();
-      } else {
+      } else if (editingItem.type === 'notion') {
         const { error } = await supabase.functions.invoke("notion-tasks", {
           headers: { Authorization: `Bearer ${session.access_token}` },
           body: {
@@ -337,10 +411,21 @@ export default function Calendar() {
     }
   };
 
-  const handleCreateActivity = async (isGlobal = false) => {
-    if (!isGlobal && !selectedDay) return;
+  const handleCreateActivity = async (isGlobal: boolean = false) => {
+    console.log("handleCreateActivity disparado!", { isGlobal, selectedDay, newEventTitle, createAsCRMTask });
+
+    if (!isGlobal && selectedDay === null) {
+      toast({ title: "Erro de Seleção", description: "Selecione um dia no calendário primeiro.", variant: "destructive" });
+      return;
+    }
+    
     if (isGlobal && !newEventDate) {
-      toast({ title: "Selecione uma data", variant: "destructive" });
+      toast({ title: "Data obrigatória", description: "Por favor, selecione uma data.", variant: "destructive" });
+      return;
+    }
+
+    if (!newEventTitle.trim()) {
+      toast({ title: "Título obrigatório", description: "Dê um nome para sua atividade.", variant: "destructive" });
       return;
     }
 
@@ -349,26 +434,17 @@ export default function Calendar() {
       toast({ title: "Dia trancado", description: "Este dia está trancado para novas atividades.", variant: "destructive" });
       return;
     }
-
-    if (!newEventTitle.trim()) return;
     
-    if (createMeetLink && !newEventTime) {
-      toast({ title: "Horário obrigatório", description: "Por favor, selecione um horário para o evento do Google Calendar.", variant: "destructive" });
-      return;
-    }
-    
-    setCreatingEvent(true);
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
+      if (!session) throw new Error("Sessão expirada. Faça login novamente.");
 
-      let startDateTime = "";
       let year, month, day;
-      
       if (isGlobal) {
+        if (!newEventDate) throw new Error("Data é obrigatória.");
         [year, month, day] = newEventDate.split('-').map(Number);
       } else {
+        if (selectedDay === null) throw new Error("Dia não selecionado.");
         year = currentDate.getFullYear();
         month = currentDate.getMonth() + 1;
         day = selectedDay!;
@@ -376,53 +452,65 @@ export default function Calendar() {
 
       const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const timeStr = newEventTime || "12:00";
-      startDateTime = `${dateStr}T${timeStr}:00-03:00`;
+      const startDateTime = `${dateStr}T${timeStr}:00-03:00`;
 
+      let meetingLink = "";
       if (createMeetLink) {
-        // Criar no Google Calendar
-        const endDate = new Date(new Date(startDateTime).getTime() + 60 * 60 * 1000);
-        const endDateTime = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00-03:00`;
-
-        const { error } = await supabase.functions.invoke("google-calendar-events", {
+        toast({ title: "Gerando link Google Meet..." });
+        const googleTask = supabase.functions.invoke("google-calendar-events", {
           headers: { Authorization: `Bearer ${session.access_token}` },
           body: {
             action: "CREATE_EVENT",
             title: newEventTitle,
             start: startDateTime,
-            end: endDateTime,
+            end: `${dateStr}T13:00:00-03:00`,
             createMeetLink: true
           },
         });
-        if (error) throw error;
-        toast({ title: "Evento criado com sucesso no Google Calendar!" });
-        fetchGoogleEvents();
-      } else {
-        // Criar no Notion
-        const { error } = await supabase.functions.invoke("notion-tasks", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-          body: {
-            action: "CREATE_TASK",
-            title: newEventTitle,
-            dueDate: dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : ""),
-            client: newEventClient
-          },
-        });
-        if (error) throw error;
-        toast({ title: "Tarefa criada com sucesso no Notion!" });
-        fetchNotionTasks();
+
+        const googleResponse = await Promise.race([
+          googleTask,
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Google")), 15000))
+        ]) as any;
+
+        if (googleResponse.error) throw new Error(`Google: ${googleResponse.error.message}`);
+        meetingLink = googleResponse.data?.event?.hangoutLink || "";
       }
+
+      const labels: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
+      const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
+
+      toast({ title: "Sincronizando com Notion..." });
+      
+      const { error: notionError } = await supabase.functions.invoke("notion-tasks", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          action: "CREATE_TASK",
+          title: newEventTitle,
+          dueDate: dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : ""),
+          client: newEventClient,
+          recurrence: recLabel
+        },
+      });
+
+      if (notionError) throw notionError;
+
+      toast({ title: "Tarefa criada no Notion!" });
+      fetchNotionTasks();
 
       setNewEventTitle("");
       setNewEventTime("");
       setNewEventClient("");
       setCreateMeetLink(false);
-      
+      setCreateAsCRMTask(false);
+      setRecurrenceType("");
       if (isGlobal) {
         setNewEventDate("");
         setIsCreateModalOpen(false);
       }
     } catch (err: any) {
-      toast({ title: "Erro ao criar", description: err.message, variant: "destructive" });
+      console.error("Erro na criação:", err);
+      toast({ title: "Erro na criação", description: err.message, variant: "destructive" });
     } finally {
       setCreatingEvent(false);
     }
@@ -494,6 +582,32 @@ export default function Calendar() {
       if (error) throw error;
 
       toast({ title: "Tarefa atualizada no Notion!" });
+
+      // Se a tarefa foi marcada como Realizado e tem recorrência, cria a próxima
+      if (updates.status === 'Realizado' || updates.status === 'done') {
+        const task = notionTasks.find(t => t.id === taskId);
+        if (task && task.recurrence && task.dueDate) {
+          const recType = task.recurrence === 'Semanal' ? 'weekly' : task.recurrence === 'Quinzenal' ? 'biweekly' : task.recurrence === 'Mensal' ? 'monthly' : null;
+          
+          if (recType) {
+            const nextDate = nextOccurrence(task.dueDate.split('T')[0], recType);
+            const clientsStr = task.clients && task.clients.length > 0 ? task.clients[0] : "";
+            
+            await supabase.functions.invoke("notion-tasks", {
+              headers: { Authorization: `Bearer ${session.access_token}` },
+              body: {
+                action: "CREATE_TASK",
+                title: task.title,
+                dueDate: nextDate + (task.time ? `T${task.time}:00-03:00` : ""),
+                client: clientsStr,
+                recurrence: task.recurrence
+              },
+            });
+            toast({ title: "Próxima ocorrência criada!", description: `Agendada para ${format(parseISO(nextDate), 'dd/MM/yyyy')}` });
+          }
+        }
+      }
+
       fetchNotionTasks();
     } catch (err: any) {
       toast({ title: "Erro ao atualizar tarefa", description: err.message, variant: "destructive" });
@@ -507,7 +621,7 @@ export default function Calendar() {
 
   useEffect(() => {
     if (googleConnected) fetchGoogleEvents();
-  }, [currentDate]);
+  }, [currentDate, googleConnected]);
 
   const handleConnectGoogle = async () => {
     setConnectingGoogle(true);
@@ -573,6 +687,11 @@ export default function Calendar() {
     } catch (e) {
       return "";
     }
+  };
+
+  const getRecurringForDay = (day: number) => {
+    const key = toDateKey(currentDate.getFullYear(), currentDate.getMonth(), day);
+    return recurringTasks.filter((t) => t.due_date === key);
   };
 
   const getEventsForDay = (day: number) => {
@@ -775,7 +894,7 @@ export default function Calendar() {
 
               const allItems = [
                 ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, color: getEventColor(e.colorId), url: e.htmlLink, status: e.status })),
-                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status }))
+                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status })),
               ];
 
               return (
@@ -802,7 +921,7 @@ export default function Calendar() {
                             key={item.id}
                             title={item.title}
                             className={`text-[10px] p-1.5 rounded-lg border truncate cursor-pointer liquid-glass transition-all hover:brightness-125
-                              ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 
+                              ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 
                                 item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'border-white/10'} 
                               flex items-center gap-1.5`}
                             onClick={(e) => {
@@ -868,7 +987,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -1027,7 +1146,7 @@ export default function Calendar() {
                     setIsEditActivityModalOpen(true);
                   }}
                   className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border 
-                    ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' : 
+                    ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' : 
                       item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                 >
                   {/* Coluna 1: Info */}
@@ -1161,6 +1280,27 @@ export default function Calendar() {
                 </div>
               </div>
 
+              <div className="space-y-1.5 p-3.5 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
+                <Select
+                  value={recurrenceType || "none"}
+                  onValueChange={(val) => {
+                    const type = val === "none" ? "" : val;
+                    setRecurrenceType(type as any);
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-10">
+                    <SelectValue placeholder="Selecione a recorrência" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                    <SelectItem value="none">Nunca</SelectItem>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="biweekly">Quinzenal</SelectItem>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2 mb-2">
                 <div className="space-y-0.5">
                   <Label className="text-white font-medium text-sm cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
@@ -1230,6 +1370,27 @@ export default function Calendar() {
               </div>
             </div>
 
+            <div className="space-y-1.5 p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
+               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
+               <Select
+                 value={recurrenceType || "none"}
+                 onValueChange={(val) => {
+                   const type = val === "none" ? "" : val;
+                   setRecurrenceType(type as any);
+                 }}
+               >
+                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-10">
+                   <SelectValue placeholder="Selecione a recorrência" />
+                 </SelectTrigger>
+                 <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                   <SelectItem value="none">Nunca</SelectItem>
+                   <SelectItem value="weekly">Semanal</SelectItem>
+                   <SelectItem value="biweekly">Quinzenal</SelectItem>
+                   <SelectItem value="monthly">Mensal</SelectItem>
+                 </SelectContent>
+               </Select>
+            </div>
+
             <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
               <div className="space-y-0.5">
                 <Label className="text-white font-medium cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
@@ -1287,7 +1448,7 @@ export default function Calendar() {
           <div className="p-6 border-b border-white/[0.05]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight">
-                 Editar {editingItem?.type === 'google' ? 'Evento' : 'Tarefa'}
+                 Editar {editingItem?.type === 'google' ? 'Evento' : editingItem?.type === 'notion' ? 'Tarefa Notion' : 'Atividade Recorrente'}
               </DialogTitle>
               <DialogDescription className="text-white/40">
                 Altere os detalhes desta atividade
@@ -1323,9 +1484,9 @@ export default function Calendar() {
               </div>
             </div>
 
-            {editingItem?.type === 'notion' && (
+            {(editingItem?.type === 'notion' || editingItem?.type === 'crm') && (
                <div className="space-y-3 pt-1">
-                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status no Notion</label>
+                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status da Atividade</label>
                  <div className="grid grid-cols-2 gap-3 w-full">
                    <motion.div
                      whileHover={{ scale: 1.05, translateY: -2 }}
@@ -1335,7 +1496,11 @@ export default function Calendar() {
                    >
                      <button 
                        onClick={() => {
-                         handleUpdateNotionTask(editingItem.id, { status: "Realizado" });
+                         if (editingItem?.type === 'notion') {
+                           handleUpdateNotionTask(editingItem.id, { status: "Realizado" });
+                         } else {
+                           handleCompleteCRMTask(editingItem?.id!);
+                         }
                          setIsEditActivityModalOpen(false);
                        }}
                        className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
@@ -1353,7 +1518,11 @@ export default function Calendar() {
                    >
                      <button 
                        onClick={() => {
-                         handleUpdateNotionTask(editingItem.id, { status: "Em andamento" });
+                         if (editingItem?.type === 'notion') {
+                           handleUpdateNotionTask(editingItem.id, { status: "Em andamento" });
+                         } else {
+                           supabase.from("recurring_tasks").update({ status: "in_progress" }).eq("id", editingItem?.id).then(() => fetchRecurringTasks());
+                         }
                          setIsEditActivityModalOpen(false);
                        }}
                        className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
