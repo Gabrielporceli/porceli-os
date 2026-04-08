@@ -33,7 +33,7 @@ import {
   Repeat,
   Tag
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -689,32 +689,45 @@ export default function Calendar() {
     }
   };
 
-  const getRecurringForDay = (day: number) => {
-    const key = toDateKey(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return recurringTasks.filter((t) => t.due_date === key);
-  };
-
-  const getEventsForDay = (day: number) => {
-    return googleEvents.filter((e) => {
+  const googleEventsByDay = useMemo(() => {
+    const map = new Map<number, typeof googleEvents>();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    for (const e of googleEvents) {
       const d = new Date(e.start);
-      return d.getDate() === day &&
-             d.getMonth() === currentDate.getMonth() &&
-             d.getFullYear() === currentDate.getFullYear();
-    });
-  };
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+         const day = d.getDate();
+         if (!map.has(day)) map.set(day, []);
+         map.get(day)!.push(e);
+      }
+    }
+    return map;
+  }, [googleEvents, currentDate]);
 
-  const getNotionTasksForDay = (day: number) => {
-    return notionTasks.filter((t) => {
-      if (!t.dueDate) return false;
-      // Se já tem T, usa como está. Se não, adiciona T12:00:00 pra evitar problemas de timezone
+  const notionTasksByDay = useMemo(() => {
+    const map = new Map<number, typeof notionTasks>();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    for (const t of notionTasks) {
+      if (!t.dueDate) continue;
       const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
       const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return false;
-      return d.getDate() === day &&
-             d.getMonth() === currentDate.getMonth() &&
-             d.getFullYear() === currentDate.getFullYear();
-    });
-  };
+      if (isNaN(d.getTime())) continue;
+      
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+         const day = d.getDate();
+         if (!map.has(day)) map.set(day, []);
+         map.get(day)!.push(t);
+      }
+    }
+    return map;
+  }, [notionTasks, currentDate]);
+
+  const getEventsForDay = (day: number) => googleEventsByDay.get(day) || [];
+  const getNotionTasksForDay = (day: number) => notionTasksByDay.get(day) || [];
+
 
   const getEventColor = (colorId?: string) =>
     EVENT_COLORS[colorId ?? "default"] ?? EVENT_COLORS.default;
@@ -724,35 +737,41 @@ export default function Calendar() {
     d1.getMonth() === d2.getMonth() &&
     d1.getFullYear() === d2.getFullYear();
 
-  const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  const todayItems = useMemo(() => {
+    const today = new Date();
+    return [
+      ...googleEvents.filter((e) => isSameDay(new Date(e.start), today)).map(e => ({
+        ...e, type: 'google' as const, date: new Date(e.start)
+      })),
+      ...notionTasks.filter((t) => {
+        if (!t.dueDate) return false;
+        const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
+        return isSameDay(new Date(dateStr), today);
+      }).map(t => ({
+        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
+      }))
+    ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [googleEvents, notionTasks]);
 
-  const todayItems = [
-    ...googleEvents.filter((e) => isSameDay(new Date(e.start), today)).map(e => ({
-      ...e, type: 'google' as const, date: new Date(e.start)
-    })),
-    ...notionTasks.filter((t) => {
-      if (!t.dueDate) return false;
-      const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
-      return isSameDay(new Date(dateStr), today);
-    }).map(t => ({
-      ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
-    }))
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const tomorrowItems = useMemo(() => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    
+    return [
+      ...googleEvents.filter((e) => isSameDay(new Date(e.start), tomorrow)).map(e => ({
+        ...e, type: 'google' as const, date: new Date(e.start)
+      })),
+      ...notionTasks.filter((t) => {
+        if (!t.dueDate) return false;
+        const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
+        return isSameDay(new Date(dateStr), tomorrow);
+      }).map(t => ({
+        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
+      }))
+    ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [googleEvents, notionTasks]);
 
-  const tomorrowItems = [
-    ...googleEvents.filter((e) => isSameDay(new Date(e.start), tomorrow)).map(e => ({
-      ...e, type: 'google' as const, date: new Date(e.start)
-    })),
-    ...notionTasks.filter((t) => {
-      if (!t.dueDate) return false;
-      const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
-      return isSameDay(new Date(dateStr), tomorrow);
-    }).map(t => ({
-      ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
-    }))
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
