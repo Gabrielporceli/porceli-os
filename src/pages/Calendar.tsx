@@ -479,6 +479,18 @@ export default function Calendar() {
 
       const labels: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
       const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
+      const combinedDueDate = dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : "");
+
+      // Criação rápida - UI Otmista
+      setNotionTasks(prev => [{
+        id: `temp_${Date.now()}`,
+        title: newEventTitle,
+        dueDate: combinedDueDate,
+        time: newEventTime || undefined,
+        status: 'Pendente',
+        recurrence: recLabel,
+        clients: newEventClient ? [newEventClient] : []
+      }, ...prev]);
 
       toast({ title: "Sincronizando com Notion..." });
       
@@ -487,7 +499,7 @@ export default function Calendar() {
         body: {
           action: "CREATE_TASK",
           title: newEventTitle,
-          dueDate: dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : ""),
+          dueDate: combinedDueDate,
           client: newEventClient,
           recurrence: recLabel
         },
@@ -569,6 +581,14 @@ export default function Calendar() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+
+      // Optimistic Update so it turns green/updates immediately!
+      setNotionTasks(prev => prev.map(t => {
+        if (t.id === taskId) {
+          return { ...t, ...updates };
+        }
+        return t;
+      }));
 
       const { data, error } = await supabase.functions.invoke("notion-tasks", {
         headers: { Authorization: `Bearer ${session.access_token}` },
