@@ -336,34 +336,37 @@ export default function Calendar() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+      
+      const itemToDelete = editingItem;
 
-      if (editingItem.type === 'google') {
+      // Optimistic state updates e Fechamento imediato
+      setIsEditActivityModalOpen(false);
+      setIsDeleteDialogOpen(false);
+      setEditingItem(null);
+
+      if (itemToDelete.type === 'google') {
+        setGoogleEvents(prev => prev.filter(e => e.id !== itemToDelete.id));
         const { error } = await supabase.functions.invoke("google-calendar-events", {
           headers: { Authorization: `Bearer ${session.access_token}` },
           body: {
             action: 'DELETE_EVENT',
-            eventId: editingItem.id,
+            eventId: itemToDelete.id,
           },
         });
         if (error) throw error;
         toast({ title: "Evento excluído com sucesso!" });
-        fetchGoogleEvents();
-      } else if (editingItem.type === 'notion') {
+      } else if (itemToDelete.type === 'notion') {
+        setNotionTasks(prev => prev.filter(t => t.id !== itemToDelete.id));
         const { error } = await supabase.functions.invoke("notion-tasks", {
           headers: { Authorization: `Bearer ${session.access_token}` },
           body: {
             action: "DELETE_TASK",
-            task_id: editingItem.id,
+            task_id: itemToDelete.id,
           },
         });
         if (error) throw error;
         toast({ title: "Tarefa excluída do Notion!" });
-        fetchNotionTasks();
       }
-
-      setIsEditActivityModalOpen(false);
-      setIsDeleteDialogOpen(false);
-      setEditingItem(null);
     } catch (error: any) {
       console.error(error);
       toast({
@@ -371,6 +374,9 @@ export default function Calendar() {
         description: "Não foi possível excluir.",
         variant: "destructive",
       });
+      // Em caso de erro do servidor volta o estado verdadeiro
+      fetchGoogleEvents();
+      fetchNotionTasks();
     }
   };
 
