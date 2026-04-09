@@ -20,6 +20,7 @@ interface Contract {
     endDate: string;
     status: 'active' | 'inactive' | 'expiring' | 'concluded';
     paymentDay?: number;
+    payment_day?: number;
     contract_url?: string;
 }
 
@@ -65,7 +66,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                 monthlyValue: contract.monthlyValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
                 startDate: format(newStartDate, "yyyy-MM-dd"),
                 endDate: format(newEndDate, "yyyy-MM-dd"),
-                paymentDay: (contract.paymentDay || 1).toString(),
+                paymentDay: (contract.payment_day || contract.paymentDay || 1).toString(),
                 contract_url: '', // Default to empty for new contract
             });
         }
@@ -208,7 +209,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                 <div className="flex items-center justify-between relative z-10">
                                     <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Resumo do Contrato Atual</span>
                                 </div>
-                                <div className="grid grid-cols-3 gap-6 relative z-10">
+                                <div className="grid grid-cols-4 gap-6 relative z-10">
                                     <div>
                                         <p className="text-[10px] text-white/20 uppercase font-bold mb-1 tracking-tighter">Plano Atual</p>
                                         <p className="text-sm font-bold text-white/90">{contract.type}</p>
@@ -216,6 +217,10 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     <div>
                                         <p className="text-[10px] text-white/20 uppercase font-bold mb-1 tracking-tighter">Valor Mensal</p>
                                         <p className="text-sm font-bold text-white/90">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contract.monthlyValue)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-white/20 uppercase font-bold mb-1 tracking-tighter">Dia do Pagamento</p>
+                                        <p className="text-sm font-bold text-white/90">{contract.payment_day || contract.paymentDay || 1}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-white/20 uppercase font-bold mb-1 tracking-tighter">Data de Expiração</p>

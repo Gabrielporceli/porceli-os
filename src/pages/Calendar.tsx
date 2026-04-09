@@ -221,8 +221,19 @@ export default function Calendar() {
   useEffect(() => {
     if (editingItem) {
       setEditTitle(editingItem.title);
-      setEditDate(editingItem.time ? new Date(editingItem.time) : undefined);
-      setEditTime(editingItem.time ? format(new Date(editingItem.time), "HH:mm") : "");
+      if (editingItem.time && /^\d{2}:\d{2}$/.test(editingItem.time)) {
+        // Handle "HH:mm" time from Notion
+        setEditDate(editingItem.due_date ? new Date(editingItem.due_date.includes('T') ? editingItem.due_date : editingItem.due_date + "T12:00:00") : new Date());
+        setEditTime(editingItem.time);
+      } else if (editingItem.time) {
+        // Handle full ISO date string
+        const d = new Date(editingItem.time);
+        setEditDate(!isNaN(d.getTime()) ? d : undefined);
+        setEditTime(!isNaN(d.getTime()) ? format(d, "HH:mm") : "");
+      } else {
+        setEditDate(undefined);
+        setEditTime("");
+      }
     }
   }, [editingItem]);
 
@@ -1028,6 +1039,7 @@ export default function Calendar() {
                         type: item.type,
                         title: item.title,
                         time: item.type === 'google' ? (item as any).start : (item as any).time,
+                        due_date: item.type === 'notion' ? (item as any).dueDate : undefined,
                         status: (item as any).status
                       });
                       setIsEditActivityModalOpen(true);
@@ -1079,6 +1091,7 @@ export default function Calendar() {
                         type: item.type,
                         title: item.title,
                         time: item.type === 'google' ? (item as any).start : (item as any).time,
+                        due_date: item.type === 'notion' ? (item as any).dueDate : undefined,
                         status: (item as any).status
                       });
                       setIsEditActivityModalOpen(true);
@@ -1544,7 +1557,7 @@ export default function Calendar() {
                          if (editingItem?.type === 'notion') {
                            handleUpdateNotionTask(editingItem.id, { status: "Realizado" });
                          } else {
-                           handleCompleteCRMTask(editingItem?.id!);
+                           supabase.from("recurring_tasks").update({ status: "completed" }).eq("id", editingItem?.id).then(() => {});
                          }
                          setIsEditActivityModalOpen(false);
                        }}
@@ -1566,7 +1579,7 @@ export default function Calendar() {
                          if (editingItem?.type === 'notion') {
                            handleUpdateNotionTask(editingItem.id, { status: "Em andamento" });
                          } else {
-                           supabase.from("recurring_tasks").update({ status: "in_progress" }).eq("id", editingItem?.id).then(() => fetchRecurringTasks());
+                           supabase.from("recurring_tasks").update({ status: "in_progress" }).eq("id", editingItem?.id).then(() => {});
                          }
                          setIsEditActivityModalOpen(false);
                        }}
