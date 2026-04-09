@@ -492,40 +492,42 @@ export default function Calendar() {
 
         if (googleResponse.error) throw new Error(`Google: ${googleResponse.error.message}`);
         meetingLink = googleResponse.data?.event?.hangoutLink || "";
-      }
+        toast({ title: "Evento criado no Google Calendar!" });
+        fetchGoogleEvents();
+      } else {
+        const labels: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
+        const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
+        const combinedDueDate = dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : "");
 
-      const labels: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
-      const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
-      const combinedDueDate = dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : "");
-
-      // Criação rápida - UI Otmista
-      setNotionTasks(prev => [{
-        id: `temp_${Date.now()}`,
-        title: newEventTitle,
-        dueDate: combinedDueDate,
-        time: newEventTime || undefined,
-        status: 'Pendente',
-        recurrence: recLabel,
-        clients: newEventClient ? [newEventClient] : []
-      }, ...prev]);
-
-      toast({ title: "Sincronizando com Notion..." });
-      
-      const { error: notionError } = await supabase.functions.invoke("notion-tasks", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: {
-          action: "CREATE_TASK",
+        // Criação rápida - UI Otmista
+        setNotionTasks(prev => [{
+          id: `temp_${Date.now()}`,
           title: newEventTitle,
           dueDate: combinedDueDate,
-          client: newEventClient,
-          recurrence: recLabel
-        },
-      });
+          time: newEventTime || undefined,
+          status: 'Pendente',
+          recurrence: recLabel,
+          clients: newEventClient ? [newEventClient] : []
+        }, ...prev]);
 
-      if (notionError) throw notionError;
+        toast({ title: "Sincronizando com Notion..." });
+        
+        const { error: notionError } = await supabase.functions.invoke("notion-tasks", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: {
+            action: "CREATE_TASK",
+            title: newEventTitle,
+            dueDate: combinedDueDate,
+            client: newEventClient,
+            recurrence: recLabel
+          },
+        });
 
-      toast({ title: "Tarefa criada no Notion!" });
-      fetchNotionTasks();
+        if (notionError) throw notionError;
+
+        toast({ title: "Tarefa criada no Notion!" });
+        fetchNotionTasks();
+      }
 
       setNewEventTitle("");
       setNewEventTime("");
