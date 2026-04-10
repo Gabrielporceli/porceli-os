@@ -135,7 +135,33 @@ export default function Calendar() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000); // atualiza a cada 30 seg
+    return () => clearInterval(timer);
+  }, []);
+
+  const isOngoing = useCallback((item: any) => {
+    // Para google events o start_time foi mapeado para "start" ou "time" dependendo de onde renderiza
+    let timeStr = item.time || item.start;
+    let endStr = item.end;
+    
+    // Se for Notion task, não temos end, então assumimos 1 hora, mas se não tiver time ignoramos
+    if (!timeStr) return false;
+
+    // Notion isAllDay checks
+    if (item.isAllDay) return false;
+
+    const start = new Date(timeStr);
+    if (isNaN(start.getTime())) return false;
+    
+    // Se não tiver fim definido (ex: Notion), assume 1 h
+    const end = endStr ? new Date(endStr) : new Date(start.getTime() + 60 * 60 * 1000);
+    
+    return currentTime >= start && currentTime <= end;
+  }, [currentTime]);
+
   // States para novo evento
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState("");
@@ -718,11 +744,14 @@ export default function Calendar() {
     if (!isoString) return "";
     try {
       // Se for apenas HH:mm
-      if (/^([01]\d|2[0-3]):[0-5]\d$/.test(isoString)) return isoString;
+      if (/^([01]\d|2[0-3]):[0-5]\d$/.test(isoString)) {
+        return isoString === '00:00' ? "" : isoString;
+      }
       
       const date = new Date(isoString);
       if (isNaN(date.getTime())) return "";
-      return format(date, "HH:mm");
+      const formatted = format(date, "HH:mm");
+      return formatted === '00:00' ? "" : formatted;
     } catch (e) {
       return "";
     }
@@ -789,8 +818,8 @@ export default function Calendar() {
       }).map(t => ({
         ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
       }))
-    ].sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [googleEvents, notionTasks]);
+    ].sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => ({...item, time: item.type === 'google' ? (item as any).start : (item as any).dueDate?.includes('T') ? (item as any).dueDate : undefined}));
+  }, [googleEvents, notionTasks, currentTime]);
 
   const tomorrowItems = useMemo(() => {
     const today = new Date();
@@ -799,14 +828,14 @@ export default function Calendar() {
     
     return [
       ...googleEvents.filter((e) => isSameDay(new Date(e.start), tomorrow)).map(e => ({
-        ...e, type: 'google' as const, date: new Date(e.start)
+        ...e, type: 'google' as const, date: new Date(e.start), time: e.start
       })),
       ...notionTasks.filter((t) => {
         if (!t.dueDate) return false;
         const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
         return isSameDay(new Date(dateStr), tomorrow);
       }).map(t => ({
-        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
+        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00"), time: t.dueDate?.includes('T') ? t.dueDate : undefined
       }))
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [googleEvents, notionTasks]);
@@ -951,8 +980,8 @@ export default function Calendar() {
                 currentDate.getFullYear() === new Date().getFullYear();
 
               const allItems = [
-                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, color: getEventColor(e.colorId), url: e.htmlLink, status: e.status })),
-                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: undefined, color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status })),
+                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, end: e.end, isAllDay: e.allDay, color: getEventColor(e.colorId), url: e.htmlLink, status: e.status })),
+                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: t.dueDate?.includes('T') ? t.dueDate : undefined, isAllDay: !t.dueDate?.includes('T') || (!t.time && t.dueDate?.endsWith('00:00:00Z')), color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status })),
               ];
 
               return (
@@ -980,7 +1009,8 @@ export default function Calendar() {
                             title={item.title}
                             className={`text-[10px] p-1.5 rounded-lg border truncate cursor-pointer liquid-glass transition-all hover:brightness-125
                               ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 
-                                item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'border-white/10'} 
+                                item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 
+                                isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'border-white/10'} 
                               flex items-center gap-1.5`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1046,7 +1076,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'border-white/[0.05]'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -1060,7 +1090,7 @@ export default function Calendar() {
                           </span>
                         )}
                         <p className="text-xs text-Porceli-gray-400">
-                          {item.type === 'google' ? formatTime((item as any).start) : ((item as any).time || "Tarefa do dia")}
+                          {formatTime(item.time) || "Tarefa do dia"}
                         </p>
                       </div>
                     </div>
@@ -1107,7 +1137,7 @@ export default function Calendar() {
                       <p className="text-sm font-medium text-white truncate">{item.title}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-xs text-Porceli-gray-400">
-                          {item.type === 'google' ? formatTime((item as any).start) : ((item as any).time || "Tarefa do dia")}
+                          {formatTime(item.time) || "Tarefa do dia"}
                         </p>
                         {item.type === 'notion' && (item as any).clients && (item as any).clients.length > 0 && (
                           <span className="text-[10px] text-primary font-bold truncate">
@@ -1147,6 +1177,7 @@ export default function Calendar() {
                    id: e.id, 
                    title: e.title, 
                    time: e.start, 
+                   end: e.end,
                    isAllDay: e.allDay,
                    color: getEventColor(e.colorId).split(' ')[0] || 'bg-primary/20', 
                    meetLink: e.hangoutLink,
@@ -1207,7 +1238,8 @@ export default function Calendar() {
                   }}
                   className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border 
                     ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' : 
-                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
+                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 
+                      isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-white/[0.05]'}`}
                 >
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">

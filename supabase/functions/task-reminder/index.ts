@@ -25,9 +25,10 @@ serve(async (req) => {
     // 2. Buscar Eventos do Calendário que começam nessa janela
     const { data: events } = await supabase
       .from('google_calendar_events')
-      .select('title, start_time')
+      .select('title, start_time, all_day')
       .gte('start_time', startTimeStr)
       .lt('start_time', endTimeStr)
+      .eq('all_day', false)
 
     // 3. Buscar Tarefas do Notion com horário
     const { data: tasks } = await supabase
@@ -42,6 +43,15 @@ serve(async (req) => {
     // 4. Disparar notificações de Calendário
     if (events && events.length > 0) {
       for (const event of events) {
+        const d = new Date(event.start_time);
+        const isMidnightUTC = d.getUTCHours() === 0 && d.getUTCMinutes() === 0;
+        const isMidnightBR = d.getUTCHours() === 3 && d.getUTCMinutes() === 0;
+        
+        if (isMidnightUTC || isMidnightBR) {
+          console.log(`Ignorando evento ${event.title} pois está marcado para as 00:00`)
+          continue;
+        }
+
         const text = `⏳ *LEMBRETE (Calendário)*\n\nSua reunião: *${event.title}*\nComeça em *10 minutos!*`
         await sendWhatsApp(text)
         notificationsSent++
@@ -51,6 +61,15 @@ serve(async (req) => {
     // 5. Disparar notificações do Notion
     if (tasks && tasks.length > 0) {
       for (const task of tasks) {
+        const d = new Date(task.due_date);
+        const isMidnightUTC = d.getUTCHours() === 0 && d.getUTCMinutes() === 0;
+        const isMidnightBR = d.getUTCHours() === 3 && d.getUTCMinutes() === 0;
+        
+        if (isMidnightUTC || isMidnightBR) {
+          console.log(`Ignorando tarefa ${task.title} pois está marcada para as 00:00`)
+          continue;
+        }
+
         const text = `⏳ *LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo começa em *10 minutos!*`
         await sendWhatsApp(text)
         notificationsSent++
