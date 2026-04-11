@@ -112,6 +112,27 @@ export default function Financial() {
     (total, c) => total + c.monthlyValue * c.durationInMonths, 0
   );
 
+  // Número correto de contratos ativos (status active ou expiring e com data de fim ainda vigente)
+  const todayForContracts = new Date();
+  todayForContracts.setHours(0, 0, 0, 0);
+  const thisYear = todayForContracts.getFullYear();
+  const activeContractsCount = contracts.filter(c => {
+    if (c.status !== 'active' && c.status !== 'expiring') return false;
+    if (!c.end_date) return false;
+    const end = parseLocalDate(c.end_date);
+    return end >= todayForContracts;
+  }).length;
+
+  // Total do ano corrente usando os financial_entries reais (para alinhar com o dashboard)
+  const total2026FromEntries = financialEntries
+    .filter((entry: any) => {
+      if (!entry?.due_date) return false;
+      if (entry?.status !== 'paid' && entry?.status !== 'pending') return false;
+      const d = parseLocalDate(entry.due_date);
+      return d.getFullYear() === thisYear;
+    })
+    .reduce((sum: number, entry: any) => sum + (Number(entry.amount) || 0), 0);
+
   const handleAddExpense = (expenseData: any) => {
     console.log('DEBUG - Dados recebidos para despesa:', expenseData);
 
@@ -546,7 +567,11 @@ export default function Financial() {
         </div>
       </Card>
 
-      <ProjectionChart contracts={contractProjections} />
+      <ProjectionChart
+        contracts={contractProjections}
+        activeContractsCount={activeContractsCount}
+        financialEntriesTotal2026={total2026FromEntries}
+      />
 
       <DeleteExpenseDialog
         open={deleteExpenseDialog.open}

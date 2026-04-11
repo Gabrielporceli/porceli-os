@@ -16,6 +16,7 @@ interface ContractProjection {
 interface ProjectionChartProps {
   contracts: ContractProjection[];
   activeContractsCount?: number; // Número real de contratos ativos (calculado externamente)
+  financialEntriesTotal2026?: number; // Total real do ano baseado nos lançamentos financeiros (para alinhar com dashboard)
 }
 
 // Função para formatar o valor como moeda brasileira
@@ -24,7 +25,7 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-export function ProjectionChart({ contracts = [], activeContractsCount }: ProjectionChartProps) {
+export function ProjectionChart({ contracts = [], activeContractsCount, financialEntriesTotal2026 }: ProjectionChartProps) {
   // --- LÓGICA DE PROCESSAMENTO DOS DADOS ---
   const processChartData = () => {
     try {
@@ -101,8 +102,14 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
   };
 
   const data = processChartData();
-  const totalProjection = data.reduce((sum, item) => sum + (item.Projeção || 0), 0);
-  const monthlyAverage = data.length > 0 ? totalProjection / data.length : 0;
+  // Se temos os lançamentos reais do ano, usamos para o KPI de faturamento anual (alinha com dashboard)
+  // Senão, usamos a projeção calculada pelos contratos
+  const totalProjection = financialEntriesTotal2026 !== undefined
+    ? financialEntriesTotal2026
+    : data.reduce((sum, item) => sum + (item.Projeção || 0), 0);
+  // Média mensal sempre baseada no gráfico de projeção (12 meses)
+  const chartTotal = data.reduce((sum, item) => sum + (item.Projeção || 0), 0);
+  const monthlyAverage = data.length > 0 ? chartTotal / 12 : 0;
 
   // Usa o número real de contratos ativos se fornecido, caso contrário calcula baseado nos contratos filtrados
   const activeContractsNow = activeContractsCount !== undefined ? activeContractsCount : contracts.filter(c => {
@@ -135,8 +142,11 @@ export function ProjectionChart({ contracts = [], activeContractsCount }: Projec
       {/* KPIs do Gráfico */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 overflow-hidden">
         <div className="liquid-glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.04] transition-all">
-          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Faturamento Anual ({currentYear})</p>
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Faturamento Total {currentYear}</p>
           <p className="text-3xl font-black text-white tabular-nums tracking-tighter">{formatCurrency(totalProjection)}</p>
+          {financialEntriesTotal2026 !== undefined && (
+            <p className="text-white/30 text-[9px] mt-1">Baseado em lançamentos financeiros</p>
+          )}
         </div>
         <div className="liquid-glass p-5 rounded-2xl border border-white/5 hover:bg-white/[0.04] transition-all">
           <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Média Mensal</p>

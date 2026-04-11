@@ -70,14 +70,34 @@ export const useCreateContract = () => {
 
       // Sync with client table
       if (data.client_id) {
+        // Calcular o valor mensal total somando todos os contratos ativos/a vencer do cliente
+        const { data: allContracts } = await supabase
+          .from('contracts')
+          .select('monthly_value, status, end_date, start_date')
+          .eq('client_id', data.client_id)
+          .eq('user_id', user.id);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const totalMonthlyValue = (allContracts || [])
+          .filter(c => {
+            if (c.status === 'active' || c.status === 'expiring') return true;
+            if (c.end_date) {
+              const end = new Date(c.end_date);
+              return end >= today;
+            }
+            return false;
+          })
+          .reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
+
         const updates: any = {
           start_date: data.start_date,
           contract_end: data.end_date,
-          monthly_value: data.monthly_value,
+          monthly_value: totalMonthlyValue || data.monthly_value,
           plan: data.type,
           updated_at: new Date().toISOString()
         };
-        
+
         if (payment_day !== undefined) {
           updates.payment_day = payment_day;
         }
@@ -155,14 +175,34 @@ export const useUpdateContract = () => {
 
       // Sync with client table if it's the most recent contract or if we want to force update
       if (data.client_id) {
+        // Recalcular o valor mensal total somando todos os contratos ativos/a vencer do cliente
+        const { data: allContracts } = await supabase
+          .from('contracts')
+          .select('monthly_value, status, end_date, start_date')
+          .eq('client_id', data.client_id)
+          .eq('user_id', user.id);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const totalMonthlyValue = (allContracts || [])
+          .filter(c => {
+            if (c.status === 'active' || c.status === 'expiring') return true;
+            if (c.end_date) {
+              const end = new Date(c.end_date);
+              return end >= today;
+            }
+            return false;
+          })
+          .reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
+
         const clientUpdates: any = {
           start_date: data.start_date,
           contract_end: data.end_date,
-          monthly_value: data.monthly_value,
+          monthly_value: totalMonthlyValue || data.monthly_value,
           plan: data.type,
           updated_at: new Date().toISOString()
         };
-        
+
         if (payment_day !== undefined) {
           clientUpdates.payment_day = payment_day;
         }
@@ -221,6 +261,16 @@ export const useDeleteContract = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Buscar o contrato antes de deletar para saber o client_id
+      const { data: contract } = await supabase
+        .from('contracts')
+        .select('*, client:clients(*)')
+        .eq('id', id)
+        .single();
+
       const { error } = await supabase
         .from('contracts')
         .delete()
@@ -230,9 +280,46 @@ export const useDeleteContract = () => {
         console.error('Error deleting contract:', error);
         throw error;
       }
+
+      // Após deletar, verificar se o cliente ainda possui outros contratos ativos.
+      // Se sim, NÃO alterar o status do cliente.
+      // O cliente só deve ser afetado pela tag automática (update_client_tags_from_contracts)
+      // se não houver nenhum outro contrato ativo para ele.
+      if (contract?.client_id) {
+        const { data: remainingContracts } = await supabase
+          .from('contracts')
+          .select('id, status, end_date')
+          .eq('client_id', contract.client_id)
+          .eq('user_id', user.id);
+
+        // Verificar se há algum contrato ainda ativo ou a vencer
+        const hasActiveContract = (remainingContracts || []).some(c => {
+          if (c.status === 'active' || c.status === 'expiring') return true;
+          // Também verifica pela data mesmo que status não esteja atualizado
+          if (c.end_date) {
+            const end = new Date(c.end_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return end >= today;
+          }
+          return false;
+        });
+
+        // Se ainda há contratos ativos, garantir que o cliente permaneça com tag 'Ativo'
+        if (hasActiveContract) {
+          await supabase
+            .from('clients')
+            .update({ tags: ['Ativo'], updated_at: new Date().toISOString() })
+            .eq('id', contract.client_id)
+            .eq('user_id', user.id);
+        }
+        // Se não há mais contratos ativos, deixa a RPC update_client_tags_from_contracts
+        // lidar com a atualização na próxima vez que os dados forem carregados
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast.success('Contrato excluído com sucesso!');
     },
     onError: (error) => {

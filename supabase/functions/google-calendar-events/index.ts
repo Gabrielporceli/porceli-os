@@ -86,6 +86,8 @@ serve(async (req) => {
           action = 'UPDATE_EVENT'
         } else if (requestBody.action === 'DELETE_EVENT') {
           action = 'DELETE_EVENT'
+        } else if (requestBody.action === 'FETCH') {
+          action = 'FETCH'
         } else if (requestBody.title) {
           action = 'CREATE_EVENT'
         }
@@ -195,31 +197,61 @@ serve(async (req) => {
 
     // Tratamento de GET/Padrão (Buscar eventos)
     const url = new URL(req.url)
-    const timeMin = url.searchParams.get('timeMin') ?? new Date().toISOString()
-    const timeMax = url.searchParams.get('timeMax') ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Buscar eventos do Google Calendar
-    const calendarRes = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
-      new URLSearchParams({
+    // Prioridade: body (frontend envia action FETCH com timeMin/timeMax) > query params > mês atual
+    let timeMin: string
+    let timeMax: string
+
+    if (requestBody?.timeMin && requestBody?.timeMax) {
+      timeMin = requestBody.timeMin
+      timeMax = requestBody.timeMax
+    } else if (url.searchParams.get('timeMin') && url.searchParams.get('timeMax')) {
+      timeMin = url.searchParams.get('timeMin')!
+      timeMax = url.searchParams.get('timeMax')!
+    } else {
+      // Fallback: mês atual completo
+      const now = new Date()
+      const firstDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0))
+      const lastDay = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59))
+      timeMin = firstDay.toISOString()
+      timeMax = lastDay.toISOString()
+    }
+
+    // Buscar eventos do Google Calendar com paginação completa
+    let allEvents: any[] = []
+    let pageToken: string | undefined = undefined
+    let hasMorePages = true
+
+    while (hasMorePages) {
+      const params: Record<string, string> = {
         timeMin,
         timeMax,
         singleEvents: 'true',
         orderBy: 'startTime',
-        maxResults: '100',
-      }),
-      {
-        headers: { Authorization: `Bearer ${accessToken}` }
+        maxResults: '250',
       }
-    )
+      if (pageToken) params.pageToken = pageToken
 
-    const calendarData = await calendarRes.json()
+      const calendarRes = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
+        new URLSearchParams(params),
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      )
 
-    if (calendarData.error) {
-      throw new Error(calendarData.error.message)
+      const calendarData = await calendarRes.json()
+
+      if (calendarData.error) {
+        throw new Error(calendarData.error.message)
+      }
+
+      allEvents = allEvents.concat(calendarData.items ?? [])
+      pageToken = calendarData.nextPageToken ?? undefined
+      hasMorePages = !!pageToken
     }
 
-    const events = (calendarData.items ?? []).map((item: any) => ({
+    const events = allEvents.map((item: any) => ({
       id: item.id,
       title: item.summary ?? '(Sem título)',
       description: item.description,

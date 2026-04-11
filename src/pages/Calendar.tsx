@@ -146,7 +146,7 @@ export default function Calendar() {
     // Para google events o start_time foi mapeado para "start" ou "time" dependendo de onde renderiza
     let timeStr = item.time || item.start;
     let endStr = item.end;
-    
+
     // Se for Notion task, não temos end, então assumimos 1 hora, mas se não tiver time ignoramos
     if (!timeStr) return false;
 
@@ -155,11 +155,31 @@ export default function Calendar() {
 
     const start = new Date(timeStr);
     if (isNaN(start.getTime())) return false;
-    
+
     // Se não tiver fim definido (ex: Notion), assume 1 h
     const end = endStr ? new Date(endStr) : new Date(start.getTime() + 60 * 60 * 1000);
-    
+
     return currentTime >= start && currentTime <= end;
+  }, [currentTime]);
+
+  // Reunião/meeting que já passou do horário de início → aparece como "realizada" (borda verde)
+  const isPastMeeting = useCallback((item: any) => {
+    // Só aplica a eventos com horário definido (não all-day) e que sejam meetings
+    if (item.isAllDay) return false;
+    // Não sobrescreve status explícito do Notion
+    if (item.status === 'Realizado' || item.status === 'done') return false;
+
+    const isMeeting = item.isGoogleMeet || item.type === 'google';
+    if (!isMeeting) return false;
+
+    const timeStr = item.time || item.start;
+    if (!timeStr) return false;
+
+    const start = new Date(timeStr);
+    if (isNaN(start.getTime())) return false;
+
+    // Verde quando passou do início da reunião
+    return currentTime >= start;
   }, [currentTime]);
 
   // States para novo evento
@@ -290,24 +310,20 @@ export default function Calendar() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
+      // Envia o intervalo do mês sendo exibido para a edge function buscar exatamente esses eventos
+      const timeMin = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), 1, 0, 0, 0)).toISOString();
+      const timeMax = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)).toISOString();
 
       const { data, error } = await supabase.functions.invoke("google-calendar-events", {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: null,
+        body: { action: "FETCH", timeMin, timeMax },
       });
 
       if (error) throw error;
 
       if (data?.connected) {
         setGoogleConnected(true);
-        // Filtrar eventos do mês atual
-        const monthEvents = (data.events ?? []).filter((e: GoogleEvent) => {
-          const d = new Date(e.start);
-          return d >= startOfMonth && d <= endOfMonth;
-        });
-        setGoogleEvents(monthEvents);
+        setGoogleEvents(data.events ?? []);
       } else {
         setGoogleConnected(false);
       }
@@ -777,15 +793,27 @@ export default function Calendar() {
     const map = new Map<number, typeof notionTasks>();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
+
     for (const t of notionTasks) {
       if (!t.dueDate) continue;
-      const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) continue;
-      
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-         const day = d.getDate();
+
+      let day: number;
+      let month: number;
+      let year: number;
+
+      // Extrai a data diretamente da string sem conversão de timezone
+      // Formato pode ser: "2026-04-15", "2026-04-15T10:00:00-03:00", "2026-04-15T13:00:00Z"
+      const datePart = t.dueDate.split('T')[0]; // sempre pega só a parte da data
+      if (!datePart || !datePart.includes('-')) continue;
+
+      const parts = datePart.split('-').map(Number);
+      if (parts.length !== 3) continue;
+      [year, month, day] = parts;
+      month = month - 1; // JS months são 0-based
+
+      if (isNaN(year) || isNaN(month) || isNaN(day)) continue;
+
+      if (month === currentMonth && year === currentYear) {
          if (!map.has(day)) map.set(day, []);
          map.get(day)!.push(t);
       }
@@ -805,6 +833,21 @@ export default function Calendar() {
     d1.getMonth() === d2.getMonth() &&
     d1.getFullYear() === d2.getFullYear();
 
+  // Helper para extrair data local de uma string sem problema de timezone
+  const extractLocalDateParts = (dateStr: string): { year: number; month: number; day: number } | null => {
+    const datePart = dateStr.split('T')[0];
+    if (!datePart || !datePart.includes('-')) return null;
+    const parts = datePart.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return null;
+    return { year: parts[0], month: parts[1] - 1, day: parts[2] };
+  };
+
+  const isSameDayLocal = (dateStr: string, ref: Date): boolean => {
+    const parts = extractLocalDateParts(dateStr);
+    if (!parts) return false;
+    return parts.year === ref.getFullYear() && parts.month === ref.getMonth() && parts.day === ref.getDate();
+  };
+
   const todayItems = useMemo(() => {
     const today = new Date();
     return [
@@ -813,30 +856,42 @@ export default function Calendar() {
       })),
       ...notionTasks.filter((t) => {
         if (!t.dueDate) return false;
-        const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
-        return isSameDay(new Date(dateStr), today);
-      }).map(t => ({
-        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00")
-      }))
-    ].sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => ({...item, time: item.type === 'google' ? (item as any).start : (item as any).dueDate?.includes('T') ? (item as any).dueDate : undefined}));
+        return isSameDayLocal(t.dueDate, today);
+      }).map(t => {
+        const parts = extractLocalDateParts(t.dueDate!);
+        const localDate = parts ? new Date(parts.year, parts.month, parts.day, 12, 0, 0) : new Date();
+        return { ...t, type: 'notion' as const, date: localDate };
+      })
+    ].sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => ({
+      ...item,
+      time: item.type === 'google'
+        ? (item as any).start
+        : (item as any).dueDate?.includes('T') ? (item as any).dueDate : undefined
+    }));
   }, [googleEvents, notionTasks, currentTime]);
 
   const tomorrowItems = useMemo(() => {
     const today = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
-    
+
     return [
       ...googleEvents.filter((e) => isSameDay(new Date(e.start), tomorrow)).map(e => ({
         ...e, type: 'google' as const, date: new Date(e.start), time: e.start
       })),
       ...notionTasks.filter((t) => {
         if (!t.dueDate) return false;
-        const dateStr = t.dueDate.includes('T') ? t.dueDate : t.dueDate + "T12:00:00";
-        return isSameDay(new Date(dateStr), tomorrow);
-      }).map(t => ({
-        ...t, type: 'notion' as const, date: new Date(t.dueDate?.includes('T') ? t.dueDate : t.dueDate + "T12:00:00"), time: t.dueDate?.includes('T') ? t.dueDate : undefined
-      }))
+        return isSameDayLocal(t.dueDate, tomorrow);
+      }).map(t => {
+        const parts = extractLocalDateParts(t.dueDate!);
+        const localDate = parts ? new Date(parts.year, parts.month, parts.day, 12, 0, 0) : new Date();
+        return {
+          ...t,
+          type: 'notion' as const,
+          date: localDate,
+          time: t.dueDate?.includes('T') ? t.dueDate : undefined
+        };
+      })
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [googleEvents, notionTasks]);
 
@@ -980,8 +1035,29 @@ export default function Calendar() {
                 currentDate.getFullYear() === new Date().getFullYear();
 
               const allItems = [
-                ...dayEvents.map(e => ({ type: 'google' as const, id: e.id, title: e.title, time: !e.allDay ? e.start : undefined, end: e.end, isAllDay: e.allDay, color: getEventColor(e.colorId), url: e.htmlLink, status: e.status })),
-                ...dayTasks.map(t => ({ type: 'notion' as const, id: t.id, title: t.title, time: t.dueDate?.includes('T') ? t.dueDate : undefined, isAllDay: !t.dueDate?.includes('T') || (!t.time && t.dueDate?.endsWith('00:00:00Z')), color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20', url: t.url, status: t.status })),
+                ...dayEvents.map(e => ({
+                  type: 'google' as const,
+                  id: e.id,
+                  title: e.title,
+                  time: !e.allDay ? e.start : undefined,
+                  end: e.end,
+                  isAllDay: e.allDay,
+                  color: getEventColor(e.colorId),
+                  url: e.htmlLink,
+                  status: e.status,
+                  isGoogleMeet: !!(e as any).hangoutLink || (e.description || '').includes('meet.google.com') || (e.title || '').toLowerCase().includes('chamada') || (e.title || '').toLowerCase().includes('reunião') || (e.title || '').toLowerCase().includes('call')
+                })),
+                ...dayTasks.map(t => ({
+                  type: 'notion' as const,
+                  id: t.id,
+                  title: t.title,
+                  time: t.dueDate?.includes('T') ? t.dueDate : undefined,
+                  isAllDay: !t.dueDate?.includes('T') || (!t.time && t.dueDate?.endsWith('00:00:00Z')),
+                  color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20',
+                  url: t.url,
+                  status: t.status,
+                  isGoogleMeet: false
+                })),
               ];
 
               return (
@@ -1008,9 +1084,15 @@ export default function Calendar() {
                             key={item.id}
                             title={item.title}
                             className={`text-[10px] p-1.5 rounded-lg border truncate cursor-pointer liquid-glass transition-all hover:brightness-125
-                              ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 
-                                item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 
-                                isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'border-white/10'} 
+                              ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
+                                ? '!border-green-500/60 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                                : item.status === 'Em andamento'
+                                ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                                : (isOngoing(item) && (item.isGoogleMeet || item.type === 'notion'))
+                                ? '!border-green-500/50 !text-green-300 !shadow-[0_0_10px_rgba(34,197,94,0.25)]'
+                                : isOngoing(item)
+                                ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                                : 'border-white/10'}
                               flex items-center gap-1.5`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1076,7 +1158,15 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'border-white/[0.05]'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${
+                      item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
+                        ? '!border-green-500/60 !shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                        : item.status === 'Em andamento'
+                        ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                        : isOngoing(item)
+                        ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.2)]'
+                        : 'border-white/[0.05]'
+                    }`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -1128,7 +1218,7 @@ export default function Calendar() {
                       });
                       setIsEditActivityModalOpen(true);
                     }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
+                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/60 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
                   >
                     <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
                       {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
@@ -1236,9 +1326,9 @@ export default function Calendar() {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border 
-                    ${item.status === 'Realizado' || item.status === 'done' ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' : 
-                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 
+                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border
+                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/60 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' :
+                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' :
                       isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-white/[0.05]'}`}
                 >
                   {/* Coluna 1: Info */}

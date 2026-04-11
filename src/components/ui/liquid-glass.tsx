@@ -136,7 +136,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
                 />
 
                 {/* Content */}
-                <div className="relative z-10 w-full h-full flex flex-col overflow-hidden">
+                <div className="relative z-10 w-full h-full flex flex-col">
                     {children}
                 </div>
             </div>

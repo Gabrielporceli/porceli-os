@@ -348,27 +348,59 @@ serve(async (req) => {
       )
     }
 
-    // Buscar páginas do banco Notion
-    const notionRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${notionToken}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
-        page_size: 50,
-      }),
-    })
+    // Buscar páginas do banco Notion — busca todas as páginas com paginação
+    // Filtra por data: mês atual ± 2 meses para garantir que todas as tarefas visíveis apareçam
+    const now = new Date()
+    const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    const twoMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 3, 0)
+    const dateFrom = twoMonthsAgo.toISOString().split('T')[0]
+    const dateTo = twoMonthsAhead.toISOString().split('T')[0]
 
-    const notionData = await notionRes.json()
+    let allResults: any[] = []
+    let hasMore = true
+    let startCursor: string | undefined = undefined
 
-    if (notionData.object === 'error') {
-      throw new Error(notionData.message)
+    while (hasMore) {
+      const body: any = {
+        sorts: [{ property: 'Dia', direction: 'ascending' }],
+        filter: {
+          and: [
+            {
+              property: 'Dia',
+              date: { on_or_after: dateFrom }
+            },
+            {
+              property: 'Dia',
+              date: { on_or_before: dateTo }
+            }
+          ]
+        },
+        page_size: 100,
+      }
+      if (startCursor) body.start_cursor = startCursor
+
+      const notionRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${notionToken}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      const notionData = await notionRes.json()
+
+      if (notionData.object === 'error') {
+        throw new Error(notionData.message)
+      }
+
+      allResults = allResults.concat(notionData.results ?? [])
+      hasMore = notionData.has_more ?? false
+      startCursor = notionData.next_cursor ?? undefined
     }
 
-    const tasks = (notionData.results ?? []).map((page: any) => {
+    const tasks = allResults.map((page: any) => {
       const dueDate = extractDate(page.properties)
       const time = extractTime(page.properties)
       return {

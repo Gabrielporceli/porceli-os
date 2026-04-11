@@ -118,7 +118,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner"
+              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-primary/50 focus:ring-0 focus:ring-offset-0 transition-all shadow-inner"
               placeholder="Ex: Aluguel escritório"
               required
             />

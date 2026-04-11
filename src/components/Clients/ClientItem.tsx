@@ -100,9 +100,25 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
             )}
           </div>
 
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-3 flex-1 flex-wrap">
             <h4 className="text-lg font-semibold text-white">{client.company}</h4>
-
+            {/* Status badge baseado nas tags do cliente */}
+            {client.tags && client.tags.length > 0 && (() => {
+              const statusTag = client.tags.find(t =>
+                ['ativo', 'a vencer', 'vencido', 'inativo'].includes(t.toLowerCase())
+              );
+              if (!statusTag) return null;
+              return (
+                <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getTagColor(statusTag)}`}>
+                  {statusTag}
+                </Badge>
+              );
+            })()}
+            {client.plan && (
+              <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getPlanColor(client.plan)}`}>
+                {client.plan}
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-2 text-white/50">
