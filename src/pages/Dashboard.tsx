@@ -307,18 +307,13 @@ export default function Dashboard() {
     return sum;
   }, 0);
 
-  // Vencidos do mês atual: pendentes com due_date anterior a hoje, mas do mês atual
+  // Vencidos: todos os pendentes com due_date anterior a hoje (qualquer mês/ano)
   const vencidos = (financialEntries || []).reduce((sum: number, entry: any) => {
     if (!entry?.due_date || entry?.status !== "pending") return sum;
     try {
       const dueDate = parseLocalDate(entry.due_date);
       dueDate.setHours(0, 0, 0, 0);
-      // Deve estar vencido (antes de hoje) e no mês atual
-      if (
-        dueDate < today &&
-        dueDate.getMonth() === currentMonth &&
-        dueDate.getFullYear() === currentYear
-      ) {
+      if (dueDate < today) {
         return sum + (Number(entry.amount) || 0);
       }
     } catch { }
