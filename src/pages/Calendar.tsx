@@ -153,6 +153,9 @@ export default function Calendar() {
     // Notion isAllDay checks
     if (item.isAllDay) return false;
 
+    // Tarefas Notion sem horário específico (só data, sem 'T') não devem ser consideradas em andamento
+    if (item.type === 'notion' && typeof timeStr === 'string' && !timeStr.includes('T')) return false;
+
     const start = new Date(timeStr);
     if (isNaN(start.getTime())) return false;
 
@@ -1088,7 +1091,7 @@ export default function Calendar() {
                                 ? '!border-green-500/60 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
                                 : item.status === 'Em andamento'
                                 ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                                : (isOngoing(item) && (item.isGoogleMeet || item.type === 'notion'))
+                                : (isOngoing(item) && item.isGoogleMeet)
                                 ? '!border-green-500/50 !text-green-300 !shadow-[0_0_10px_rgba(34,197,94,0.25)]'
                                 : isOngoing(item)
                                 ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
