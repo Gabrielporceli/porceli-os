@@ -143,23 +143,22 @@ export default function Calendar() {
   }, []);
 
   const isOngoing = useCallback((item: any) => {
+    // Apenas reuniões do Google Calendar devem ser consideradas em andamento por horário
+    if (item.type === 'notion') return false;
+
     // Para google events o start_time foi mapeado para "start" ou "time" dependendo de onde renderiza
     let timeStr = item.time || item.start;
     let endStr = item.end;
 
-    // Se for Notion task, não temos end, então assumimos 1 hora, mas se não tiver time ignoramos
     if (!timeStr) return false;
 
-    // Notion isAllDay checks
+    // Google provides "all day" flag
     if (item.isAllDay) return false;
-
-    // Tarefas Notion sem horário específico (só data, sem 'T') não devem ser consideradas em andamento
-    if (item.type === 'notion' && typeof timeStr === 'string' && !timeStr.includes('T')) return false;
 
     const start = new Date(timeStr);
     if (isNaN(start.getTime())) return false;
 
-    // Se não tiver fim definido (ex: Notion), assume 1 h
+    // Se não tiver fim definido (ex: Notion - embora agora retorne false acima), assume 1 h
     const end = endStr ? new Date(endStr) : new Date(start.getTime() + 60 * 60 * 1000);
 
     return currentTime >= start && currentTime <= end;
