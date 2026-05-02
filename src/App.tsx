@@ -13,7 +13,6 @@ import Conversations from "./pages/Conversations"
 import Financial from "./pages/Financial"
 import Contracts from "./pages/Contracts"
 import NotFound from "./pages/NotFound"
-import SdrAgent from "./pages/SdrAgent"
 import Calendar from "./pages/Calendar"
 import Automations from "./pages/Automations"
 import { CRMLayout } from "./components/Layout/CRMLayout"
@@ -102,16 +101,6 @@ function App() {
                       <ProtectedRoute>
                         <CRMLayout>
                           <Contracts />
-                        </CRMLayout>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/sdr-agent"
-                    element={
-                      <ProtectedRoute>
-                        <CRMLayout>
-                          <SdrAgent />
                         </CRMLayout>
                       </ProtectedRoute>
                     }

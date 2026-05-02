@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Bot, Calendar, Zap } from "lucide-react";
+import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
@@ -12,7 +12,6 @@ const menuItems = [
   { title: "Financeiro", url: "/financial", icon: DollarSign },
   { title: "Conversas", url: "/conversations", icon: MessageSquare },
   { title: "Clientes", url: "/clients", icon: Users },
-  { title: "Agente SDR", url: "/sdr-agent", icon: Bot },
   { title: "Automações", url: "/automations", icon: Zap },
 ];
 
