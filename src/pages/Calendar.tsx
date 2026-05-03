@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
+import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -890,8 +891,33 @@ export default function Calendar() {
       events
     })) as CalendarData[];
   }, [googleEvents, notionTasks]);
+  const contributionData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
+    // Processar Google Events
+    googleEvents.forEach(event => {
+      const dateStr = format(new Date(event.start), "yyyy-MM-dd");
+      counts[dateStr] = (counts[dateStr] || 0) + 1;
+    });
+    
+    // Processar Notion Tasks
+    notionTasks.forEach(task => {
+      if (task.dueDate) {
+        const dateStr = format(new Date(task.dueDate), "yyyy-MM-dd");
+        counts[dateStr] = (counts[dateStr] || 0) + 1;
+      }
+    });
+    
+    return Object.entries(counts).map(([date, count]) => ({
+      date,
+      count: Math.min(count, 4) // Limitar a 4 para a escala de cores do componente
+    }));
+  }, [googleEvents, notionTasks]);
+
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
+      <GitHubCalendar data={contributionData} />
+
       <div className="min-h-[800px]">
         <FullScreenCalendar 
           data={calendarData}
