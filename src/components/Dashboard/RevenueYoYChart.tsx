@@ -1,26 +1,23 @@
-import { Card } from "@/components/ui/card";
-import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+'use client';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/components/ui/card';
+import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/area-charts-2';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CreditCard, Eye, ShoppingCart, Store, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { cn } from '@/lib/utils';
+import { format, parseISO } from 'date-fns';
 
 type FinancialEntry = {
   amount?: number | string;
-  due_date?: string; // YYYY-MM-DD (ideal)
+  due_date?: string;
   status?: "paid" | "pending" | string;
 };
 
 type RevenueYoYChartProps = {
-  title?: string;
-  subtitle?: string;
   financialEntries: FinancialEntry[];
-  maxYearsToShow?: number; // default 4
+  maxYearsToShow?: number;
 };
 
 const formatCurrency = (value: number) =>
@@ -28,15 +25,7 @@ const formatCurrency = (value: number) =>
     Number.isFinite(value) ? value : 0
   );
 
-const formatAxisBRL = (value: number) => {
-  const v = Number(value) || 0;
-  if (v >= 1_000_000) return `R$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `R$${(v / 1_000).toFixed(1)}k`;
-  return `R$${v}`;
-};
-
-// YYYY-MM-DD (sem timezone)
-export const parseLocalDate = (dateString: string) => {
+const parseLocalDate = (dateString: string) => {
   const [y, m, d] = dateString.split("-").map(Number);
   return new Date(y, (m || 1) - 1, d || 1);
 };
@@ -130,25 +119,17 @@ export const calculateRevenueKPIs = (financialEntries: FinancialEntry[]) => {
 };
 
 export function RevenueYoYChart({
-  title = "Crescimento de Receita (YoY)",
-  subtitle = "Comparação de receita total entre anos.",
   financialEntries,
   maxYearsToShow = 4,
 }: RevenueYoYChartProps) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // ✅ Base do faturamento: TODOS os lançamentos (paid + pending, incluindo vencidos)
+  const currentYear = today.getFullYear();
+  
+  // Data processing
   const validEntries = (financialEntries || []).filter((e) => {
-    if (!e?.due_date || typeof e?.due_date !== "string" || !e.due_date.includes("-")) {
-      return false;
-    }
-
-    // Inclui todos: paid e pending (incluindo vencidos)
-    return e?.status === "paid" || e?.status === "pending";
+    return (e?.due_date && (e?.status === "paid" || e?.status === "pending"));
   });
 
-  // Agrupa por ano/mês
   const byYearMonth = new Map<number, number[]>();
   const yearsSet = new Set<number>();
 
@@ -156,22 +137,16 @@ export function RevenueYoYChart({
     try {
       const d = parseLocalDate(String(e.due_date));
       if (isNaN(d.getTime())) continue;
-
       const year = d.getFullYear();
-      const monthIdx = d.getMonth(); // 0..11
+      const monthIdx = d.getMonth();
       const amount = Number(e.amount) || 0;
-
       yearsSet.add(year);
       if (!byYearMonth.has(year)) byYearMonth.set(year, Array(12).fill(0));
       byYearMonth.get(year)![monthIdx] += amount;
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
-  const currentYear = new Date().getFullYear();
-  yearsSet.add(currentYear); // garante linha do ano atual
-
+  yearsSet.add(currentYear);
   const years = Array.from(yearsSet).sort((a, b) => a - b);
   const yearsToShow = years.slice(-maxYearsToShow);
 
@@ -182,8 +157,8 @@ export function RevenueYoYChart({
     return name.charAt(0).toUpperCase() + name.slice(1);
   });
 
-  const data = months.map((monthName, idx) => {
-    const row: Record<string, any> = { month: monthName };
+  const chartData = months.map((monthName, idx) => {
+    const row: Record<string, any> = { period: monthName };
     for (const y of yearsToShow) {
       const arr = byYearMonth.get(y) || Array(12).fill(0);
       row[String(y)] = arr[idx] || 0;
@@ -191,97 +166,171 @@ export function RevenueYoYChart({
     return row;
   });
 
-  // Estilo das linhas (cores distintas para facilitar a leitura)
-  const lineStyleForIndex = (idxFromEnd: number, total: number) => {
-    const isMostRecent = idxFromEnd === total - 1;
+  // Config for years
+  const chartConfig: ChartConfig = {};
+  const yearColors = [
+    'var(--color-indigo-400)',
+    'var(--color-indigo-500)',
+    'var(--color-indigo-600)',
+    'var(--color-indigo-700)',
+  ];
+  
+  // Custom colors for Porceli theme (purples)
+  const porceliColors = [
+    '#4B5563', // Older (Gray)
+    '#6366F1', // Indigo
+    '#8B5CF6', // Purple
+    '#D8B4FE', // Light Purple
+  ];
 
-    // Cores: Roxo vibrante para o atual, Azul/Indigo para o anterior, Cinza para os mais antigos
-    const colors = ["#4B5563", "#3B82F6", "#8B5CF6"];
-    const color = colors[Math.min(idxFromEnd, colors.length - 1)];
-
-    return {
-      stroke: isMostRecent ? "#8B5CF6" : (idxFromEnd === total - 2 ? "#3B82F6" : "#4B5563"),
-      strokeWidth: isMostRecent ? 3 : 2,
-      strokeOpacity: isMostRecent ? 1 : 0.6,
-      strokeDasharray: isMostRecent ? "0" : "5 5",
+  yearsToShow.forEach((y, i) => {
+    chartConfig[String(y)] = {
+      label: `Ano ${y}`,
+      color: porceliColors[Math.min(i, porceliColors.length - 1)],
     };
-  };
+  });
+
+  // Stats for the header (Current Year totals vs Prev Year)
+  const getYearTotal = (y: number) => (byYearMonth.get(y) || Array(12).fill(0)).reduce((a, b) => a + b, 0);
+  
+  const currentTotal = getYearTotal(currentYear);
+  const prevYearTotal = getYearTotal(currentYear - 1);
+  const yoyGrowth = prevYearTotal > 0 ? ((currentTotal - prevYearTotal) / prevYearTotal) * 100 : 0;
+
   return (
-    <Card className="liquid-glass border-white/[0.05] p-6 dashboard-glow">
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h3 className="text-sm font-bold text-white uppercase tracking-widest">{title}</h3>
-          <p className="text-white/30 text-xs mt-1">{subtitle}</p>
-        </div>
-      </div>
+    <Card className="liquid-glass border-white/[0.05] dashboard-glow w-full">
+      <CardHeader className="border-0 min-h-auto py-6">
+        <CardTitle className="text-lg font-semibold text-white">Crescimento de Receita (YoY)</CardTitle>
+      </CardHeader>
 
-      <div className="w-full h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 18, left: 6, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
-
-            <XAxis
-              dataKey="month"
-              stroke="rgba(255,255,255,0.3)"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-            />
-
-            <YAxis
-              stroke="rgba(255,255,255,0.3)"
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={formatAxisBRL}
-              width={46}
-            />
-
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(10, 10, 10, 0.95)",
-                backdropFilter: "blur(20px)",
-                borderColor: "rgba(255,255,255,0.1)",
-                color: "#FFFFFF",
-                borderRadius: "1rem",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-              labelStyle={{ color: "rgba(255,255,255,0.5)", fontWeight: "bold", fontSize: "11px", marginBottom: "4px" }}
-              itemStyle={{ fontSize: "13px", color: "#fff", padding: "2px 0" }}
-              formatter={(value: any, name: any) => [
-                formatCurrency(Number(value) || 0),
-                name,
-              ]}
-            />
-
-            <Legend
-              wrapperStyle={{ color: "rgba(255,255,255,0.4)", fontSize: 10, paddingTop: 20 }}
-              iconType="circle"
-              iconSize={8}
-            />
-
+      <CardContent className="px-2.5">
+        <div className="@container px-2.5">
+          <div className="flex flex-wrap gap-10 mb-10">
             {yearsToShow.map((y, i) => {
-              const style = lineStyleForIndex(i, yearsToShow.length);
+              const yearTotal = getYearTotal(y);
               const isCurrent = y === currentYear;
+              const color = chartConfig[String(y)].color;
+
               return (
-                <Line
-                  key={y}
-                  type="monotone"
-                  dataKey={String(y)}
-                  name={isCurrent ? `Ano Atual (${y})` : `Ano (${y})`}
-                  dot={false}
-                  stroke={style.stroke}
-                  strokeWidth={style.strokeWidth}
-                  strokeOpacity={style.strokeOpacity}
-                  strokeDasharray={style.strokeDasharray}
-                  animationDuration={1500}
-                />
+                <div key={y} className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <div 
+                      className="w-0.5 h-12 rounded-full" 
+                      style={{ backgroundColor: color || 'var(--color-indigo-500)' }}
+                    ></div>
+                    <div className="flex flex-col gap-2">
+                      <div className="text-sm font-medium text-white/40">Total {y}</div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl font-semibold leading-none text-white">
+                          {formatCurrency(yearTotal)}
+                        </span>
+                        {isCurrent && (
+                          <span className={cn(
+                            'inline-flex items-center gap-1 text-xs font-medium',
+                            yoyGrowth >= 0 ? 'text-green-500' : 'text-red-500'
+                          )}>
+                            {yoyGrowth >= 0 ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+                            {Math.abs(Math.round(yoyGrowth))}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+          </div>
+        </div>
+
+        <ChartContainer
+          config={chartConfig}
+          className="h-[400px] w-full [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
+        >
+          <AreaChart
+            accessibilityLayer
+            data={chartData}
+            margin={{ top: 10, bottom: 10, left: 20, right: 20 }}
+          >
+            <defs>
+              <pattern id="modernPattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <path d="M0,16 L32,16 M16,0 L16,32" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeOpacity="0.05" />
+                <circle cx="8" cy="8" r="1.5" fill="white" fillOpacity="0.02" />
+              </pattern>
+              
+              {yearsToShow.map((y) => (
+                <linearGradient key={`fill-${y}`} id={`fill-${y}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={chartConfig[String(y)].color} stopOpacity={0.6} />
+                  <stop offset="95%" stopColor={chartConfig[String(y)].color} stopOpacity={0.1} />
+                </linearGradient>
+              ))}
+            </defs>
+
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" />
+
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              tick={{ textAnchor: 'middle', fontSize: 12, fill: 'rgba(255,255,255,0.4)' }}
+              interval={0}
+            />
+
+            <YAxis hide />
+
+            <ChartTooltip
+              cursor={{
+                strokeDasharray: '4 4',
+                stroke: 'rgba(255,255,255,0.2)',
+                strokeWidth: 1,
+              }}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="rounded-xl border border-white/10 bg-black/80 backdrop-blur-xl p-4 shadow-2xl min-w-[200px]">
+                      <div className="text-sm font-semibold text-white mb-3.5 pb-2 border-b border-white/10">
+                        {label}
+                      </div>
+                      <div className="space-y-1.5">
+                        {payload.map((p) => (
+                          <div key={p.dataKey} className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="size-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
+                              <span className="text-xs font-medium text-white/40">Ano {p.dataKey}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-white">{formatCurrency(p.value as number)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+
+            {yearsToShow.map((y, i) => (
+              <Area
+                key={y}
+                dataKey={String(y)}
+                type="natural"
+                fill={`url(#fill-${y})`}
+                fillOpacity={0.4}
+                stroke={chartConfig[String(y)].color}
+                stackId={i === yearsToShow.length - 1 ? undefined : "a"} // Last year is primary, others stacked? 
+                // Actually user example stacked them. I'll stack them all for consistent look.
+                dot={false}
+                activeDot={{
+                  r: 4,
+                  fill: chartConfig[String(y)].color,
+                  stroke: 'white',
+                  strokeWidth: 1.5,
+                }}
+              />
+            ))}
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
     </Card>
   );
 }

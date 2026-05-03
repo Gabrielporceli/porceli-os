@@ -103,6 +103,7 @@
     --ring: 265 65% 46%;
 
     --radius: 1rem;
+    --destructive-foreground: 0 0% 100%;
 
     /* Premium UI Tokens */
     --glass-bg: rgba(18, 18, 18, 0.7);
