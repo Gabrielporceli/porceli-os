@@ -47,11 +47,11 @@ const getAlertColor = (type: Alert['type']) => {
 export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
   const alertsToShow = typeof limit === 'number' ? alerts.slice(0, limit) : alerts;
   return (
-    <Card className={cn("premium-card p-6 h-full animate-premium-in", className)}>
-      <div className="flex items-center gap-2 mb-6">
-        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Alertas & Notificações</h3>
+    <Card className={cn("liquid-glass p-4 md:p-5 h-full animate-premium-in shadow-2xl", className)}>
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-lg font-semibold text-white">Alertas & Notificações</h3>
       </div>
-      <div className="space-y-3 overflow-y-auto overflow-x-hidden pr-1">
+      <div className="space-y-3 overflow-y-auto overflow-x-hidden pr-1 max-h-[600px] pt-1">
         {alertsToShow.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 opacity-30">
             <AlertTriangle className="w-12 h-12 mb-2" />
@@ -59,13 +59,20 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
           </div>
         ) : (
           alertsToShow.map((alert) => (
-            <div key={alert.id} className="flex items-start gap-4 p-3 rounded-xl liquid-glass border-white/[0.05] dashboard-glow transition-all duration-300 hover:bg-white/[0.02]">
-              <div className="flex-1 min-w-0">
+            <div 
+              key={alert.id} 
+              className="flex items-center justify-between p-3 rounded-lg liquid-glass border-white/[0.05] dashboard-glow"
+            >
+              <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-white font-semibold text-sm truncate">{alert.title}</h4>
-                  <span className="text-white/20 text-[10px] whitespace-nowrap">{alert.timestamp}</span>
+                  <h4 className="text-white text-sm font-medium truncate">{alert.title}</h4>
                 </div>
-                <p className="text-white/40 text-xs mt-1 leading-relaxed line-clamp-2">{alert.description}</p>
+                <p className="text-Porceli-gray-400 text-xs truncate mt-0.5">{alert.description}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-Porceli-gray-500 text-[10px]">
+                  {alert.timestamp}
+                </span>
               </div>
             </div>
           ))

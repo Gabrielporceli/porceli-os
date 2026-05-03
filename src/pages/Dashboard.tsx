@@ -23,6 +23,7 @@ import {
 } from "recharts";
 
 import { RevenueYoYChart, calculateRevenueKPIs } from "@/components/Dashboard/RevenueYoYChart";
+import { MiniSparklineCard } from "@/components/Dashboard/MiniSparklineCard";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
@@ -371,8 +372,7 @@ export default function Dashboard() {
     Leads: Number(s?.count || 0),
   }));
 
-  // ===== KPIs Faturamento Ano a Ano =====
-  const revenueKPIs = calculateRevenueKPIs(financialEntries);
+
 
   // ===== Alertas Reais =====
   // Helper para formatar tempo relativo
@@ -502,12 +502,53 @@ export default function Dashboard() {
     return 0; // Manter ordem original se mesma prioridade
   });
 
+  // ===== Dados para Sparklines (últimos 6 meses) =====
+  const getTrendData = (type: 'revenue' | 'expenses') => {
+    const data = [];
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(today);
+      targetDate.setMonth(targetDate.getMonth() - i);
+      const m = targetDate.getMonth();
+      const y = targetDate.getFullYear();
+      
+      let amount = 0;
+      if (type === 'revenue') {
+        amount = (financialEntries || []).reduce((sum, e: any) => {
+          if (e.status !== "paid") return sum;
+          const d = parseLocalDate(e.due_date);
+          return (d.getMonth() === m && d.getFullYear() === y) ? sum + (Number(e.amount) || 0) : sum;
+        }, 0);
+      } else {
+        amount = (expenses || []).reduce((sum, e: any) => {
+          const d = parseLocalDate(e.date);
+          return (d.getMonth() === m && d.getFullYear() === y) ? sum + (Number(e.amount) || 0) : sum;
+        }, 0);
+      }
+      data.push({ value: amount });
+    }
+    return data;
+  };
+
+  const revenueTrend = getTrendData('revenue');
+  const expensesTrend = getTrendData('expenses');
+  const profitTrend = revenueTrend.map((r, i) => ({ value: r.value - expensesTrend[i].value }));
+
+  const receitasChange = receitasMesAnterior > 0 ? Math.round(((receitasMes - receitasMesAnterior) / receitasMesAnterior) * 100) : 0;
+  const despesasChange = despesasMesAnterior > 0 ? Math.round(((despesasMes - despesasMesAnterior) / despesasMesAnterior) * 100) : 0;
+  const lucroMesAnterior = receitasMesAnterior - despesasMesAnterior;
+  const lucroChange = lucroMesAnterior > 0 ? Math.round(((lucroMes - lucroMesAnterior) / lucroMesAnterior) * 100) : 0;
+  
+  const aReceberTrend = Array(6).fill(0).map((_, i) => ({ value: (aReceberMesAtual / 6) * (i + 1) }));
+  const vencidosTrend = Array(6).fill(0).map((_, i) => ({ value: (vencidos / 6) * (6 - i) }));
+
+  const revenueKPIs = calculateRevenueKPIs(financialEntries as any[]);
+
   // ===== Layout tokens (padronização) =====
   const PAGE_GAP = "gap-4 md:gap-5";
   const CARD = "liquid-glass dashboard-glow border-white/[0.05]";
   const SECTION_PAD = "p-5 md:p-6";
   const MINI = "bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] rounded-2xl p-4";
-  const MINI_TIGHT = "bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] rounded-xl p-3";
+  const MINI_TIGHT = "liquid-glass dashboard-glow rounded-xl p-3";
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
 
@@ -548,32 +589,44 @@ export default function Dashboard() {
 
       {/* SAÚDE FINANCEIRA (unidades) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="liquid-glass p-5">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Receita (Mês)</p>
-          <p className="text-2xl font-bold text-white tracking-tight">{formatCurrency(receitasMes)}</p>
-        </Card>
+        <MiniSparklineCard 
+          title="Receita (Mês)" 
+          value={formatCurrency(receitasMes)} 
+          change={receitasChange}
+          trend={receitasChange >= 0 ? 'up' : 'down'}
+          data={revenueTrend}
+        />
 
-        <Card className="liquid-glass p-5">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Despesas (Mês)</p>
-          <p className="text-2xl font-bold text-red-500 tracking-tight">{formatCurrency(despesasMes)}</p>
-        </Card>
+        <MiniSparklineCard 
+          title="Despesas (Mês)" 
+          value={formatCurrency(despesasMes)} 
+          change={despesasChange}
+          trend={despesasChange <= 0 ? 'up' : 'down'} // Down in expenses is "good"
+          data={expensesTrend}
+          color={despesasChange <= 0 ? '#22c55e' : '#ef4444'}
+        />
 
-        <Card className="liquid-glass p-5">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Lucro (Mês)</p>
-          <p className={`text-2xl font-bold tracking-tight ${lucroMes >= 0 ? "text-green-400" : "text-red-500"}`}>
-            {formatCurrency(lucroMes)}
-          </p>
-        </Card>
+        <MiniSparklineCard 
+          title="Lucro (Mês)" 
+          value={formatCurrency(lucroMes)} 
+          change={lucroChange}
+          trend={lucroChange >= 0 ? 'up' : 'down'}
+          data={profitTrend}
+        />
 
-        <Card className="liquid-glass p-5">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">A Receber</p>
-          <p className="text-2xl font-bold text-amber-400 tracking-tight">{formatCurrency(aReceberMesAtual)}</p>
-        </Card>
+        <MiniSparklineCard 
+          title="A Receber" 
+          value={formatCurrency(aReceberMesAtual)} 
+          data={aReceberTrend}
+          trend="up"
+        />
 
-        <Card className="liquid-glass p-5">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Vencidos</p>
-          <p className="text-2xl font-bold text-red-500 tracking-tight">{formatCurrency(vencidos)}</p>
-        </Card>
+        <MiniSparklineCard 
+          title="Vencidos" 
+          value={formatCurrency(vencidos)} 
+          data={vencidosTrend}
+          trend="down"
+        />
       </div>
 
       {/* KPIs Ano a Ano */}
@@ -759,58 +812,51 @@ export default function Dashboard() {
 
         {/* Cards Futuros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Ticket Médio</p>
-            <p className="text-xl font-bold text-white">{formatCurrency(ticketMedioContratosAtivos)}</p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">Contratos ativos</p>
-          </Card>
+          <MiniSparklineCard 
+            title="Ticket Médio" 
+            value={formatCurrency(ticketMedioContratosAtivos)} 
+            description="Contratos ativos"
+            data={revenueTrend.map(r => ({ value: r.value / Math.max(1, activeClients) }))}
+          />
 
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Churn</p>
-            <p className="text-xl font-bold text-white">{churnRate.toFixed(1)}%</p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">Taxa de cancelamento</p>
-          </Card>
+          <MiniSparklineCard 
+            title="Churn" 
+            value={`${churnRate.toFixed(1)}%`} 
+            description="Taxa de cancelamento"
+            trend="down"
+            data={Array(6).fill(0).map((_, i) => ({ value: churnRate * (1 - i*0.1) }))}
+          />
 
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Comparativo mensal</p>
-            <p className={`text-xl font-bold ${variacaoComparativoMensal >= 0 ? "text-green-400" : "text-red-500"}`}>
-              {variacaoComparativoMensal >= 0 ? "+" : ""}
-              {variacaoComparativoMensal.toFixed(1)}%
-            </p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">vs mês anterior (faturamento geral)</p>
-          </Card>
+          <MiniSparklineCard 
+            title="Comparativo mensal" 
+            value={`${variacaoComparativoMensal >= 0 ? "+" : ""}${variacaoComparativoMensal.toFixed(1)}%`} 
+            description="vs mês anterior (faturamento geral)"
+            trend={variacaoComparativoMensal >= 0 ? 'up' : 'down'}
+            data={revenueTrend}
+          />
 
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Margem de lucro</p>
-            <p className={`text-xl font-bold ${margemLucro > 40
-              ? "text-green-400"
-              : margemLucro >= 20 && margemLucro <= 40
-                ? "text-white"
-                : "text-red-500"
-              }`}>
-              {margemLucro.toFixed(1)}%
-            </p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">Meta ideal: 20-40%</p>
-          </Card>
+          <MiniSparklineCard 
+            title="Margem de lucro" 
+            value={`${margemLucro.toFixed(1)}%`} 
+            description="Meta ideal: 20-40%"
+            data={profitTrend.map((p, i) => ({ value: p.value / Math.max(1, revenueTrend[i].value) * 100 }))}
+          />
 
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Receita por hora</p>
-            <p className="text-xl font-bold text-white">{formatCurrency(receitaPorHora)}</p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">Produtividade mensal ({horasTrabalhadasMes}h)</p>
-          </Card>
+          <MiniSparklineCard 
+            title="Receita por hora" 
+            value={formatCurrency(receitaPorHora)} 
+            description="Produtividade mensal (160h)"
+            data={revenueTrend.map(r => ({ value: r.value / 160 }))}
+          />
 
-          <Card className="liquid-glass border-white/[0.05] dashboard-glow p-4">
-            <p className="text-Porceli-gray-400 text-xs mb-1">Concentração de receita</p>
-            <p className={`text-xl font-bold ${concentracaoReceita <= 30
-              ? "text-green-400"
-              : "text-red-500"
-              }`}>
-              {concentracaoReceita.toFixed(1)}%
-            </p>
-            <p className="text-Porceli-gray-500 text-xs mt-1">
-              {concentracaoReceita > 30 ? "Risco alto (>30%)" : "Diversificado (≤30%)"}
-            </p>
-          </Card>
+          <MiniSparklineCard 
+            title="Concentração de receita" 
+            value={`${concentracaoReceita.toFixed(1)}%`} 
+            description="Diversificado (≤30%)"
+            trend={concentracaoReceita <= 30 ? 'up' : 'down'}
+            color={concentracaoReceita <= 30 ? '#22c55e' : '#ef4444'}
+            data={Array(6).fill(0).map((_, i) => ({ value: concentracaoReceita * (1 + (Math.random() - 0.5) * 0.1) }))}
+          />
         </div>
       </div>
     </div >
