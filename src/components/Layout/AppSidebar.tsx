@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap } from "lucide-react";
+import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: BarChart2 },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
   { title: "Contratos", url: "/contracts", icon: FileText },
@@ -18,92 +17,90 @@ const menuItems = [
 export function AppSidebar() {
   const location = useLocation();
   const { logout } = useAuth();
-  const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
   };
 
   return (
-    <>
-      {/* Zona de hover na borda esquerda */}
-      <div
-        className="fixed inset-y-0 left-0 w-3 z-40"
-        onMouseEnter={() => setOpen(true)}
-      />
-
-      {/* Barra flutuante */}
-      <div
-        className={`
-          fixed left-4 top-4 bottom-4 z-50
-          flex flex-col items-center
-          liquid-glass rounded-[2rem]
-          px-2 py-8
-          transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
-          ${open ? "translate-x-0 opacity-100" : "-translate-x-[150%] opacity-0"}
-        `}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-      >
-
-        {/* Ícones no topo */}
-        <div className="flex flex-col items-center gap-4 w-full px-1">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.url;
-            const Icon = item.icon;
-
-            return (
-              <motion.div
-                key={item.title}
-                whileHover={{ scale: 1.1, translateY: -2 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Link
-                  to={item.url}
-                  title={item.title}
-                  className={`
-                    relative group
-                    flex items-center justify-center
-                    w-12 h-12 rounded-2xl
-                    transition-all duration-300
-                    ${isActive
-                      ? "bg-primary text-white shadow-[0_0_20px_rgba(104,41,192,0.4)]"
-                      : "text-white/40 hover:text-white hover:bg-white/5"
-                    }
-                  `}
-                >
-                  <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
-                </Link>
-              </motion.div>
-            );
-          })}
+    <div className="w-64 h-screen flex flex-col sidebar-glass border-r border-white/5 relative z-50">
+      {/* Logo Section */}
+      <div className="p-8 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center icon-glow-cyan">
+          <div className="w-6 h-6 border-2 border-black rounded-md rotate-45 flex items-center justify-center">
+            <div className="w-2 h-2 bg-black rounded-full" />
+          </div>
         </div>
-
-        {/* Espaço flexível que empurra o botão para baixo */}
-        <div className="flex-1" />
-
-        {/* Botão de sair no rodapé da barra */}
-        <motion.div
-          whileHover={{ scale: 1.1, translateY: -2 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <button
-            type="button"
-            title="Sair"
-            onClick={handleLogout}
-            className="
-              flex items-center justify-center
-              w-12 h-12 rounded-2xl
-              text-white/40 hover:text-red-400 hover:bg-red-400/10
-              transition-all duration-300
-            "
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </motion.div>
+        <span className="text-xl font-bold tracking-tight text-white">Porceli</span>
       </div>
-    </>
+
+
+      {/* Navigation Items */}
+      <nav className="flex-1 px-4 py-4 flex flex-col gap-2">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          const Icon = item.icon;
+
+          return (
+            <Link key={item.title} to={item.url}>
+              <motion.div
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className={`
+                  group flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300
+                  ${isActive 
+                    ? "active-item-pill" 
+                    : "hover:bg-white/5"
+                  }
+                `}
+              >
+                {/* Icon Container */}
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                  ${isActive 
+                    ? "icon-glow-cyan" 
+                    : "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white"
+                  }
+                `}>
+
+                  <Icon className="w-5 h-5" />
+                </div>
+
+                {/* Title */}
+                <span className={`
+                  font-medium transition-colors duration-300
+                  ${isActive ? "text-white" : "text-white/40 group-hover:text-white"}
+                `}>
+                  {item.title}
+                </span>
+
+                {/* Active Indicator Arrow */}
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-indicator"
+                    className="ml-auto"
+                  >
+                    <ChevronRight className="w-4 h-4 text-white/20" />
+                  </motion.div>
+                )}
+              </motion.div>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer Section */}
+      <div className="p-6 mt-auto">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 group"
+        >
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-red-400/20">
+            <LogOut className="w-5 h-5" />
+          </div>
+          <span className="font-medium">Sair</span>
+        </button>
+      </div>
+    </div>
   );
 }

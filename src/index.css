@@ -161,14 +161,40 @@
     position: relative;
     overflow: hidden;
     background: rgba(18, 18, 18, 0.4) !important;
-    backdrop-filter: blur(20px) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(20px) brightness(1.1) !important;
+    backdrop-filter: blur(25px) brightness(1.2) !important;
+    -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 1rem;
-    box-shadow: none !important;
-    /* Removendo sombra que "gruda" os elementos */
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
   }
+
+  .sidebar-glass {
+    background: rgba(10, 10, 10, 0.6) !important;
+    backdrop-filter: blur(40px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(1.5) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .active-item-pill {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02) !important;
+  }
+
+  .icon-glow-cyan {
+    background: #2dd4bf !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px rgba(45, 212, 191, 0.5) !important;
+  }
+
+  .icon-glow-purple {
+    background: #6829c0 !important;
+    color: #fff !important;
+    box-shadow: 0 0 20px rgba(104, 41, 192, 0.5) !important;
+  }
+
 
 
   .liquid-container {
@@ -201,7 +227,23 @@
     animation-delay: -5s;
   }
 
+  .header-glass {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(20px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .nav-item-dark-pill {
+    background: #1a1a1a !important;
+    color: #fff !important;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  }
+
   @keyframes liquid-move {
+
     0% {
       transform: translate(0, 0) scale(1);
     }

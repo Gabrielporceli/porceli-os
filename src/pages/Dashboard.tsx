@@ -511,12 +511,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
-        </div>
-      </div>
+      {/* Header removido - navegação no topo */}
+
 
       {/* TOP KPIs */}
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${PAGE_GAP}`}>

@@ -11,7 +11,6 @@ export function ClientsHeader({ onNewClient }: ClientsHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div className="space-y-1">
-        <h1 className="text-4xl font-bold text-white tracking-tight">Clientes</h1>
 
       </div>
       <motion.div 

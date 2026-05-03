@@ -481,7 +481,7 @@ export default function Conversations() {
   const cardHeightClasses = "h-full";
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in relative flex flex-col h-[calc(100vh-48px)]">
+    <div className="space-y-6 md:space-y-8 animate-fade-in relative flex flex-col h-[calc(100vh-160px)]">
       <ConversationsHeader onNewConversation={() => setIsNewConversationModalOpen(true)} />
 
       {/* CONTEÚDO DA PÁGINA (Grid de conversas e chat) */}

@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -850,401 +851,143 @@ export default function Calendar() {
     return parts.year === ref.getFullYear() && parts.month === ref.getMonth() && parts.day === ref.getDate();
   };
 
-  const todayItems = useMemo(() => {
-    const today = new Date();
-    return [
-      ...googleEvents.filter((e) => isSameDay(new Date(e.start), today)).map(e => ({
-        ...e, type: 'google' as const, date: new Date(e.start)
-      })),
-      ...notionTasks.filter((t) => {
-        if (!t.dueDate) return false;
-        return isSameDayLocal(t.dueDate, today);
-      }).map(t => {
-        const parts = extractLocalDateParts(t.dueDate!);
-        const localDate = parts ? new Date(parts.year, parts.month, parts.day, 12, 0, 0) : new Date();
-        return { ...t, type: 'notion' as const, date: localDate };
-      })
-    ].sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => ({
-      ...item,
-      time: item.type === 'google'
-        ? (item as any).start
-        : (item as any).dueDate?.includes('T') ? (item as any).dueDate : undefined
-    }));
-  }, [googleEvents, notionTasks, currentTime]);
+  const calendarData = useMemo(() => {
+    const dataMap = new Map<string, CalendarEvent[]>();
 
-  const tomorrowItems = useMemo(() => {
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
+    googleEvents.forEach(e => {
+      const parts = extractLocalDateParts(e.start);
+      if (!parts) return;
+      const dateKey = `${parts.year}-${String(parts.month + 1).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+      if (!dataMap.has(dateKey)) dataMap.set(dateKey, []);
+      dataMap.get(dateKey)!.push({
+        id: e.id,
+        name: e.title,
+        time: e.start.includes('T') ? format(new Date(e.start), "HH:mm") : undefined,
+        datetime: e.start,
+        type: 'google',
+        status: e.status
+      });
+    });
 
-    return [
-      ...googleEvents.filter((e) => isSameDay(new Date(e.start), tomorrow)).map(e => ({
-        ...e, type: 'google' as const, date: new Date(e.start), time: e.start
-      })),
-      ...notionTasks.filter((t) => {
-        if (!t.dueDate) return false;
-        return isSameDayLocal(t.dueDate, tomorrow);
-      }).map(t => {
-        const parts = extractLocalDateParts(t.dueDate!);
-        const localDate = parts ? new Date(parts.year, parts.month, parts.day, 12, 0, 0) : new Date();
-        return {
-          ...t,
-          type: 'notion' as const,
-          date: localDate,
-          time: t.dueDate?.includes('T') ? t.dueDate : undefined
-        };
-      })
-    ].sort((a, b) => a.date.getTime() - b.date.getTime());
+    notionTasks.forEach(t => {
+      if (!t.dueDate) return;
+      const parts = extractLocalDateParts(t.dueDate);
+      if (!parts) return;
+      const dateKey = `${parts.year}-${String(parts.month + 1).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+      if (!dataMap.has(dateKey)) dataMap.set(dateKey, []);
+      dataMap.get(dateKey)!.push({
+        id: t.id,
+        name: t.title,
+        time: t.dueDate.includes('T') ? format(new Date(t.dueDate), "HH:mm") : undefined,
+        datetime: t.dueDate,
+        type: 'notion',
+        status: t.status
+      });
+    });
+
+    return Array.from(dataMap.entries()).map(([dateStr, events]) => ({
+      day: new Date(dateStr + 'T12:00:00'),
+      events
+    })) as CalendarData[];
   }, [googleEvents, notionTasks]);
-
-
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in relative">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Calendário</h1>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Botão Google Calendar */}
-          {!googleConnected ? (
-            <button
-              onClick={handleConnectGoogle}
-              disabled={connectingGoogle}
-              className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm disabled:opacity-60 font-medium"
-            >
-              {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1.086 14.324l-3.456-3.456 1.414-1.414 2.042 2.042 4.292-4.292 1.414 1.414-5.706 5.706z"/>
-                </svg>
-              )}
-              Google Calendar
-            </button>
-          ) : (
-            <motion.div
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <button
-                onClick={fetchGoogleEvents}
-                disabled={loadingGoogle}
-                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
-              >
-                {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                Google
-              </button>
-            </motion.div>
-          )}
-
-          {/* Botão Notion */}
-          {!notionConnected ? (
-            <motion.div
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <button
-                onClick={handleConnectNotion}
-                disabled={connectingNotion}
-                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
-              >
-                {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
-                Conectar Notion
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <button
-                onClick={() => fetchNotionTasks()}
-                disabled={loadingNotion}
-                className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-6 h-11 !rounded-2xl transition-all duration-300 text-sm font-medium"
-              >
-                {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                Notion
-              </button>
-            </motion.div>
-          )}
-
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <button 
-               onClick={() => setIsCreateModalOpen(true)}
-               className="liquid-glass flex items-center gap-2 !bg-primary hover:!bg-primary/90 !text-white px-6 h-11 !rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(104,41,192,0.3)] text-sm whitespace-nowrap font-bold !border-primary/20"
-            >
-              <Plus className="w-4 h-4" />
-              Novo Evento
-            </button>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Calendário Principal */}
-        <Card className={`${CARD} xl:col-span-3 p-6`}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-semibold text-white">
-              {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
+    <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
+      <div className="min-h-[800px]">
+        <FullScreenCalendar 
+          data={calendarData}
+          rightActions={
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-white/60 hover:text-white"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setCurrentDate(new Date())}
-                className="px-3 py-1 text-sm hover:bg-white/5 rounded-lg transition-colors text-white/60 hover:text-white border border-white/10"
-              >
-                Hoje
-              </button>
-              <button
-                onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-white/60 hover:text-white"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {loadingGoogle && (
-            <div className="flex items-center justify-center py-4 gap-2 text-Porceli-gray-400 text-sm mb-4">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Sincronizando eventos...
-            </div>
-          )}
-
-          <div className="grid grid-cols-7 gap-px bg-white/5 rounded-xl overflow-hidden border border-white/5">
-            {DAYS_OF_WEEK.map((day) => (
-              <div key={day} className="bg-black/40 backdrop-blur-md p-4 text-center text-xs font-medium text-Porceli-gray-400 uppercase tracking-wider">
-                {day}
-              </div>
-            ))}
-            {days.map((day, idx) => {
-              const dayEvents = day ? getEventsForDay(day) : [];
-              const dayTasks = day ? getNotionTasksForDay(day) : [];
-              const isToday =
-                day === new Date().getDate() &&
-                currentDate.getMonth() === new Date().getMonth() &&
-                currentDate.getFullYear() === new Date().getFullYear();
-
-              const allItems = [
-                ...dayEvents.map(e => ({
-                  type: 'google' as const,
-                  id: e.id,
-                  title: e.title,
-                  time: !e.allDay ? e.start : undefined,
-                  end: e.end,
-                  isAllDay: e.allDay,
-                  color: getEventColor(e.colorId),
-                  url: e.htmlLink,
-                  status: e.status,
-                  isGoogleMeet: !!(e as any).hangoutLink || (e.description || '').includes('meet.google.com') || (e.title || '').toLowerCase().includes('chamada') || (e.title || '').toLowerCase().includes('reunião') || (e.title || '').toLowerCase().includes('call')
-                })),
-                ...dayTasks.map(t => ({
-                  type: 'notion' as const,
-                  id: t.id,
-                  title: t.title,
-                  time: t.dueDate?.includes('T') ? t.dueDate : undefined,
-                  isAllDay: !t.dueDate?.includes('T') || (!t.time && t.dueDate?.endsWith('00:00:00Z')),
-                  color: 'bg-white/10 text-white/90 border-white/20 hover:bg-white/20',
-                  url: t.url,
-                  status: t.status,
-                  isGoogleMeet: false
-                })),
-              ];
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => day && setSelectedDay(day)}
-                  className={`min-h-[120px] bg-black/20 p-2 transition-colors relative hover:bg-white/[0.04] ${day ? "cursor-pointer" : "opacity-20 cursor-default"} ${day && isDayLocked(day) ? 'ring-1 ring-inset ring-red-500/50' : ''}`}
+              {/* Botão Google Calendar */}
+              {!googleConnected ? (
+                <button
+                  onClick={handleConnectGoogle}
+                  disabled={connectingGoogle}
+                  className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs disabled:opacity-60 font-bold uppercase tracking-widest border border-white/5"
                 >
-                  {day && (
-                    <div className="flex flex-col h-full">
-                      <span className={`text-sm font-medium relative ${
-                        isToday
-                          ? "bg-primary text-white w-7 h-7 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(104,41,192,0.5)]"
-                          : "text-Porceli-gray-300 p-1"
-                      }`}>
-                        {day}
-                        {isDayLocked(day) && (
-                          <Lock className="w-2.5 h-2.5 text-red-500/70 absolute -top-1 -right-1" />
-                        )}
-                      </span>
-                      <div className="mt-2 space-y-1">
-                        {allItems.slice(0, 3).map((item) => (
-                          <div
-                            key={item.id}
-                            title={item.title}
-                            className={`text-[10px] p-1.5 rounded-lg border truncate cursor-pointer liquid-glass transition-all hover:brightness-125
-                              ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
-                                ? '!border-green-500/60 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                                : item.status === 'Em andamento'
-                                ? '!border-blue-500/50 !shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                                : (isOngoing(item) && item.isGoogleMeet)
-                                ? '!border-green-500/50 !text-green-300 !shadow-[0_0_10px_rgba(34,197,94,0.25)]'
-                                : isOngoing(item)
-                                ? '!border-green-500/50 !shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                                : 'border-white/10'}
-                              flex items-center gap-1.5`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingItem({
-                                id: item.id,
-                                type: item.type,
-                                title: item.title,
-                                time: item.time
-                              });
-                              setIsEditActivityModalOpen(true);
-                            }}
-                          >
-                            {item.type === 'notion' && (
-                              <BookOpen className="w-2.5 h-2.5 opacity-70 flex-shrink-0" />
-                            )}
-                            {item.time && (
-                              <span className="opacity-70 mr-0.5">{formatTime(item.time)}</span>
-                            )}
-                            <span className="truncate">{item.title}</span>
-                          </div>
-                        ))}
-                        {allItems.length > 3 && (
-                          <div className="text-[10px] text-Porceli-gray-400 pl-1 mt-1 font-medium">
-                            +{allItems.length - 3} mais
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                    <RefreshCw className="w-4 h-4" />
                   )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Atividades de Hoje */}
-          <Card className={`${CARD} p-5`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Atividades de Hoje</h3>
-            </div>
-
-            {loadingGoogle || loadingNotion ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-Porceli-gray-400" />
-              </div>
-            ) : todayItems.length === 0 ? (
-              <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhuma atividade hoje</p>
-            ) : (
-              <div className="space-y-3">
-                {todayItems.map((item) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => {
-                      setEditingItem({
-                        id: item.id,
-                        type: item.type,
-                        title: item.title,
-                        time: item.type === 'google' ? (item as any).start : (item as any).time,
-                        due_date: item.type === 'notion' ? (item as any).dueDate : undefined,
-                        status: (item as any).status
-                      });
-                      setIsEditActivityModalOpen(true);
-                    }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${
-                      item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
-                        ? '!border-green-500/60 !shadow-[0_0_15px_rgba(34,197,94,0.1)]'
-                        : item.status === 'Em andamento'
-                        ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-                        : isOngoing(item)
-                        ? '!border-green-500/50 !shadow-[0_0_15px_rgba(34,197,94,0.2)]'
-                        : 'border-white/[0.05]'
-                    }`}
+                  Google
+                </button>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button
+                    onClick={fetchGoogleEvents}
+                    disabled={loadingGoogle}
+                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
                   >
-                    <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
-                      {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {item.type === 'notion' && (item as any).clients && (item as any).clients.length > 0 && (
-                          <span className="text-[11px] text-white font-medium truncate">
-                            {(item as any).clients[0]}
-                          </span>
-                        )}
-                        <p className="text-xs text-Porceli-gray-400">
-                          {formatTime(item.time) || "Tarefa do dia"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                    {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Google
+                  </button>
+                </motion.div>
+              )}
 
-          {/* Atividades de Amanhã */}
-          <Card className={`${CARD} p-5`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Atividades de Amanhã</h3>
-            </div>
-
-            {loadingGoogle || loadingNotion ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-Porceli-gray-400" />
-              </div>
-            ) : tomorrowItems.length === 0 ? (
-              <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhuma atividade para amanhã</p>
-            ) : (
-              <div className="space-y-3">
-                {tomorrowItems.map((item) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => {
-                      setEditingItem({
-                        id: item.id,
-                        type: item.type,
-                        title: item.title,
-                        time: item.type === 'google' ? (item as any).start : (item as any).time,
-                        due_date: item.type === 'notion' ? (item as any).dueDate : undefined,
-                        status: (item as any).status
-                      });
-                      setIsEditActivityModalOpen(true);
-                    }}
-                    className={`liquid-glass dashboard-glow flex items-start gap-3 p-3 rounded-xl transition-all group relative overflow-hidden cursor-pointer hover:bg-white/10 ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/60 !shadow-[0_0_15px_rgba(34,197,94,0.1)]' : item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-white/[0.05]'}`}
+              {/* Botão Notion */}
+              {!notionConnected ? (
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button
+                    onClick={handleConnectNotion}
+                    disabled={connectingNotion}
+                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
                   >
-                    <div className={`p-2 rounded-lg ${item.type === 'google' ? (getEventColor((item as any).colorId).split(" ")[0]) : 'bg-white/10'}`}>
-                      {item.type === 'google' ? <CalendarIcon className="w-4 h-4 text-white/70" /> : <BookOpen className="w-4 h-4 text-white/70" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-Porceli-gray-400">
-                          {formatTime(item.time) || "Tarefa do dia"}
-                        </p>
-                        {item.type === 'notion' && (item as any).clients && (item as any).clients.length > 0 && (
-                          <span className="text-[10px] text-primary font-bold truncate">
-                            • {(item as any).clients[0]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+                    {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Notion
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button
+                    onClick={() => fetchNotionTasks()}
+                    disabled={loadingNotion}
+                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
+                  >
+                    {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Notion
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          }
+          onAddEvent={(day) => {
+            setNewEventDate(format(day, "yyyy-MM-dd"));
+            setIsCreateModalOpen(true);
+          }}
+          onEventClick={(event) => {
+            // Find the original item to populate the edit modal
+            const googleItem = googleEvents.find(i => i.id === event.id);
+            const notionItem = notionTasks.find(i => i.id === event.id);
+            
+            if (googleItem) {
+              setEditingItem({...googleItem, type: 'google' as const});
+              setEditTitle(googleItem.title);
+              setEditDate(new Date(googleItem.start));
+              setEditTime(googleItem.start.includes('T') ? format(new Date(googleItem.start), "HH:mm") : "12:00");
+              setIsEditActivityModalOpen(true);
+            } else if (notionItem) {
+              setEditingItem({...notionItem, type: 'notion' as const});
+              setEditTitle(notionItem.title);
+              const dateStr = notionItem.dueDate!;
+              setEditDate(new Date(dateStr));
+              setEditTime(dateStr.includes('T') ? format(new Date(dateStr), "HH:mm") : "12:00");
+              setIsEditActivityModalOpen(true);
+            }
+          }}
+          onDateChange={(date) => setCurrentDate(date)}
+        />
       </div>
+
+
+
+
 
       {/* Modal do Dia Selecionado */}
       <Dialog open={selectedDay !== null} onOpenChange={(open) => !open && setSelectedDay(null)}>

@@ -13,7 +13,6 @@ export function ConversationsHeader({ onNewConversation, children }: Conversatio
     <div className="bg-transparent w-full space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Atendimentos</h1>
           </div>
 
           <motion.div

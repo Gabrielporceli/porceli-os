@@ -460,13 +460,12 @@ export default function LeadsKanban() {
   return (
     <div className="relative">
       <div
-        className="fixed inset-x-0 top-0 z-30 backdrop-blur-3xl bg-[#121212]/50 border-b border-white/[0.08] shadow-2xl"
+        className="backdrop-blur-3xl bg-[#121212]/50 border border-white/[0.08] shadow-2xl rounded-3xl mb-8"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
         <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-6 pb-4 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
               <div className="space-y-1">
-                <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline</h1>
               </div>
 
               <div className="flex flex-row items-center gap-3">
@@ -564,7 +563,7 @@ export default function LeadsKanban() {
         </div>
       </div>
 
-      <div className="pt-44 pb-6">
+      <div className="pb-6">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}

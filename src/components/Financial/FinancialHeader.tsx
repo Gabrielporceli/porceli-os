@@ -12,7 +12,6 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Financeiro</h1>
       </div>
       <div className="flex gap-3">
         {onSync && (
