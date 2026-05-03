@@ -2,6 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatedValue } from "@/components/ui/AnimatedValue";
 
 interface StatsCardProps {
   title: string;
@@ -21,7 +22,9 @@ export function StatsCard({ title, value, icon: Icon, trend, description, classN
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{title}</p>
-          <p className="text-3xl font-black text-white tabular-nums tracking-tighter">{value}</p>
+          <p className="text-3xl font-black text-white tabular-nums tracking-tighter">
+            <AnimatedValue value={String(value)} />
+          </p>
           {description && (
             <p className="text-white/30 text-[10px] mt-1 leading-relaxed font-medium">{description}</p>
           )}

@@ -24,6 +24,7 @@ import {
 
 import { RevenueYoYChart, calculateRevenueKPIs } from "@/components/Dashboard/RevenueYoYChart";
 import { MiniSparklineCard } from "@/components/Dashboard/MiniSparklineCard";
+import { AnimatedValue } from "@/components/ui/AnimatedValue";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
@@ -633,29 +634,29 @@ export default function Dashboard() {
       <div className={`grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4`}>
         <Card className="liquid-glass p-5">
           <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Total {revenueKPIs.currentYear}</p>
-          <p className="text-2xl font-bold text-white tracking-tight">{formatCurrency(revenueKPIs.totalCurrent)}</p>
+          <p className="text-2xl font-bold text-white tracking-tight">
+            <AnimatedValue value={formatCurrency(revenueKPIs.totalCurrent)} />
+          </p>
         </Card>
 
         <Card className="liquid-glass p-5">
           <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Recebido {revenueKPIs.currentYear}</p>
           <p className="text-2xl font-bold text-white tracking-tight">
-            {formatCurrency(revenueKPIs.totalPaidCurrentYear)}
+            <AnimatedValue value={formatCurrency(revenueKPIs.totalPaidCurrentYear)} />
           </p>
         </Card>
 
         <Card className="liquid-glass p-5">
           <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">A Receber {revenueKPIs.currentYear}</p>
           <p className="text-2xl font-bold text-white tracking-tight">
-            {formatCurrency(revenueKPIs.totalPendingNotOverdueCurrentYear)}
+            <AnimatedValue value={formatCurrency(revenueKPIs.totalPendingNotOverdueCurrentYear)} />
           </p>
         </Card>
 
         <Card className="liquid-glass p-5">
           <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Crescimento YoY</p>
           <p className="text-2xl font-bold text-white tracking-tight">
-            {revenueKPIs.yoyPct === null
-              ? "—"
-              : `${revenueKPIs.yoyPct > 0 ? "+" : ""}${revenueKPIs.yoyPct}%`}
+            <AnimatedValue value={revenueKPIs.yoyPct === null ? "—" : `${revenueKPIs.yoyPct > 0 ? "+" : ""}${revenueKPIs.yoyPct}%`} />
           </p>
         </Card>
 
@@ -667,9 +668,7 @@ export default function Dashboard() {
               ? "text-green-400"
               : "text-red-400"
             }`}>
-            {variacaoMesAnoPassado === null
-              ? "—"
-              : `${variacaoMesAnoPassado >= 0 ? "+" : ""}${variacaoMesAnoPassado.toFixed(1)}%`}
+            <AnimatedValue value={variacaoMesAnoPassado === null ? "—" : `${variacaoMesAnoPassado >= 0 ? "+" : ""}${variacaoMesAnoPassado.toFixed(1)}%`} />
           </p>
         </Card>
       </div>
@@ -763,6 +762,9 @@ export default function Dashboard() {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorFunnel)"
+                    animationBegin={0}
+                    animationDuration={1400}
+                    animationEasing="ease-out"
                   />
                 </AreaChart>
               </ResponsiveContainer>

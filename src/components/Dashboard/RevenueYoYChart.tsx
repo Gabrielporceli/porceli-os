@@ -317,9 +317,10 @@ export function RevenueYoYChart({
                 fill={`url(#fill-${y})`}
                 fillOpacity={0.4}
                 stroke={chartConfig[String(y)].color}
-                stackId={i === yearsToShow.length - 1 ? undefined : "a"} // Last year is primary, others stacked? 
-                // Actually user example stacked them. I'll stack them all for consistent look.
                 dot={false}
+                animationBegin={i * 150}
+                animationDuration={1400}
+                animationEasing="ease-out"
                 activeDot={{
                   r: 4,
                   fill: chartConfig[String(y)].color,
