@@ -1,10 +1,8 @@
 'use client';
 
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 import { AnimatedValue } from '@/components/ui/AnimatedValue';
 
 type MiniSparklineCardProps = {
@@ -22,7 +20,6 @@ export function MiniSparklineCard({
   title,
   value,
   description,
-  change,
   data,
   trend = 'up',
   color = '#22c55e',
@@ -30,6 +27,7 @@ export function MiniSparklineCard({
 }: MiniSparklineCardProps) {
   const isPositive = trend === 'up';
   const displayColor = color || (isPositive ? '#22c55e' : '#ef4444');
+  const gradientId = `gradient-${title.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
   return (
     <Card className={cn("liquid-glass border-white/[0.05] overflow-hidden flex flex-col p-0", className)}>
@@ -47,7 +45,7 @@ export function MiniSparklineCard({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
             <defs>
-              <linearGradient id={`gradient-${title.replace(/[^a-zA-Z0-9]/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={displayColor} stopOpacity={0.3} />
                 <stop offset="100%" stopColor={displayColor} stopOpacity={0} />
               </linearGradient>
@@ -58,11 +56,11 @@ export function MiniSparklineCard({
               dataKey="value"
               stroke={displayColor}
               strokeWidth={2}
-              fill={`url(#gradient-${title.replace(/[^a-zA-Z0-9]/g, '-')})`}
+              fill={`url(#${gradientId})`}
               isAnimationActive={true}
               animationBegin={0}
               animationDuration={1400}
-              animationEasing="ease-out"
+              animationEasing="ease-in-out"
             />
           </AreaChart>
         </ResponsiveContainer>

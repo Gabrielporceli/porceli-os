@@ -8,7 +8,9 @@
       "Bash(grep -h -A 6 \"cron.schedule\\(\" /c/Users/gabri/.gemini/antigravity/scratch/lead-goat-flow/supabase/migrations/*.sql)",
       "Bash(wait)",
       "Bash(npx tsc:*)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__get_publishable_keys"
     ]
   }
 }

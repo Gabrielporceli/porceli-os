@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,9 @@ export default function Contracts() {
   const updateContractMutation = useUpdateContract();
   const renewContractMutation = useRenewContract();
   const updateClientMutation = useUpdateClient();
+
+  const isReady = usePageReady(isLoading);
+  if (!isReady) return <PageLoader />;
   const queryClient = useQueryClient();
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);

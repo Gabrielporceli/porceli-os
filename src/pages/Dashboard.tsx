@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { DollarSign, Users, TrendingUp, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Component as EtherealShadow } from "@/components/ui/etheral-shadow";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 
 import { useClients } from "@/hooks/useClients";
 import { useContracts } from "@/hooks/useContracts";
@@ -34,6 +36,9 @@ export default function Dashboard() {
   const { leads = [] } = useLeads();
   const { financialEntries = [] } = useFinancialEntries();
   const { expenses = [] } = useExpenses();
+
+  const isReady = usePageReady();
+  if (!isReady) return <PageLoader />;
 
   // ===== Helpers =====
   const parseLocalDate = (dateString: string) => {
@@ -762,9 +767,9 @@ export default function Dashboard() {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorFunnel)"
-                    animationBegin={0}
-                    animationDuration={1400}
-                    animationEasing="ease-out"
+                    animationBegin={200}
+                    animationDuration={2000}
+                    animationEasing="ease-in-out"
                   />
                 </AreaChart>
               </ResponsiveContainer>

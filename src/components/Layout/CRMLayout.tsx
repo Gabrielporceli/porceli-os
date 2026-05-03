@@ -1,11 +1,17 @@
+import { useEffect } from "react";
 import { Header } from "./Header";
-
+import { supabase } from "@/integrations/supabase/client";
 
 interface CRMLayoutProps {
   children: React.ReactNode;
 }
 
 export function CRMLayout({ children }: CRMLayoutProps) {
+  useEffect(() => {
+    // Estabelece a conexão com o Supabase assim que o layout carrega,
+    // antes dos dados do Dashboard serem requisitados.
+    supabase.from("clients").select("id").limit(1);
+  }, []);
   return (
     <div className="min-h-screen bg-porceli-dark relative overflow-hidden">
       {/* Background image */}

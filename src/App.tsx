@@ -20,7 +20,16 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
 import { PlansProvider } from "./contexts/PlansContext"
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,      // 5 min: dados não são re-buscados em retornos rápidos
+      gcTime: 1000 * 60 * 10,        // 10 min: mantém em memória mesmo sem componentes ativos
+      refetchOnWindowFocus: false,   // não rebusca ao voltar para a aba
+      retry: 1,
+    },
+  },
+})
 
 function App() {
   return (

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -87,6 +89,8 @@ export default function LeadsKanban() {
     updateStage,
     deleteStage,
   } = useStages();
+
+  const isReady = usePageReady(leadsLoading || tagsLoading || stagesLoading);
 
   // ===== Modais / Seleções =====
   const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
@@ -449,13 +453,7 @@ export default function LeadsKanban() {
     }
   };
 
-  if (leadsLoading || tagsLoading || stagesLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-white">Carregando...</div>
-      </div>
-    );
-  }
+  if (!isReady) return <PageLoader />;
 
   return (
     <div className="relative">

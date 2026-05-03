@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -295,6 +297,9 @@ function AutomationRow({
 export default function Automations() {
   const { data: automations = [], isLoading } = useAutomations();
   const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null);
+
+  const isReady = usePageReady(isLoading);
+  if (!isReady) return <PageLoader />;
 
   const grouped = automations.reduce<Record<string, Automation[]>>((acc, a) => {
     if (!acc[a.category]) acc[a.category] = [];

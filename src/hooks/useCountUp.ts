@@ -16,8 +16,10 @@ export function useCountUp(target: number, duration = 1400): number {
       if (startTime === null) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // ease-out expo: fast start, smooth landing
-      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      // ease-in-out cubic: ramp suave na entrada e na saída
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
       setCurrent(target * eased);
 
       if (progress < 1) {

@@ -318,9 +318,9 @@ export function RevenueYoYChart({
                 fillOpacity={0.4}
                 stroke={chartConfig[String(y)].color}
                 dot={false}
-                animationBegin={i * 150}
-                animationDuration={1400}
-                animationEasing="ease-out"
+                animationBegin={i * 200}
+                animationDuration={2000}
+                animationEasing="ease-in-out"
                 activeDot={{
                   r: 4,
                   fill: chartConfig[String(y)].color,

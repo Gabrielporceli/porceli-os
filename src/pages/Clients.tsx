@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "@/hooks/useClients";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { NewClientModal } from "@/components/Clients/NewClientModal";
 import { EditClientModal } from "@/components/Clients/EditClientModal";
 import { ClientFilters } from "@/components/Clients/ClientFilters";
@@ -53,6 +55,9 @@ export default function Clients() {
   const createClientMutation = useCreateClient();
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
+
+  const isReady = usePageReady(isLoading);
+  if (!isReady) return <PageLoader />;
   const queryClient = useQueryClient();
 
   const [expandedClients, setExpandedClients] = useState<string[]>([]);

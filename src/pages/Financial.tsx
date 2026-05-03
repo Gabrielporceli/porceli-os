@@ -12,6 +12,8 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { useFinancialEntries } from "@/hooks/useFinancialEntries";
 import { DeleteExpenseDialog } from "@/components/Financial/DeleteExpenseDialog";
 import { useState, useMemo, useEffect } from "react";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -20,6 +22,9 @@ export default function Financial() {
   const { data: contracts = [], refetch } = useContracts();
   const { expenses, createExpense, payExpense, deleteExpense, isLoading: expensesLoading, isPaying, isDeleting } = useExpenses();
   const { financialEntries, financialEntriesLoading, markAsPaid, isMarkingAsPaid, generateMissingEntries, isGeneratingEntries } = useFinancialEntries();
+
+  const isReady = usePageReady(expensesLoading || financialEntriesLoading);
+  if (!isReady) return <PageLoader />;
 
   // Calculate monthly revenue from active contracts
   const monthlyRevenue = contracts

@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { usePageReady } from "@/hooks/usePageReady";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
 import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
@@ -124,6 +126,8 @@ const MONTHS = [
 const DAYS_OF_WEEK = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 
 export default function Calendar() {
+  const isReady = usePageReady();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [googleEvents, setGoogleEvents] = useState<GoogleEvent[]>([]);
   const [notionTasks, setNotionTasks] = useState<NotionTask[]>([]);
@@ -913,6 +917,8 @@ export default function Calendar() {
       count: Math.min(count, 4) // Limitar a 4 para a escala de cores do componente
     }));
   }, [googleEvents, notionTasks]);
+
+  if (!isReady) return <PageLoader />;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
