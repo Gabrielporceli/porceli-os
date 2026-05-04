@@ -56,8 +56,6 @@ export default function Clients() {
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
 
-  const isReady = usePageReady(isLoading);
-  if (!isReady) return <PageLoader />;
   const queryClient = useQueryClient();
 
   const [expandedClients, setExpandedClients] = useState<string[]>([]);
@@ -74,6 +72,9 @@ export default function Clients() {
   });
 
   const [planColors, setPlanColors] = useState<Record<string, string>>({});
+
+  const isReady = usePageReady(isLoading);
+  if (!isReady) return <PageLoader />;
 
   const toggleClientExpanded = (clientId: string) => {
     setExpandedClients((prev) =>

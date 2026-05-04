@@ -9,7 +9,7 @@ const menuItems = [
   { title: "Funil", url: "/leads", icon: Filter },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
-  { title: "Conversas", url: "/conversations", icon: MessageSquare },
+
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Automações", url: "/automations", icon: Zap },
 ];

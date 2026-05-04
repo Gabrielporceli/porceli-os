@@ -22,6 +22,8 @@ import {
   PlusCircleIcon,
   SearchIcon,
   Calendar as CalendarIcon,
+  LockIcon,
+  LockOpenIcon,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -49,7 +51,10 @@ interface FullScreenCalendarProps {
   data: CalendarData[]
   onAddEvent?: (day: Date) => void
   onEventClick?: (event: CalendarEvent) => void
+  onDaySelect?: (day: Date) => void
   onDateChange?: (date: Date) => void
+  onToggleLock?: (day: Date) => void
+  isDayLocked?: (day: Date) => boolean
   leftActions?: React.ReactNode
   rightActions?: React.ReactNode
 }
@@ -64,7 +69,7 @@ const colStartClasses = [
   "col-start-7",
 ]
 
-export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChange, leftActions, rightActions }: FullScreenCalendarProps) {
+export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect, onDateChange, onToggleLock, isDayLocked, leftActions, rightActions }: FullScreenCalendarProps) {
   const today = startOfToday()
   const [selectedDay, setSelectedDay] = React.useState(today)
   const [currentMonth, setCurrentMonth] = React.useState(
@@ -165,7 +170,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
               {days.map((day, dayIdx) => (
                 <div
                   key={day.toISOString()}
-                  onClick={() => setSelectedDay(day)}
+                  onClick={() => { setSelectedDay(day); onDaySelect?.(day); }}
                   className={cn(
                     !isSameMonth(day, firstDayCurrentMonth) && "opacity-20 pointer-events-none",
                     "relative flex flex-col border-b border-r border-white/[0.03] hover:bg-white/[0.02] focus:z-10 transition-colors group",
@@ -187,15 +192,39 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
                         {format(day, "d")}
                       </time>
                     </button>
+                    {/* Cadeado sempre visível quando trancado; controles só quando selecionado */}
+                    {isDayLocked?.(day) && !isEqual(day, selectedDay) && (
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-red-500/20 border border-red-500/40 text-red-400">
+                        <LockIcon size={10} />
+                      </div>
+                    )}
                     {isEqual(day, selectedDay) && (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all border border-white/5"
-                        onClick={(e) => { e.stopPropagation(); onAddEvent?.(day); }}
-                      >
-                        <PlusCircleIcon size={12} />
-                      </motion.button>
+                      <div className="flex items-center gap-1">
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          title={isDayLocked?.(day) ? "Destrancar dia" : "Trancar dia"}
+                          className={cn(
+                            "w-6 h-6 rounded-lg flex items-center justify-center transition-all border",
+                            isDayLocked?.(day)
+                              ? "bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30"
+                              : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-white"
+                          )}
+                          onClick={(e) => { e.stopPropagation(); onToggleLock?.(day); }}
+                        >
+                          {isDayLocked?.(day) ? <LockIcon size={10} /> : <LockOpenIcon size={10} />}
+                        </motion.button>
+                        {!isDayLocked?.(day) && (
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all border border-white/5"
+                            onClick={(e) => { e.stopPropagation(); onAddEvent?.(day); }}
+                          >
+                            <PlusCircleIcon size={12} />
+                          </motion.button>
+                        )}
+                      </div>
                     )}
                   </header>
                   

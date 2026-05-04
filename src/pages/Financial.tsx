@@ -23,6 +23,33 @@ export default function Financial() {
   const { expenses, createExpense, payExpense, deleteExpense, isLoading: expensesLoading, isPaying, isDeleting } = useExpenses();
   const { financialEntries, financialEntriesLoading, markAsPaid, isMarkingAsPaid, generateMissingEntries, isGeneratingEntries } = useFinancialEntries();
 
+  // Add state for the delete confirmation modal
+  const [deleteExpenseDialog, setDeleteExpenseDialog] = useState<{
+    open: boolean;
+    expenseId: string;
+    expenseDescription: string;
+  }>({
+    open: false,
+    expenseId: "",
+    expenseDescription: ""
+  });
+
+  // Filtros de status
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('currentMonth');
+
+  // Filtro de despesas
+  const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
+
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+
+  useEffect(() => {
+    const onFocus = () => {
+      refetch();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refetch]);
+
   const isReady = usePageReady(expensesLoading || financialEntriesLoading);
   if (!isReady) return <PageLoader />;
 
@@ -170,16 +197,7 @@ export default function Financial() {
     payExpense(expenseId);
   };
 
-  // Add state for the delete confirmation modal
-  const [deleteExpenseDialog, setDeleteExpenseDialog] = useState<{
-    open: boolean;
-    expenseId: string;
-    expenseDescription: string;
-  }>({
-    open: false,
-    expenseId: "",
-    expenseDescription: ""
-  });
+
 
   const handleDeleteExpense = (expenseId: string, expenseDescription: string) => {
     setDeleteExpenseDialog({
@@ -199,11 +217,7 @@ export default function Financial() {
     });
   };
 
-  // Filtros de status
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('currentMonth');
 
-  // Filtro de despesas
-  const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
 
   // Filtrar lançamentos financeiros conforme status
   const now = new Date();
@@ -256,15 +270,7 @@ export default function Financial() {
 
   const lucroMes = receitasMes - despesasMes;
 
-  useEffect(() => {
-    const onFocus = () => {
-      refetch();
-    };
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [refetch]);
 
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">

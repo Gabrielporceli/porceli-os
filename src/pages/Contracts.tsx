@@ -36,14 +36,15 @@ export default function Contracts() {
   const renewContractMutation = useRenewContract();
   const updateClientMutation = useUpdateClient();
 
-  const isReady = usePageReady(isLoading);
-  if (!isReady) return <PageLoader />;
   const queryClient = useQueryClient();
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const createContractMutation = useCreateContract();
+
+  const isReady = usePageReady(isLoading);
+  if (!isReady) return <PageLoader />;
 
   // Transform Supabase contracts to component format
   const contracts: Contract[] = contractsData.map(contract => ({

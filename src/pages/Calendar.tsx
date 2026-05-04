@@ -33,6 +33,8 @@ import {
   CheckCircle,
   Save,
   Lock,
+  LockIcon,
+  LockOpenIcon,
   Unlock,
   Repeat,
   Tag
@@ -897,25 +899,21 @@ export default function Calendar() {
   }, [googleEvents, notionTasks]);
   const contributionData = useMemo(() => {
     const counts: Record<string, number> = {};
-    
-    // Processar Google Events
+
+    // Google Calendar — pega só a parte da data (antes do T) para evitar timezone shift
     googleEvents.forEach(event => {
-      const dateStr = format(new Date(event.start), "yyyy-MM-dd");
-      counts[dateStr] = (counts[dateStr] || 0) + 1;
+      const datePart = event.start?.split('T')[0];
+      if (datePart) counts[datePart] = (counts[datePart] || 0) + 1;
     });
-    
-    // Processar Notion Tasks
+
+    // Notion tasks — mesma abordagem
     notionTasks.forEach(task => {
-      if (task.dueDate) {
-        const dateStr = format(new Date(task.dueDate), "yyyy-MM-dd");
-        counts[dateStr] = (counts[dateStr] || 0) + 1;
-      }
+      if (!task.dueDate) return;
+      const datePart = task.dueDate.split('T')[0];
+      if (datePart) counts[datePart] = (counts[datePart] || 0) + 1;
     });
-    
-    return Object.entries(counts).map(([date, count]) => ({
-      date,
-      count: Math.min(count, 4) // Limitar a 4 para a escala de cores do componente
-    }));
+
+    return Object.entries(counts).map(([date, count]) => ({ date, count }));
   }, [googleEvents, notionTasks]);
 
   if (!isReady) return <PageLoader />;
@@ -925,8 +923,11 @@ export default function Calendar() {
       <GitHubCalendar data={contributionData} />
 
       <div className="min-h-[740px] overflow-hidden rounded-3xl">
-        <FullScreenCalendar 
+        <FullScreenCalendar
           data={calendarData}
+          onDaySelect={(date: Date) => setSelectedDay(date.getDate())}
+          onToggleLock={(date: Date) => toggleLockDay(date.getDate())}
+          isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
             <div className="flex items-center gap-2">
               {/* Botão Google Calendar */}
@@ -1023,17 +1024,22 @@ export default function Calendar() {
 
       {/* Modal do Dia Selecionado */}
       <Dialog open={selectedDay !== null} onOpenChange={(open) => !open && setSelectedDay(null)}>
-        <DialogContent className="sm:max-w-[500px] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-transparent flex flex-col">
-          <div className="p-6 border-b border-white/[0.05] shrink-0">
+        <DialogContent className="sm:max-w-[820px] max-h-[85vh] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#0e0e0e]/95 backdrop-blur-xl flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="p-5 border-b border-white/[0.05] shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold tracking-tight">
+              <DialogTitle className="text-xl font-bold tracking-tight">
                 {selectedDay} de {MONTHS[currentDate.getMonth()]}
               </DialogTitle>
             </DialogHeader>
           </div>
-          
-          <div className="overflow-y-auto max-h-[45vh] custom-scrollbar p-6">
-            <div className="space-y-3 pr-2">
+
+          {/* Body — 2 colunas */}
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+
+            {/* Esquerda: lista de atividades */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 border-r border-white/[0.05]">
+            <div className="space-y-3">
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
               const dayTasks = getNotionTasksForDay(selectedDay);
@@ -1171,114 +1177,95 @@ export default function Calendar() {
               ));
             })()}
             </div>
-          </div>
-          
-          <div className="p-6 pt-0 shrink-0">
-            {/* Formulário de novo evento dentro do modal */}
-            <div className="pt-4 border-t border-white/10 space-y-3">
-              <div className="flex items-center justify-between mb-4 px-1">
-                <h4 className="text-sm font-medium text-white/80">
-                  {createMeetLink ? "Adicionar Evento no Google Calendar" : "Adicionar Tarefa no Notion"}
-                </h4>
+            </div>
+
+            {/* Direita: formulário + trancar dia */}
+            <div className="w-[300px] shrink-0 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-4">
+
+              {/* Trancar dia */}
+              <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Trancar Dia</span>
-                  <Switch 
-                    checked={selectedDay ? isDayLocked(selectedDay) : false}
-                    onCheckedChange={() => selectedDay && toggleLockDay(selectedDay)}
-                    className="scale-75"
-                  />
-                </div>
-              </div>
-              
-              <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
-                {selectedDay && isDayLocked(selectedDay) && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[1px] rounded-xl">
-                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20 shadow-2xl">Dia Trancado</p>
-                  </div>
-                )}
-                <div className="flex flex-col sm:flex-row gap-2 w-full">
-                  <input 
-                    type="text" 
-                    placeholder="Título da atividade" 
-                    className="flex-1 bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl px-3 transition-all outline-none"
-                    value={newEventTitle}
-                    onChange={(e) => setNewEventTitle(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
-                  />
-                  <div className="w-full sm:w-40">
-                    <TimePicker
-                      value={newEventTime}
-                      onChange={(time) => setNewEventTime(time)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 w-full">
-                  <input 
-                    type="text" 
-                    placeholder="Cliente (opcional)" 
-                    className="flex-1 bg-white/[0.03] border border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl px-3 transition-all outline-none"
-                    value={newEventClient}
-                    onChange={(e) => setNewEventClient(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
-                  />
-                  <motion.div
-                    whileHover={!creatingEvent && newEventTitle.trim() ? { scale: 1.05, translateY: -2 } : {}}
-                    whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.95 } : {}}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className="shrink-0"
-                  >
-                    <button 
-                      disabled={creatingEvent || !newEventTitle.trim()}
-                      onClick={() => handleCreateActivity(false)}
-                      className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-2xl px-6 h-11 text-xs font-bold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all flex items-center justify-center w-full uppercase tracking-wider"
-                    >
-                      {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
-                    </button>
-                  </motion.div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 p-3.5 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
-                <Select
-                  value={recurrenceType || "none"}
-                  onValueChange={(val) => {
-                    const type = val === "none" ? "" : val;
-                    setRecurrenceType(type as any);
-                  }}
-                >
-                  <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-10">
-                    <SelectValue placeholder="Selecione a recorrência" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
-                    <SelectItem value="none">Nunca</SelectItem>
-                    <SelectItem value="weekly">Semanal</SelectItem>
-                    <SelectItem value="biweekly">Quinzenal</SelectItem>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2 mb-2">
-                <div className="space-y-0.5">
-                  <Label className="text-white font-medium text-sm cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
-                  <p className="text-white/40 text-[11px] text-balance">
-                    {createMeetLink ? "Gerar evento com Meet." : "Salvar como tarefa no Notion."}
-                  </p>
+                  {selectedDay && isDayLocked(selectedDay)
+                    ? <LockIcon className="w-4 h-4 text-red-400" />
+                    : <LockOpenIcon className="w-4 h-4 text-white/30" />}
+                  <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/40'}`}>
+                    {selectedDay && isDayLocked(selectedDay) ? 'Dia Trancado' : 'Trancar Dia'}
+                  </span>
                 </div>
                 <Switch
-                  checked={createMeetLink}
-                  onCheckedChange={(checked) => setCreateMeetLink(checked)}
+                  checked={selectedDay ? isDayLocked(selectedDay) : false}
+                  onCheckedChange={() => selectedDay && toggleLockDay(selectedDay)}
+                  className="scale-75"
                 />
               </div>
+
+              {/* Formulário */}
+              <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em]">
+                  {createMeetLink ? "Novo evento no Google" : "Nova tarefa no Notion"}
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="Título da atividade"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
+                />
+
+                <TimePicker value={newEventTime} onChange={(time) => setNewEventTime(time)} />
+
+                <input
+                  type="text"
+                  placeholder="Cliente (opcional)"
+                  className="w-full bg-white/[0.03] border border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  value={newEventClient}
+                  onChange={(e) => setNewEventClient(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
+                />
+
+                <div className="space-y-1.5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrência</label>
+                  <Select value={recurrenceType || "none"} onValueChange={(val) => setRecurrenceType(val === "none" ? "" as any : val as any)}>
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                      <SelectItem value="none">Nunca</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="biweekly">Quinzenal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <div>
+                    <Label className="text-white font-medium text-sm cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
+                    <p className="text-white/40 text-[11px]">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
+                  </div>
+                  <Switch checked={createMeetLink} onCheckedChange={setCreateMeetLink} />
+                </div>
+
+                <motion.button
+                  whileHover={!creatingEvent && newEventTitle.trim() ? { scale: 1.02 } : {}}
+                  whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.97 } : {}}
+                  disabled={creatingEvent || !newEventTitle.trim()}
+                  onClick={() => handleCreateActivity(false)}
+                  className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl h-10 text-xs font-bold transition-all flex items-center justify-center uppercase tracking-wider"
+                >
+                  {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
+                </motion.button>
+              </div>
             </div>
-          </div>
+
+          </div>{/* fim body */}
         </DialogContent>
       </Dialog>
 
       <Dialog open={isCreateModalOpen} onOpenChange={(open) => !open && setIsCreateModalOpen(false)}>
-        <DialogContent className="sm:max-w-[450px] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#121212] backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#121212] backdrop-blur-2xl">
           <DialogHeader className="p-6 border-b border-white/[0.05]">
             <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
                <Plus className="w-5 h-5 text-primary" />
@@ -1288,39 +1275,38 @@ export default function Calendar() {
               Preencha os detalhes da nova atividade
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="p-6 space-y-4">
-            <div className="space-y-1.5">
+          <div className="p-5 space-y-3">
+            <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 placeholder="Ex: Reunião com Cliente"
                 value={newEventTitle}
                 onChange={(e) => setNewEventTitle(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-12 rounded-2xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Cliente</label>
               <input 
                 type="text"
                 placeholder="Nome do cliente"
                 value={newEventClient}
                 onChange={(e) => setNewEventClient(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-12 rounded-2xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={newEventDate ? new Date(newEventDate + 'T12:00:00') : undefined}
                   setDate={(date) => setNewEventDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={newEventTime}
@@ -1329,7 +1315,7 @@ export default function Calendar() {
               </div>
             </div>
 
-            <div className="space-y-1.5 p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
+            <div className="space-y-1 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
                <Select
                  value={recurrenceType || "none"}
@@ -1338,7 +1324,7 @@ export default function Calendar() {
                    setRecurrenceType(type as any);
                  }}
                >
-                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-10">
+                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9">
                    <SelectValue placeholder="Selecione a recorrência" />
                  </SelectTrigger>
                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1350,7 +1336,7 @@ export default function Calendar() {
                </Select>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-2">
+            <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
               <div className="space-y-0.5">
                 <Label className="text-white font-medium cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
                 <p className="text-white/40 text-xs text-balance">
@@ -1363,7 +1349,7 @@ export default function Calendar() {
               />
             </div>
 
-            <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
+            <div className="flex gap-3 pt-4 mt-4 border-t border-white/[0.05]">
               <motion.div 
                 className="flex-1" 
                 whileHover={{ scale: 1.05, translateY: -2 }} 
@@ -1372,7 +1358,7 @@ export default function Calendar() {
               >
                 <Button
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
                 >
                   Cancelar
                 </Button>
@@ -1386,7 +1372,7 @@ export default function Calendar() {
                 <Button
                   disabled={creatingEvent || !newEventTitle.trim() || !newEventDate || (createMeetLink && !newEventTime)}
                   onClick={() => handleCreateActivity(true)}
-                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2"
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2"
                 >
                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                      <>
@@ -1415,26 +1401,26 @@ export default function Calendar() {
             </DialogHeader>
           </div>
           
-          <div className="p-6 space-y-4">
-            <div className="space-y-1.5">
+          <div className="p-5 space-y-3">
+            <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-12 rounded-2xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={editDate}
                   setDate={setEditDate}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={editTime}
@@ -1444,7 +1430,7 @@ export default function Calendar() {
             </div>
 
             {(editingItem?.type === 'notion' || editingItem?.type === 'crm') && (
-               <div className="space-y-3 pt-1">
+               <div className="space-y-2 pt-1">
                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status da Atividade</label>
                  <div className="grid grid-cols-2 gap-3 w-full">
                    <motion.div
@@ -1462,7 +1448,7 @@ export default function Calendar() {
                          }
                          setIsEditActivityModalOpen(false);
                        }}
-                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-10 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
                      >
                        <CheckCircle className="w-4 h-4 text-white/40 group-hover:text-green-500 transition-colors" />
                        <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Realizado</span>
@@ -1484,7 +1470,7 @@ export default function Calendar() {
                          }
                          setIsEditActivityModalOpen(false);
                        }}
-                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-12 sm:h-14 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-10 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
                      >
                        <Clock className="w-4 h-4 text-white/40 group-hover:text-blue-500 transition-colors" />
                        <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Andamento</span>
@@ -1494,7 +1480,7 @@ export default function Calendar() {
                </div>
             )}
 
-            <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
+            <div className="flex gap-3 pt-4 mt-4 border-t border-white/[0.05]">
               <motion.div 
                 className="flex-1" 
                 whileHover={{ scale: 1.05, translateY: -2 }} 
@@ -1503,7 +1489,7 @@ export default function Calendar() {
               >
                 <Button
                   onClick={() => setIsEditActivityModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
                 >
                   Cancelar
                 </Button>
@@ -1514,7 +1500,7 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2">
+                <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2">
                   <Save className="w-4 h-4" />
                   Salvar
                 </Button>

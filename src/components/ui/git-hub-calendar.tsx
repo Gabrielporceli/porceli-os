@@ -34,17 +34,24 @@ const GitHubCalendar = ({
   const weeks = differenceInWeeks(endDate, startOfWeek(startDate, { weekStartsOn: 0 })) + 1;
 
   useEffect(() => {
-    setContributions(data.map((item) => ({ 
-      ...item, 
-      date: typeof item.date === 'string' ? new Date(item.date) : item.date 
-    })));
+    setContributions(data.map((item) => {
+      let date: Date;
+      if (typeof item.date === 'string') {
+        // Parseia como data local para evitar UTC midnight shift no Brasil (UTC-3)
+        const [y, m, d] = item.date.split('-').map(Number);
+        date = new Date(y, m - 1, d);
+      } else {
+        date = item.date;
+      }
+      return { ...item, date };
+    }));
   }, [data]);
 
   const getColor = (count: number) => {
     if (count === 0) return colors[0];
     if (count === 1) return colors[1];
-    if (count === 2) return colors[2];
-    if (count === 3) return colors[3];
+    if (count <= 3) return colors[2];
+    if (count <= 6) return colors[3];
     return colors[4];
   };
 

@@ -10,7 +10,7 @@ const menuItems = [
   { title: "Funil", url: "/leads", icon: Filter },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
-  { title: "Conversas", url: "/conversations", icon: MessageSquare },
+
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Automações", url: "/automations", icon: Zap },
 ];
@@ -86,7 +86,7 @@ export const Header = () => {
                       : "text-white/40 hover:text-white hover:bg-white/5"
                     }
                   `}>
-                    <Icon className={`w-4 h-4 ${isActive ? "text-cyan-400" : ""}`} />
+                    <Icon className="w-4 h-4" style={isActive ? { color: '#6829c0' } : undefined} />
                     <span className="hidden lg:inline">{item.title}</span>
                   </div>
                 </Link>

@@ -9,7 +9,7 @@ import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
 import Clients from "./pages/Clients"
 import LeadsKanban from "./pages/LeadsKanban"
-import Conversations from "./pages/Conversations"
+
 import Financial from "./pages/Financial"
 import Contracts from "./pages/Contracts"
 import NotFound from "./pages/NotFound"
@@ -84,16 +84,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/conversations"
-                    element={
-                      <ProtectedRoute>
-                        <CRMLayout>
-                          <Conversations />
-                        </CRMLayout>
-                      </ProtectedRoute>
-                    }
-                  />
+
                   <Route
                     path="/financial"
                     element={

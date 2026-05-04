@@ -663,13 +663,7 @@ export default function LeadsKanban() {
 
                                           <div className="flex items-center gap-3 flex-1 min-w-0">
                                             <div
-                                              className="relative cursor-pointer flex-shrink-0 group/avatar"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                const param = (lead.remotejid && lead.remotejid.includes('@')) ? `jid=${lead.remotejid}` : `phone=${lead.phone}`;
-                                                navigate(`/conversations?${param}`);
-                                              }}
-                                              title="Abrir Conversa"
+                                              className="relative flex-shrink-0 group/avatar"
                                               data-no-pan
                                             >
                                               <Avatar className="w-10 h-10 border-2 border-primary/40 group-hover/avatar:border-primary shadow-md transition-all">
