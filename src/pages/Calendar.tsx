@@ -924,7 +924,7 @@ export default function Calendar() {
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
       <GitHubCalendar data={contributionData} />
 
-      <div className="min-h-[800px]">
+      <div className="min-h-[740px] overflow-hidden rounded-3xl">
         <FullScreenCalendar 
           data={calendarData}
           rightActions={
@@ -1104,9 +1104,9 @@ export default function Calendar() {
                     setIsEditActivityModalOpen(true);
                   }}
                   className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border
-                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/60 !shadow-[0_0_20px_rgba(34,197,94,0.15)]' :
-                      item.status === 'Em andamento' ? '!border-blue-500/50 !shadow-[0_0_20px_rgba(59,130,246,0.15)]' :
-                      isOngoing(item) ? '!border-green-500/50 !shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-white/[0.05]'}`}
+                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/30' :
+                      item.status === 'Em andamento' || isOngoing(item) ? '!border-blue-500/30' :
+                      'border-white/[0.05]'}`}
                 >
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">

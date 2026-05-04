@@ -137,7 +137,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
             whileHover={{ scale: 1.05, translateY: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => onAddEvent?.(selectedDay)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all text-xs font-bold uppercase tracking-widest"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
           >
             <PlusCircleIcon size={18} />
             <span>Novo Evento</span>
@@ -147,7 +147,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
 
       {/* Calendar Grid */}
       <div className="lg:flex lg:flex-auto lg:flex-col overflow-hidden px-4 pb-4">
-        <div className="liquid-glass border-white/5 rounded-3xl overflow-hidden flex flex-col h-full">
+        <div className="liquid-glass border-white/5 rounded-3xl overflow-hidden flex flex-col h-full isolate !shadow-none">
           {/* Week Days Header */}
           <div className="grid grid-cols-7 border-b border-white/5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/30 bg-white/[0.02]">
             <div className="py-4 border-r border-white/5">Dom</div>
@@ -161,7 +161,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
 
           {/* Calendar Days */}
           <div className="flex text-xs leading-6 flex-auto">
-            <div className="grid w-full grid-cols-7 auto-rows-[minmax(120px,1fr)] bg-white/[0.01]">
+            <div className="grid w-full grid-cols-7 auto-rows-[minmax(110px,1fr)] bg-white/[0.01]">
               {days.map((day, dayIdx) => (
                 <div
                   key={day.toISOString()}
@@ -178,7 +178,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
                       className={cn(
                         "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black transition-all",
                         isToday(day) && !isEqual(day, selectedDay) && "text-primary border border-primary/20 bg-primary/10",
-                        isEqual(day, selectedDay) && isToday(day) && "bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.5)]",
+                        isEqual(day, selectedDay) && isToday(day) && "bg-primary text-white",
                         isEqual(day, selectedDay) && !isToday(day) && "bg-white text-black",
                         !isEqual(day, selectedDay) && !isToday(day) && "text-white/40 group-hover:text-white"
                       )}
@@ -211,10 +211,10 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDateChang
                             onClick={(e) => { e.stopPropagation(); onEventClick?.(event); }}
                             className={cn(
                               "flex flex-col items-start gap-1 rounded-xl border p-2.5 text-[11px] leading-tight cursor-pointer transition-all hover:brightness-125 hover:translate-y-[-2px] bg-black/40 backdrop-blur-md",
-                              event.status === 'REALIZADO' ? "border-emerald-500/50 shadow-[0_4px_12px_rgba(16,185,129,0.1)]" :
-                              event.status === 'EM ANDAMENTO' ? "border-blue-500/50 shadow-[0_4px_12px_rgba(59,130,246,0.1)]" :
-                              event.type === 'google' ? "border-cyan-500/30 text-cyan-200 shadow-[0_4px_12px_rgba(34,211,238,0.1)]" :
-                              "border-white/10 text-white/80 shadow-[0_4px_12px_rgba(255,255,255,0.05)]"
+                              ['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '') ? "border-green-500/30" :
+                              ['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '') ? "border-blue-500/30" :
+                              event.type === 'google' ? "border-cyan-500/20 text-cyan-200" :
+                              "border-white/10 text-white/80"
                             )}
                           >
                             <div className="flex items-center justify-between w-full gap-2">
