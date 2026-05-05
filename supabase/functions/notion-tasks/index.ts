@@ -83,14 +83,34 @@ function extractPriority(properties: any): string | null {
 }
 
 function extractClients(properties: any): string[] {
-  for (const key of ['Clientes', 'Cliente', 'Clients', 'Client']) {
+  for (const key of ['Clientes', 'Cliente', 'Clients', 'Client', 'Projeto', 'Project', 'Empresa', 'Company', 'Marca', 'Tags']) {
     const prop = properties[key]
     if (prop?.type === 'multi_select') return prop.multi_select.map((s: any) => s.name)
-    if (prop?.type === 'relation') return prop.relation.map((r: any) => r.id) // Simplificado
+    if (prop?.type === 'relation') return prop.relation.map((r: any) => r.id) // IDs resolvidos depois
     if (prop?.type === 'select' && prop.select) return [prop.select.name]
     if (prop?.type === 'rich_text' && prop.rich_text?.length > 0) return [prop.rich_text[0].plain_text]
   }
   return []
+}
+
+// Resolve IDs de relation para títulos reais via API do Notion
+async function resolveRelationTitles(ids: string[], notionToken: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  await Promise.all(ids.map(async (id) => {
+    try {
+      const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${notionToken}`,
+          'Notion-Version': '2022-06-28',
+        }
+      })
+      const page = await res.json()
+      if (page.object !== 'error') {
+        map.set(id, extractTitle(page.properties))
+      }
+    } catch (_) { /* ignora falhas individuais */ }
+  }))
+  return map
 }
 
 function extractRecurrence(properties: any): string | null {
@@ -188,7 +208,7 @@ serve(async (req) => {
           // Cliente
           if (body.client) {
             const clientKey = Object.keys(dbProps).find(k => 
-              ['Clientes', 'Cliente', 'Clients', 'Client'].includes(k)
+              ['Clientes', 'Cliente', 'Clients', 'Client', 'Projeto', 'Project', 'Empresa', 'Company', 'Marca', 'Tags'].includes(k)
             )
             if (clientKey) {
               const type = dbProps[clientKey].type
@@ -400,9 +420,20 @@ serve(async (req) => {
       startCursor = notionData.next_cursor ?? undefined
     }
 
-    const tasks = allResults.map((page: any) => {
+    // Extrai clients de cada página (pode conter IDs de relation)
+    const rawTaskClients = allResults.map((page: any) => extractClients(page.properties))
+
+    // Coleta IDs únicos que parecem UUIDs (relation) para resolver
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const relationIds = [...new Set(rawTaskClients.flat().filter(c => uuidRe.test(c)))]
+    const relationTitleMap = relationIds.length > 0
+      ? await resolveRelationTitles(relationIds, notionToken)
+      : new Map<string, string>()
+
+    const tasks = allResults.map((page: any, i: number) => {
       const dueDate = extractDate(page.properties)
       const time = extractTime(page.properties)
+      const clients = rawTaskClients[i].map(c => relationTitleMap.get(c) ?? c)
       return {
         id: page.id,
         title: extractTitle(page.properties),
@@ -410,7 +441,7 @@ serve(async (req) => {
         dueDate,
         time,
         priority: extractPriority(page.properties),
-        clients: extractClients(page.properties),
+        clients,
         recurrence: extractRecurrence(page.properties),
         responsible: extractResponsible(page.properties),
         url: page.url,

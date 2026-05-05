@@ -888,7 +888,8 @@ export default function Calendar() {
         time: t.dueDate.includes('T') ? format(new Date(t.dueDate), "HH:mm") : undefined,
         datetime: t.dueDate,
         type: 'notion',
-        status: t.status
+        status: t.status,
+        clients: t.clients
       });
     });
 
@@ -1045,17 +1046,25 @@ export default function Calendar() {
               const dayTasks = getNotionTasksForDay(selectedDay);
 
               const allItems = [
-                ...dayEvents.map(e => ({ 
-                   type: 'google' as const, 
-                   id: e.id, 
-                   title: e.title, 
-                   time: e.start, 
-                   end: e.end,
-                   isAllDay: e.allDay,
-                   color: getEventColor(e.colorId).split(' ')[0] || 'bg-primary/20', 
-                   meetLink: e.hangoutLink,
-                   status: undefined 
-                })),
+                ...dayEvents.map(e => {
+                   let clientName = undefined;
+                   if (e.title && e.title.includes(' - ')) {
+                       const parts = e.title.split(' - ');
+                       clientName = parts[parts.length - 1].trim();
+                   }
+                   return { 
+                     type: 'google' as const, 
+                     id: e.id, 
+                     title: e.title, 
+                     time: e.start, 
+                     end: e.end,
+                     isAllDay: e.allDay,
+                     color: getEventColor(e.colorId).split(' ')[0] || 'bg-primary/20', 
+                     meetLink: e.hangoutLink,
+                     status: undefined,
+                     client: clientName
+                   };
+                }),
                 ...dayTasks.map(t => {
                    let time = t.dueDate;
                    let isAllDay = !t.time || t.time === '00:00';
@@ -1080,7 +1089,8 @@ export default function Calendar() {
                     color: 'bg-white/10', 
                     meetLink: undefined,
                     status: t.status,
-                    clients: t.clients
+                    clients: t.clients,
+                    client: (t as any).client
                    };
                 })
               ];
@@ -1118,7 +1128,7 @@ export default function Calendar() {
                   <div className="flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-[85%]">
+                        <h4 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
                           {item.title}
                         </h4>
                         {item.meetLink && (
@@ -1134,12 +1144,7 @@ export default function Calendar() {
                           </motion.a>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        {(item as any).clients && (item as any).clients.length > 0 && (
-                          <span className="text-[11px] text-white font-medium tracking-tight">
-                            {(item as any).clients[0]}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
                         {item.time && !item.isAllDay && (
                            <div className="flex items-center gap-1.5">
                               <Clock className="w-3.5 h-3.5 text-primary" />
@@ -1148,15 +1153,32 @@ export default function Calendar() {
                               </span>
                            </div>
                         )}
+                        {(item.isAllDay || (item.type === 'notion' && !item.time)) && (
+                          <div className="flex items-center gap-1.5">
+                             <Clock className="w-3.5 h-3.5 text-white/20" />
+                             <span className="text-[11px] text-white/20 font-bold uppercase tracking-wider">
+                                Tarefa do Dia
+                             </span>
+                          </div>
+                        )}
+                        {((item as any).clients?.length > 0 || (item as any).client) ? (
+                          <div className="flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-primary/60 flex-shrink-0" />
+                            <span className="text-[11px] text-primary/80 font-semibold tracking-tight truncate max-w-[160px]">
+                              {(item as any).clients?.length > 0
+                                ? (item as any).clients.join(', ')
+                                : (item as any).client}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-white/10 flex-shrink-0" />
+                            <span className="text-[11px] text-white/20 font-semibold tracking-tight">
+                              Sem cliente
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      {(item.isAllDay || (item.type === 'notion' && !item.time)) && (
-                        <div className="flex items-center gap-1.5 mt-1">
-                           <Clock className="w-3.5 h-3.5 text-white/20" />
-                           <span className="text-[11px] text-white/20 font-bold uppercase tracking-wider">
-                              Tarefa do Dia
-                           </span>
-                        </div>
-                      )}
                     </div>
                   </div>
 

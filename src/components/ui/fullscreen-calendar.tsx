@@ -40,6 +40,7 @@ export interface CalendarEvent {
   type: 'google' | 'notion' | 'crm'
   color?: string
   status?: string
+  clients?: string[]
 }
 
 export interface CalendarData {
@@ -138,15 +139,17 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
         </div>
 
         <div className="flex items-center gap-3">          {rightActions}
-          <motion.button
+          <motion.div
             whileHover={{ scale: 1.05, translateY: -2 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onAddEvent?.(selectedDay)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
           >
-            <PlusCircleIcon size={18} />
-            <span>Novo Evento</span>
-          </motion.button>
+            <button
+              onClick={() => onAddEvent?.(selectedDay)}
+              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl transition-colors duration-300 text-xs font-bold uppercase tracking-widest"
+            >
+              <span>Novo Evento</span>
+            </button>
+          </motion.div>
         </div>
       </div>
 
@@ -242,7 +245,6 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                               "flex flex-col items-start gap-1 rounded-xl border p-2.5 text-[11px] leading-tight cursor-pointer transition-all hover:brightness-125 hover:translate-y-[-2px] bg-black/40 backdrop-blur-md",
                               ['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '') ? "border-green-500/30" :
                               ['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '') ? "border-blue-500/30" :
-                              event.type === 'google' ? "border-cyan-500/20 text-cyan-200" :
                               "border-white/10 text-white/80"
                             )}
                           >
@@ -250,6 +252,9 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                               <p className="font-bold truncate">{event.name}</p>
                               {event.time && <span className="text-[9px] font-black opacity-50 whitespace-nowrap">{event.time}</span>}
                             </div>
+                            {event.clients && event.clients.length > 0 && (
+                              <p className="text-[9px] text-white/40 font-medium truncate w-full">{event.clients[0]}</p>
+                            )}
                           </motion.div>
                         ))}
                       
