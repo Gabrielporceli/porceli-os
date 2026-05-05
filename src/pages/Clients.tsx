@@ -10,6 +10,7 @@ import { ClientsHeader } from "@/components/Clients/ClientsHeader";
 import { ClientsSearch } from "@/components/Clients/ClientsSearch";
 import { ClientsKPIs } from "@/components/Clients/ClientsKPIs";
 import { ClientsList } from "@/components/Clients/ClientsList";
+import { ClientMap } from "@/components/Clients/ClientMap";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -243,6 +244,20 @@ export default function Clients() {
       />
 
       <ClientsKPIs clients={clientsForKPIs} />
+
+      <div className="backdrop-blur-3xl bg-[#121212]/50 border border-white/[0.08] shadow-2xl rounded-3xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-white font-semibold text-sm">Mapa de Clientes</span>
+          <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+            {clients.filter((c: any) => c.latitude && c.longitude).length} no mapa
+          </span>
+        </div>
+        <ClientMap
+          markers={clients
+            .filter((c: any) => c.latitude && c.longitude)
+            .map((c: any) => ({ id: c.id, company: c.company, lat: c.latitude, lng: c.longitude, address: c.address ?? '' }))}
+        />
+      </div>
 
       <ClientsList 
         clients={filteredClients}

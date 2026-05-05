@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { generateFinancialEntriesForClient, updateFinancialEntriesForClient } from './useGenerateFinancialEntries';
+import { geocodeAddress } from '@/lib/geocode';
 
 type Client = Tables<'clients'>;
 type ClientInsert = TablesInsert<'clients'>;
@@ -11,6 +12,7 @@ type ClientUpdate = TablesUpdate<'clients'>;
 export const useClients = () => {
   return useQuery({
     queryKey: ['clients'],
+    staleTime: 0,
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -56,9 +58,17 @@ export const useCreateClient = () => {
         payment_day: typeof client.payment_day
       });
 
+      // Geocodificar endereço antes de inserir
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      if (client.address) {
+        const coords = await geocodeAddress(client.address);
+        if (coords) { latitude = coords.lat; longitude = coords.lng; }
+      }
+
       const { data, error } = await supabase
         .from('clients')
-        .insert({ ...client, user_id: user.id })
+        .insert({ ...client, user_id: user.id, latitude, longitude } as any)
         .select()
         .single();
 
@@ -154,9 +164,20 @@ export const useUpdateClient = () => {
         payment_day: typeof updates.payment_day
       });
 
+      // Re-geocodificar se o endereço foi alterado
+      let geoUpdates: { latitude?: number | null; longitude?: number | null } = {};
+      if (updates.address !== undefined) {
+        if (updates.address) {
+          const coords = await geocodeAddress(updates.address);
+          geoUpdates = coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
+        } else {
+          geoUpdates = { latitude: null, longitude: null };
+        }
+      }
+
       const { data, error } = await supabase
         .from('clients')
-        .update(updates)
+        .update({ ...updates, ...geoUpdates } as any)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
