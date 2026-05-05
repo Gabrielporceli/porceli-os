@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { motion } from "framer-motion";
@@ -7,22 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Calendar,
   Edit,
   EllipsisVertical,
   GripVertical,
   Plus,
-  Settings,
   Trash2,
   User,
 } from "lucide-react";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import {
   Avatar,
@@ -456,7 +448,7 @@ export default function LeadsKanban() {
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="relative">
+    <main className="relative">
       <div
         className="backdrop-blur-3xl bg-[#121212]/50 border border-white/[0.08] shadow-2xl rounded-3xl mb-8"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
@@ -473,10 +465,9 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsTagsModalOpen(true)}
                   >
-                    <Settings className="w-4 h-4 mr-2" />
                     {isMobile ? "Tags" : "Gerenciar Tags"}
                   </Button>
                 </motion.div>
@@ -487,10 +478,9 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsAddStageModalOpen(true)}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
                     {isMobile ? "Etapa" : "Nova Etapa"}
                   </Button>
                 </motion.div>
@@ -501,10 +491,9 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all"
+                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsNewLeadModalOpen(true)}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
                     {isMobile ? "Lead" : "Novo Lead"}
                   </Button>
                 </motion.div>
@@ -643,19 +632,24 @@ export default function LeadsKanban() {
                                 <ContextMenu>
                                   <ContextMenuTrigger asChild>
                                     <Card
-                                      className={`liquid-glass border-white/[0.05] p-2.5 sm:p-3 rounded-2xl dashboard-glow relative group ${snapshot.isDragging
-                                        ? "border-primary/50 shadow-2xl scale-[1.02]"
-                                        : ""
-                                        }`}
+                                      className={cn(
+                                        'liquid-glass border-white/[0.05] p-2.5 sm:p-3 rounded-2xl dashboard-glow relative group cursor-pointer',
+                                        snapshot.isDragging && 'border-primary/50 shadow-2xl scale-[1.02]'
+                                      )}
                                     >
-                                      <div className="space-y-1.5">
+                                      <div
+                                        className={cn('absolute inset-0 z-[1] rounded-2xl')}
+                                        onClick={() => handleEditLead(lead)}
+                                      />
+
+                                      <div className="space-y-1.5 relative">
                                         <div className="flex items-center gap-2">
                                           <div
                                             {...provided.dragHandleProps}
                                             data-dnd-handle
                                             // ✅ garante que o browser não tente “interpretar gesto” e travar eixo
                                             style={{ touchAction: "none" }}
-                                            className="touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-Porceli-gray-400 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+                                            className="relative z-[2] touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-Porceli-gray-400 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
                                             title="Arrastar"
                                           >
                                             <GripVertical className="w-4 h-4" />
@@ -663,10 +657,14 @@ export default function LeadsKanban() {
 
                                           <div className="flex items-center gap-3 flex-1 min-w-0">
                                             <div
-                                              className="relative flex-shrink-0 group/avatar"
+                                              className="relative flex-shrink-0 z-[10] cursor-pointer"
                                               data-no-pan
+                                              onPointerDown={(e) => {
+                                                e.stopPropagation();
+                                                handleEditLead(lead);
+                                              }}
                                             >
-                                              <Avatar className="w-10 h-10 border-2 border-primary/40 group-hover/avatar:border-primary shadow-md transition-all">
+                                              <Avatar className="w-10 h-10 shadow-md transition-all">
                                                 <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
                                                 <AvatarFallback className="bg-primary/5 text-primary">
                                                   <User className="w-5 h-5" />
@@ -684,21 +682,19 @@ export default function LeadsKanban() {
                                             </div>
                                           </div>
 
-                                          <motion.div
-                                            whileHover={{ scale: 1.1, translateY: -2 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                                          <button
+                                            className="relative z-[10] text-white/40 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
+                                            data-no-pan
+                                            onPointerDown={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              handleEditLead(lead);
+                                            }}
+                                            title="Editar Lead"
                                           >
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="text-Porceli-gray-400 hover:bg-Porceli-purple/80 hover:text-white h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0"
-                                              onClick={() => handleEditLead(lead)}
-                                              data-no-pan
-                                            >
-                                              <EllipsisVertical className="w-4 h-4" />
-                                            </Button>
-                                          </motion.div>
+                                            <EllipsisVertical className="w-5 h-5" />
+                                          </button>
+
                                         </div>
 
 
@@ -831,6 +827,6 @@ export default function LeadsKanban() {
           }}
         />
       </div>
-    </div >
+    </main>
   );
 }

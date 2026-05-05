@@ -1289,8 +1289,7 @@ export default function Calendar() {
       <Dialog open={isCreateModalOpen} onOpenChange={(open) => !open && setIsCreateModalOpen(false)}>
         <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#121212] backdrop-blur-2xl">
           <DialogHeader className="p-6 border-b border-white/[0.05]">
-            <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
-               <Plus className="w-5 h-5 text-primary" />
+            <DialogTitle className="text-xl font-bold tracking-tight">
                {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
             </DialogTitle>
             <DialogDescription className="text-white/40">

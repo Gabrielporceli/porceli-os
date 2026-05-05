@@ -8,10 +8,9 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
+  { title: "Clientes", url: "/clients", icon: Users },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
-
-  { title: "Clientes", url: "/clients", icon: Users },
   { title: "Automações", url: "/automations", icon: Zap },
 ];
 

@@ -85,40 +85,76 @@ export function useLeads() {
       const derivedJid = leadData.remotejid || formatToJID(leadData.phone);
       const cleanedPhone = cleanPhone(leadData.phone);
 
-      const { data, error } = await supabase
-        .from('leads')
-        .upsert({
-          user_id: user.id,
-          name: leadData.name,
-          company: leadData.company,
-          phone: cleanedPhone,
-          email: leadData.email || null,
-          stage: leadData.stage,
-          tags: leadData.tags || [],
-          value: leadData.value || null,
-          notes: leadData.notes || null,
-          meeting_date: leadData.meeting_date || null,
-          reuniao_realizada: leadData.reuniao_realizada || false,
-          remotejid: derivedJid,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,remotejid'
-        })
-        .select()
-        .single();
+      // Verificar se já existe um lead com o mesmo remotejid para evitar duplicatas
+      let data: Lead | null = null;
+      let error: unknown = null;
+
+      if (derivedJid) {
+        const { data: existing } = await supabase
+          .from('leads')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('remotejid', derivedJid)
+          .maybeSingle();
+
+        if (existing) {
+          const { data: updated, error: updateError } = await supabase
+            .from('leads')
+            .update({
+              name: leadData.name,
+              company: leadData.company,
+              phone: cleanedPhone,
+              email: leadData.email || null,
+              stage: leadData.stage,
+              tags: leadData.tags || [],
+              value: leadData.value || null,
+              notes: leadData.notes || null,
+              meeting_date: leadData.meeting_date || null,
+              reuniao_realizada: leadData.reuniao_realizada || false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existing.id)
+            .select()
+            .single();
+          data = updated as unknown as Lead;
+          error = updateError;
+        }
+      }
+
+      if (!data) {
+        const { data: inserted, error: insertError } = await supabase
+          .from('leads')
+          .insert({
+            user_id: user.id,
+            name: leadData.name,
+            company: leadData.company,
+            phone: cleanedPhone,
+            email: leadData.email || null,
+            stage: leadData.stage,
+            tags: leadData.tags || [],
+            value: leadData.value || null,
+            notes: leadData.notes || null,
+            meeting_date: leadData.meeting_date || null,
+            reuniao_realizada: leadData.reuniao_realizada || false,
+            remotejid: derivedJid || null,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        data = inserted as unknown as Lead;
+        error = insertError;
+      }
 
       if (error) throw error;
 
-      // Se o data já existia, a query .select().single() retorna o atualizado.
-      // Precisamos atualizar o estado local removendo o antigo se existir ou atualizando.
       setLeads(prev => {
-        const filtered = prev.filter(l => l.remotejid !== derivedJid);
-        return [data as unknown as Lead, ...filtered];
+        const filtered = prev.filter(l => l.id !== (data as Lead).id);
+        return [data as Lead, ...filtered];
       });
 
       toast({
         title: 'Sucesso',
-        description: 'Lead processado com sucesso (criado ou atualizado).',
+        description: 'Lead criado com sucesso.',
       });
       return data;
     } catch (error) {

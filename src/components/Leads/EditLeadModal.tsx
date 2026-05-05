@@ -13,6 +13,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { parseISO, format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
+import { QRCode } from "@/components/ui/qr-code";
 
 interface Stage {
   id: string;
@@ -146,6 +147,27 @@ export function EditLeadModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0">
+        {/* QR CODE CONTAINER - VISIBLE ONLY ON DESKTOP E POSICIONADO À DIREITA */}
+        {lead?.id && (
+          <div className="absolute top-0 -right-[340px] hidden lg:block w-[320px]">
+            <div className="liquid-glass rounded-3xl border-white/[0.05] p-7 shadow-2xl flex flex-col items-center">
+              <div className="mb-5 w-full flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-white/40">Acesso Rápido</p>
+                  <h3 className="text-xl font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
+                </div>
+              </div>
+              <QRCode
+                value={lead.phone ? `https://wa.me/${lead.phone.replace(/\D/g, "")}` : `https://porceli.com/lead/${lead.id}`}
+                size={260}
+                fgColor="#f8fafc"
+                bgColor="#121212"
+                className="rounded-xl border border-white/5"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="p-6 border-b border-white/[0.05]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold tracking-tight">Editar Lead</DialogTitle>
