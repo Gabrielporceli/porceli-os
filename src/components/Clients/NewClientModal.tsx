@@ -237,44 +237,26 @@ export function NewClientModal({
 
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
-    <>
-      {/* Custom Overlay with blur */}
-      <div
-        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        className="animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal Container */}
-      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
-        <div
-          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
-                <Plus className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Novo Cliente</h2>
-                <p className="text-white/40 text-sm">Preencha os dados do novo cliente</p>
-              </div>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(104,41,192,0.3)]">
+              <Plus className="w-5 h-5 text-white" />
             </div>
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                size="icon"
-                className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              >
-              <X className="w-5 h-5" />
-            </Button>
+            <div>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Novo Cliente</DialogTitle>
+                <p className="text-white/40 text-sm">Preencha os dados do novo cliente</p>
+              </DialogHeader>
+            </div>
           </div>
+        </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar">
+        <div className="overflow-y-auto flex-1 custom-scrollbar">
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -292,92 +274,87 @@ export function NewClientModal({
             }
             .custom-scrollbar {
               scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
-            }
-            
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
+              scrollbar-color: #6829c0 transparent;
             }
           `}</style>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-white">Nome da Empresa *</Label>
+                  <Label htmlFor="company" className="text-white/70 text-xs font-bold uppercase tracking-widest">Nome da Empresa *</Label>
                   <Input
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cnpj" className="text-white">CNPJ *</Label>
+                  <Label htmlFor="cnpj" className="text-white/70 text-xs font-bold uppercase tracking-widest">CNPJ *</Label>
                   <Input
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="00.000.000/0000-00"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="responsible" className="text-white">Responsável *</Label>
+                  <Label htmlFor="responsible" className="text-white/70 text-xs font-bold uppercase tracking-widest">Responsável *</Label>
                   <Input
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="Nome do responsável"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white">Telefone *</Label>
+                  <Label htmlFor="phone" className="text-white/70 text-xs font-bold uppercase tracking-widest">Telefone *</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="(11) 99999-9999"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">E-mail *</Label>
+                  <Label htmlFor="email" className="text-white/70 text-xs font-bold uppercase tracking-widest">E-mail *</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="cliente@empresa.com"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="grupo_id" className="text-white">Grupo ID</Label>
+                  <Label htmlFor="grupo_id" className="text-white/70 text-xs font-bold uppercase tracking-widest">Grupo ID</Label>
                   <Input
                     id="grupo_id"
                     type="text"
                     value={formData.grupo_id}
                     onChange={(e) => handleChange("grupo_id", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-Porceli-purple focus:ring-Porceli-purple/20 placeholder:text-white/70"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="ID do grupo"
                   />
                 </div>
@@ -386,32 +363,32 @@ export function NewClientModal({
 
             {/* Plano e Valores */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Plano e Valores
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="flex justify-between text-white">
+                  <Label className="flex justify-between text-white/70 text-xs font-bold uppercase tracking-widest">
                     Plano
                     <Button
                       type="button"
                       size="sm"
-                      className="bg-Porceli-purple/20 hover:bg-Porceli-purple/30 text-white border-Porceli-purple/50 h-6 px-2 text-xs"
+                      className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/20 h-6 px-2 text-[10px] font-bold uppercase tracking-wider"
                       onClick={() => setShowAddPlan(!showAddPlan)}
                     >
-                      <Plus className="w-3 h-3 mr-1" /> <span className="text-white">Novo</span>
+                      <Plus className="w-3 h-3 mr-1" /> Novo
                     </Button>
                   </Label>
 
                   {showAddPlan && (
-                    <div className="space-y-4 p-4 rounded-xl border border-white/[0.05] bg-white/[0.02]">
+                    <div className="space-y-4 p-4 rounded-xl border border-white/[0.05] bg-white/[0.02] animate-in fade-in slide-in-from-top-2">
                       <div className="space-y-2">
                         <Input
                           value={newPlanName}
                           onChange={(e) => setNewPlanName(e.target.value)}
                           placeholder="Nome do novo plano"
-                          className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all text-sm"
+                          className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all text-sm"
                           onKeyPress={(e) => e.key === "Enter" && handleAddCustomPlan()}
                         />
                       </div>
@@ -427,7 +404,7 @@ export function NewClientModal({
                           type="button"
                           size="sm"
                           onClick={handleAddCustomPlan}
-                          className="bg-Porceli-purple hover:bg-Porceli-purple/80 text-white flex-1"
+                          className="bg-primary hover:bg-primary/90 text-white flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
                         >
                           Adicionar Plano
                         </Button>
@@ -435,7 +412,7 @@ export function NewClientModal({
                           type="button"
                           size="sm"
                           onClick={() => setShowAddPlan(false)}
-                          className="bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 transition-all w-full md:w-auto"
+                          className="bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 transition-all flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
                         >
                           Cancelar
                         </Button>
@@ -462,7 +439,7 @@ export function NewClientModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="monthly_value" className="text-white">Valor Mensal (R$)</Label>
+                  <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest">Valor Mensal (R$)</Label>
                   <Input
                     id="monthly_value"
                     type="text"
@@ -475,13 +452,13 @@ export function NewClientModal({
                         setFormData((prev) => ({ ...prev, monthly_value: "" }));
                       }
                     }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="0,00"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="payment_day" className="text-white">Dia de Pagamento</Label>
+                  <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest">Dia de Pagamento</Label>
                   <Input
                     id="payment_day"
                     type="text"
@@ -493,13 +470,13 @@ export function NewClientModal({
                         setFormData(prev => ({ ...prev, payment_day: '' }));
                       }
                     }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
                     placeholder="1-31"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Status</Label>
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Status</Label>
                   <Select 
                     value={formData.tags[0]} 
                     onValueChange={(value) => handleChange("tags", [value])}
@@ -519,13 +496,13 @@ export function NewClientModal({
 
             {/* Datas e Localização */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Datas e Localização
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-white">Data de Início</Label>
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Data de Início</Label>
                   <DatePicker
                     date={formData.start_date ? parseISO(formData.start_date) : undefined}
                     setDate={(newDate) => {
@@ -535,7 +512,7 @@ export function NewClientModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Fim do Contrato</Label>
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Fim do Contrato</Label>
                   <DatePicker
                     date={formData.contract_end ? parseISO(formData.contract_end) : undefined}
                     setDate={(newDate) => {
@@ -545,13 +522,12 @@ export function NewClientModal({
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address" className="text-white">Endereço</Label>
+                  <Label htmlFor="address" className="text-white/70 text-xs font-bold uppercase tracking-widest">Endereço</Label>
                   <Textarea
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none"
-                    rows={3}
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 rounded-xl transition-all resize-none min-h-[100px]"
                     placeholder="Endereço completo do cliente"
                   />
                 </div>
@@ -569,7 +545,7 @@ export function NewClientModal({
                 <Button
                   type="button"
                   onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
                 >
                   Cancelar
                 </Button>
@@ -582,7 +558,7 @@ export function NewClientModal({
               >
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
                 >
                   Salvar Cliente
                 </Button>
@@ -590,9 +566,8 @@ export function NewClientModal({
             </div>
           </form>
         </div>
-      </div>
-      </div>
-    </>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
+}
 }

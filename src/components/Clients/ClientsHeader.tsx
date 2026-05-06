@@ -19,10 +19,9 @@ export function ClientsHeader({ onNewClient }: ClientsHeaderProps) {
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
         <Button
-          className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold"
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
           onClick={onNewClient}
         >
-          <Plus className="w-4 h-4 mr-2" />
           Novo Cliente
         </Button>
       </motion.div>

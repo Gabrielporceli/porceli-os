@@ -1025,7 +1025,7 @@ export default function Calendar() {
 
       {/* Modal do Dia Selecionado */}
       <Dialog open={selectedDay !== null} onOpenChange={(open) => !open && setSelectedDay(null)}>
-        <DialogContent className="sm:max-w-[820px] max-h-[85vh] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#0e0e0e]/95 backdrop-blur-xl flex flex-col overflow-hidden">
+        <DialogContent className="sm:max-w-[820px] h-[85vh] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 !flex flex-col overflow-hidden">
           {/* Header */}
           <div className="p-5 border-b border-white/[0.05] shrink-0">
             <DialogHeader>
@@ -1037,10 +1037,25 @@ export default function Calendar() {
 
           {/* Body — 2 colunas */}
           <div className="flex flex-1 min-h-0 overflow-hidden">
+            <style>{`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(104, 41, 192, 0.2);
+                border-radius: 10px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: rgba(104, 41, 192, 0.4);
+              }
+            `}</style>
 
             {/* Esquerda: lista de atividades */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 border-r border-white/[0.05]">
-            <div className="space-y-3">
+              <div className="space-y-3">
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
               const dayTasks = getNotionTasksForDay(selectedDay);
@@ -1287,7 +1302,7 @@ export default function Calendar() {
       </Dialog>
 
       <Dialog open={isCreateModalOpen} onOpenChange={(open) => !open && setIsCreateModalOpen(false)}>
-        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#121212] backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto border-white/[0.05] shadow-2xl text-white !p-0 !gap-0">
           <DialogHeader className="p-6 border-b border-white/[0.05]">
             <DialogTitle className="text-xl font-bold tracking-tight">
                {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
@@ -1410,7 +1425,7 @@ export default function Calendar() {
 
       {/* Modal de Edição de Atividade */}
       <Dialog open={isEditActivityModalOpen} onOpenChange={(open) => !open && setIsEditActivityModalOpen(false)}>
-        <DialogContent className="sm:max-w-[450px] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 bg-[#121212] backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-[450px] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0">
           <div className="p-6 border-b border-white/[0.05]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight">
@@ -1548,7 +1563,7 @@ export default function Calendar() {
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="liquid-glass border-white/10 shadow-2xl bg-[#121212]/90 backdrop-blur-2xl text-white">
+        <AlertDialogContent className="liquid-glass border-white/10 shadow-2xl text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-red-500" />

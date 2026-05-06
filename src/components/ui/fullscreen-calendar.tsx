@@ -243,7 +243,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                             onClick={(e) => { e.stopPropagation(); onEventClick?.(event); }}
                             className={cn(
                               "flex flex-col items-start gap-1 rounded-xl border p-2.5 text-[11px] leading-tight cursor-pointer transition-all hover:brightness-125 hover:translate-y-[-2px] bg-black/40 backdrop-blur-md",
-                              ['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '') ? "border-green-500/30" :
+                              ['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '') || (event.type === 'google' && event.datetime && event.datetime.includes('T') && new Date() >= new Date(event.datetime)) ? "border-green-500/30" :
                               ['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '') ? "border-blue-500/30" :
                               "border-white/10 text-white/80"
                             )}
