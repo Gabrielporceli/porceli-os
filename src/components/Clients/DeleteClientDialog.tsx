@@ -1,12 +1,18 @@
-
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, X, AlertTriangle } from "lucide-react";
-import ReactDOM from "react-dom";
+import { AlertTriangle, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { cn } from "@/lib/utils";
 
 interface Client {
   id: string;
@@ -50,193 +56,124 @@ export function DeleteClientDialog({
 
   if (!isOpen || !client) return null;
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return ReactDOM.createPortal(
-    <div 
-      style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      className="flex items-center justify-center animate-fade-in"
-      onClick={handleOverlayClick}
-    >
-      <div 
-        className="relative liquid-glass rounded-2xl shadow-2xl w-full max-w-md border border-white/[0.05] animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes scale-in {
-            from { 
-              transform: scale(0.95);
-              opacity: 0;
-            }
-            to { 
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-          
-          .animate-fade-in {
-            animation: fade-in 0.2s ease-out;
-          }
-          
-          .animate-scale-in {
-            animation: scale-in 0.2s ease-out;
-          }
-        `}</style>
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-white/[0.05]">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-              <Trash2 className="w-3.5 h-3.5 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Excluir Cliente</h2>
-              <p className="text-white/40 text-xs">Esta ação não pode ser desfeita</p>
-            </div>
-          </div>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg h-7 w-7 transition-colors"
-            disabled={isDeleting}
-          >
-            <X className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="p-3 space-y-3">
-          {/* Warning Section - Reduced */}
-          <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-2">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
-              <div className="space-y-1">
-                <h3 className="font-medium text-red-400 text-xs">
-                  Atenção: Exclusão Permanente
-                </h3>
-                <p className="text-red-300 text-xs leading-tight">
-                  Todos os dados serão perdidos permanentemente.
-                </p>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 !flex flex-col overflow-hidden !rounded-3xl">
+        <LiquidGlass className="h-full w-full flex flex-col !p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+            <div className="flex items-center gap-3">
+              <div>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-white tracking-tight">Excluir Cliente</DialogTitle>
+                  <p className="text-white/40 text-sm">Esta ação é irreversível</p>
+                </DialogHeader>
               </div>
             </div>
           </div>
 
-          {/* Client Info Section */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-white border-b border-white/[0.05] pb-1">
-              Dados do Cliente
-            </h4>
-            
-            <div className="bg-white/[0.02] border border-white/5 rounded-lg p-2 space-y-2">
-              <div className="grid grid-cols-1 gap-2">
-                <div>
-                  <span className="text-white/40 text-xs">Empresa:</span>
-                  <p className="text-white font-medium text-sm truncate">{client.company}</p>
+          {/* Content */}
+          <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar">
+            <style>{`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(239, 68, 68, 0.2);
+                border-radius: 10px;
+              }
+            `}</style>
+
+            {/* Warning Section */}
+            <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <h3 className="text-sm font-black text-red-500 uppercase tracking-widest">
+                    Atenção: Exclusão Permanente
+                  </h3>
+                  <p className="text-red-400/80 text-sm leading-relaxed">
+                    Todos os dados de <strong>{client.company}</strong> serão deletados permanentemente de nossos servidores.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Client Info Section */}
+            <div className="space-y-4">
+              <h4 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2 ml-1">
+                Dados do Alvo
+              </h4>
+              
+              <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 space-y-6">
+                <div className="space-y-1">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Nome da Empresa</span>
+                  <p className="text-white font-bold text-lg tracking-tight">{client.company}</p>
                 </div>
                 
-                {client.cnpj && client.responsible && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-white/40 text-xs">CNPJ:</span>
-                      <p className="text-white text-xs truncate">{client.cnpj}</p>
-                    </div>
-                    <div>
-                      <span className="text-white/40 text-xs">Responsável:</span>
-                      <p className="text-white text-xs truncate">{client.responsible}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Responsável</span>
+                    <p className="text-white font-medium text-sm">{client.responsible || "Não informado"}</p>
                   </div>
-                )}
+                  <div className="space-y-1">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Plano Atual</span>
+                    <p className="text-white font-medium text-sm">{client.plan || "Nenhum"}</p>
+                  </div>
+                </div>
 
-                {client.phone && client.email && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-white/40 text-xs">Telefone:</span>
-                      <p className="text-white text-xs truncate">{client.phone}</p>
-                    </div>
-                    <div>
-                      <span className="text-white/40 text-xs">E-mail:</span>
-                      <p className="text-white text-xs truncate" title={client.email}>{client.email}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">CNPJ</span>
+                    <p className="text-white font-medium text-sm">{client.cnpj || "Não informado"}</p>
                   </div>
-                )}
-
-                {client.plan && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-white/40 text-xs">Plano:</span>
-                      <p className="text-white text-xs truncate">{client.plan}</p>
-                    </div>
-                    {client.tags && client.tags.length > 0 && (
-                      <div>
-                        <span className="text-white/40 text-xs">Status:</span>
-                        <p className={`text-xs truncate ${
-                          client.tags[0] === 'Ativo'
-                            ? 'text-green-400'
-                            : client.tags[0] === 'A vencer'
-                            ? 'text-yellow-400'
-                            : 'text-red-400'
-                        }`}>
-                          {client.tags[0]}
-                        </p>
-                      </div>
-                    )}
+                  <div className="space-y-1">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Status</span>
+                    <p className={cn(
+                      "font-bold text-sm",
+                      client.tags?.[0] === 'Ativo' ? "text-green-400" : "text-red-400"
+                    )}>{client.tags?.[0] || "Indefinido"}</p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex gap-2 p-3 border-t border-white/[0.05]">
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              onClick={onClose}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-9 text-xs font-bold rounded-xl transition-all"
-              disabled={isDeleting}
+          {/* Footer */}
+          <div className="flex gap-4 p-6 border-t border-white/[0.05]">
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
             >
-              Cancelar
-            </Button>
-          </motion.div>
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              onClick={handleConfirm}
-              disabled={isDeleting}
-              className="w-full h-9 text-xs font-bold bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+                disabled={isDeleting}
+              >
+                Cancelar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
             >
-              {isDeleting ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Excluindo...
-                </div>
-              ) : (
-                'Excluir Cliente'
-              )}
-            </Button>
-          </motion.div>
-        </div>
-      </div>
-    </div>,
-    document.body
+              <Button
+                onClick={handleConfirm}
+                disabled={isDeleting}
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-50"
+              >
+                {isDeleting ? "Processando..." : "Confirmar Exclusão"}
+              </Button>
+            </motion.div>
+          </div>
+        </LiquidGlass>
+      </DialogContent>
+    </Dialog>
   );
 }

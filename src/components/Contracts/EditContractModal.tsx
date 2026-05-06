@@ -1,3 +1,4 @@
+"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,15 @@ import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import ReactDOM from "react-dom";
-import { X, Edit, DollarSign } from "lucide-react";
+import { X, DollarSign } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { cn } from "@/lib/utils";
 
 interface Contract {
   id: string;
@@ -66,14 +74,12 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.status === 'inactive' && formData.client_id) {
-      // Update client tags to reflect inactive status
       await updateClient.mutateAsync({
         id: formData.client_id,
         tags: ['Inativo']
       });
     }
 
-    // Convert monthlyValue from Brazilian format to number
     const monthlyValueNumber = parseFloat(formData.monthlyValue.replace('.', '').replace(',', '.')) || 0;
 
     onSave({
@@ -124,137 +130,82 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
   if (!isOpen || !contract) return null;
 
-  return ReactDOM.createPortal(
-    <>
-      {/* Custom Overlay with blur */}
-      <div
-        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        className="animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal Container */}
-      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
-        <div
-          className="relative flex flex-col liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <style>{`
-            @keyframes fade-in {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            
-            @keyframes scale-in {
-              from { 
-                transform: scale(0.95);
-                opacity: 0;
-              }
-              to { 
-                transform: scale(1);
-                opacity: 1;
-              }
-            }
-            
-            .animate-fade-in {
-              animation: fade-in 0.2s ease-out;
-            }
-            
-            .animate-scale-in {
-              animation: scale-in 0.2s ease-out;
-            }
-            
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 8px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: rgba(255, 255, 255, 0.02);
-              border-radius: 4px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: #6829c0;
-              border-radius: 4px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-              background: #6B21D3;
-            }
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
-            }
-          `}</style>
-
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
+        <LiquidGlass className="w-full flex flex-col !p-0">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
+          <div className="flex items-center justify-between p-5 border-b border-white/[0.05] shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
-                <Edit className="w-5 h-5 text-white" />
-              </div>
               <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Editar Contrato</h2>
-                <p className="text-white/40 text-sm">Atualize os dados do contrato</p>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-white tracking-tight">Editar Contrato</DialogTitle>
+                  <p className="text-white/40 text-xs">Atualize os dados e condições do contrato</p>
+                </DialogHeader>
               </div>
             </div>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="icon"
-              className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </Button>
           </div>
 
-          {/* Content with Custom Scrollbar */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="client" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente</Label>
-                <Input
-                  id="client"
-                  value={formData.client}
-                  onChange={(e) => handleInputChange('client', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
-                  required
-                />
+          {/* Content */}
+          <div className="overflow-y-auto custom-scrollbar p-6">
+            <style>{`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(104, 41, 192, 0.2);
+                border-radius: 10px;
+              }
+            `}</style>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="client" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Cliente</Label>
+                  <Input
+                    id="client"
+                    value={formData.client}
+                    onChange={(e) => handleInputChange('client', e.target.value)}
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="type" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Tipo de Serviço</Label>
+                  <Input
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) => handleInputChange('type', e.target.value)}
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Tipo de Serviço</Label>
-                <Input
-                  id="type"
-                  value={formData.type}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyValue" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="monthlyValue" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
                   <div className="relative group">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-colors" />
                     <Input
                       id="monthlyValue"
                       type="text"
                       value={formData.monthlyValue}
                       onChange={handleMonthlyValueChange}
                       onBlur={handleMonthlyValueBlur}
-                      onFocus={(e) => {
-                        if (e.target.value === "0,00") {
-                          handleInputChange('monthlyValue', "");
-                        }
-                      }}
-                      className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
+                      className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 pl-9 focus:border-primary/50 transition-all text-sm font-bold"
                       placeholder="0,00"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="payment_day" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="payment_day" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
                   <Input
                     id="payment_day"
                     type="number"
@@ -263,63 +214,54 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                     value={formData.payment_day}
                     onChange={(e) => {
                       const val = parseInt(e.target.value);
-                      if (val > 28) {
-                        handleInputChange('payment_day', "28");
-                      } else if (val < 1 && e.target.value !== "") {
-                        handleInputChange('payment_day', "1");
-                      } else {
-                        handleInputChange('payment_day', e.target.value);
-                      }
+                      if (val > 28) handleInputChange('payment_day', "28");
+                      else if (val < 1 && e.target.value !== "") handleInputChange('payment_day', "1");
+                      else handleInputChange('payment_day', e.target.value);
                     }}
-                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Ex: 10"
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contract_url" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Link do Contrato</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contract_url" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Link do Contrato</Label>
                 <Input
                   id="contract_url"
                   type="url"
                   placeholder="https://..."
                   value={formData.contract_url}
                   onChange={(e) => handleInputChange('contract_url', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium"
+                  className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Início</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <Label className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Data de Início</Label>
                   <DatePicker
                     date={formData.startDate ? parseISO(formData.startDate) : undefined}
                     setDate={(newDate) => {
-                      if (newDate) {
-                        handleInputChange('startDate', format(newDate, "yyyy-MM-dd"));
-                      }
+                      if (newDate) handleInputChange('startDate', format(newDate, "yyyy-MM-dd"));
                     }}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Término</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Data de Término</Label>
                   <DatePicker
                     date={formData.endDate ? parseISO(formData.endDate) : undefined}
                     setDate={(newDate) => {
-                      if (newDate) {
-                        handleInputChange('endDate', format(newDate, "yyyy-MM-dd"));
-                      }
+                      if (newDate) handleInputChange('endDate', format(newDate, "yyyy-MM-dd"));
                     }}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Status</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Status do Contrato</Label>
                 <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                  <SelectTrigger className="bg-white/[0.02] border-white/[0.05] h-10 rounded-xl text-white/70 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -331,42 +273,29 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 </Select>
               </div>
 
-
-
-              <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.05]">
-                <motion.div 
-                  className="flex-1" 
-                  whileHover={{ scale: 1.05, translateY: -2 }} 
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
+              <div className="flex justify-end gap-3 pt-5 border-t border-white/[0.05]">
+                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     type="button"
                     onClick={onClose}
-                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                    className="w-full h-10 bg-white/[0.03] hover:bg-white/10 text-white/60 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-[10px] font-bold"
                   >
                     Cancelar
                   </Button>
                 </motion.div>
-                <motion.div 
-                  className="flex-1" 
-                  whileHover={{ scale: 1.05, translateY: -2 }} 
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
+                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     type="submit"
-                    className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                    className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_15px_rgba(104,41,192,0.2)] font-bold uppercase tracking-widest text-[10px]"
                   >
-                    Salvar
+                    Salvar Alterações
                   </Button>
                 </motion.div>
               </div>
             </form>
           </div>
-        </div>
-      </div>
-    </>,
-    document.body
+        </LiquidGlass>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,11 +1,17 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
-import ReactDOM from "react-dom";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { cn } from "@/lib/utils";
 
 interface Contract {
   id: string;
@@ -52,96 +58,90 @@ export function DeleteContractDialog({
   const penaltyFee = remainingValue * 0.20;
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  // --- Fim da Lógica de Cálculo ---
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return ReactDOM.createPortal(
-    <div
-      style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      className="flex items-center justify-center animate-fade-in"
-      onClick={handleOverlayClick}
-    >
-      <div
-        className="relative liquid-glass rounded-2xl shadow-2xl w-full max-w-lg border border-white/5 animate-scale-in backdrop-blur-3xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-7 border-b border-white/5">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center border border-red-500/10">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Cancelar Contrato</h2>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 !flex flex-col overflow-hidden !rounded-3xl">
+        <LiquidGlass className="h-full w-full flex flex-col !p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+            <div className="flex items-center gap-3">
+              <div>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-white tracking-tight">Cancelar Contrato</DialogTitle>
+                  <p className="text-white/40 text-sm">Rescisão e cálculo de multa</p>
+                </DialogHeader>
+              </div>
             </div>
           </div>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-white/20 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-        <div className="p-7 text-center space-y-4">
-          {isExpired ? (
-            <>
-              <p className="text-lg text-white font-medium">Este contrato já está vencido.</p>
-              <p className="text-white/40 text-sm leading-relaxed">
-                Deseja remover este contrato do sistema?<br />Esta ação não pode ser desfeita.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-lg text-white font-medium">Tem certeza que deseja cancelar este contrato?</p>
-              <div className="text-left bg-white/[0.02] p-5 rounded-2xl border border-white/5 space-y-3">
-                <div className="flex justify-between items-center"><span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Meses Restantes</span> <span className="text-white font-bold">{monthsRemaining}</span></div>
-                <div className="flex justify-between items-center"><span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Valor Restante</span> <span className="text-white font-bold">{formatCurrency(remainingValue)}</span></div>
-                <div className="pt-2 border-t border-white/5 flex justify-between items-center"><span className="text-red-400/60 text-[10px] font-black uppercase tracking-widest">Multa (20%)</span> <span className="text-red-400 font-black text-lg">{formatCurrency(penaltyFee)}</span></div>
+
+          {/* Content */}
+          <div className="p-7 text-center space-y-8">
+            {isExpired ? (
+              <div className="space-y-4">
+                <p className="text-lg text-white font-medium">Este contrato já está vencido.</p>
+                <p className="text-white/40 text-sm leading-relaxed">
+                  Deseja remover este contrato do sistema?<br />Esta ação não pode ser desfeita.
+                </p>
               </div>
-              <p className="text-xs text-white/20 pt-2 italic">
-                O contrato será marcado como inativo e a multa será registrada.
-              </p>
-            </>
-          )}
-        </div>
-        <div className="flex gap-4 p-7 bg-white/[0.01] border-t border-white/5">
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              type="button"
-              onClick={onClose}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all"
+            ) : (
+              <div className="space-y-6">
+                <p className="text-lg text-white font-medium">Confirmar cancelamento do contrato?</p>
+                
+                <div className="text-left bg-white/[0.02] p-6 rounded-2xl border border-white/[0.05] space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Meses Restantes</span> 
+                    <span className="text-white font-bold">{monthsRemaining}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Valor Restante</span> 
+                    <span className="text-white font-bold">{formatCurrency(remainingValue)}</span>
+                  </div>
+                  <div className="pt-4 border-t border-white/[0.05] flex justify-between items-center">
+                    <span className="text-red-400/60 text-[10px] font-black uppercase tracking-widest">Multa Rescisória (20%)</span> 
+                    <span className="text-red-400 font-black text-xl">{formatCurrency(penaltyFee)}</span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-white/20 italic">
+                  O contrato será marcado como inativo e a multa será registrada financeiramente.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex gap-4 p-6 border-t border-white/[0.05]">
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
             >
-              Voltar
-            </Button>
-          </motion.div>
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Button
-              type="button"
-              onClick={onConfirm}
-              className="w-full h-11 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all shadow-[0_10px_20px_rgba(239,68,68,0.15)]"
+              <Button
+                type="button"
+                onClick={onClose}
+                variant="ghost"
+                className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+              >
+                Voltar
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="flex-1" 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
             >
-              {isExpired ? 'Remover' : 'Cancelar'}
-            </Button>
-          </motion.div>
-        </div>
-      </div>
-    </div>,
-    document.body
+              <Button
+                type="button"
+                onClick={onConfirm}
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-widest text-xs font-bold"
+              >
+                {isExpired ? 'Remover' : 'Cancelar'}
+              </Button>
+            </motion.div>
+          </div>
+        </LiquidGlass>
+      </DialogContent>
+    </Dialog>
   );
 }
