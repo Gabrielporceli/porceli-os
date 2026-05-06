@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { Plus, X, ChevronDown } from "lucide-react";
+import { Users, Plus, X, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { ColorPicker } from "./ColorPicker";
 import { usePlansContext } from "@/contexts/PlansContext";
@@ -239,13 +239,10 @@ export function NewClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] flex flex-col overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 h-[90vh] !flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(104,41,192,0.3)]">
-              <Plus className="w-5 h-5 text-white" />
-            </div>
             <div>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-white tracking-tight">Novo Cliente</DialogTitle>
@@ -569,5 +566,4 @@ export function NewClientModal({
       </DialogContent>
     </Dialog>
   );
-}
 }

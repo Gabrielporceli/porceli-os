@@ -1,4 +1,9 @@
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X, FilePlus, DollarSign } from "lucide-react";
+import { X, FileText, DollarSign } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 
 interface NewContractModalProps {
@@ -104,46 +109,24 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
-    <>
-      {/* Custom Overlay with blur */}
-      <div
-        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        className="animate-fade-in"
-        onClick={onClose}
-      />
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+          <div className="flex items-center gap-3">
+            <div>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Novo Contrato</DialogTitle>
+                <p className="text-white/40 text-sm">Crie um contrato para um cliente existente</p>
+              </DialogHeader>
+            </div>
+          </div>
+        </div>
 
-      {/* Modal Container */}
-      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
-        <div
-          className="relative flex flex-col liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
+        {/* Content with Custom Scrollbar */}
+        <div className="overflow-y-auto flex-1 custom-scrollbar">
           <style>{`
-            @keyframes fade-in {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            
-            @keyframes scale-in {
-              from { 
-                transform: scale(0.95);
-                opacity: 0;
-              }
-              to { 
-                transform: scale(1);
-                opacity: 1;
-              }
-            }
-            
-            .animate-fade-in {
-              animation: fade-in 0.2s ease-out;
-            }
-            
-            .animate-scale-in {
-              animation: scale-in 0.2s ease-out;
-            }
-            
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
             }
@@ -160,219 +143,198 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             }
             .custom-scrollbar {
               scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
-            }
-
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
+              scrollbar-color: #6829c0 transparent;
             }
           `}</style>
 
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
-                <FilePlus className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Novo Contrato</h2>
-                <p className="text-white/40 text-sm">Crie um contrato para um cliente existente</p>
-              </div>
-            </div>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="icon"
-              className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+            <div className="space-y-6">
+              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                Dados do Contrato
+              </h3>
 
-          {/* Content with Custom Scrollbar */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Cliente *</Label>
-                <Select 
-                  value={formData.client_id} 
-                  onValueChange={(value) => {
-                    handleChange('client_id', value);
-                    const client = clients.find(c => c.id === value);
-                    if (client) setSelectedClientName(client.company);
-                  }}
-                >
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
-                    <SelectValue placeholder="Selecionar Cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.length === 0 ? (
-                      <div className="p-2 text-white/40 text-sm text-center">Nenhum cliente encontrado</div>
-                    ) : (
-                      clients.map((client) => (
-                        <SelectItem
-                          key={client.id}
-                          value={client.id}
-                          className="cursor-pointer"
-                        >
-                          {client.company}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="type" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Tipo de Serviço *</Label>
-                <Input
-                  id="type"
-                  placeholder="Ex: Gestão de Tráfego"
-                  value={formData.type}
-                  onChange={(e) => handleChange('type', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all placeholder:text-white/20 font-medium"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="monthly_value" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
-                  <div className="relative group">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente *</Label>
+                  <Select 
+                    value={formData.client_id} 
+                    onValueChange={(value) => {
+                      handleChange('client_id', value);
+                      const client = clients.find(c => c.id === value);
+                      if (client) setSelectedClientName(client.company);
+                    }}
+                  >
+                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                      <SelectValue placeholder="Selecionar Cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.length === 0 ? (
+                        <div className="p-2 text-white/40 text-sm text-center">Nenhum cliente encontrado</div>
+                      ) : (
+                        clients.map((client) => (
+                          <SelectItem
+                            key={client.id}
+                            value={client.id}
+                            className="cursor-pointer"
+                          >
+                            {client.company}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="type" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Tipo de Serviço *</Label>
+                  <Input
+                    id="type"
+                    placeholder="Ex: Gestão de Tráfego"
+                    value={formData.type}
+                    onChange={(e) => handleChange('type', e.target.value)}
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="monthly_value"
+                        type="text"
+                        value={formData.monthly_value}
+                        onChange={handleMonthlyValueChange}
+                        onBlur={handleMonthlyValueBlur}
+                        onFocus={(e) => {
+                          if (e.target.value === "0,00") {
+                            handleChange('monthly_value', "");
+                          }
+                        }}
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl pl-10 transition-all font-bold"
+                        placeholder="0,00"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
                     <Input
-                      id="monthly_value"
-                      type="text"
-                      value={formData.monthly_value}
-                      onChange={handleMonthlyValueChange}
-                      onBlur={handleMonthlyValueBlur}
-                      onFocus={(e) => {
-                        if (e.target.value === "0,00") {
-                          handleChange('monthly_value', "");
+                      id="payment_day"
+                      type="number"
+                      min="1"
+                      max="28"
+                      value={formData.payment_day}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val > 28) {
+                          handleChange('payment_day', "28");
+                        } else if (val < 1 && e.target.value !== "") {
+                          handleChange('payment_day', "1");
+                        } else {
+                          handleChange('payment_day', e.target.value);
                         }
                       }}
-                      className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 pl-10 focus:border-white/20 transition-all font-bold"
-                      placeholder="0,00"
+                      className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="Ex: 10"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="payment_day" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
+                  <Label htmlFor="contract_url" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Link do Contrato</Label>
                   <Input
-                    id="payment_day"
-                    type="number"
-                    min="1"
-                    max="28"
-                    value={formData.payment_day}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      if (val > 28) {
-                        handleChange('payment_day', "28");
-                      } else if (val < 1 && e.target.value !== "") {
-                        handleChange('payment_day', "1");
-                      } else {
-                        handleChange('payment_day', e.target.value);
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Ex: 10"
-                    required
+                    id="contract_url"
+                    type="url"
+                    placeholder="https://..."
+                    value={formData.contract_url}
+                    onChange={(e) => handleChange('contract_url', e.target.value)}
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contract_url" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Link do Contrato</Label>
-                <Input
-                  id="contract_url"
-                  type="url"
-                  placeholder="https://..."
-                  value={formData.contract_url}
-                  onChange={(e) => handleChange('contract_url', e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] text-white rounded-xl h-11 focus:border-white/20 transition-all placeholder:text-white/20 font-medium"
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Início *</Label>
+                    <DatePicker
+                      date={formData.start_date ? parseISO(formData.start_date) : undefined}
+                      setDate={(newDate) => {
+                        if (newDate) {
+                           handleChange('start_date', format(newDate, "yyyy-MM-dd"));
+                        }
+                      }}
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Data de Início *</Label>
-                  <DatePicker
-                    date={formData.start_date ? parseISO(formData.start_date) : undefined}
+                  <div className="space-y-2">
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Término *</Label>
+                    <DatePicker
+                    date={formData.end_date ? parseISO(formData.end_date) : undefined}
                     setDate={(newDate) => {
                       if (newDate) {
-                         handleChange('start_date', format(newDate, "yyyy-MM-dd"));
+                        handleChange('end_date', format(newDate, "yyyy-MM-dd"));
                       }
                     }}
                   />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Data de Término *</Label>
-                  <DatePicker
-                  date={formData.end_date ? parseISO(formData.end_date) : undefined}
-                  setDate={(newDate) => {
-                    if (newDate) {
-                      handleChange('end_date', format(newDate, "yyyy-MM-dd"));
-                    }
-                  }}
-                />
+                  <Label htmlFor="status" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active" className="cursor-pointer">Ativo</SelectItem>
+                      <SelectItem value="expiring" className="cursor-pointer">A vencer</SelectItem>
+                      <SelectItem value="concluded" className="cursor-pointer">Concluído</SelectItem>
+                      <SelectItem value="inactive" className="cursor-pointer">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-white/40 text-[10px] font-black uppercase tracking-widest ml-1">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active" className="cursor-pointer">Ativo</SelectItem>
-                    <SelectItem value="expiring" className="cursor-pointer">A vencer</SelectItem>
-                    <SelectItem value="concluded" className="cursor-pointer">Concluído</SelectItem>
-                    <SelectItem value="inactive" className="cursor-pointer">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-6 border-t border-white/[0.05]">
-                <motion.div 
-                  className="flex-1" 
-                  whileHover={{ scale: 1.05, translateY: -2 }} 
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            {/* Botões */}
+            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
+              <motion.div 
+                className="flex-1" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
                 >
-                  <Button
-                    type="button"
-                    onClick={onClose}
-                    className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
-                  >
-                    Cancelar
-                  </Button>
-                </motion.div>
-                <motion.div 
-                  className="flex-1" 
-                  whileHover={{ scale: 1.05, translateY: -2 }} 
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  Cancelar
+                </Button>
+              </motion.div>
+              <motion.div 
+                className="flex-1" 
+                whileHover={{ scale: 1.05, translateY: -2 }} 
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Button
+                  type="submit"
+                  disabled={isPending || !formData.client_id}
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Button
-                    type="submit"
-                    disabled={isPending || !formData.client_id}
-                    className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isPending ? 'Criando...' : 'Criar Contrato'}
-                  </Button>
-                </motion.div>
-              </div>
-            </form>
-          </div>
+                  {isPending ? 'Criando...' : 'Criar Contrato'}
+                </Button>
+              </motion.div>
+            </div>
+          </form>
         </div>
-      </div>
-    </>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }
 
