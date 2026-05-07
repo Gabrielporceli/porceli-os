@@ -298,17 +298,19 @@ export default function Automations() {
   const { data: automations = [], isLoading } = useAutomations();
   const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null);
 
+  const filteredAutomations = automations.filter(a => a.display_name !== 'Limpeza de Mídias Antigas');
+
   const isReady = usePageReady(isLoading);
   if (!isReady) return <PageLoader />;
 
-  const grouped = automations.reduce<Record<string, Automation[]>>((acc, a) => {
+  const grouped = filteredAutomations.reduce<Record<string, Automation[]>>((acc, a) => {
     if (!acc[a.category]) acc[a.category] = [];
     acc[a.category].push(a);
     return acc;
   }, {});
 
   const categoryOrder = ['financeiro', 'atividades', 'sistema'];
-  const enabledCount = automations.filter((a) => a.enabled).length;
+  const enabledCount = filteredAutomations.filter((a) => a.enabled).length;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
