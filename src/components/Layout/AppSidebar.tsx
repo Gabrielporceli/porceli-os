@@ -1,4 +1,4 @@
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight } from "lucide-react";
+import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight, Clock } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
@@ -11,7 +11,8 @@ const menuItems = [
   { title: "Financeiro", url: "/financial", icon: DollarSign },
 
   { title: "Clientes", url: "/clients", icon: Users },
-  { title: "Automações", url: "/automations", icon: Zap },
+  { title: "Automações",  url: "/automations",        icon: Zap   },
+  { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
 ];
 
 export function AppSidebar() {
