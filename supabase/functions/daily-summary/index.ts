@@ -3,10 +3,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ""
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ""
-const EVOLUTION_URL = "https://api.gabrielporceli.com.br"
-const EVOLUTION_API_KEY = "2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76"
-const EVOLUTION_INSTANCE = "agencia02"
-const GROUP_JID = "120363162167738258@g.us"
+const EVOLUTION_URL      = Deno.env.get('EVOLUTION_API_URL') || "https://api.gabrielporceli.com.br"
+const EVOLUTION_API_KEY  = Deno.env.get('EVOLUTION_API_KEY') || ""
+const EVOLUTION_INSTANCE = Deno.env.get('EVOLUTION_INSTANCE') || "agencia02"
+const GROUP_JID          = Deno.env.get('ASAAS_ADMIN_GROUP_JID') || "120363162167738258@g.us"
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
