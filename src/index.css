@@ -68,6 +68,20 @@
   -webkit-appearance: none !important;
 }
 
+/* Remove ring/outline de todos os inputs, selects e textareas do sistema */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+button:focus-visible,
+[role="combobox"]:focus,
+[role="listbox"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Porceli Company Theme - Dark Mode with Purple Accents */
 @layer base {
   :root {
