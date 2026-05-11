@@ -1,20 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-const SUPABASE_URL  = Deno.env.get("SUPABASE_URL") ?? "";
-const SERVICE_KEY   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const ASAAS_KEY     = Deno.env.get("ASAAS_API_KEY") ?? "";
-const ASAAS_URL     = "https://api.asaas.com/v3";
-const EVO_URL       = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE  = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY       = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ASAAS_KEY    = Deno.env.get("ASAAS_API_KEY") ?? "";
+const ASAAS_BASE   = "https://api.asaas.com/v3";
+const EVO_URL      = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
+const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
+const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "";
 
-// ── Feriados nacionais brasileiros ─────────────────────────────────────────
+// ── Feriados ───────────────────────────────────────────────────────────────────
 
 function getEaster(year: number): Date {
   const a = year % 19, b = Math.floor(year / 100), c = year % 100;
@@ -24,85 +21,72 @@ function getEaster(year: number): Date {
   const i = Math.floor(c / 4), k = c % 4;
   const l = (32 + 2 * e + 2 * i - h - k) % 7;
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31);
-  const day   = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month - 1, day);
+  return new Date(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1);
 }
 
 function getBrazilianHolidays(year: number): Set<string> {
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const iso   = (d: Date) => d.toISOString().slice(0, 10);
   const shift = (d: Date, n: number) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
-  const easter = getEaster(year);
+  const e = getEaster(year);
   return new Set([
-    `${year}-01-01`, `${year}-04-21`, `${year}-05-01`,
-    `${year}-09-07`, `${year}-10-12`, `${year}-11-02`,
-    `${year}-11-15`, `${year}-11-20`, `${year}-12-25`,
-    iso(shift(easter, -48)), iso(shift(easter, -47)),
-    iso(shift(easter, -2)),  iso(shift(easter, 60)),
+    `${year}-01-01`,`${year}-04-21`,`${year}-05-01`,
+    `${year}-09-07`,`${year}-10-12`,`${year}-11-02`,
+    `${year}-11-15`,`${year}-11-20`,`${year}-12-25`,
+    iso(shift(e,-48)),iso(shift(e,-47)),iso(shift(e,-2)),iso(shift(e,60)),
   ]);
 }
 
 function isWeekend(d: Date): boolean { return d.getDay() === 0 || d.getDay() === 6; }
-function isHoliday(d: Date, h: Set<string>): boolean { return h.has(d.toISOString().slice(0, 10)); }
-function isBusinessDay(d: Date, h: Set<string>): boolean { return !isWeekend(d) && !isHoliday(d, h); }
+function isHoliday(d: Date, h: Set<string>): boolean { return h.has(d.toISOString().slice(0,10)); }
+function isBusinessDay(d: Date, h: Set<string>): boolean { return !isWeekend(d) && !isHoliday(d,h); }
+function prevBD(d: Date, h: Set<string>): Date { const r = new Date(d); r.setDate(r.getDate()-1); while(!isBusinessDay(r,h)) r.setDate(r.getDate()-1); return r; }
+function effectiveDue(due: Date, h: Set<string>): Date { return isBusinessDay(due,h) ? due : prevBD(due,h); }
 
-function prevBusinessDay(d: Date, h: Set<string>): Date {
-  const r = new Date(d);
-  r.setDate(r.getDate() - 1);
-  while (!isBusinessDay(r, h)) r.setDate(r.getDate() - 1);
-  return r;
-}
-
-function effectiveDueDate(due: Date, h: Set<string>): Date {
-  return isBusinessDay(due, h) ? due : prevBusinessDay(due, h);
-}
-
-// ── Helpers de data ────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, (m || 1) - 1, d || 1);
 }
 
-function isoToday(): string {
-  return new Date().toISOString().slice(0, 10);
+function todayBRT(): string {
+  return new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" }).slice(0, 10);
 }
 
 function daysBetween(a: Date, b: Date): number {
-  const msDay = 86_400_000;
-  return Math.round((b.getTime() - a.getTime()) / msDay);
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
 function fmtBRL(n: number): string {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function fmtDateBR(iso: string): string {
+function fmtDate(iso: string): string {
   return iso.split("-").reverse().join("/");
 }
 
-// ── Asaas helpers ──────────────────────────────────────────────────────────
+function formatPhoneBR(phone: string): string {
+  const c = phone.replace(/\D/g, "");
+  if (c.startsWith("55") && c.length === 13) return `+${c}`;
+  if (c.length === 11) return `+55${c}`;
+  if (c.length === 10) return `+55${c}`;
+  return phone;
+}
+
+// ── Asaas ──────────────────────────────────────────────────────────────────────
 
 async function asaasGetAll(path: string): Promise<unknown[]> {
-  const all: unknown[] = [];
-  let offset = 0;
-  const limit = 100;
+  const all: unknown[] = []; let offset = 0;
   while (true) {
     const sep = path.includes("?") ? "&" : "?";
-    const r = await fetch(`${ASAAS_URL}${path}${sep}limit=${limit}&offset=${offset}`, {
-      headers: { access_token: ASAAS_KEY },
-    });
+    const r = await fetch(`${ASAAS_BASE}${path}${sep}limit=100&offset=${offset}`, { headers: { access_token: ASAAS_KEY } });
     if (!r.ok) break;
-    const data = await r.json();
-    const items = data.data ?? [];
-    all.push(...items);
-    if (!data.hasMore) break;
-    offset += limit;
+    const data = await r.json(); all.push(...(data.data ?? [])); if (!data.hasMore) break; offset += 100;
   }
   return all;
 }
 
-// ── Evolution API ──────────────────────────────────────────────────────────
+// ── Evolution API ──────────────────────────────────────────────────────────────
 
 async function sendWhatsApp(number: string, text: string): Promise<void> {
   try {
@@ -111,177 +95,114 @@ async function sendWhatsApp(number: string, text: string): Promise<void> {
       headers: { "Content-Type": "application/json", apikey: EVO_KEY },
       body: JSON.stringify({ number, text }),
     });
-  } catch (e) {
-    console.error("sendWhatsApp error:", (e as Error).message);
-  }
+  } catch (e) { console.error("sendWhatsApp:", (e as Error).message); }
 }
 
-// ── Deduplicação ───────────────────────────────────────────────────────────
+// ── Deduplicação ───────────────────────────────────────────────────────────────
 
-async function wasNotifiedRecently(
+async function wasNotified(
   supabase: ReturnType<typeof createClient>,
-  paymentId: string,
-  type: string,
-  withinDays: number
+  paymentId: string, type: string, withinDays: number
 ): Promise<boolean> {
-  const since = new Date();
-  since.setDate(since.getDate() - withinDays);
+  const since = new Date(); since.setDate(since.getDate() - withinDays);
   const { data } = await supabase
-    .from("notification_logs")
-    .select("id")
-    .eq("asaas_payment_id", paymentId)
-    .eq("type", type)
-    .gte("sent_at", since.toISOString())
-    .limit(1);
+    .from("notification_logs").select("id")
+    .eq("asaas_payment_id", paymentId).eq("type", type)
+    .gte("sent_at", since.toISOString()).limit(1);
   return (data ?? []).length > 0;
 }
 
-async function logNotification(
-  supabase: ReturnType<typeof createClient>,
-  entry: {
-    asaas_customer_id?: string;
-    client_name?: string;
-    type: string;
-    channel: string;
-    asaas_payment_id?: string;
-    days_overdue?: number;
-    status: string;
-    error_message?: string;
-    metadata?: Record<string, unknown>;
-  }
-) {
+async function logNotif(supabase: ReturnType<typeof createClient>, entry: Record<string, unknown>): Promise<void> {
   await supabase.from("notification_logs").insert(entry);
 }
 
-// ── Escalada de vencidos ───────────────────────────────────────────────────
+// ── Escalada ───────────────────────────────────────────────────────────────────
 
-function overdueConfig(daysOverdue: number): { type: string; withinDays: number; urgency: "mild" | "urgent" | "persistent" } {
-  if (daysOverdue <= 3)  return { type: "overdue_mild",       withinDays: 1, urgency: "mild" };
-  if (daysOverdue <= 10) return { type: "overdue_urgent",     withinDays: 1, urgency: "urgent" };
-  return                        { type: "overdue_persistent", withinDays: 5, urgency: "persistent" };
+function overdueConfig(d: number): { type: string; withinDays: number; urgency: "mild" | "urgent" | "persistent" } {
+  if (d <= 3)  return { type: "overdue_mild",       withinDays: 1, urgency: "mild" };
+  if (d <= 10) return { type: "overdue_urgent",     withinDays: 1, urgency: "urgent" };
+  return              { type: "overdue_persistent", withinDays: 5, urgency: "persistent" };
 }
 
-// ── Mensagens ─────────────────────────────────────────────────────────────
+// ── Mensagens ──────────────────────────────────────────────────────────────────
 
-function msgDueSoon(name: string, description: string, dueDate: string, value: string, invoiceUrl: string, daysLeft: number): string {
-  const intro = daysLeft === 0
+function msgPending(name: string, desc: string, due: string, val: string, url: string, days: number): string {
+  const intro = days === 0
     ? `Olá! ⚠️ Sua fatura vence *hoje*. Segue o resumo:`
-    : `Olá! 📅 Sua fatura vence em *${daysLeft} dias* (${fmtDateBR(dueDate)}). Segue o resumo:`;
-  return (
-    `${intro}\n\n` +
-    `*Cliente:* ${name}\n` +
-    `*Descrição:* ${description}\n` +
-    `*Vencimento:* ${fmtDateBR(dueDate)}\n` +
-    `*Valor:* ${value}\n\n` +
-    `*Link para pagamento:* ${invoiceUrl}\n\n` +
-    (daysLeft === 0
-      ? `Evite bloqueios! Regularize ainda hoje para manter seu serviço ativo.\nSe já pagou, pode ignorar este aviso. 😊`
-      : `Pague dentro do prazo e evite imprevistos. Se precisar de ajuda, é só chamar! 😊`)
-  );
+    : `Olá! 📅 Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
+  const footer = days === 0
+    ? `Regularize ainda hoje para manter o serviço ativo. Se já pagou, pode ignorar. 😊`
+    : `Pague dentro do prazo e evite imprevistos. 😊`;
+  return `${intro}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)}\n*Valor:* ${val}\n\n*Link para pagamento:* ${url}\n\n${footer}`;
 }
 
-function msgOverdue(name: string, description: string, dueDate: string, value: string, invoiceUrl: string, urgency: "mild" | "urgent" | "persistent"): string {
+function msgOverdue(name: string, desc: string, due: string, val: string, url: string, urgency: "mild" | "urgent" | "persistent"): string {
   const headers = {
-    mild:       "Olá! 😊 Identificamos um pagamento em aberto:",
-    urgent:     "Olá! ⚠️ Seu pagamento está em atraso. Regularize o quanto antes:",
-    persistent: "Olá! 🔴 Fatura em atraso. Evite bloqueio do serviço:",
+    mild:       `Olá! 😊 Identificamos um pagamento em aberto:`,
+    urgent:     `Olá! ⚠️ Seu pagamento está em atraso. Regularize o quanto antes:`,
+    persistent: `Olá! 🔴 Fatura em atraso. Evite bloqueio do serviço:`,
   };
-  return (
-    `${headers[urgency]}\n\n` +
-    `*Cliente:* ${name}\n` +
-    `*Descrição:* ${description}\n` +
-    `*Vencimento:* ${fmtDateBR(dueDate)} + juros de atraso\n` +
-    `*Valor base:* ${value}\n\n` +
-    `*Link para pagamento:* ${invoiceUrl}\n\n` +
-    `Se já realizou o pagamento, favor desconsiderar este aviso.`
-  );
+  return `${headers[urgency]}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)} + juros de atraso\n*Valor base:* ${val}\n\n*Link para pagamento:* ${url}\n\nSe já realizou o pagamento, favor desconsiderar este aviso.`;
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────
+// ── Main ───────────────────────────────────────────────────────────────────────
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-  const todayISO = isoToday();
+  const todayISO = todayBRT();
   const today    = parseLocalDate(todayISO);
   const holidays = getBrazilianHolidays(today.getFullYear());
-
-  const results = { pending: 0, overdue: 0, skipped: 0, errors: 0 };
+  const results  = { pending: 0, overdue: 0, skipped: 0, errors: 0 };
 
   try {
-    // ── 1. Busca clientes do Asaas para montar mapa id → {name, phone, group_id} ──
-    const asaasCustomers = await asaasGetAll("/customers") as Array<{ id: string; name: string; mobilePhone?: string }>;
+    // Mapa clientes Asaas: id → { name, phone }
+    const asaasCustomers = (await asaasGetAll("/customers")) as Array<{ id: string; name: string; mobilePhone?: string }>;
     const customerMap = new Map<string, { name: string; phone: string }>();
-    for (const c of asaasCustomers) {
-      customerMap.set(c.id, { name: c.name, phone: c.mobilePhone ?? "" });
+    for (const c of asaasCustomers) customerMap.set(c.id, { name: c.name, phone: c.mobilePhone ?? "" });
+
+    // Mapa group_id Supabase: company_lower → group_id
+    const { data: sbClients } = await supabase.from("clients").select("company, group_id");
+    const groupMap = new Map<string, string>();
+    for (const c of sbClients ?? []) {
+      if (c.group_id) groupMap.set((c.company ?? "").toLowerCase(), c.group_id);
     }
 
-    // Busca group_id dos clientes no Supabase (pelo nome da empresa)
-    const { data: supabaseClients } = await supabase
-      .from("clients")
-      .select("company, group_id, phone");
-    const groupMap = new Map<string, string>(); // name → group_id
-    for (const c of supabaseClients ?? []) {
-      if (c.group_id) groupMap.set(c.company?.toLowerCase(), c.group_id);
-    }
-
-    // ── 2. Pagamentos PENDENTES (lembretes D-5, D-2, D-0) ────────────────────
-    const pending = await asaasGetAll("/payments?status=PENDING") as Array<{
+    // ── PENDENTES: D-5, D-2, D-0 ──────────────────────────────────────────────
+    const pending = (await asaasGetAll("/payments?status=PENDING")) as Array<{
       id: string; customer: string; description?: string;
       dueDate: string; value: number; invoiceUrl?: string;
     }>;
 
     for (const p of pending) {
       try {
-        const rawDue      = parseLocalDate(p.dueDate);
-        const effDue      = effectiveDueDate(rawDue, holidays);
-        const effDueISO   = effDue.toISOString().slice(0, 10);
-        const daysToEffDue = daysBetween(today, effDue);
-        const customer    = customerMap.get(p.customer);
-        if (!customer) continue;
+        const rawDue  = parseLocalDate(p.dueDate);
+        const effDue  = effectiveDue(rawDue, holidays);
+        const days    = daysBetween(today, effDue);
+        const cust    = customerMap.get(p.customer);
+        if (!cust) continue;
 
-        // Determina tipo de alerta
-        let notifType: string | null = null;
-        let daysLeft = 0;
-        if (daysToEffDue === 0) { notifType = "due_today";    daysLeft = 0; }
-        else if (daysToEffDue === 2) { notifType = "due_soon_2d"; daysLeft = 2; }
-        else if (daysToEffDue === 5) { notifType = "due_soon_5d"; daysLeft = 5; }
+        let type: string | null = null, daysLeft = 0;
+        if (days === 0)      { type = "due_today";   daysLeft = 0; }
+        else if (days === 2) { type = "due_soon_2d"; daysLeft = 2; }
+        else if (days === 5) { type = "due_soon_5d"; daysLeft = 5; }
+        if (!type) { results.skipped++; continue; }
 
-        if (!notifType) { results.skipped++; continue; }
+        if (await wasNotified(supabase, p.id, type, 1)) { results.skipped++; continue; }
 
-        // Deduplicação: só uma por tipo por pagamento por dia
-        const alreadySent = await wasNotifiedRecently(supabase, p.id, notifType, 1);
-        if (alreadySent) { results.skipped++; continue; }
+        const effISO = effDue.toISOString().slice(0, 10);
+        const msg    = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
 
-        const value   = fmtBRL(p.value);
-        const message = msgDueSoon(customer.name, p.description ?? "", effDueISO, value, p.invoiceUrl ?? "", daysLeft);
-        const phone   = customer.phone;
-        const groupId = groupMap.get(customer.name.toLowerCase());
+        if (cust.phone) await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        const gid = groupMap.get(cust.name.toLowerCase());
+        if (gid) await sendWhatsApp(gid, msg);
 
-        // WhatsApp pessoal
-        if (phone) await sendWhatsApp(phone, message);
-        // WhatsApp grupo do cliente
-        if (groupId) await sendWhatsApp(groupId, message);
-
-        await logNotification(supabase, {
-          asaas_customer_id: p.customer,
-          client_name: customer.name,
-          type: notifType,
-          channel: "whatsapp",
-          asaas_payment_id: p.id,
-          status: "sent",
-          metadata: { daysToEffDue, effDueISO },
-        });
-
+        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, status: "sent", metadata: { days, effISO } });
         results.pending++;
-      } catch (e) {
-        console.error("pending payment error:", (e as Error).message);
-        results.errors++;
-      }
+      } catch (e) { console.error("pending:", (e as Error).message); results.errors++; }
     }
 
-    // ── 3. Pagamentos VENCIDOS (escalada por tempo) ───────────────────────────
+    // ── VENCIDOS: escalada ─────────────────────────────────────────────────────
     const overdue = (await asaasGetAll("/payments?status=OVERDUE")) as Array<{
       id: string; customer: string; description?: string;
       dueDate: string; value: number; invoiceUrl?: string;
@@ -289,58 +210,31 @@ serve(async (req) => {
 
     for (const p of overdue) {
       try {
-        const rawDue     = parseLocalDate(p.dueDate);
-        const daysLate   = daysBetween(rawDue, today);
-        const customer   = customerMap.get(p.customer);
-        if (!customer) continue;
+        const daysLate = daysBetween(parseLocalDate(p.dueDate), today);
+        const cust     = customerMap.get(p.customer);
+        if (!cust) continue;
 
-        const { type: notifType, withinDays, urgency } = overdueConfig(daysLate);
-        const alreadySent = await wasNotifiedRecently(supabase, p.id, notifType, withinDays);
-        if (alreadySent) { results.skipped++; continue; }
+        const { type, withinDays, urgency } = overdueConfig(daysLate);
+        if (await wasNotified(supabase, p.id, type, withinDays)) { results.skipped++; continue; }
 
-        const value   = fmtBRL(p.value);
-        const message = msgOverdue(customer.name, p.description ?? "", p.dueDate, value, p.invoiceUrl ?? "", urgency);
-        const phone   = customer.phone;
-        const groupId = groupMap.get(customer.name.toLowerCase());
+        const msg = msgOverdue(cust.name, p.description ?? "", p.dueDate, fmtBRL(p.value), p.invoiceUrl ?? "", urgency);
 
-        if (phone) await sendWhatsApp(phone, message);
-        if (groupId) await sendWhatsApp(groupId, message);
+        if (cust.phone) await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        const gid = groupMap.get(cust.name.toLowerCase());
+        if (gid) await sendWhatsApp(gid, msg);
 
-        await logNotification(supabase, {
-          asaas_customer_id: p.customer,
-          client_name: customer.name,
-          type: notifType,
-          channel: "whatsapp",
-          asaas_payment_id: p.id,
-          days_overdue: daysLate,
-          status: "sent",
-          metadata: { urgency },
-        });
-
+        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, days_overdue: daysLate, status: "sent", metadata: { urgency } });
         results.overdue++;
-      } catch (e) {
-        console.error("overdue payment error:", (e as Error).message);
-        results.errors++;
-      }
+      } catch (e) { console.error("overdue:", (e as Error).message); results.errors++; }
     }
 
-    // ── 4. Atualiza last_triggered_at ─────────────────────────────────────────
-    await supabase
-      .from("automations")
-      .update({ last_triggered_at: new Date().toISOString() })
-      .eq("jobname", "asaas-alertas-pagamento");
-
-    console.log("asaas-payment-alerts result:", results);
-
-    return new Response(JSON.stringify({ success: true, results }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    await supabase.from("automations").update({ last_triggered_at: new Date().toISOString() }).eq("jobname", "asaas-alertas-pagamento");
+    console.log("asaas-payment-alerts:", results);
+    return new Response(JSON.stringify({ success: true, results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const e = err as Error;
     console.error("asaas-payment-alerts fatal:", e.message);
-    return new Response(JSON.stringify({ success: false, error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
