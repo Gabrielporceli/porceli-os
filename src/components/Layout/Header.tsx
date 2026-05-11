@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut } from 'lucide-react';
+import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const menuItems = [
@@ -11,7 +11,8 @@ const menuItems = [
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
-  { title: "Automações", url: "/automations", icon: Zap },
+  { title: "Automações",   url: "/automations",        icon: Zap   },
+  { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
 ];
 
 export const Header = () => {
