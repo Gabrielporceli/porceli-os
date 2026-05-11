@@ -184,6 +184,17 @@ button:focus-visible,
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
   }
 
+  /* Elementos liquid-glass aninhados dentro de outro: fundo branco translúcido
+     para não empilhar opacidade escura e ficar muito denso */
+  .liquid-glass .liquid-glass {
+    background: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+  }
+
   .sidebar-glass {
     background: rgba(10, 10, 10, 0.6) !important;
     backdrop-filter: blur(40px) saturate(1.5) !important;
