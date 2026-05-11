@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Clock, Plus, X, Send, Users, MessageSquare, Phone,
+  Clock, X, Send, Users, MessageSquare, Phone,
   CheckCircle2, AlertCircle, Ban, Loader2, ChevronDown,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -124,7 +124,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(20px) saturate(180%)" }}
       onClick={onClose}
     >
       <motion.div
@@ -139,12 +139,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
           <div className="p-6 space-y-5">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-primary" />
-                </div>
-                <h3 className="text-white font-semibold">Agendar Mensagem</h3>
-              </div>
+              <h3 className="text-white font-semibold">Agendar Mensagem</h3>
               <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
                 <X className="w-4 h-4" />
               </button>
@@ -410,9 +405,8 @@ export default function ScheduledMessages() {
         </div>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="h-10 px-5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)] flex items-center gap-2"
+          className="h-10 px-5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)]"
         >
-          <Plus className="w-4 h-4" />
           Agendar Mensagem
         </Button>
       </div>
