@@ -235,12 +235,11 @@ export default function Clients() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
-      <ClientsHeader onNewClient={() => setIsNewClientModalOpen(true)} />
-      
-      <ClientsSearch 
+      <ClientsSearch
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onFiltersOpen={() => setIsFiltersOpen(true)}
+        onNewClient={() => setIsNewClientModalOpen(true)}
       />
 
       <ClientsKPIs clients={clientsForKPIs} />
