@@ -77,21 +77,24 @@ serve(async (req) => {
 
         if (!automation) throw new Error('Automação não encontrada')
 
-        if (enabled) {
-          // Reagendar cron
-          const command = buildCronCommand(automation.function_name)
-          await supabase.rpc('manage_automation_cron', {
-            p_action: 'schedule',
-            p_jobname: automation.jobname,
-            p_schedule: automation.schedule,
-            p_command: command,
-          })
-        } else {
-          // Remover do cron
-          await supabase.rpc('manage_automation_cron', {
-            p_action: 'unschedule',
-            p_jobname: automation.jobname,
-          })
+        // Automações webhook não usam pg_cron
+        if (automation.trigger_type !== 'webhook') {
+          if (enabled) {
+            // Reagendar cron
+            const command = buildCronCommand(automation.function_name)
+            await supabase.rpc('manage_automation_cron', {
+              p_action: 'schedule',
+              p_jobname: automation.jobname,
+              p_schedule: automation.schedule,
+              p_command: command,
+            })
+          } else {
+            // Remover do cron
+            await supabase.rpc('manage_automation_cron', {
+              p_action: 'unschedule',
+              p_jobname: automation.jobname,
+            })
+          }
         }
 
         // Atualizar tabela
@@ -113,6 +116,7 @@ serve(async (req) => {
           .single()
 
         if (!automation) throw new Error('Automação não encontrada')
+        if (automation.trigger_type === 'webhook') throw new Error('Automações webhook não possuem agendamento editável')
 
         // Atualizar cron se habilitado
         if (automation.enabled) {

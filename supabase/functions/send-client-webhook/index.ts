@@ -1,106 +1,51 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const clientData = await req.json();
-    console.log('=== WEBHOOK CLIENT - INÍCIO ===');
-    console.log('Dados recebidos do cliente:', JSON.stringify(clientData, null, 2));
+    console.log("send-client-webhook: dados recebidos", clientData?.company);
 
-    // Webhook URL
-    const webhookUrl = 'https://webhook.gabrielporceli.com.br/webhook/recebedadosclientenovo';
-    console.log('URL do webhook:', webhookUrl);
-
-    // Preparar payload com dados do cliente
-    const payload = {
-      ...clientData,
-      timestamp: new Date().toISOString(),
-      event: 'client_created'
-    };
-
-    console.log('Payload a ser enviado:', JSON.stringify(payload, null, 2));
-
-    // Enviar para o webhook com timeout
-    console.log('Iniciando envio para o webhook...');
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
-
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
+    // Chama asaas-new-client internamente (substitui webhook n8n)
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/asaas-new-client`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Supabase-Edge-Function',
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SERVICE_KEY}`,
       },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
+      body: JSON.stringify({ ...clientData, timestamp: new Date().toISOString(), event: "client_created" }),
     });
 
-    clearTimeout(timeoutId);
-    console.log('Status da resposta do webhook:', response.status);
-    console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
+    const result = await response.json();
+    console.log("asaas-new-client response:", response.status, result?.success);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Erro no webhook - Status:', response.status);
-      console.error('Erro no webhook - Text:', errorText);
-      
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Webhook failed: ${response.status} ${response.statusText}`,
-          details: errorText,
-          url: webhookUrl
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ success: false, error: result?.error ?? "asaas-new-client failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const responseData = await response.text();
-    console.log('Resposta do webhook (sucesso):', responseData);
-    console.log('=== WEBHOOK CLIENT - FIM (SUCESSO) ===');
-
     return new Response(
-      JSON.stringify({ success: true, response: responseData, url: webhookUrl }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ success: true, ...result }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('=== ERRO CRÍTICO NO WEBHOOK ===');
-    console.error('Tipo do erro:', err.constructor?.name || 'Unknown');
-    console.error('Mensagem do erro:', err.message || 'Unknown error');
-    console.error('Stack trace:', err.stack || 'No stack trace');
-    
-    if (err.name === 'AbortError') {
-      console.error('Timeout na requisição do webhook');
-    }
-    
+  } catch (err: unknown) {
+    const e = err as Error;
+    console.error("send-client-webhook error:", e.message);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `Erro crítico: ${err.message || 'Unknown error'}`,
-        errorType: err.constructor?.name || 'Unknown',
-        url: 'https://webhook.gabrielporceli.com.br/webhook/recebedadosclientenovo'
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ success: false, error: e.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
