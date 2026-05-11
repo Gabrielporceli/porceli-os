@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays, Bell, DollarSign, Trash2, Play, Clock, Edit2, Zap,
-  X, Save, CheckCircle2, AlertCircle, Loader2,
+  X, Save, CheckCircle2, AlertCircle, Loader2, Webhook,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -76,11 +76,12 @@ function formatLastRun(dateStr: string | null): string {
 
 function EditModal({ automation, onClose }: { automation: Automation; onClose: () => void }) {
   const isEveryMinute = automation.schedule === '* * * * *';
-  const [time, setTime] = useState(isEveryMinute ? '00:00' : cronToBRTTime(automation.schedule));
+  const isWebhook = automation.trigger_type === 'webhook';
+  const [time, setTime] = useState(isEveryMinute || isWebhook ? '00:00' : cronToBRTTime(automation.schedule));
   const updateSchedule = useUpdateAutomationSchedule();
 
   const handleSave = () => {
-    if (isEveryMinute) { onClose(); return; }
+    if (isEveryMinute || isWebhook) { onClose(); return; }
     const newCron = brtTimeToCron(time);
     updateSchedule.mutate({ id: automation.id, schedule: newCron }, { onSuccess: onClose });
   };
@@ -133,7 +134,12 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
               <label className="text-white/60 text-xs font-medium flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" /> Horário de execução (Horário de Brasília)
               </label>
-              {isEveryMinute ? (
+              {isWebhook ? (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                  <Webhook className="w-4 h-4 text-white/40" />
+                  <span className="text-white/60 text-sm">Disparada automaticamente ao cadastrar um novo cliente</span>
+                </div>
+              ) : isEveryMinute ? (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="text-white/60 text-sm">Executa automaticamente a cada minuto</span>
@@ -147,7 +153,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
                   style={{ colorScheme: 'dark' }}
                 />
               )}
-              {!isEveryMinute && (
+              {!isEveryMinute && !isWebhook && (
                 <p className="text-white/30 text-xs">
                   Armazenado como <code className="text-white/40">{brtTimeToCron(time)}</code> (UTC)
                 </p>
@@ -165,7 +171,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
               <Button
                 className="flex-1 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_15px_rgba(104,41,192,0.3)]"
                 onClick={handleSave}
-                disabled={updateSchedule.isPending || isEveryMinute}
+                disabled={updateSchedule.isPending || isEveryMinute || isWebhook}
               >
                 {updateSchedule.isPending
                   ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -238,7 +244,10 @@ function AutomationRow({
       <div className="hidden md:block text-center px-6 flex-shrink-0 w-52">
         <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Frequência</p>
         <div className="flex items-center justify-center gap-1.5">
-          <Clock className="w-3 h-3 text-white/25" />
+          {automation.trigger_type === 'webhook'
+            ? <Webhook className="w-3 h-3 text-white/25" />
+            : <Clock className="w-3 h-3 text-white/25" />
+          }
           <p className="text-white/70 font-medium text-sm">{automation.schedule_human}</p>
         </div>
       </div>
@@ -257,15 +266,17 @@ function AutomationRow({
 
       {/* Ações */}
       <div className="flex items-center gap-2 flex-shrink-0 pl-2">
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => onEdit(automation)}
-          title="Editar automação"
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-all"
-        >
-          <Edit2 className="w-3.5 h-3.5" />
-        </motion.button>
+        {automation.trigger_type !== 'webhook' && (
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => onEdit(automation)}
+            title="Editar automação"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-all"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </motion.button>
+        )}
 
         <motion.button
           whileHover={{ scale: 1.08 }}

@@ -17,6 +17,7 @@ export interface Automation {
   is_scheduled: boolean;
   updated_at: string;
   config: Record<string, string> | null;
+  trigger_type: 'cron' | 'webhook';
 }
 
 async function callManageAutomations(body: object) {
@@ -142,6 +143,7 @@ export function useTriggerAutomation() {
 export function cronToHumanBRT(cron: string): string {
   if (!cron) return '—';
   if (cron === '* * * * *') return 'A cada minuto';
+  if (cron === 'webhook') return 'Ao cadastrar cliente';
   const parts = cron.trim().split(/\s+/);
   if (parts.length < 5) return cron;
   const minute = parseInt(parts[0]);
