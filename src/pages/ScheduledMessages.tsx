@@ -1,13 +1,28 @@
 import { useState, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Clock, X, Send, Users, MessageSquare, Phone,
+  Clock, Send, Users, MessageSquare, Phone,
   CheckCircle2, AlertCircle, Ban, Loader2, ChevronDown,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePageReady } from "@/hooks/usePageReady";
 import { PageLoader } from "@/components/ui/PageLoader";
@@ -84,8 +99,6 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
   const [message, setMessage]             = useState("");
   const [schedDate, setSchedDate]         = useState("");
   const [schedTime, setSchedTime]         = useState("");
-  const [clientSearch, setClientSearch]   = useState("");
-  const [showClientList, setShowClientList] = useState(false);
 
   const selectedClient = clients.find(c => c.id === clientId);
 
@@ -94,10 +107,6 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
     if (recipientType === "group")       return selectedClient?.group_id ?? "";
     return customPhone;
   }, [recipientType, selectedClient, customPhone]);
-
-  const filteredClients = clients.filter(c =>
-    c.company.toLowerCase().includes(clientSearch.toLowerCase())
-  );
 
   const canSubmit = resolvedPhone && message && schedDate && schedTime &&
     (recipientType !== "custom" || customPhone);
@@ -118,81 +127,43 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
   const today = new Date().toISOString().split("T")[0];
 
-  const modal = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.94, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.94, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        onClick={e => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
-      >
-        <LiquidGlass className="border-white/10 rounded-2xl">
-          <div className="p-6 space-y-5">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-semibold">Agendar Mensagem</h3>
-              <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white tracking-tight">Agendar Mensagem</DialogTitle>
+          </DialogHeader>
+        </div>
 
-            {/* Cliente (opcional) */}
-            <div className="space-y-1.5 relative">
-              <label className="text-white/60 text-xs font-medium">Cliente <span className="text-white/30">(opcional)</span></label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowClientList(v => !v)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-left text-sm flex items-center justify-between"
-                >
-                  <span className={selectedClient ? "text-white" : "text-white/30"}>
-                    {selectedClient?.company ?? "Selecionar cliente..."}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-white/30" />
-                </button>
-                {showClientList && (
-                  <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-                    <div className="p-2 border-b border-white/5">
-                      <input
-                        autoFocus
-                        value={clientSearch}
-                        onChange={e => setClientSearch(e.target.value)}
-                        placeholder="Buscar cliente..."
-                        className="w-full bg-white/5 px-3 py-1.5 rounded-lg text-sm text-white placeholder-white/30 outline-none"
-                      />
-                    </div>
-                    <div className="max-h-48 overflow-y-auto">
-                      <button
-                        type="button"
-                        onClick={() => { setClientId(""); setShowClientList(false); setClientSearch(""); }}
-                        className="w-full px-3 py-2 text-left text-sm text-white/40 hover:bg-white/5"
-                      >
-                        Nenhum
-                      </button>
-                      {filteredClients.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => { setClientId(c.id); setShowClientList(false); setClientSearch(""); }}
-                          className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/5"
-                        >
-                          {c.company}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
+          {/* Cliente (opcional) */}
+          <div className="space-y-2">
+            <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/30 lowercase">(opcional)</span></Label>
+            <Select 
+              value={clientId || "none"} 
+              onValueChange={(value) => {
+                setClientId(value === "none" ? "" : value);
+              }}
+            >
+              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                <SelectValue placeholder="Selecionar Cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none" className="cursor-pointer text-white/50">Nenhum</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem
+                    key={c.id}
+                    value={c.id}
+                    className="cursor-pointer"
+                  >
+                    {c.company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
             {/* Destinatário */}
             <div className="space-y-1.5">
@@ -254,56 +225,46 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
             </div>
 
             {/* Data e Hora */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-white/60 text-xs font-medium">Data (BRT)</label>
-                <input
-                  type="date"
-                  min={today}
-                  value={schedDate}
-                  onChange={e => setSchedDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-primary/40"
-                  style={{ colorScheme: "dark" }}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <DatePicker 
+                  date={schedDate ? new Date(schedDate + 'T12:00:00') : undefined}
+                  setDate={(date) => setSchedDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-white/60 text-xs font-medium">Hora (BRT)</label>
-                <input
-                  type="time"
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <TimePicker 
                   value={schedTime}
-                  onChange={e => setSchedTime(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-primary/40"
-                  style={{ colorScheme: "dark" }}
+                  onChange={setSchedTime}
                 />
               </div>
             </div>
 
             {/* Ações */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-4 pt-2 mt-2">
               <Button
-                variant="ghost"
+                type="button"
                 onClick={onClose}
-                className="flex-1 h-10 text-white/50 hover:text-white border border-white/[0.06] hover:bg-white/5 rounded-xl text-sm"
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 flex-1 h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!canSubmit || isCreating}
-                className="flex-1 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_15px_rgba(104,41,192,0.3)]"
+                className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
               >
                 {isCreating
                   ? <Loader2 className="w-4 h-4 animate-spin" />
                   : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
               </Button>
             </div>
-          </div>
-        </LiquidGlass>
-      </motion.div>
-    </motion.div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-
-  return createPortal(modal, document.body);
 }
 
 // ── Row ───────────────────────────────────────────────────────────────────────
@@ -370,7 +331,7 @@ function MessageRow({ msg, index, onCancel, isCancelling }: {
 
 export default function ScheduledMessages() {
   const { messages, isLoading, createMessage, isCreating, cancelMessage, isCancelling } = useScheduledMessages();
-  const { clients } = useClients();
+  const { data: clients = [] } = useClients();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter]           = useState<MessageStatus | "all">("all");
 
@@ -403,33 +364,35 @@ export default function ScheduledMessages() {
           <Clock className="w-4 h-4" />
           <span>{counts.pending} agendada{counts.pending !== 1 ? "s" : ""}</span>
         </div>
+      </div>
+
+      {/* Filtros e Ação */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {FILTER_TABS.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setFilter(tab.value)}
+              className={cn(
+                "px-4 py-1.5 rounded-xl text-xs font-medium border transition-all",
+                filter === tab.value
+                  ? "bg-primary/20 border-primary/40 text-primary"
+                  : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
+              )}
+            >
+              {tab.label}
+              {counts[tab.value] > 0 && (
+                <span className="ml-1.5 opacity-60">{counts[tab.value]}</span>
+              )}
+            </button>
+          ))}
+        </div>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="h-10 px-5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)]"
         >
           Agendar Mensagem
         </Button>
-      </div>
-
-      {/* Filtros */}
-      <div className="flex gap-2 flex-wrap">
-        {FILTER_TABS.map(tab => (
-          <button
-            key={tab.value}
-            onClick={() => setFilter(tab.value)}
-            className={cn(
-              "px-4 py-1.5 rounded-xl text-xs font-medium border transition-all",
-              filter === tab.value
-                ? "bg-primary/20 border-primary/40 text-primary"
-                : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
-            )}
-          >
-            {tab.label}
-            {counts[tab.value] > 0 && (
-              <span className="ml-1.5 opacity-60">{counts[tab.value]}</span>
-            )}
-          </button>
-        ))}
       </div>
 
       {/* Lista */}

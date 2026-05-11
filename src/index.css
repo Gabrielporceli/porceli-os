@@ -452,11 +452,8 @@
 ✅ Corrige Radix Select (Dropdown de Status e Plano) - ATUALIZADO
    Agora usando as novas cores padronizadas
 =============================== */
-[data-radix-select-content-wrapper],
-[data-state="open"]>div[data-radix-popper-content-wrapper],
-.SelectContent,
 [data-radix-dropdown-menu-content] {
-  background: rgba(18, 18, 18, 0.7) !important;
+  background: rgba(18, 18, 18, 0.4) !important;
   backdrop-filter: blur(25px) brightness(1.2) !important;
   -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
