@@ -83,7 +83,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
     <>
       {/* Custom Overlay with blur */}
       <div
-        className="fixed inset-0 z-[999999] bg-black/40 backdrop-blur-[2px] animate-fade-in"
+        className="fixed inset-0 z-[999999] bg-black/50 backdrop-blur-[4px] animate-fade-in"
         onClick={onClose}
       />
 
