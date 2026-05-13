@@ -1134,10 +1134,12 @@ export default function Calendar() {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all hover:bg-white/[0.04] cursor-pointer border
-                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item) ? '!border-green-500/30' :
-                      item.status === 'Em andamento' || isOngoing(item) ? '!border-blue-500/30' :
-                      'border-white/[0.05]'}`}
+                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all cursor-pointer border
+                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
+                      ? '!border-green-500/30 hover:!border-green-500/60'
+                      : item.status === 'Em andamento' || isOngoing(item)
+                      ? '!border-blue-500/30 hover:!border-blue-500/60'
+                      : 'border-white/[0.05] hover:!border-white/[0.15]'}`}
                 >
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">

@@ -369,8 +369,7 @@ button:focus-visible,
   .dashboard-glow:hover {
     transform: translateY(-4px);
     @apply shadow-[0_20px_40px_-15px_#000000b3] bg-white/[0.05];
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    /* border removido daqui — controlado por Tailwind por card para não sobrescrever bordas coloridas */
     z-index: 10;
   }
 
