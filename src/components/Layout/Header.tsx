@@ -58,11 +58,8 @@ export const Header = () => {
         <header className="liquid-glass h-16 w-full max-w-7xl flex items-center px-6 gap-4 pointer-events-auto">
 
           {/* Logo Section */}
-          <div className="flex items-center gap-2 mr-4 pr-4 border-r border-white/5">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <img src="/logo.png" alt="Porceli" className="w-8 h-8 object-contain" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-white hidden sm:inline">Porceli</span>
+          <div className="flex items-center mr-4 pr-4 border-r border-white/5">
+            <img src="/logo.png" alt="Porceli" className="w-8 h-8 object-contain" />
           </div>
 
           {/* Navigation Items - Center Styled */}
