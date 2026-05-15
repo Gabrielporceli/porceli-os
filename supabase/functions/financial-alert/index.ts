@@ -52,7 +52,7 @@ serve(async () => {
     }
 
     const dateLabel = new Date().toLocaleDateString('pt-BR')
-    let message = `💰 *ALERTA FINANCEIRO - ${dateLabel}*\n\n`
+    let message = `💰 *Relatório Financeiro - ${dateLabel}*\n\n`
 
     if (hasOverdue) {
       const byClient: Record<string, { company: string; responsible: string; entries: { amount: number; date: string }[] }> = {}
@@ -70,7 +70,12 @@ serve(async () => {
         byClient[key].entries.push({ amount: Number(f.amount), date: f.due_date })
       }
 
-      message += `🔴 *CLIENTES INADIMPLENTES (${Object.keys(byClient).length}):*\n`
+      const totalInadimplentes = Object.values(byClient)
+        .flatMap(c => c.entries)
+        .reduce((s, e) => s + e.amount, 0)
+
+      message += `🔴 *Clientes Inadimplentes: ${Object.keys(byClient).length}*\n`
+      message += `💸 *Caixa total de inadimplentes: ${formatMoney(totalInadimplentes)}*\n`
 
       for (const { company, responsible, entries } of Object.values(byClient)) {
         const total = entries.reduce((s, e) => s + e.amount, 0)
