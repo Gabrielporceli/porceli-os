@@ -74,7 +74,7 @@ serve(async () => {
         .flatMap(c => c.entries)
         .reduce((s, e) => s + e.amount, 0)
 
-      message += `🔴 *Clientes Inadimplentes: ${Object.keys(byClient).length}*\n`
+      message += `🔴 *Clientes Inadimplentes: ${Object.keys(byClient).length}*\n\n`
       message += `💸 *Caixa total de inadimplentes: ${formatMoney(totalInadimplentes)}*\n`
 
       for (const { company, responsible, entries } of Object.values(byClient)) {
