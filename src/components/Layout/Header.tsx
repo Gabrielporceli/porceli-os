@@ -16,7 +16,7 @@ const menuItems = [
 ];
 
 export const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -92,7 +92,7 @@ export const Header = () => {
           {/* User Actions */}
           <div className="flex items-center ml-4 pl-4 border-l border-white/5">
             <button
-              onClick={() => signOut()}
+              onClick={() => logout()}
               className="p-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 group"
               title="Sair"
             >
