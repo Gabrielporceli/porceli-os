@@ -59,10 +59,8 @@ export const Header = () => {
 
           {/* Logo Section */}
           <div className="flex items-center gap-2 mr-4 pr-4 border-r border-white/5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center icon-glow-cyan">
-              <div className="w-5 h-5 border-2 border-black rounded rotate-45 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 bg-black rounded-full" />
-              </div>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img src="/logo.png" alt="Porceli" className="w-8 h-8 object-contain" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white hidden sm:inline">Porceli</span>
           </div>

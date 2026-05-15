@@ -27,10 +27,8 @@ export function AppSidebar() {
     <div className="w-64 h-screen flex flex-col sidebar-glass border-r border-white/5 relative z-50">
       {/* Logo Section */}
       <div className="p-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center icon-glow-cyan">
-          <div className="w-6 h-6 border-2 border-black rounded-md rotate-45 flex items-center justify-center">
-            <div className="w-2 h-2 bg-black rounded-full" />
-          </div>
+        <div className="w-10 h-10 flex items-center justify-center">
+          <img src="/logo.png" alt="Porceli" className="w-10 h-10 object-contain" />
         </div>
         <span className="text-xl font-bold tracking-tight text-white">Porceli</span>
       </div>
