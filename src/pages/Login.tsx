@@ -102,10 +102,10 @@ const Login = () => {
                   transition={{ type: "spring", duration: 0.8 }}
                   className="mx-auto w-10 h-10 flex items-center justify-center"
                 >
-                  <img 
-                    src="/lovable-uploads/71999d17-6e7e-45ff-bd6d-8c56b9968b1d.png" 
-                    alt="porceli Logo" 
-                    className="w-8 h-8 object-contain"
+                  <img
+                    src="/logo.png"
+                    alt="Porceli Logo"
+                    className="w-12 h-12 object-contain"
                   />
                 </motion.div>
 
