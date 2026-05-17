@@ -42,6 +42,13 @@ function isBusinessDay(d: Date, h: Set<string>): boolean { return !isWeekend(d) 
 function prevBD(d: Date, h: Set<string>): Date { const r = new Date(d); r.setDate(r.getDate()-1); while(!isBusinessDay(r,h)) r.setDate(r.getDate()-1); return r; }
 function effectiveDue(due: Date, h: Set<string>): Date { return isBusinessDay(due,h) ? due : prevBD(due,h); }
 
+// Retorna o dia útil em que a notificação deve ser enviada (antecipa se cair em fim de semana/feriado)
+function notifDay(due: Date, daysAhead: number, h: Set<string>): string {
+  const raw = new Date(due); raw.setDate(raw.getDate() - daysAhead);
+  const bd  = isBusinessDay(raw, h) ? raw : prevBD(raw, h);
+  return bd.toISOString().slice(0, 10);
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function parseLocalDate(iso: string): Date {
@@ -155,6 +162,18 @@ serve(async (req) => {
   const holidays = getBrazilianHolidays(today.getFullYear());
   const results  = { pending: 0, overdue: 0, skipped: 0, errors: 0 };
 
+  // Nunca envia notificações em finais de semana ou feriados nacionais
+  if (!isBusinessDay(today, holidays)) {
+    console.log(`asaas-payment-alerts: ${todayISO} não é dia útil — notificações suspensas.`);
+    await supabase.from("automations")
+      .update({ last_triggered_at: new Date().toISOString() })
+      .eq("jobname", "asaas-alertas-pagamento");
+    return new Response(
+      JSON.stringify({ success: true, message: "Dia não útil — notificações não enviadas.", results }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     // Mapa clientes Asaas: id → { name, phone }
     const asaasCustomers = (await asaasGetAll("/customers")) as Array<{ id: string; name: string; mobilePhone?: string }>;
@@ -178,26 +197,31 @@ serve(async (req) => {
       try {
         const rawDue  = parseLocalDate(p.dueDate);
         const effDue  = effectiveDue(rawDue, holidays);
-        const days    = daysBetween(today, effDue);
         const cust    = customerMap.get(p.customer);
         if (!cust) continue;
 
-        let type: string | null = null, daysLeft = 0;
-        if (days === 0)      { type = "due_today";   daysLeft = 0; }
-        else if (days === 2) { type = "due_soon_2d"; daysLeft = 2; }
-        else if (days === 5) { type = "due_soon_5d"; daysLeft = 5; }
+        // Calcula o dia útil correspondente a cada janela de notificação (antecipa se cair em fds/feriado)
+        const nd5 = notifDay(effDue, 5, holidays);
+        const nd2 = notifDay(effDue, 2, holidays);
+        const nd0 = notifDay(effDue, 0, holidays);
+
+        let type: string | null = null;
+        if (todayISO === nd0)      type = "due_today";
+        else if (todayISO === nd2) type = "due_soon_2d";
+        else if (todayISO === nd5) type = "due_soon_5d";
         if (!type) { results.skipped++; continue; }
 
         if (await wasNotified(supabase, p.id, type, 1)) { results.skipped++; continue; }
 
-        const effISO = effDue.toISOString().slice(0, 10);
-        const msg    = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
+        const daysLeft = daysBetween(today, effDue);
+        const effISO   = effDue.toISOString().slice(0, 10);
+        const msg      = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
 
         if (cust.phone) await sendWhatsApp(formatPhoneBR(cust.phone), msg);
         const gid = groupMap.get(cust.name.toLowerCase());
         if (gid) await sendWhatsApp(gid, msg);
 
-        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, status: "sent", metadata: { days, effISO } });
+        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, status: "sent", metadata: { daysLeft, effISO } });
         results.pending++;
       } catch (e) { console.error("pending:", (e as Error).message); results.errors++; }
     }
