@@ -136,7 +136,7 @@ function overdueConfig(d: number): { type: string; withinDays: number; urgency: 
 function msgPending(name: string, desc: string, due: string, val: string, url: string, days: number): string {
   const intro = days === 0
     ? `Olá! ⚠️ Sua fatura vence *hoje*. Segue o resumo:`
-    : `Olá! 📅 Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
+    : `Olá! Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
   const footer = days === 0
     ? `Regularize ainda hoje para manter o serviço ativo. Se já pagou, pode ignorar. 😊`
     : `Pague dentro do prazo e evite imprevistos. 😊`;
