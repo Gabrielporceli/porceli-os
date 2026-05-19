@@ -7,6 +7,14 @@ const EVO_URL       = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielp
 const EVO_INSTANCE  = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
 const EVO_KEY       = Deno.env.get("EVOLUTION_API_KEY") ?? "";
 
+function formatPhoneBR(phone: string): string {
+  const c = phone.replace(/\D/g, "");
+  if (c.startsWith("55") && c.length >= 12) return `+${c}`;
+  if (c.length === 11) return `+55${c}`;
+  if (c.length === 10) return `+55${c}`;
+  return phone; // group JID ou formato desconhecido: passa sem alterar
+}
+
 async function sendWhatsApp(number: string, text: string): Promise<void> {
   const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
     method: "POST",
@@ -42,7 +50,7 @@ serve(async () => {
 
   for (const msg of messages) {
     try {
-      await sendWhatsApp(msg.phone, msg.message);
+      await sendWhatsApp(formatPhoneBR(msg.phone), msg.message);
 
       await supabase
         .from("scheduled_messages")
