@@ -227,14 +227,14 @@ function AutomationRow({
           <Icon className="w-5 h-5" />
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h4 className="text-white font-bold tracking-tight">{automation.display_name}</h4>
             <span className={cn("text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 font-medium", colors.badge)}>
               {CATEGORY_LABELS[automation.category] ?? automation.category}
             </span>
           </div>
-          <p className="text-white/40 text-sm leading-relaxed line-clamp-1">
+          <p className="text-white/40 text-sm truncate">
             {automation.description}
           </p>
         </div>

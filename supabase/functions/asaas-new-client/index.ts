@@ -11,8 +11,8 @@ const SERVICE_KEY      = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY        = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_URL        = "https://api.asaas.com/v3";
 const EVO_URL          = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE     = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY          = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const EVO_INSTANCE     = "agencia03";
+const EVO_KEY          = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 const ADMIN_GROUP      = Deno.env.get("ASAAS_ADMIN_GROUP_JID") ?? "120363162167738258@g.us";
 
 // ── Feriados nacionais brasileiros ─────────────────────────────────────────
