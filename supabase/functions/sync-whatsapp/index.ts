@@ -18,8 +18,8 @@ serve(async (req) => {
     )
 
     const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
-    const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim()
-    const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim()
+    const evolutionApiKey = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
+    const evolutionInstance = "agencia03"
     const defaultUserId = Deno.env.get('DEFAULT_USER_ID') || 'bad3abae-951e-49a4-8738-9037661fd5a1'
 
     console.log(`🔄 Iniciando sincronização WhatsApp para instância: ${evolutionInstance}`)

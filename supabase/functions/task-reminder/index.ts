@@ -4,8 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ""
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ""
 const EVOLUTION_URL      = Deno.env.get('EVOLUTION_API_URL') || "https://api.gabrielporceli.com.br"
-const EVOLUTION_API_KEY  = Deno.env.get('EVOLUTION_API_KEY') || ""
-const EVOLUTION_INSTANCE = Deno.env.get('EVOLUTION_INSTANCE') || "agencia02"
+const EVOLUTION_API_KEY  = Deno.env.get('EVOLUTION_API_KEY') || "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
+const EVOLUTION_INSTANCE = Deno.env.get('EVOLUTION_INSTANCE') || "agencia03"
 const GROUP_JID          = Deno.env.get('ASAAS_ADMIN_GROUP_JID') || "120363162167738258@g.us"
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -52,7 +52,7 @@ serve(async (req) => {
           continue;
         }
 
-        const text = `⏳ *LEMBRETE (Calendário)*\n\nSua reunião: *${event.title}*\nComeça em *10 minutos!*`
+        const text = `*LEMBRETE (Calendario)*\n\nSua reuniao: *${event.title}*\nComeca em *10 minutos!*`
         await sendWhatsApp(text)
         notificationsSent++
       }
@@ -70,16 +70,23 @@ serve(async (req) => {
           continue;
         }
 
-        const text = `⏳ *LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo começa em *10 minutos!*`
+        const text = `*LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo comeca em *10 minutos!*`
         await sendWhatsApp(text)
         notificationsSent++
       }
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    if (notificationsSent > 0) {
+      await supabase
+        .from('automations')
+        .update({ last_triggered_at: new Date().toISOString() })
+        .eq('jobname', 'vigilante-tarefas-10min')
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
       notifications: notificationsSent,
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString()
     }), { status: 200 })
 
   } catch (error) {

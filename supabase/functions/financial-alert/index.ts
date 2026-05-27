@@ -4,8 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 const SUPABASE_URL              = Deno.env.get('SUPABASE_URL') || ""
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ""
 const EVOLUTION_URL             = Deno.env.get('EVOLUTION_API_URL') || "https://api.gabrielporceli.com.br"
-const EVOLUTION_API_KEY         = Deno.env.get('EVOLUTION_API_KEY') || ""
-const EVOLUTION_INSTANCE        = Deno.env.get('EVOLUTION_INSTANCE') || "agencia02"
+const EVOLUTION_API_KEY         = Deno.env.get('EVOLUTION_API_KEY') || "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
+const EVOLUTION_INSTANCE        = Deno.env.get('EVOLUTION_INSTANCE') || "agencia03"
 const GROUP_JID                 = Deno.env.get('ASAAS_ADMIN_GROUP_JID') || "120363162167738258@g.us"
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -48,11 +48,15 @@ serve(async () => {
     const hasExpiring = expiringContracts && expiringContracts.length > 0
 
     if (!hasOverdue && !hasExpiring) {
+      await supabase
+        .from('automations')
+        .update({ last_triggered_at: new Date().toISOString() })
+        .eq('jobname', 'alerta-financeiro-diario')
       return new Response(JSON.stringify({ success: true, message: "Nada a reportar hoje." }), { status: 200 })
     }
 
     const dateLabel = new Date().toLocaleDateString('pt-BR')
-    let message = `💰 *Relatório Financeiro - ${dateLabel}*\n\n`
+    let message = `*Relatorio Financeiro - ${dateLabel}*\n\n`
 
     if (hasOverdue) {
       const byClient: Record<string, { company: string; responsible: string; entries: { amount: number; date: string }[] }> = {}
@@ -74,8 +78,8 @@ serve(async () => {
         .flatMap(c => c.entries)
         .reduce((s, e) => s + e.amount, 0)
 
-      message += `🔴 *Clientes Inadimplentes: ${Object.keys(byClient).length}*\n\n`
-      message += `💸 *Caixa total de inadimplentes: ${formatMoney(totalInadimplentes)}*\n`
+      message += `*Clientes Inadimplentes: ${Object.keys(byClient).length}*\n\n`
+      message += `*Caixa total de inadimplentes: ${formatMoney(totalInadimplentes)}*\n`
 
       for (const { company, responsible, entries } of Object.values(byClient)) {
         const total = entries.reduce((s, e) => s + e.amount, 0)
@@ -83,36 +87,47 @@ serve(async () => {
         if (responsible) message += ` (${responsible})`
         message += `\n`
         for (const e of entries) {
-          message += `  • ${referenceMonth(e.date)}: *${formatMoney(e.amount)}*\n`
+          message += `  - ${referenceMonth(e.date)}: *${formatMoney(e.amount)}*\n`
         }
         if (entries.length > 1) {
-          message += `  📌 Total: *${formatMoney(total)}*\n`
+          message += `  Total: *${formatMoney(total)}*\n`
         }
       }
       message += `\n`
     } else {
-      message += `✅ *Sem inadimplentes no momento.*\n\n`
+      message += `*Sem inadimplentes no momento.*\n\n`
     }
 
     if (hasExpiring) {
-      message += `⚠️ *CONTRATOS VENCENDO EM 30 DIAS (${expiringContracts!.length}):*\n`
+      message += `*CONTRATOS VENCENDO EM 30 DIAS (${expiringContracts!.length}):*\n`
       for (const c of expiringContracts!) {
         const client   = (c as any).clients
         const endDate  = new Date(c.end_date + 'T12:00:00').toLocaleDateString('pt-BR')
         const daysLeft = Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)
         message += `\n*${client?.company || 'Cliente desconhecido'}*\n`
-        message += `  • Plano: ${c.type} — ${formatMoney(Number(c.monthly_value))}/mês\n`
-        message += `  • Vence em: *${endDate}* (${daysLeft} dias)\n`
+        message += `  - Plano: ${c.type} - ${formatMoney(Number(c.monthly_value))}/mes\n`
+        message += `  - Vence em: *${endDate}* (${daysLeft} dias)\n`
       }
     } else {
-      message += `✅ *Sem contratos vencendo nos próximos 30 dias.*`
+      message += `*Sem contratos vencendo nos proximos 30 dias.*`
     }
 
-    await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
+    const evoRes = await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
       body: JSON.stringify({ number: GROUP_JID, text: message })
     })
+    const evoBody = await evoRes.text()
+    if (!evoRes.ok) {
+      console.error(`Evolution API error ${evoRes.status}:`, evoBody)
+    } else {
+      console.log('Evolution API ok:', evoRes.status, evoBody.slice(0, 120))
+    }
+
+    await supabase
+      .from('automations')
+      .update({ last_triggered_at: new Date().toISOString() })
+      .eq('jobname', 'alerta-financeiro-diario')
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' }, status: 200

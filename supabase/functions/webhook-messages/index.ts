@@ -215,8 +215,8 @@ serve(async (req) => {
       if (!contactPhoto && !isGroup) {
         try {
           const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim();
-          const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim();
-          const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim();
+          const evolutionApiKey = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
+          const evolutionInstance = "agencia03";
 
           console.log(`📸 Buscando foto de perfil para: ${remoteJid}`);
           // Buscar a foto via Evolution API (v2 recomenda POST para este endpoint)

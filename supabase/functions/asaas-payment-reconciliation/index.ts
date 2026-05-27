@@ -8,8 +8,8 @@ const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY    = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_BASE   = "https://api.asaas.com/v3";
 const EVO_URL      = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const EVO_INSTANCE = "agencia03";
+const EVO_KEY      = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 const ADMIN_GROUP  = Deno.env.get("ASAAS_ADMIN_GROUP_JID") ?? "120363162167738258@g.us";
 
 const EPS         = 0.50;
@@ -86,6 +86,9 @@ serve(async (req) => {
     const { data: pendingEntries } = await supabase.from("financial_entries").select("*").eq("status", "pending");
 
     if (!pendingEntries?.length || !received.length) {
+      const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const reason = !pendingEntries?.length ? "Nenhuma entrada pendente no sistema." : "Nenhum pagamento recebido no Asaas nos últimos 6 meses.";
+      await sendWhatsApp(ADMIN_GROUP, `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n✅ Nada a conciliar hoje.\n_${reason}_`);
       await supabase.from("automations").update({ last_triggered_at: new Date().toISOString() }).eq("jobname", "asaas-reconciliacao");
       return new Response(JSON.stringify({ success: true, matched: 0, unmatched: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
