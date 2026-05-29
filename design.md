@@ -266,16 +266,72 @@ const buttonVariants = cva(
 <Button variant="dashed"><Plus className="h-4 w-4" /> Adicionar</Button>
 ```
 
-### 3.3 Animação nos botões
+### 3.3 Animação nos botões (padrão oficial)
 
-Todos os botões têm `active:scale-95` para feedback tátil. Nos botões com Framer Motion:
+O padrão de animação envolve um `<motion.div>` wrapper ao redor do `<Button>`. O botão em si não carrega a animação — o wrapper Framer Motion faz isso. Isso garante que o CVA e as classes do botão fiquem intactos enquanto a animação é controlada externamente.
+
+**Comportamento:**
+- **Hover:** sobe `2px` + cresce `5%` → sensação de "levitar"
+- **Clique (tap):** encolhe para `95%` → feedback tátil imediato
+- **Transição:** mola (`spring`) com `stiffness: 400` e `damping: 17` — snappy, com leve overshoot natural
 
 ```tsx
-<motion.button
-  whileHover={{ scale: 1.02 }}
-  whileTap={{ scale: 0.97 }}
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+
+// Padrão para QUALQUER botão de ação principal
+<motion.div
+  whileHover={{ scale: 1.05, translateY: -2 }}
+  whileTap={{ scale: 0.95 }}
   transition={{ type: "spring", stiffness: 400, damping: 17 }}
 >
+  <Button ...>Label</Button>
+</motion.div>
+```
+
+### 3.4 Variantes visuais com animação — exemplos reais
+
+**Botão primário (ação principal, ex: "Nova Transação"):**
+```tsx
+<motion.div
+  whileHover={{ scale: 1.05, translateY: -2 }}
+  whileTap={{ scale: 0.95 }}
+  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+>
+  <Button
+    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold uppercase tracking-widest text-xs"
+  >
+    Nova Transação
+  </Button>
+</motion.div>
+```
+- `shadow-[0_0_20px_rgba(104,41,192,0.3)]` → glow roxo permanente embaixo do botão
+- `uppercase tracking-widest text-xs font-bold` → texto em caixa alta com kerning amplo
+- `rounded-2xl` (`border-radius: 16px`) → mais arredondado que o padrão `rounded-md`
+- No hover: fundo passa para `bg-primary/90` (ligeiramente mais claro)
+
+**Botão ícone / glass (ações secundárias, ex: sync/refresh):**
+```tsx
+<motion.div
+  whileHover={{ scale: 1.05, translateY: -2 }}
+  whileTap={{ scale: 0.95 }}
+  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+>
+  <Button
+    size="icon"
+    className="liquid-glass border-white/5 text-white h-11 w-11 !rounded-2xl hover:bg-white/[0.02]"
+  >
+    <RefreshCw className="w-4 h-4 text-white/70" />
+  </Button>
+</motion.div>
+```
+- `liquid-glass` → fundo semitransparente com blur
+- `h-11 w-11` (`44×44px`) com `!rounded-2xl` → quadrado levemente arredondado
+- Ícone em `text-white/70` → 70% de opacidade no estado normal
+- **Estado de loading:** ícone gira com `animate-spin` e muda para `text-primary` (roxo)
+
+```tsx
+<RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : 'text-white/70'}`} />
 ```
 
 ---
