@@ -523,6 +523,12 @@ export default function Calendar() {
       const timeStr = newEventTime || "12:00";
       const startDateTime = `${dateStr}T${timeStr}:00-03:00`;
 
+      // Calcula o fim como start + 1 hora (evita hardcode que quebrava horários após 13:00)
+      const [startHour, startMin] = timeStr.split(':').map(Number);
+      const endHour = startHour + 1 >= 24 ? 23 : startHour + 1;
+      const endTimeStr = `${String(endHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+      const endDateTime = `${dateStr}T${endTimeStr}:00-03:00`;
+
       let meetingLink = "";
       if (createMeetLink) {
         toast({ title: "Gerando link Google Meet..." });
@@ -532,7 +538,7 @@ export default function Calendar() {
             action: "CREATE_EVENT",
             title: newEventTitle,
             start: startDateTime,
-            end: `${dateStr}T13:00:00-03:00`,
+            end: endDateTime,
             createMeetLink: true
           },
         });
