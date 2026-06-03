@@ -303,43 +303,71 @@ export default function Financial() {
             <h3 className="text-xl font-bold text-red-200 tracking-tight">Pagamentos em Atraso</h3>
           </div>
           <div className="p-6 space-y-4">
-            {overdueEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all">
-                <div className="flex-1 grid grid-cols-5 gap-6 items-center">
-                  <div>
-                    <h4 className="text-white font-bold mb-1 tracking-tight">{entry.name}</h4>
+            {(() => {
+              // Agrupar por cliente
+              const groups = overdueEntries.reduce((acc: Record<string, typeof overdueEntries>, entry: any) => {
+                const key = entry.name;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(entry);
+                return acc;
+              }, {});
+
+              return Object.entries(groups).map(([clientName, entries]: [string, any[]]) => {
+                const totalAmount = entries.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+                return (
+                  <div key={clientName} className="liquid-glass border border-white/5 rounded-2xl overflow-hidden">
+                    {/* Cabeçalho do cliente */}
+                    <div className="flex items-center justify-between px-5 py-4 bg-red-500/[0.03] border-b border-white/[0.05]">
+                      <h4 className="text-white font-bold tracking-tight">{clientName}</h4>
+                      <div className="flex items-center gap-4">
+                        <span className="text-white/30 text-xs font-medium">
+                          {entries.length} {entries.length === 1 ? 'fatura' : 'faturas'}
+                        </span>
+                        <span className="text-red-400 font-black">{formatCurrency(totalAmount)}</span>
+                      </div>
+                    </div>
+
+                    {/* Entradas individuais */}
+                    <div className="divide-y divide-white/[0.03]">
+                      {entries.map((entry: any) => (
+                        <div key={entry.id} className="flex items-center px-5 py-4 hover:bg-white/[0.02] transition-all">
+                          <div className="flex-1 grid grid-cols-4 gap-6 items-center">
+                            <div className="text-center">
+                              <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                              <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
+                              <p className="text-white/80 font-medium">{entry.reference}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
+                              <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
+                            </div>
+                            <div className="flex justify-center">
+                              <motion.div
+                                whileHover={{ scale: 1.05, translateY: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                              >
+                                <Button
+                                  onClick={() => handleMarkAsPaid(entry.id)}
+                                  disabled={isMarkingAsPaid}
+                                  className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-8 font-bold transition-all"
+                                  size="sm"
+                                >
+                                  Confirmar
+                                </Button>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                    <p className="text-white font-bold text-lg">{formatCurrency(Number(entry.amount))}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                    <p className="text-white/80 font-medium">{entry.reference}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                    <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
-                  </div>
-                  <div className="flex justify-center">
-                    <motion.div
-                      whileHover={{ scale: 1.05, translateY: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <Button
-                        onClick={() => handleMarkAsPaid(entry.id)}
-                        disabled={isMarkingAsPaid}
-                        className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-8 font-bold transition-all"
-                        size="sm"
-                      >
-                        Confirmar
-                      </Button>
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         </Card>
       )}
