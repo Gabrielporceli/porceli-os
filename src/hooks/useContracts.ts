@@ -221,24 +221,27 @@ export const useUpdateContract = () => {
           console.error('Error updating financial entries:', err);
         }
 
-        // Trigger webhook
-        try {
-          const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
-          
-          await supabase.functions.invoke('send-client-webhook', {
-            body: {
-              ...data.client,
-              plan: data.type,
-              contract_end: data.end_date,
-              start_date: data.start_date,
-              payment_day: finalPaymentDay,
-              monthly_value: data.monthly_value,
-              event: 'contract_updated',
-              updated_at: new Date().toISOString()
-            }
-          });
-        } catch (webhookErr) {
-          console.error('Erro ao enviar webhook de atualização:', webhookErr);
+        // Trigger webhook — nunca dispara ao cancelar (status inactive)
+        // para evitar envio de mensagem de boas-vindas ao cliente indevidamente
+        if (updates.status !== 'inactive') {
+          try {
+            const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
+
+            await supabase.functions.invoke('send-client-webhook', {
+              body: {
+                ...data.client,
+                plan: data.type,
+                contract_end: data.end_date,
+                start_date: data.start_date,
+                payment_day: finalPaymentDay,
+                monthly_value: data.monthly_value,
+                event: 'contract_updated',
+                updated_at: new Date().toISOString()
+              }
+            });
+          } catch (webhookErr) {
+            console.error('Erro ao enviar webhook de atualização:', webhookErr);
+          }
         }
       }
 

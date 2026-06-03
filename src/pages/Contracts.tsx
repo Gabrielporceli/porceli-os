@@ -152,53 +152,79 @@ export default function Contracts() {
     }
   };
 
-  const handleConfirmCancel = async () => {
-    if (deletingContract) {
+  // Lógica compartilhada de cancelamento: marca inativo, atualiza tag e remove faturas pendentes
+  const cancelContractBase = async (contract: Contract) => {
+    await updateContractMutation.mutateAsync({ id: contract.id, status: 'inactive' });
+
+    if (contract.client_id) {
+      const { data: { user } } = await supabase.auth.getUser();
+
       try {
-        // Atualizar status do contrato para inactive
-        await updateContractMutation.mutateAsync({ id: deletingContract.id, status: 'inactive' });
+        await updateClientMutation.mutateAsync({ id: contract.client_id, tags: ['Inativo'] });
+        queryClient.invalidateQueries({ queryKey: ['clients'] });
+      } catch (clientError) {
+        console.error('Erro ao atualizar tag do cliente:', clientError);
+      }
 
-        // Atualizar tag do cliente para "Inativo" e deletar faturas pendentes se houver client_id
-        if (deletingContract.client_id) {
-          try {
-            // Atualizar tag do cliente
-            await updateClientMutation.mutateAsync({
-              id: deletingContract.client_id,
-              tags: ['Inativo']
+      if (user) {
+        const { error: deleteError } = await supabase
+          .from('financial_entries')
+          .delete()
+          .eq('client_id', contract.client_id)
+          .eq('user_id', user.id)
+          .eq('status', 'pending');
+
+        if (deleteError) {
+          console.error('Erro ao deletar faturas pendentes:', deleteError);
+        } else {
+          queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+        }
+      }
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!deletingContract) return;
+    try {
+      await cancelContractBase(deletingContract);
+      setDeletingContract(null);
+    } catch (error) {
+      console.error('Error canceling contract:', error);
+    }
+  };
+
+  const handleConfirmCancelWithFine = async (amount: number, dueDate: string) => {
+    if (!deletingContract) return;
+    try {
+      await cancelContractBase(deletingContract);
+
+      // Inserir fatura de multa rescisória
+      if (deletingContract.client_id) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error: fineError } = await supabase
+            .from('financial_entries')
+            .insert({
+              client_id: deletingContract.client_id,
+              user_id: user.id,
+              name: `Multa Rescisória — ${deletingContract.client}`,
+              amount,
+              due_date: dueDate,
+              reference: 'Multa Rescisória',
+              status: 'pending',
             });
-            console.log('Tag do cliente atualizada para Inativo');
 
-            // Invalidar query de clientes para atualizar a UI
-            queryClient.invalidateQueries({ queryKey: ['clients'] });
-
-            // Deletar todas as faturas pendentes (não pagas) do cliente
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { error: deleteError } = await supabase
-                .from('financial_entries')
-                .delete()
-                .eq('client_id', deletingContract.client_id)
-                .eq('user_id', user.id)
-                .eq('status', 'pending');
-
-              if (deleteError) {
-                console.error('Erro ao deletar faturas pendentes:', deleteError);
-              } else {
-                console.log('Faturas pendentes deletadas com sucesso');
-                // Invalidar queries de faturas para atualizar a UI
-                queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
-              }
-            }
-          } catch (clientError) {
-            console.error('Erro ao atualizar tag do cliente ou deletar faturas:', clientError);
-            // Não falhar o cancelamento do contrato se a atualização do cliente falhar
+          if (fineError) {
+            console.error('Erro ao inserir multa rescisória:', fineError);
+          } else {
+            queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
           }
         }
-
-        setDeletingContract(null);
-      } catch (error) {
-        console.error('Error updating contract:', error);
       }
+
+      setDeletingContract(null);
+    } catch (error) {
+      console.error('Error canceling contract with fine:', error);
     }
   };
 
@@ -479,6 +505,7 @@ export default function Contracts() {
         contract={deletingContract}
         onClose={() => setDeletingContract(null)}
         onConfirm={handleConfirmCancel}
+        onConfirmWithFine={handleConfirmCancelWithFine}
       />
       <RenewContractModal
         isOpen={!!renewingContract}
