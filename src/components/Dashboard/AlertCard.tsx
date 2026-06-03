@@ -1,6 +1,5 @@
 
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, DollarSign, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,51 +30,36 @@ const getAlertIcon = (type: Alert['type']) => {
   }
 };
 
-const getAlertColor = (type: Alert['type']) => {
-  switch (type) {
-    case 'danger':
-      return 'bg-red-500/10 text-red-400 border-red-500/20';
-    case 'warning':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    case 'info':
-      return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    default:
-      return 'bg-white/5 text-white/40 border-white/10';
-  }
-};
-
 export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
   const alertsToShow = typeof limit === 'number' ? alerts.slice(0, limit) : alerts;
+
   return (
-    <Card className={cn("liquid-glass p-4 md:p-5 h-full animate-premium-in shadow-2xl", className)}>
-      <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-lg font-semibold text-white">Alertas & Notificações</h3>
+    <Card className={cn("liquid-glass dashboard-glow border border-white/5 overflow-hidden h-full animate-premium-in shadow-2xl", className)}>
+      <div className="p-6 border-b border-white/5">
+        <h3 className="text-xl font-bold text-white tracking-tight">Alertas & Notificações</h3>
       </div>
-      <div className="space-y-3 overflow-y-auto overflow-x-hidden pr-1 max-h-[600px] pt-1">
+
+      <div className="overflow-y-auto overflow-x-hidden max-h-[560px]">
         {alertsToShow.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 opacity-30">
             <AlertTriangle className="w-12 h-12 mb-2" />
-            <p className="text-sm">Sem alertas no momento</p>
+            <p className="text-sm text-white">Sem alertas no momento</p>
           </div>
         ) : (
-          alertsToShow.map((alert) => (
-            <div 
-              key={alert.id} 
-              className="flex items-center justify-between p-3 rounded-lg liquid-glass border-white/[0.05] dashboard-glow"
-            >
-              <div className="flex-1 min-w-0 pr-4">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-white text-sm font-medium truncate">{alert.title}</h4>
+          <div className="divide-y divide-white/5">
+            {alertsToShow.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
+              >
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white font-semibold text-sm">{alert.title}</h4>
+                  <p className="text-white/40 text-xs mt-0.5 truncate">{alert.description}</p>
                 </div>
-                <p className="text-Porceli-gray-400 text-xs truncate mt-0.5">{alert.description}</p>
+                <span className="text-white/30 text-xs shrink-0">{alert.timestamp}</span>
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-Porceli-gray-500 text-[10px]">
-                  {alert.timestamp}
-                </span>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </Card>

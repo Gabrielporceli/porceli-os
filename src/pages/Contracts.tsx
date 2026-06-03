@@ -301,41 +301,37 @@ export default function Contracts() {
 
       {/* Expiring Contracts Alert */}
       {expiringContracts.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
+        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5 flex items-center gap-3">
             <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Atenção Prioritária</span>
+            <h3 className="text-xl font-bold text-white tracking-tight">Atenção Prioritária</h3>
           </div>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="divide-y divide-white/5">
             {expiringContracts.map((contract) => (
               <motion.div
                 key={contract.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="liquid-glass border-yellow-500/20 bg-yellow-500/[0.02] p-4 flex items-center justify-between"
+                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shrink-0">
                     <Calendar className="w-5 h-5 text-yellow-500" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold">{contract.client}</h4>
+                    <h4 className="text-white font-semibold">{contract.client}</h4>
                     <p className="text-white/40 text-xs">{contract.type} • Vence em {formatDate(contract.endDate)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 shrink-0">
                   <div className="text-right">
-                    <p className="text-xs text-yellow-500/60 font-bold uppercase tracking-wider">Restam</p>
+                    <p className="text-[10px] text-yellow-500/60 font-black uppercase tracking-widest">Restam</p>
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
-                  <motion.div 
-                    whileHover={{ scale: 1.05, translateY: -2 }} 
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
+                  <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                     <Button
                       onClick={() => handleRenewClick(contract)}
-                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-8 rounded-2xl transition-all"
+                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-6 rounded-2xl transition-all font-bold text-xs uppercase tracking-widest"
                     >
                       Renovar Agora
                     </Button>
@@ -344,36 +340,33 @@ export default function Contracts() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Contracts List */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-white/40" />
-          <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Lista de Contratos</h3>
+      <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-xl font-bold text-white tracking-tight">Lista de Contratos</h3>
+          <p className="text-[10px] text-white/20 font-medium">Sincronizado automaticamente</p>
         </div>
-        <p className="text-[10px] text-white/20 font-medium">Sincronizado automaticamente</p>
-      </div>
 
-      {contracts.length === 0 ? (
-        <div className="liquid-glass border-white/5 p-20 text-center">
-          <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
-            <FileText className="w-10 h-10 text-white/10" />
+        {contracts.length === 0 ? (
+          <div className="p-20 text-center">
+            <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
+              <FileText className="w-10 h-10 text-white/10" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
+            <p className="text-white/30 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
-          <p className="text-white/30 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 pb-10">
-          {contracts.map((contract) => (
-            <motion.div
-              key={contract.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              whileHover={{ scale: 1.005, translateY: -2 }}
-              className="liquid-glass border-white/5 p-5 flex items-center justify-between group transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] min-h-[100px]"
-            >
+        ) : (
+          <div className="divide-y divide-white/5">
+            {contracts.map((contract) => (
+              <motion.div
+                key={contract.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-between p-5 hover:bg-white/[0.04] transition-all duration-300 group"
+              >
               <div className="flex items-center gap-6 flex-1">
                 <div className={cn(
                   "w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center transition-all duration-500",
@@ -491,9 +484,10 @@ export default function Contracts() {
                 </motion.div>
               </div>
             </motion.div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </Card>
       <EditContractModal
         isOpen={!!editingContract}
         contract={editingContract}

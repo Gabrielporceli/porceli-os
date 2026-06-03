@@ -450,7 +450,7 @@ export default function LeadsKanban() {
   return (
     <main className="relative">
       <div
-        className="backdrop-blur-3xl bg-[#121212]/50 border border-white/[0.08] shadow-2xl rounded-3xl mb-8"
+        className="liquid-glass dashboard-glow border border-white/5 rounded-3xl mb-8 overflow-hidden"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
         <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-6 pb-4 space-y-6">
@@ -500,11 +500,9 @@ export default function LeadsKanban() {
               </div>
             </div>
 
-          <Card
-            className="liquid-glass border-white/[0.05] px-4 py-3 sm:px-6 shadow-2xl"
-          >
+          <div className="border-t border-white/5 px-4 py-3 sm:px-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-              <span className="text-white/60 font-semibold text-xs sm:text-sm uppercase tracking-wider">Filtros:</span>
+              <span className="text-white/40 font-black text-[10px] uppercase tracking-widest">Filtros:</span>
               <div className="flex flex-wrap gap-2">
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
@@ -546,7 +544,7 @@ export default function LeadsKanban() {
                 ))}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 

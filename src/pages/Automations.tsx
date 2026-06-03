@@ -211,7 +211,7 @@ function AutomationRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       className={cn(
-        "flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all group",
+        "flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group",
         !automation.enabled && "opacity-55"
       )}
     >
@@ -227,26 +227,26 @@ function AutomationRow({
           <Icon className="w-5 h-5" />
         </div>
 
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="min-w-0 overflow-hidden max-w-xl">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h4 className="text-white font-bold tracking-tight">{automation.display_name}</h4>
             <span className={cn("text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 font-medium", colors.badge)}>
               {CATEGORY_LABELS[automation.category] ?? automation.category}
             </span>
           </div>
-          <p className="text-white/40 text-sm truncate">
+          <p className="text-white/40 text-sm line-clamp-1">
             {automation.description}
           </p>
         </div>
       </div>
 
       {/* Frequência */}
-      <div className="hidden md:block text-center px-6 flex-shrink-0 w-52">
+      <div className="hidden md:block px-6 flex-shrink-0 w-52">
         <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Frequência</p>
-        <div className="flex items-center justify-center gap-1.5">
+        <div className="flex items-center gap-1.5">
           {automation.trigger_type === 'webhook'
-            ? <Webhook className="w-3 h-3 text-white/25" />
-            : <Clock className="w-3 h-3 text-white/25" />
+            ? <Webhook className="w-3 h-3 text-white/25 flex-shrink-0" />
+            : <Clock className="w-3 h-3 text-white/25 flex-shrink-0" />
           }
           <p className="text-white/70 font-medium text-sm">{automation.schedule_human}</p>
         </div>
@@ -373,17 +373,15 @@ export default function Automations() {
                   </div>
 
                   {/* Card body */}
-                  <div className="p-6">
-                    <div className="space-y-3">
-                      {items.map((automation, i) => (
-                        <AutomationRow
-                          key={automation.id}
-                          automation={automation}
-                          index={i}
-                          onEdit={setEditingAutomation}
-                        />
-                      ))}
-                    </div>
+                  <div className="divide-y divide-white/5">
+                    {items.map((automation, i) => (
+                      <AutomationRow
+                        key={automation.id}
+                        automation={automation}
+                        index={i}
+                        onEdit={setEditingAutomation}
+                      />
+                    ))}
                   </div>
                 </Card>
               );

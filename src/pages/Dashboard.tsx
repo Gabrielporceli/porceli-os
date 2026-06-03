@@ -785,36 +785,36 @@ export default function Dashboard() {
       {/* Clientes Recentes + Cards Futuros */}
       <div className={`grid grid-cols-1 lg:grid-cols-2 ${PAGE_GAP}`}>
         {/* Clientes Recentes */}
-        <Card className={`${CARD} p-4 md:p-5`}>
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-lg font-semibold text-white">Clientes Recentes</h3>
+        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5">
+            <h3 className="text-xl font-bold text-white tracking-tight">Clientes Recentes</h3>
           </div>
 
-          <div className="space-y-3">
-            {clients.slice(0, 4).map((client: any, index: number) => (
-              <div
-                key={client.id}
-                className="flex items-center justify-between p-3 rounded-lg liquid-glass border-white/[0.05] dashboard-glow"
-              >
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{client.company}</p>
-                  <p className="text-Porceli-gray-400 text-xs truncate">Responsável: {client.responsible}</p>
+          {clients.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-white/30">Nenhum cliente cadastrado ainda</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {clients.slice(0, 4).map((client: any) => (
+                <div
+                  key={client.id}
+                  className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{client.company}</p>
+                    <p className="text-white/40 text-xs mt-0.5">Responsável: {client.responsible}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-white/30 text-xs">
+                      {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
+                    </span>
+                    {client.plan && <p className="text-primary text-xs mt-0.5">{client.plan}</p>}
+                  </div>
                 </div>
-                <div className="text-right shrink-0 pl-4">
-                  <span className="text-Porceli-gray-500 text-xs">
-                    {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
-                  </span>
-                  {client.plan && <p className="text-Porceli-purple text-xs mt-1">{client.plan}</p>}
-                </div>
-              </div>
-            ))}
-
-            {clients.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-Porceli-gray-400">Nenhum cliente cadastrado ainda</p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Cards Futuros */}
