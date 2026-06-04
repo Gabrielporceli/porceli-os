@@ -128,7 +128,7 @@ export function EditClientModal({
       {/* Modal Container */}
       <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] border border-white/[0.05] animate-scale-in pointer-events-auto"
+          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] border border-white/[0.05] animate-scale-in pointer-events-auto flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
         <style>{`
@@ -203,8 +203,8 @@ export function EditClientModal({
         </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto max-h-[calc(90vh-140px)] custom-scrollbar">
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
+          <form id="edit-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
@@ -306,37 +306,21 @@ export function EditClientModal({
               </div>
             </div>
 
-            {/* Botões */}
-            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
-                >
-                  Salvar
-                </Button>
-              </motion.div>
-            </div>
           </form>
+          </div>
+
+          {/* Footer fixo */}
+          <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+            <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <Button type="button" onClick={onClose} className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all text-base">
+                Cancelar
+              </Button>
+            </motion.div>
+            <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <Button type="submit" form="edit-client-form" className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base">
+                Salvar
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>

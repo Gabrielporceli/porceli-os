@@ -215,7 +215,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
               <Button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all text-base"
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all text-base"
               >
                 Cancelar
               </Button>
@@ -228,7 +228,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
             >
               <Button
                 type="submit"
-                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
+                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base"
               >
                 Adicionar
               </Button>

@@ -266,7 +266,7 @@ function AutomationRow({
 
       {/* Ações */}
       <div className="flex items-center gap-2 flex-shrink-0 pl-2">
-        {automation.trigger_type !== 'webhook' && (
+        {automation.trigger_type !== 'webhook' ? (
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
@@ -276,6 +276,8 @@ function AutomationRow({
           >
             <Edit2 className="w-3.5 h-3.5" />
           </motion.button>
+        ) : (
+          <div className="w-9 h-9 flex-shrink-0" />
         )}
 
         <motion.button

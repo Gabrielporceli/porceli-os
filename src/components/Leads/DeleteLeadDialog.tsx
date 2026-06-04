@@ -162,7 +162,7 @@ export function DeleteLeadDialog({
           >
             <Button
               onClick={onClose}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 text-sm font-bold rounded-2xl transition-all"
+              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 text-sm font-bold rounded-xl transition-all"
               disabled={isDeleting}
             >
               Cancelar
@@ -178,7 +178,7 @@ export function DeleteLeadDialog({
             <Button
               onClick={handleConfirm}
               disabled={isDeleting}
-              className="w-full h-11 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50"
+              className="w-full h-11 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50"
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">

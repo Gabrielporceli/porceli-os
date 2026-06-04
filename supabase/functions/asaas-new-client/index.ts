@@ -176,6 +176,7 @@ serve(async (req) => {
     }
 
     const { company, cnpj, responsible, phone, email, start_date, contract_end, payment_day, monthly_value } = client;
+    const billingType = (body as any).billing_type ?? "BOLETO";
 
     // 1. Verifica se cliente já existe no Asaas
     const existing = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
@@ -218,11 +219,12 @@ serve(async (req) => {
     // 4. Cria cobrança parcelada no Asaas
     await asaasPost("/payments", {
       customer: asaasCustomerId,
-      billingType: "BOLETO",
+      billingType,
       installmentCount: installments,
       totalValue,
       dueDate: firstDueDateISO,
       description: "Parcelamento de contrato",
+      notificationDisabled: true,
       interest: { value: 1 },
       fine: { value: 2 },
     });

@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ClientsSearchProps {
   searchTerm: string;
@@ -23,19 +24,23 @@ export function ClientsSearch({ searchTerm, onSearchChange, onFiltersOpen, onNew
         />
       </div>
       <div className="flex gap-3">
-        <Button
-          className="bg-white/[0.05] hover:bg-white/[0.08] text-white flex items-center gap-2 h-11 px-6 rounded-xl border border-white/10 transition-all"
-          onClick={onFiltersOpen}
-        >
-          <Filter className="w-4 h-4" />
-          Filtros
-        </Button>
-        <Button
-          className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
-          onClick={onNewClient}
-        >
-          Novo Cliente
-        </Button>
+        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Button
+            className="liquid-glass text-white flex items-center gap-2 h-11 px-6 !rounded-xl border-white/10 hover:bg-white/[0.08] transition-colors"
+            onClick={onFiltersOpen}
+          >
+            <Filter className="w-4 h-4" />
+            Filtros
+          </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Button
+            className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-colors font-bold uppercase tracking-widest text-xs"
+            onClick={onNewClient}
+          >
+            Novo Cliente
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

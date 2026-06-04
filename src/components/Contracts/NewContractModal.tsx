@@ -14,7 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X, FileText, DollarSign } from "lucide-react";
+import { X, FileText, DollarSign, Landmark, QrCode, CreditCard } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 
 interface NewContractModalProps {
@@ -37,6 +37,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
   useScrollLock(isOpen);
   const { data: clients = [] } = useClients();
   
+  const [billingType, setBillingType] = useState<"BOLETO" | "PIX" | "CREDIT_CARD">("BOLETO");
   const [formData, setFormData] = useState({
     client_id: '',
     type: '',
@@ -64,8 +65,9 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       end_date: formData.end_date,
       payment_day: parseInt(formData.payment_day) || 1,
       status: formData.status,
-      contract_url: formData.contract_url
-    });
+      contract_url: formData.contract_url,
+      billing_type: billingType,
+    } as any);
   };
 
   const handleChange = (field: string, value: any) => {
@@ -111,7 +113,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] flex flex-col overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
@@ -125,7 +127,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
         </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto flex-1 custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -147,7 +149,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             }
           `}</style>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form id="new-contract-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             <div className="space-y-6">
               <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Dados do Contrato
@@ -300,38 +302,66 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
               </div>
             </div>
 
-            {/* Botões */}
-            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="submit"
-                  disabled={isPending || !formData.client_id}
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPending ? 'Criando...' : 'Criar Contrato'}
-                </Button>
-              </motion.div>
+            {/* Forma de Pagamento */}
+            <div className="space-y-2 pt-2">
+              <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Forma de Pagamento</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: "BOLETO",      label: "Boleto",  Icon: Landmark  },
+                  { value: "PIX",         label: "PIX",     Icon: QrCode    },
+                  { value: "CREDIT_CARD", label: "Cartão",  Icon: CreditCard },
+                ] as const).map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setBillingType(value)}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
+                      billingType === value
+                        ? "bg-primary/15 border-primary/40 text-primary"
+                        : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
+
           </form>
+        </div>
+
+        {/* Footer fixo */}
+        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button
+              type="button"
+              onClick={onClose}
+              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
+            >
+              Cancelar
+            </Button>
+          </motion.div>
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button
+              type="submit"
+              form="new-contract-form"
+              disabled={isPending || !formData.client_id}
+              className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? 'Criando...' : 'Criar Contrato'}
+            </Button>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

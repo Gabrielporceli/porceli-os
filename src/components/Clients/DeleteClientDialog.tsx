@@ -152,7 +152,7 @@ export function DeleteClientDialog({
               <Button
                 onClick={onClose}
                 variant="ghost"
-                className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+                className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 disabled={isDeleting}
               >
                 Cancelar

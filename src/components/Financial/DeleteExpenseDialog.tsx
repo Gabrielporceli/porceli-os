@@ -42,7 +42,7 @@ export function DeleteExpenseDialog({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-2xl font-bold transition-all"
+              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all"
             >
               Cancelar
             </Button>
@@ -55,7 +55,7 @@ export function DeleteExpenseDialog({
           >
             <Button
               onClick={onConfirm}
-              className="bg-red-500 hover:bg-red-600 text-white w-full h-11 rounded-2xl font-bold transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+              className="bg-red-500 hover:bg-red-600 text-white w-full h-11 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
             >
               Excluir
             </Button>

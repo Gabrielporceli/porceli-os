@@ -376,7 +376,7 @@ export function EditLeadModal({
             >
               <Button
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all"
               >
                 Cancelar
               </Button>
@@ -387,7 +387,7 @@ export function EditLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
                 <Save className="w-4 h-4 mr-2" />
                 Salvar
               </Button>

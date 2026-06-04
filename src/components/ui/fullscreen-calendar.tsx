@@ -145,7 +145,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
           >
             <button
               onClick={() => onAddEvent?.(selectedDay)}
-              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl transition-colors duration-300 text-xs font-bold uppercase tracking-widest"
+              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl transition-colors duration-300 text-xs font-bold uppercase tracking-widest"
             >
               <span>Novo Evento</span>
             </button>

@@ -239,7 +239,7 @@ export function NewClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 h-[90vh] !flex flex-col overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
@@ -253,7 +253,7 @@ export function NewClientModal({
         </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto flex-1 custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -275,7 +275,7 @@ export function NewClientModal({
             }
           `}</style>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form id="new-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
               <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
@@ -531,37 +531,21 @@ export function NewClientModal({
               </div>
             </div>
 
-            {/* Botões */}
-            <div className="flex gap-4 pt-6 mt-6 border-t border-white/[0.05]">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Salvar Cliente
-                </Button>
-              </motion.div>
-            </div>
           </form>
+        </div>
+
+        {/* Footer fixo */}
+        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <Button type="button" onClick={onClose} className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest">
+              Cancelar
+            </Button>
+          </motion.div>
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <Button type="submit" form="new-client-form" className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest">
+              Salvar Cliente
+            </Button>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

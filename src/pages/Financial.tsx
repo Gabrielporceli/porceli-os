@@ -11,7 +11,9 @@ import { useContracts } from "@/hooks/useContracts";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useFinancialEntries } from "@/hooks/useFinancialEntries";
 import { DeleteExpenseDialog } from "@/components/Financial/DeleteExpenseDialog";
+import { RenegotiationModal } from "@/components/Financial/RenegotiationModal";
 import { useState, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
@@ -40,8 +42,10 @@ export default function Financial() {
   // Filtro de despesas
   const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
 
+  const queryClient = useQueryClient();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expandedOverdueClients, setExpandedOverdueClients] = useState<string[]>([]);
+  const [renegotiating, setRenegotiating] = useState<{ clientName: string; clientId: string; entries: any[] } | null>(null);
 
   const toggleOverdueClient = (clientName: string) => {
     setExpandedOverdueClients(prev =>
@@ -303,8 +307,14 @@ export default function Financial() {
       {/* Pagamentos em Atraso */}
       {overdueEntries.length > 0 && (
         <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-white/5">
-            <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
+              <p className="text-white/30 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
+            </div>
+            <span className="text-red-500 font-black text-xl">
+              {formatCurrency(overdueEntries.reduce((sum: number, e: any) => sum + Number(e.amount), 0))}
+            </span>
           </div>
 
           <div className="divide-y divide-white/5">
@@ -338,7 +348,21 @@ export default function Financial() {
                           {entries.length} {entries.length === 1 ? 'fatura' : 'faturas'}
                         </span>
                       </div>
-                      <span className="text-red-400 font-black">{formatCurrency(totalAmount)}</span>
+                      <div className="flex flex-col items-end gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.05, translateY: -1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const clientId = entries[0]?.client_id ?? "";
+                            setRenegotiating({ clientName, clientId, entries });
+                          }}
+                          className="h-9 px-4 rounded-xl liquid-glass border border-white/[0.08] text-primary hover:bg-primary/10 hover:border-primary/30 text-xs font-bold uppercase tracking-widest transition-colors"
+                        >
+                          Renegociar
+                        </motion.button>
+                        <span className="text-red-500 font-bold text-sm">{formatCurrency(totalAmount)}</span>
+                      </div>
                     </div>
 
                     {/* Faturas individuais — visíveis só quando expandido */}
@@ -364,14 +388,15 @@ export default function Financial() {
                                   <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => handleMarkAsPaid(entry.id)}
                                 disabled={isMarkingAsPaid}
-                                className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
+                                className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
                               >
                                 Confirmar
-                              </Button>
+                              </motion.button>
                             </div>
                           ))}
                         </div>
@@ -409,7 +434,7 @@ export default function Financial() {
                 <Button
                   onClick={() => setStatusFilter(btn.id as any)}
                   className={cn(
-                    "h-10 px-5 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
+                    "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     statusFilter === btn.id
                       ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
                       : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
@@ -455,14 +480,15 @@ export default function Financial() {
                     </div>
                     <div className="flex gap-2">
                       {entry.status === 'pending' ? (
-                        <Button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleMarkAsPaid(entry.id)}
                           disabled={isMarkingAsPaid}
-                          className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
-                          size="sm"
+                          className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
                         >
                           Confirmar
-                        </Button>
+                        </motion.button>
                       ) : (
                         <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
                       )}
@@ -496,7 +522,7 @@ export default function Financial() {
                 <Button
                   onClick={() => setExpenseFilter(btn.id as any)}
                   className={cn(
-                    "h-10 px-5 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
+                    "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     expenseFilter === btn.id
                       ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
                       : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
@@ -610,6 +636,16 @@ export default function Financial() {
         onConfirm={confirmDeleteExpense}
         expenseDescription={deleteExpenseDialog.expenseDescription}
       />
+
+      {renegotiating && (
+        <RenegotiationModal
+          clientName={renegotiating.clientName}
+          clientId={renegotiating.clientId}
+          overdueEntries={renegotiating.entries}
+          onClose={() => setRenegotiating(null)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["financial-entries"] })}
+        />
+      )}
     </div>
   );
 }

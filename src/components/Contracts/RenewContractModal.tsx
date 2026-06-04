@@ -276,7 +276,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     <Button
                                         type="submit"
                                         disabled={isPending}
-                                        className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold uppercase tracking-widest text-xs"
+                                        className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold uppercase tracking-widest text-xs"
                                     >
                                         {isPending ? 'Processando...' : 'Confirmar Renovação'}
                                     </Button>

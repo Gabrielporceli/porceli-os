@@ -69,7 +69,7 @@ export default function Contracts() {
       case 'concluded':
         return <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 transition-all font-bold px-3 py-1 rounded-full">Concluído</Badge>;
       case 'inactive':
-        return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
       default:
         return <Badge variant="outline" className="bg-white/5 text-white/50 border-white/10 font-bold px-3 py-1 rounded-full">Desconhecido</Badge>;
     }
@@ -262,7 +262,7 @@ export default function Contracts() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-white/5 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-white/5 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
             <FileText className="w-16 h-16 text-white" />
           </div>
@@ -270,7 +270,7 @@ export default function Contracts() {
           <p className="text-3xl font-bold text-white tracking-tight">{contracts.length}</p>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-green-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-green-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
             <FileText className="w-16 h-16" style={{ stroke: "#22c55e" }} />
           </div>
@@ -280,7 +280,7 @@ export default function Contracts() {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-yellow-500/30 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-yellow-500/30 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.15] group-hover:opacity-[0.25] transition-opacity">
             <AlertTriangle className="w-16 h-16" style={{ stroke: "#eab308" }} />
           </div>
@@ -290,11 +290,11 @@ export default function Contracts() {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-red-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-red-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
             <FileText className="w-16 h-16" style={{ stroke: "#ef4444" }} />
           </div>
-          <p className="text-red-400/50 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Inativos</p>
+          <p className="text-red-500/60 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Inativos</p>
           <p className="text-3xl font-bold text-white tracking-tight">{inactiveContracts.length}</p>
         </motion.div>
       </div>
@@ -331,7 +331,7 @@ export default function Contracts() {
                   <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                     <Button
                       onClick={() => handleRenewClick(contract)}
-                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-6 rounded-2xl transition-all font-bold text-xs uppercase tracking-widest"
+                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-6 rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
                     >
                       Renovar Agora
                     </Button>
@@ -449,7 +449,7 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setEditingContract(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     Editar
                   </Button>
@@ -463,7 +463,7 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleRenewClick(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     {contract.status === 'active' ? 'Estender' : 'Renovar'}
                   </Button>
@@ -477,7 +477,7 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setDeletingContract(contract)}
-                    className="liquid-glass text-red-500 hover:bg-white/10 hover:text-red-400 border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="liquid-glass text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     Cancelar
                   </Button>

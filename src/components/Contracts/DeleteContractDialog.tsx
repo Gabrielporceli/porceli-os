@@ -193,33 +193,33 @@ export function DeleteContractDialog({
           {/* Footer — Step: confirm */}
           {step === 'confirm' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                 <Button
                   type="button"
                   onClick={handleClose}
                   variant="ghost"
-                  className="h-12 px-6 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="liquid-glass h-12 px-6 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold hover:bg-white/10"
                 >
                   Voltar
                 </Button>
               </motion.div>
 
-              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                 <Button
                   type="button"
                   onClick={onConfirm}
-                  className="w-full h-12 bg-red-600/60 hover:bg-red-700/70 text-white rounded-2xl border border-red-500/20 transition-all uppercase tracking-widest text-xs font-bold"
+                  className="w-full h-12 liquid-glass text-red-500 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 >
                   {isExpired ? 'Remover' : 'Só Cancelar'}
                 </Button>
               </motion.div>
 
               {!isExpired && (
-                <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                   <Button
                     type="button"
                     onClick={handleOpenFineForm}
-                    className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-widest text-xs font-bold"
+                    className="w-full h-12 liquid-glass text-red-500 border border-red-500/30 hover:bg-red-500/15 hover:border-red-500/50 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all uppercase tracking-widest text-xs font-bold"
                   >
                     Cancelar + Multa
                   </Button>
@@ -231,23 +231,23 @@ export function DeleteContractDialog({
           {/* Footer — Step: fine-form */}
           {step === 'fine-form' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                 <Button
                   type="button"
                   onClick={() => setStep('confirm')}
                   variant="ghost"
-                  className="h-12 px-6 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="liquid-glass h-12 px-6 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold hover:bg-white/10"
                 >
                   Voltar
                 </Button>
               </motion.div>
 
-              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                 <Button
                   type="button"
                   onClick={handleConfirmFine}
                   disabled={!isFineValid}
-                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="w-full h-12 liquid-glass text-red-500 border border-red-500/30 hover:bg-red-500/15 hover:border-red-500/50 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   Confirmar e Cancelar
                 </Button>

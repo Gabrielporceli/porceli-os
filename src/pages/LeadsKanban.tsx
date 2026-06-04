@@ -453,19 +453,15 @@ export default function LeadsKanban() {
         className="liquid-glass dashboard-glow border border-white/5 rounded-3xl mb-8 overflow-hidden"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
-        <div className="max-w-[1600px] mx-auto w-full pl-4 lg:pl-6 pr-6 lg:pr-10 pt-6 pb-4 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
-              <div className="space-y-1">
-              </div>
-
-              <div className="flex flex-row items-center gap-3">
+        <div className="max-w-[1600px] mx-auto w-full px-6 py-4">
+            <div className="flex flex-row items-center justify-end gap-3">
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all font-bold uppercase tracking-widest text-xs"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsTagsModalOpen(true)}
                   >
                     {isMobile ? "Tags" : "Gerenciar Tags"}
@@ -478,7 +474,7 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-2xl transition-all font-bold uppercase tracking-widest text-xs"
+                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsAddStageModalOpen(true)}
                   >
                     {isMobile ? "Etapa" : "Nova Etapa"}
@@ -491,64 +487,17 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
+                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
                     onClick={() => setIsNewLeadModalOpen(true)}
                   >
                     {isMobile ? "Lead" : "Novo Lead"}
                   </Button>
                 </motion.div>
-              </div>
             </div>
-
-          <div className="border-t border-white/5 px-4 py-3 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-              <span className="text-white/40 font-black text-[10px] uppercase tracking-widest">Filtros:</span>
-              <div className="flex flex-wrap gap-2">
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`h-9 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border-white/5 ${activeFilter === "all"
-                      ? "bg-primary text-white border-primary shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
-                      : "bg-white/[0.03] text-white/60 hover:bg-white/[0.03] hover:text-white/60"
-                      }`}
-                    onClick={() => setActiveFilter("all")}
-                  >
-                    Todos os grupos
-                  </Button>
-                </motion.div>
-
-                {tags.map((tag: Tag) => (
-                  <motion.div
-                    key={tag.id}
-                    whileHover={{ scale: 1.05, translateY: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`h-9 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center transition-all duration-300 border-white/5 ${activeFilter === tag.name
-                        ? "bg-primary text-white border-primary shadow-[0_0_10px_rgba(104,41,192,0.4)] hover:bg-primary hover:text-white"
-                        : "bg-white/[0.03] text-white/60 hover:bg-white/[0.03] hover:text-white/60"
-                        }`}
-                      onClick={() => setActiveFilter(tag.name)}
-                    >
-                      <span className="translate-y-[1.5px] leading-none">{tag.name}</span>
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="pb-6">
+      <div className="pb-6 -mx-4 lg:-mx-10 px-4 lg:px-10">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -560,11 +509,13 @@ export default function LeadsKanban() {
         >
           <div
             ref={kanbanRef}
-            className="flex gap-3 sm:gap-6 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing"
+            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing px-16 pb-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
+              maskImage: "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
