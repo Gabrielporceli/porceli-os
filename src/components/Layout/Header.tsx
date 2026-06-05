@@ -92,7 +92,7 @@ export const Header = () => {
           <div className="flex items-center ml-4 pl-4 border-l border-white/5">
             <button
               onClick={() => logout()}
-              className="p-2.5 text-red-500 transition-all duration-300"
+              className="p-2.5 text-white/30 hover:text-red-500 transition-all duration-300"
               title="Sair"
             >
               <LogOut className="w-5 h-5" />

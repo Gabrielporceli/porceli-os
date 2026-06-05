@@ -93,18 +93,53 @@ export default function Dashboard() {
   const ticketMedioContratosAtivos =
     activeContracts.length > 0 ? monthlyRevenue / activeContracts.length : 0;
 
-  // LTV = Ticket Médio × Duração Média dos contratos (em meses)
+  // LTV = Ticket Médio × Tempo Médio de Vida Real de cada cliente
+  // Agrupa contratos por cliente → primeiro contrato até hoje (ativo) ou último contrato (inativo)
   const ltv = (() => {
-    const allContracts = [...(activeContracts || []), ...(contracts?.filter((c: any) => c.status === 'inactive' || c.status === 'concluded') || [])];
-    if (allContracts.length === 0) return 0;
-    const durations = allContracts.map((c: any) => {
-      const start = new Date(c.start_date || c.startDate);
-      const end = new Date(c.end_date || c.endDate);
-      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-      return Math.max(1, months);
-    });
-    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
-    return ticketMedioContratosAtivos * avgDuration;
+    if (!contracts || contracts.length === 0) return 0;
+
+    // Agrupa todos os contratos por client_id
+    const byClient: Record<string, any[]> = {};
+    for (const c of contracts) {
+      const id = c.client_id || c.clientId;
+      if (!id) continue;
+      if (!byClient[id]) byClient[id] = [];
+      byClient[id].push(c);
+    }
+
+    const lifetimes: number[] = [];
+    const now = new Date();
+
+    for (const clientContracts of Object.values(byClient)) {
+      const starts = clientContracts
+        .map((c: any) => new Date(c.start_date || c.startDate).getTime())
+        .filter(t => !isNaN(t));
+      if (starts.length === 0) continue;
+
+      const firstStart = new Date(Math.min(...starts));
+      const isActive = clientContracts.some((c: any) =>
+        c.status === 'active' || c.status === 'expiring'
+      );
+
+      let endDate: Date;
+      if (isActive) {
+        endDate = now;
+      } else {
+        const ends = clientContracts
+          .map((c: any) => new Date(c.end_date || c.endDate).getTime())
+          .filter(t => !isNaN(t));
+        endDate = ends.length > 0 ? new Date(Math.max(...ends)) : now;
+      }
+
+      const months =
+        (endDate.getFullYear() - firstStart.getFullYear()) * 12 +
+        (endDate.getMonth() - firstStart.getMonth());
+      lifetimes.push(Math.max(1, months));
+    }
+
+    if (lifetimes.length === 0) return 0;
+    const avgLifetime = lifetimes.reduce((a, b) => a + b, 0) / lifetimes.length;
+    return ticketMedioContratosAtivos * avgLifetime;
   })();
 
   // Cálculo do Churn (taxa de cancelamento)
