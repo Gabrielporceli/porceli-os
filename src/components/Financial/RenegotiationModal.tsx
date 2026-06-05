@@ -258,45 +258,50 @@ export function RenegotiationModal({
         .eq("id", clientId)
         .single();
 
-      if (clientErr || !clientRow?.cnpj) {
-        throw new Error("CNPJ do cliente não encontrado. Verifique o cadastro do cliente.");
+      const hasCnpj = !clientErr && clientRow?.cnpj;
+      if (!hasCnpj) {
+        toast.warning("CNPJ não encontrado — cobrança Asaas ignorada. As faturas locais serão atualizadas normalmente.");
       }
 
-      const asaasClientData = {
-        cnpj:         clientRow.cnpj,
-        company_name: clientRow.company,
-        email:        clientRow.email,
-        phone:        clientRow.phone,
-      };
+      const asaasClientData = hasCnpj ? {
+        cnpj:         clientRow!.cnpj,
+        company_name: clientRow!.company,
+        email:        clientRow!.email,
+        phone:        clientRow!.phone,
+      } : null;
 
       const newEntries: any[] = [];
 
       if (mode === "personalizado") {
-        // ── Modo personalizado: uma cobrança Asaas por pagamento ──────────────
         for (const [i, p] of customPayments.entries()) {
           const amount = parseInt(p.amountStr, 10) / 100;
-          const { data, error } = await supabase.functions.invoke("asaas-renegotiation", {
-            body: { ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}` },
-          });
-          if (error || !data?.success) throw new Error(data?.error || error?.message || `Erro ao criar pagamento ${i + 1} no Asaas.`);
+          if (asaasClientData) {
+            const { data, error } = await supabase.functions.invoke("asaas-renegotiation", {
+              body: { ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}` },
+            });
+            if (error || !data?.success) console.warn(`Asaas pagamento ${i + 1}: ${data?.error || error?.message}`);
+          }
           newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount, due_date: p.dueDate, reference: `Renegociação — Pagamento ${i + 1}/${customPayments.length}`, status: "pending" });
         }
 
       } else {
-        // ── Modo parcelamento ─────────────────────────────────────────────────
-        const asaasBase = { ...asaasClientData, billing_type: billingType };
+        const asaasBase = asaasClientData ? { ...asaasClientData, billing_type: billingType } : null;
 
         if (hasEntrada && grossEntrada > 0) {
-          const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
-            { body: { ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}` } });
-          if (error || !data?.success) throw new Error(data?.error || error?.message || "Erro ao criar entrada no Asaas.");
+          if (asaasBase) {
+            const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
+              { body: { ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}` } });
+            if (error || !data?.success) console.warn("Asaas entrada:", data?.error || error?.message);
+          }
           newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: grossEntrada, due_date: entradaDate, reference: "Renegociação — Entrada", status: "pending" });
         }
 
         if (grossInstallments > 0) {
-          const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
-            { body: { ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}` } });
-          if (error || !data?.success) throw new Error(data?.error || error?.message || "Erro ao criar parcelas no Asaas.");
+          if (asaasBase) {
+            const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
+              { body: { ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}` } });
+            if (error || !data?.success) console.warn("Asaas parcelas:", data?.error || error?.message);
+          }
           Array.from({ length: installments }).forEach((_, i) => {
             newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: installmentValue, due_date: i === 0 ? dueDate : addMonths(dueDate, i), reference: installments > 1 ? `Renegociação — Parcela ${i + 1}/${installments}` : "Renegociação", status: "pending" });
           });
@@ -304,8 +309,13 @@ export function RenegotiationModal({
       }
 
       // Apaga cobranças em atraso selecionadas
-      const { error: delErr } = await supabase.from("financial_entries").delete().in("id", Array.from(selectedIds));
+      const { error: delErr, count: delCount } = await supabase
+        .from("financial_entries")
+        .delete({ count: "exact" })
+        .in("id", Array.from(selectedIds))
+        .eq("user_id", user!.id);
       if (delErr) throw new Error("Erro ao remover cobranças antigas: " + delErr.message);
+      console.log(`[Renegociação] ${delCount} fatura(s) removida(s) de ${selectedIds.size} selecionada(s)`);
 
       // Insere novas entradas
       const { error: insErr } = await supabase.from("financial_entries").insert(newEntries);

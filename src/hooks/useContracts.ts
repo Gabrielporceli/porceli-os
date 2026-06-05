@@ -50,7 +50,7 @@ export const useCreateContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ payment_day, ...contract }: Omit<ContractInsert, 'user_id'> & { payment_day?: number }) => {
+    mutationFn: async ({ payment_day, billing_type, ...contract }: Omit<ContractInsert, 'user_id'> & { payment_day?: number; billing_type?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -127,6 +127,7 @@ export const useCreateContract = () => {
               start_date: data.start_date,
               payment_day: finalPaymentDay,
               monthly_value: data.monthly_value,
+              billing_type: billing_type || 'BOLETO',
               event: 'contract_created',
               updated_at: new Date().toISOString()
             }
