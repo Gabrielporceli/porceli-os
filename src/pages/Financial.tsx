@@ -357,7 +357,7 @@ export default function Financial() {
                             const clientId = entries[0]?.client_id ?? "";
                             setRenegotiating({ clientName, clientId, entries });
                           }}
-                          className="h-9 px-4 rounded-xl liquid-glass border border-white/[0.08] text-primary hover:bg-primary/10 hover:border-primary/30 text-xs font-bold uppercase tracking-widest transition-colors"
+                          className="btn-danger-glass h-9 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors"
                         >
                           Renegociar
                         </motion.button>
@@ -393,7 +393,7 @@ export default function Financial() {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleMarkAsPaid(entry.id)}
                                 disabled={isMarkingAsPaid}
-                                className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
+                                className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-colors"
                               >
                                 Confirmar
                               </motion.button>
@@ -432,12 +432,13 @@ export default function Financial() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
+                  variant="ghost"
                   onClick={() => setStatusFilter(btn.id as any)}
                   className={cn(
                     "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     statusFilter === btn.id
-                      ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
-                      : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
+                      ? "btn-primary-glass text-white border-primary/40"
+                      : "liquid-glass text-white/70 hover:text-white border-white/5"
                   )}
                   size="sm"
                 >
@@ -485,7 +486,7 @@ export default function Financial() {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleMarkAsPaid(entry.id)}
                           disabled={isMarkingAsPaid}
-                          className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
+                          className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-colors"
                         >
                           Confirmar
                         </motion.button>
@@ -520,12 +521,13 @@ export default function Financial() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
+                  variant="ghost"
                   onClick={() => setExpenseFilter(btn.id as any)}
                   className={cn(
                     "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     expenseFilter === btn.id
-                      ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
-                      : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
+                      ? "btn-primary-glass text-white border-primary/40"
+                      : "liquid-glass text-white/70 hover:text-white border-white/5"
                   )}
                   size="sm"
                 >
@@ -596,7 +598,7 @@ export default function Financial() {
                         <Button
                           onClick={() => handlePayExpense(expense.id)}
                           disabled={isPaying}
-                          className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
+                          className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-all"
                           size="sm"
                         >
                           Pagar

@@ -93,6 +93,20 @@ export default function Dashboard() {
   const ticketMedioContratosAtivos =
     activeContracts.length > 0 ? monthlyRevenue / activeContracts.length : 0;
 
+  // LTV = Ticket Médio × Duração Média dos contratos (em meses)
+  const ltv = (() => {
+    const allContracts = [...(activeContracts || []), ...(contracts?.filter((c: any) => c.status === 'inactive' || c.status === 'concluded') || [])];
+    if (allContracts.length === 0) return 0;
+    const durations = allContracts.map((c: any) => {
+      const start = new Date(c.start_date || c.startDate);
+      const end = new Date(c.end_date || c.endDate);
+      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      return Math.max(1, months);
+    });
+    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+    return ticketMedioContratosAtivos * avgDuration;
+  })();
+
   // Cálculo do Churn (taxa de cancelamento)
   // Clientes perdidos = clientes inativos/vencidos
   const lostClients = clients.filter((client: any) => {
@@ -819,8 +833,15 @@ export default function Dashboard() {
 
         {/* Cards Futuros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-          <MiniSparklineCard 
-            title="Ticket Médio" 
+          <MiniSparklineCard
+            title="LTV"
+            value={formatCurrency(ltv)}
+            description="Ticket médio × duração média dos contratos"
+            data={revenueTrend.map(r => ({ value: r.value * 6 }))}
+          />
+
+          <MiniSparklineCard
+            title="Ticket Médio"
             value={formatCurrency(ticketMedioContratosAtivos)} 
             description="Contratos ativos"
             data={revenueTrend.map(r => ({ value: r.value / Math.max(1, activeClients) }))}

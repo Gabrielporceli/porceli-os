@@ -173,9 +173,9 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                       key={status} 
                       className={cn(
                         "flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer",
-                        localFilters.status.includes(status) 
-                          ? "bg-primary/10 border-primary/30" 
-                          : "bg-white/[0.02] border-white/[0.05] hover:border-white/10"
+                        localFilters.status.includes(status)
+                          ? "liquid-glass border-primary/30"
+                          : "liquid-glass border-white/[0.05] hover:border-white/10"
                       )}
                       onClick={() => handleStatusChange(status, !localFilters.status.includes(status))}
                     >
@@ -210,9 +210,9 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                         key={plan} 
                         className={cn(
                           "flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer",
-                          localFilters.plan.includes(plan) 
-                            ? "bg-primary/10 border-primary/30" 
-                            : "bg-white/[0.02] border-white/[0.05] hover:border-white/10"
+                          localFilters.plan.includes(plan)
+                            ? "liquid-glass border-primary/30"
+                            : "liquid-glass border-white/[0.05] hover:border-white/10"
                         )}
                         onClick={() => handlePlanChange(plan, !localFilters.plan.includes(plan))}
                       >
@@ -287,7 +287,8 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
               <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={handleClearFilters}
-                  className="w-full h-12 text-sm font-bold bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest"
+                  variant="ghost"
+                  className="liquid-glass-ghost w-full h-12 text-sm font-bold text-white/70 hover:text-white rounded-xl transition-all uppercase tracking-widest"
                 >
                   Limpar
                 </Button>

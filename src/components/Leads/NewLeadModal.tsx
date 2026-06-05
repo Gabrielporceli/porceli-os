@@ -337,7 +337,7 @@ export function NewLeadModal({
             >
               <Button
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all"
+                className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all"
               >
                 Cancelar
               </Button>

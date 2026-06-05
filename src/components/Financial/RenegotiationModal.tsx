@@ -487,8 +487,8 @@ export function RenegotiationModal({
                               className={cn(
                                 "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border text-xs font-bold transition-all",
                                 p.billingType === value
-                                  ? "bg-primary/15 border-primary/40 text-primary"
-                                  : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
+                                  ? "btn-primary-glass text-white border-primary/40"
+                                  : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                               )}
                             >
                               <Icon className="w-3.5 h-3.5" />
@@ -562,7 +562,7 @@ export function RenegotiationModal({
                         value={formattedEntrada}
                         onChange={(e) => setEntradaStr(e.target.value.replace(/\D/g, ""))}
                         placeholder="R$ 0,00"
-                        className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                        className="w-full h-11 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -570,6 +570,7 @@ export function RenegotiationModal({
                       <DatePicker
                         date={entradaDate ? parseISO(entradaDate) : undefined}
                         setDate={(d) => setEntradaDate(d ? format(d, "yyyy-MM-dd") : "")}
+                        className="h-11"
                       />
                     </div>
                   </div>
@@ -590,7 +591,7 @@ export function RenegotiationModal({
                     value={String(installments)}
                     onValueChange={(v) => setInstallments(Number(v))}
                   >
-                    <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl h-10 focus:border-primary/40">
+                    <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl h-11 focus:border-primary/40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[99999]">
@@ -625,8 +626,8 @@ export function RenegotiationModal({
                       className={cn(
                         "flex flex-col items-center gap-2 py-3 px-2 rounded-xl border text-xs font-medium transition-all",
                         billingType === value
-                          ? "bg-primary/15 border-primary/40 text-primary"
-                          : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
+                          ? "btn-primary-glass text-white border-primary/40"
+                          : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                       )}
                     >
                       <Icon className="w-4 h-4" />
@@ -736,7 +737,7 @@ export function RenegotiationModal({
               whileTap={{ scale: 0.97 }}
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 h-11 rounded-xl liquid-glass border border-white/[0.08] text-white/60 hover:text-white font-bold text-sm uppercase tracking-widest transition-colors"
+              className="flex-1 h-11 rounded-xl btn-danger-glass font-bold text-sm uppercase tracking-widest transition-colors"
             >
               Cancelar
             </motion.button>

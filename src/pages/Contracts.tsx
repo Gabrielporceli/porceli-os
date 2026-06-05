@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink } from "lucide-react";
+import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
@@ -41,6 +41,13 @@ export default function Contracts() {
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
+  const [expandedClients, setExpandedClients] = useState<string[]>([]);
+
+  const toggleClient = (client: string) => {
+    setExpandedClients(prev =>
+      prev.includes(client) ? prev.filter(c => c !== client) : [...prev, client]
+    );
+  };
   const createContractMutation = useCreateContract();
 
   const isReady = usePageReady(isLoading);
@@ -331,7 +338,7 @@ export default function Contracts() {
                   <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                     <Button
                       onClick={() => handleRenewClick(contract)}
-                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-6 rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
+                      className="btn-danger-glass h-9 px-6 rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
                     >
                       Renovar Agora
                     </Button>
@@ -360,39 +367,52 @@ export default function Contracts() {
           </div>
         ) : (
           <div className="divide-y divide-white/5">
-            {contracts.map((contract) => (
-              <motion.div
+            {(() => {
+              const groups = contracts.reduce<Record<string, typeof contracts>>((acc, c) => {
+                const key = c.client || 'Sem cliente';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(c);
+                return acc;
+              }, {});
+
+              return Object.entries(groups).map(([clientName, clientContracts]) => {
+                const isExpanded = expandedClients.includes(clientName);
+
+                return (
+                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
+                    {/* Header do grupo */}
+                    <div
+                      className="flex items-center justify-between p-6 cursor-pointer transition-all duration-300"
+                      onClick={() => toggleClient(clientName)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          {isExpanded
+                            ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                          }
+                        </div>
+                        <h4 className="text-white font-semibold text-lg">{clientName}</h4>
+                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                          {clientContracts.length} {clientContracts.length === 1 ? 'contrato' : 'contratos'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contratos do grupo */}
+                    {isExpanded && (
+                      <div className="px-6 pb-4">
+                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
+                          {clientContracts.map((contract) => (
+              <div
                 key={contract.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center justify-between p-5 hover:bg-white/[0.04] transition-all duration-300 group"
+                className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
               >
               <div className="flex items-center gap-6 flex-1">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center transition-all duration-500",
-                  contract.status === 'active' && "group-hover:bg-green-500/10 group-hover:border-green-500/20",
-                  contract.status === 'concluded' && "group-hover:bg-blue-500/10 group-hover:border-blue-500/20",
-                  contract.status === 'expiring' && "group-hover:bg-yellow-500/10 group-hover:border-yellow-500/20",
-                  contract.status === 'inactive' && "group-hover:bg-red-500/10 group-hover:border-red-500/20"
-                )}>
-                  <FileText className={cn(
-                    "w-6 h-6 text-white/20 transition-colors duration-500",
-                    contract.status === 'active' && "group-hover:text-green-400",
-                    contract.status === 'concluded' && "group-hover:text-blue-400",
-                    contract.status === 'expiring' && "group-hover:text-yellow-400",
-                    contract.status === 'inactive' && "group-hover:text-red-400"
-                  )} />
-                </div>
                 <div className="grid grid-cols-4 gap-8 flex-1 items-center">
                   <div>
                     <div className="flex items-center gap-2 mb-1 min-w-0">
-                      <h4 className={cn(
-                        "text-white font-bold text-lg tracking-tight transition-colors truncate m-0",
-                        contract.status === 'active' && "group-hover:text-green-400",
-                        contract.status === 'concluded' && "group-hover:text-blue-400",
-                        contract.status === 'expiring' && "group-hover:text-yellow-400",
-                        contract.status === 'inactive' && "group-hover:text-red-400"
-                      )} title={contract.client}>{contract.client}</h4>
+                      <h4 className="text-white font-bold text-lg tracking-tight truncate m-0" title={contract.client}>{contract.client}</h4>
                       {contract.contract_url && (
                         <motion.a
                           href={contract.contract_url}
@@ -477,14 +497,21 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setDeletingContract(contract)}
-                    className="liquid-glass text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
+                    className="btn-danger-glass rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     Cancelar
                   </Button>
                 </motion.div>
               </div>
-            </motion.div>
-            ))}
+            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
       </Card>

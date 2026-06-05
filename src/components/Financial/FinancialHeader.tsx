@@ -21,13 +21,13 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <Button
-              size="icon"
-              className="liquid-glass border-white/5 text-white h-11 w-11 !rounded-xl transition-all hover:bg-white/[0.02]"
+              variant="ghost"
+              className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5 hover:bg-white/[0.06] hover:text-white"
               onClick={onSync}
               disabled={isSyncing}
               title="Gerar e Atualizar Lançamentos Faltantes"
             >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : 'text-white/70'}`} />
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
             </Button>
           </motion.div>
         )}
@@ -37,7 +37,7 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <Button
-            className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
+            className="btn-primary-glass text-white h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
             onClick={onNewTransaction}
           >
             Nova Transação

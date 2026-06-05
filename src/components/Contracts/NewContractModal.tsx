@@ -317,8 +317,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     onClick={() => setBillingType(value)}
                     className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
                       billingType === value
-                        ? "bg-primary/15 border-primary/40 text-primary"
-                        : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
+                        ? "btn-primary-glass text-white border-primary/40"
+                        : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -342,7 +342,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             <Button
               type="button"
               onClick={onClose}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
+              className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
             >
               Cancelar
             </Button>

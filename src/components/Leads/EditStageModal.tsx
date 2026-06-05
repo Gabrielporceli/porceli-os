@@ -135,7 +135,7 @@ export function EditStageModal({
               <Button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all text-base"
+                className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-base"
               >
                 Cancelar
               </Button>
@@ -166,7 +166,7 @@ export function EditStageModal({
                     onDeleteStage(stage.id);
                     onOpenChange(false);
                   }}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="h-12 w-12 rounded-xl btn-danger-glass transition-all"
                   title="Excluir Etapa"
                 >
                   <Trash2 className="w-5 h-5" />

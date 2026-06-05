@@ -267,7 +267,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                         type="button"
                                         onClick={onClose}
                                         disabled={isPending}
-                                        className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-2xl transition-all uppercase tracking-widest text-xs font-bold"
+                                        className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                                     >
                                         Cancelar
                                     </Button>

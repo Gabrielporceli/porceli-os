@@ -2,13 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Founders Grotesk Font Family */
+/* Founders Grotesk Font Family
+   ascent-override e descent-override calculados a partir das métricas reais da fonte:
+   UPM=1000, capHeight=630 → centro óptico = capHeight/2 = 315 acima da baseline
+   Para alinhar o centro da line-box ao centro óptico:
+   new_ascent = (capHeight + UPM) / 2 = 815 → 81.5%
+   new_descent = UPM - new_ascent = 185 → 18.5%
+*/
 @font-face {
   font-family: 'Founders Grotesk';
   src: url('/fonts/FoundersGrotesk-Light.otf') format('opentype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -17,6 +26,9 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -25,6 +37,9 @@
   font-weight: 500;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -33,6 +48,9 @@
   font-weight: 600;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -41,6 +59,9 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -49,6 +70,9 @@
   font-weight: 300;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -57,6 +81,9 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 
@@ -145,6 +172,9 @@ button:focus-visible,
     overflow-x: hidden;
   }
 
+  /* Centralização vertical corrigida via ascent-override/descent-override
+     nos @font-face acima — nenhum hack manual necessário aqui. */
+
   h1,
   h2,
   h3,
@@ -153,6 +183,22 @@ button:focus-visible,
   h6 {
     color: #eaeaea !important;
     @apply font-bold;
+  }
+
+  /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
+  .liquid-glass-ghost {
+    background: transparent !important;
+    backdrop-filter: blur(10px) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .liquid-glass-ghost:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
   }
 
   .gradient-text {
@@ -170,6 +216,75 @@ button:focus-visible,
     backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Botão primário com efeito liquid glass (estilo iOS filled)
+     Aplicado globalmente em todos os elementos com bg-primary
+     exceto switches e badges que têm seu próprio design */
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
+  .btn-primary-glass {
+    background: rgba(104, 41, 192, 0.82) !important;
+    backdrop-filter: blur(20px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-top-color: rgba(255, 255, 255, 0.28) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):hover,
+  .btn-primary-glass:hover {
+    background: rgba(104, 41, 192, 0.92) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):disabled,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass)[disabled] {
+    background: rgba(104, 41, 192, 0.40) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Botão de sucesso com efeito liquid glass */
+  .btn-success-glass {
+    background: rgba(22, 163, 74, 0.75) !important;
+    backdrop-filter: blur(20px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-top-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+    color: white !important;
+  }
+
+  .btn-success-glass:hover {
+    background: rgba(22, 163, 74, 0.90) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Botão destrutivo com efeito liquid glass */
+  .btn-danger-glass {
+    background: rgba(220, 38, 38, 0.75) !important;
+    backdrop-filter: blur(20px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-top-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+    color: white !important;
+  }
+
+  .btn-danger-glass:hover {
+    background: rgba(220, 38, 38, 0.90) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
   }
 
   .liquid-glass {

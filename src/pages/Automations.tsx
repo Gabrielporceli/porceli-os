@@ -162,8 +162,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
 
             <div className="flex gap-2 pt-1">
               <Button
-                variant="ghost"
-                className="flex-1 h-10 text-white/50 hover:text-white border border-white/[0.06] hover:bg-white/5 rounded-xl text-sm"
+                className="btn-danger-glass flex-1 h-10 rounded-xl text-sm"
                 onClick={onClose}
               >
                 Cancelar
@@ -215,18 +214,8 @@ function AutomationRow({
         !automation.enabled && "opacity-55"
       )}
     >
-      {/* Ícone + Info */}
+      {/* Info */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div
-          className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all", colors.icon)}
-          style={{
-            background: automation.enabled ? colors.bg : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${automation.enabled ? colors.border : 'rgba(255,255,255,0.06)'}`,
-          }}
-        >
-          <Icon className="w-5 h-5" />
-        </div>
-
         <div className="min-w-0 overflow-hidden max-w-xl">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h4 className="text-white font-bold tracking-tight">{automation.display_name}</h4>

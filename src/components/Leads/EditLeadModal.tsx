@@ -150,7 +150,7 @@ export function EditLeadModal({
         {/* QR CODE CONTAINER - VISIBLE ONLY ON DESKTOP E POSICIONADO À DIREITA */}
         {lead?.id && (
           <div className="absolute top-0 -right-[340px] hidden lg:block w-[320px]">
-            <div className="liquid-glass rounded-3xl border-white/[0.05] p-7 shadow-2xl flex flex-col items-center">
+            <div className="liquid-glass rounded-2xl border border-white/[0.05] p-7 shadow-2xl flex flex-col items-center">
               <div className="mb-5 w-full flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm text-white/40">Acesso Rápido</p>
@@ -376,7 +376,7 @@ export function EditLeadModal({
             >
               <Button
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-xl font-bold transition-all"
+                className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all"
               >
                 Cancelar
               </Button>
@@ -407,7 +407,7 @@ export function EditLeadModal({
                       onDeleteLead(lead);
                     }
                   }}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="btn-danger-glass h-12 w-12 rounded-xl transition-all"
                   title="Excluir Lead"
                 >
                   <Trash2 className="w-5 h-5" />

@@ -198,7 +198,7 @@ export function DeleteContractDialog({
                   type="button"
                   onClick={handleClose}
                   variant="ghost"
-                  className="liquid-glass h-12 px-6 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold hover:bg-white/10"
+                  className="btn-danger-glass h-12 px-6 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 >
                   Voltar
                 </Button>
@@ -208,7 +208,7 @@ export function DeleteContractDialog({
                 <Button
                   type="button"
                   onClick={onConfirm}
-                  className="w-full h-12 liquid-glass text-red-500 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 >
                   {isExpired ? 'Remover' : 'Só Cancelar'}
                 </Button>
@@ -219,7 +219,7 @@ export function DeleteContractDialog({
                   <Button
                     type="button"
                     onClick={handleOpenFineForm}
-                    className="w-full h-12 liquid-glass text-red-500 border border-red-500/30 hover:bg-red-500/15 hover:border-red-500/50 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all uppercase tracking-widest text-xs font-bold"
+                    className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                   >
                     Cancelar + Multa
                   </Button>
@@ -236,7 +236,7 @@ export function DeleteContractDialog({
                   type="button"
                   onClick={() => setStep('confirm')}
                   variant="ghost"
-                  className="liquid-glass h-12 px-6 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold hover:bg-white/10"
+                  className="btn-danger-glass h-12 px-6 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 >
                   Voltar
                 </Button>
@@ -247,7 +247,7 @@ export function DeleteContractDialog({
                   type="button"
                   onClick={handleConfirmFine}
                   disabled={!isFineValid}
-                  className="w-full h-12 liquid-glass text-red-500 border border-red-500/30 hover:bg-red-500/15 hover:border-red-500/50 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Confirmar e Cancelar
                 </Button>

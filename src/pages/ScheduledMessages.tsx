@@ -177,8 +177,8 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                     className={cn(
                       "py-2 px-3 rounded-xl text-xs font-medium border transition-all",
                       recipientType === type
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06]"
+                        ? "btn-primary-glass text-white border-primary/40"
+                        : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     )}
                   >
                     {type === "responsible" && <><Phone className="w-3 h-3 inline mr-1" />Responsável</>}
@@ -244,22 +244,26 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Ações */}
             <div className="flex gap-4 pt-2 mt-2">
-              <Button
-                type="button"
-                onClick={onClose}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 flex-1 h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!canSubmit || isCreating}
-                className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
-              >
-                {isCreating
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
-              </Button>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
+                >
+                  Cancelar
+                </Button>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!canSubmit || isCreating}
+                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50"
+                >
+                  {isCreating
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
+                </Button>
+              </motion.div>
             </div>
         </div>
       </DialogContent>
@@ -332,7 +336,7 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
         whileTap={{ scale: 0.95 }}
         onClick={() => onDelete(msg.id)}
         disabled={isDeleting}
-        className="h-9 px-4 rounded-xl flex items-center justify-center text-red-500 liquid-glass border border-white/[0.08] hover:bg-red-500/10 hover:border-red-500/30 transition-colors flex-shrink-0 text-sm font-medium"
+        className="btn-danger-glass h-9 px-4 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 text-sm font-medium"
       >
         Excluir
       </motion.button>

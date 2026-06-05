@@ -282,7 +282,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
               <Button
                 type="button"
                 onClick={onClose}
-                className="w-full h-10 bg-white/[0.03] hover:bg-white/10 text-white/60 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-[10px] font-bold"
+                className="btn-danger-glass w-full h-10 rounded-xl transition-all uppercase tracking-widest text-[10px] font-bold"
               >
                 Cancelar
               </Button>

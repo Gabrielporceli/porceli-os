@@ -461,7 +461,8 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
+                    variant="ghost"
+                    className="liquid-glass text-white border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs hover:text-white hover:bg-white/10"
                     onClick={() => setIsTagsModalOpen(true)}
                   >
                     {isMobile ? "Tags" : "Gerenciar Tags"}
@@ -474,7 +475,8 @@ export default function LeadsKanban() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Button
-                    className="liquid-glass text-white/70 border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
+                    variant="ghost"
+                    className="liquid-glass text-white border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs hover:text-white hover:bg-white/10"
                     onClick={() => setIsAddStageModalOpen(true)}
                   >
                     {isMobile ? "Etapa" : "Nova Etapa"}
@@ -632,7 +634,7 @@ export default function LeadsKanban() {
                                           </div>
 
                                           <button
-                                            className="relative z-[10] text-white/40 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
+                                            className="relative z-[10] text-white/40 hover:text-white p-1.5 transition-colors cursor-pointer"
                                             data-no-pan
                                             onPointerDown={(e) => {
                                               e.preventDefault();

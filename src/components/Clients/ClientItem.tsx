@@ -132,7 +132,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
           <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
             <Button
               size="sm"
-              className="liquid-glass text-primary hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
+              className="liquid-glass text-white hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -144,7 +144,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
           <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
             <Button
               size="sm"
-              className="liquid-glass text-red-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
+              className="btn-danger-glass rounded-xl h-9 px-4 font-bold transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();

@@ -107,7 +107,7 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
               <Button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all text-base"
+                className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all text-base"
               >
                 Cancelar
               </Button>

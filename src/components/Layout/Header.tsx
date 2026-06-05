@@ -81,7 +81,6 @@ export const Header = () => {
                       : "text-white/40 hover:text-white hover:bg-white/5"
                     }
                   `}>
-                    <Icon className="w-4 h-4" style={isActive ? { color: '#6829c0' } : undefined} />
                     <span className="hidden lg:inline">{item.title}</span>
                   </div>
                 </Link>
@@ -93,10 +92,10 @@ export const Header = () => {
           <div className="flex items-center ml-4 pl-4 border-l border-white/5">
             <button
               onClick={() => logout()}
-              className="p-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 group"
+              className="p-2.5 text-red-500 transition-all duration-300"
               title="Sair"
             >
-              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </header>
