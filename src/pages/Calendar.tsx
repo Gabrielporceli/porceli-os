@@ -37,10 +37,13 @@ import {
   LockOpenIcon,
   Unlock,
   Repeat,
-  Tag
+  Tag,
+  GripVertical
 } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -144,6 +147,28 @@ export default function Calendar() {
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // ── Ordem customizada das atividades por dia (persistida em localStorage) ──
+  const ORDER_STORAGE_KEY = "calendar_activity_order";
+  const [activityOrder, setActivityOrder] = useState<Record<string, string[]>>(() => {
+    try {
+      const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const dayKey = (day: number) =>
+    `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+  const saveActivityOrder = (key: string, ids: string[]) => {
+    setActivityOrder(prev => {
+      const next = { ...prev, [key]: ids };
+      try { localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000); // atualiza a cada 30 seg
@@ -1061,7 +1086,7 @@ export default function Calendar() {
 
             {/* Esquerda: lista de atividades */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 border-r border-white/[0.05]">
-              <div className="space-y-3">
+              <div>
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
               const dayTasks = getNotionTasksForDay(selectedDay);
@@ -1116,8 +1141,8 @@ export default function Calendar() {
                 })
               ];
 
-              // Ordenar: Com hora primeiro, sem hora por último
-              const sortedItems = [...allItems].sort((a, b) => {
+              // Ordenação padrão: com hora primeiro, sem hora por último
+              const defaultSorted = [...allItems].sort((a, b) => {
                 const hasTimeA = a.time && !(a as any).isAllDay;
                 const hasTimeB = b.time && !(b as any).isAllDay;
 
@@ -1129,24 +1154,70 @@ export default function Calendar() {
                 return 0;
               });
 
+              // Aplica ordem customizada salva (se existir), mantendo novos itens no fim
+              const key = dayKey(selectedDay);
+              const savedOrder = activityOrder[key];
+              let sortedItems = defaultSorted;
+              if (savedOrder && savedOrder.length > 0) {
+                const indexOf = (id: string) => {
+                  const i = savedOrder.indexOf(id);
+                  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+                };
+                sortedItems = [...allItems].sort((a, b) => {
+                  const ia = indexOf(a.id), ib = indexOf(b.id);
+                  if (ia === ib) {
+                    // ambos novos (não salvos): usa ordem padrão por tempo
+                    return defaultSorted.indexOf(a) - defaultSorted.indexOf(b);
+                  }
+                  return ia - ib;
+                });
+              }
+
               if (sortedItems.length === 0) {
                 return <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhum evento neste dia.</p>;
               }
 
-              return sortedItems.map((item) => (
-                <div 
-                  key={item.id} 
+              const handleDragEnd = (result: DropResult) => {
+                if (!result.destination) return;
+                const reordered = [...sortedItems];
+                const [moved] = reordered.splice(result.source.index, 1);
+                reordered.splice(result.destination.index, 0, moved);
+                saveActivityOrder(key, reordered.map(i => i.id));
+              };
+
+              return (
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="day-activities">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                        {sortedItems.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index}>
+                            {(prov, snapshot) => {
+                              const cardEl = (
+                <div
+                  ref={prov.innerRef}
+                  {...prov.draggableProps}
                   onClick={() => {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all cursor-pointer border
+                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer border
+                    ${snapshot.isDragging ? 'ring-2 ring-primary/40 shadow-xl' : ''}
                     ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
                       ? '!border-green-500/30 hover:!border-green-500/60'
                       : item.status === 'Em andamento' || isOngoing(item)
                       ? '!border-blue-500/30 hover:!border-blue-500/60'
                       : 'border-white/[0.05] hover:!border-white/[0.15]'}`}
                 >
+                  {/* Handle de arrastar */}
+                  <div
+                    {...prov.dragHandleProps}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-center text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing transition-colors -ml-1"
+                    title="Arraste para reordenar"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
@@ -1219,7 +1290,17 @@ export default function Calendar() {
                     </button>
                   </div>
                 </div>
-              ));
+                              );
+                              return snapshot.isDragging ? createPortal(cardEl, document.body) : cardEl;
+                            }}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              );
             })()}
             </div>
             </div>
