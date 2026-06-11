@@ -90,14 +90,16 @@ const GitHubCalendar = ({
 
   const renderMonthLabels = () => {
     const months = [];
-    let currentMonth = startDate;
+    const year = startDate.getFullYear();
     for (let i = 0; i < 12; i++) {
+      // Usa o 1º dia de cada mês real (jan..dez) em vez de somar 30 dias,
+      // que causava meses duplicados (jan, jan / mai, mai) e dez faltando.
+      const monthDate = new Date(year, i, 1);
       months.push(
         <span key={i} className="text-[10px] font-black text-white/20 uppercase tracking-tighter">
-          {format(currentMonth, "MMM", { locale: ptBR })}
+          {format(monthDate, "MMM", { locale: ptBR })}
         </span>
       );
-      currentMonth = addDays(currentMonth, 30);
     }
     return months;
   };

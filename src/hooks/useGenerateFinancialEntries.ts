@@ -56,31 +56,33 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       return;
     }
 
-    // 3. Buscar lançamentos existentes para deduplicação por (due_date + amount)
+    // 3. Buscar lançamentos existentes — contamos QUANTOS existem por (due_date + amount).
+    // Isso é crucial: um cliente pode ter 2 contratos de mesmo valor/data, gerando
+    // 2 lançamentos legítimos na mesma data. A dedup por contagem evita tanto duplicar
+    // numa re-execução quanto colapsar contratos distintos numa única entrada.
     const { data: existingEntries } = await supabase
       .from('financial_entries')
       .select('due_date, amount')
       .eq('client_id', clientId)
       .eq('user_id', userId);
 
-    // Chave composta: data + valor — permite múltiplos contratos na mesma data
-    // se tiverem valores diferentes, mas evita duplicatas do mesmo contrato
-    const existingKeys = new Set(
-      (existingEntries || []).map(e => `${e.due_date}_${Number(e.amount)}`)
-    );
+    const existingCount: Record<string, number> = {};
+    for (const e of existingEntries || []) {
+      const k = `${e.due_date}_${Number(e.amount)}`;
+      existingCount[k] = (existingCount[k] || 0) + 1;
+    }
 
     const paymentDay = client.payment_day;
-    const financialEntries: {
-      client_id: string;
-      user_id: string;
-      name: string;
-      amount: number;
-      due_date: string;
-      reference: string;
-      status: string;
-    }[] = [];
 
-    // 4. Para cada contrato ativo, gerar as parcelas mensais
+    type Entry = {
+      client_id: string; user_id: string; name: string;
+      amount: number; due_date: string; reference: string; status: string;
+    };
+
+    // 4. Monta a lista DESEJADA de todas as parcelas de TODOS os contratos ativos
+    // (permitindo duplicatas de mesma data+valor quando vêm de contratos diferentes)
+    const desiredByKey: Record<string, Entry[]> = {};
+
     for (const contract of activeContracts) {
       const monthlyValue = Number(contract.monthly_value);
       if (!monthlyValue || !contract.end_date || !contract.start_date) continue;
@@ -88,7 +90,6 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       const startDate = new Date(contract.start_date + 'T00:00:00');
       const endDate   = new Date(contract.end_date   + 'T23:59:59');
 
-      // Primeira data de pagamento: no mesmo mês do início ou no seguinte
       let currentDate = new Date(startDate);
       if (startDate.getDate() > paymentDay) {
         currentDate.setMonth(currentDate.getMonth() + 1);
@@ -98,7 +99,6 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       while (true) {
         const paymentDate = new Date(currentDate);
         paymentDate.setHours(0, 0, 0, 0);
-
         if (paymentDate > endDate) break;
 
         const year     = paymentDate.getFullYear();
@@ -107,23 +107,29 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
         const entryDate = `${year}-${monthStr}-${dayStr}`;
         const key = `${entryDate}_${monthlyValue}`;
 
-        if (!existingKeys.has(key)) {
-          financialEntries.push({
-            client_id: clientId,
-            user_id:   userId,
-            name:      client.company,
-            amount:    monthlyValue,
-            due_date:  entryDate,
-            reference: `${monthNames[paymentDate.getMonth()]} de ${year}`,
-            status:    'pending',
-          });
-          existingKeys.add(key); // evita duplicata dentro desta execução
-        }
+        (desiredByKey[key] ||= []).push({
+          client_id: clientId,
+          user_id:   userId,
+          name:      client.company,
+          amount:    monthlyValue,
+          due_date:  entryDate,
+          reference: `${monthNames[paymentDate.getMonth()]} de ${year}`,
+          status:    'pending',
+        });
 
-        // Próximo mês
         const nextMonth = new Date(currentDate);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         currentDate = setPaymentDay(nextMonth, paymentDay);
+      }
+    }
+
+    // 5. Para cada (data+valor), insere apenas a diferença entre o desejado e o existente
+    const financialEntries: Entry[] = [];
+    for (const [key, items] of Object.entries(desiredByKey)) {
+      const have = existingCount[key] || 0;
+      const need = items.length - have;
+      for (let i = 0; i < need; i++) {
+        financialEntries.push(items[i]);
       }
     }
 

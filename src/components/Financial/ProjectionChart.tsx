@@ -16,6 +16,9 @@ interface ProjectionChartProps {
   contracts: ContractProjection[];
   activeContractsCount?: number;
   financialEntriesTotal2026?: number;
+  // Totais mensais reais (das faturas). Quando fornecido, tem prioridade sobre
+  // a projeção derivada dos contratos — garante que a curva bata com os lançamentos.
+  monthlyData?: { period: string; value: number }[];
 }
 
 const formatCurrency = (value: number) => {
@@ -30,7 +33,7 @@ const chartConfig: ChartConfig = {
   },
 };
 
-export function ProjectionChart({ contracts = [], activeContractsCount, financialEntriesTotal2026 }: ProjectionChartProps) {
+export function ProjectionChart({ contracts = [], activeContractsCount, financialEntriesTotal2026, monthlyData }: ProjectionChartProps) {
   const processChartData = () => {
     try {
       const monthlyProjections: { [key: string]: number } = {};
@@ -74,7 +77,10 @@ export function ProjectionChart({ contracts = [], activeContractsCount, financia
     }
   };
 
-  const data = processChartData();
+  // Usa os totais mensais reais das faturas quando disponíveis; senão, projeção dos contratos
+  const data = monthlyData && monthlyData.length > 0
+    ? monthlyData.map(m => ({ period: m.period, Projeção: m.value }))
+    : processChartData();
   const chartTotal = data.reduce((sum, item) => sum + (item.Projeção || 0), 0);
   const totalProjection = financialEntriesTotal2026 !== undefined ? financialEntriesTotal2026 : chartTotal;
   const monthlyAverage = chartTotal / 12;

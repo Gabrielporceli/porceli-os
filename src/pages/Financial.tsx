@@ -36,8 +36,9 @@ export default function Financial() {
     expenseDescription: ""
   });
 
-  // Filtros de status
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('currentMonth');
+  // Filtros de status — padrão "Em Aberto" mostra todas as cobranças futuras/pendentes
+  // (sem poluir com os pagos antigos), evitando a sensação de que faltam lançamentos.
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('pending');
 
   // Filtro de despesas
   const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
@@ -175,6 +176,23 @@ export default function Financial() {
       return d.getFullYear() === thisYear;
     })
     .reduce((sum: number, entry: any) => sum + (Number(entry.amount) || 0), 0);
+
+  // Totais mensais reais (a partir das faturas) — fonte da verdade para o gráfico,
+  // garantindo que a curva bata exatamente com os lançamentos financeiros.
+  const monthlyData2026 = (() => {
+    const totals = Array(12).fill(0);
+    for (const entry of financialEntries as any[]) {
+      if (!entry?.due_date) continue;
+      if (entry?.status !== 'paid' && entry?.status !== 'pending') continue;
+      const d = parseLocalDate(entry.due_date);
+      if (d.getFullYear() !== thisYear) continue;
+      totals[d.getMonth()] += Number(entry.amount) || 0;
+    }
+    return totals.map((value, i) => {
+      const name = new Date(thisYear, i, 1).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      return { period: name.charAt(0).toUpperCase() + name.slice(1), value };
+    });
+  })();
 
   const handleAddExpense = (expenseData: any) => {
     console.log('DEBUG - Dados recebidos para despesa:', expenseData);
@@ -630,6 +648,7 @@ export default function Financial() {
         contracts={contractProjections}
         activeContractsCount={activeContractsCount}
         financialEntriesTotal2026={total2026FromEntries}
+        monthlyData={monthlyData2026}
       />
 
       <DeleteExpenseDialog

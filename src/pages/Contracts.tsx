@@ -159,35 +159,56 @@ export default function Contracts() {
     }
   };
 
-  // Lógica compartilhada de cancelamento: marca inativo, atualiza tag e remove faturas pendentes
+  // Lógica compartilhada de cancelamento.
+  // ATENÇÃO: existe um trigger no banco (sync_client_contract_status) que, ao mudar
+  // a tag do cliente para 'Inativo', marca TODOS os contratos do cliente como inactive.
+  // Por isso, só marcamos o cliente como Inativo se NÃO houver outros contratos ativos.
   const cancelContractBase = async (contract: Contract) => {
     await updateContractMutation.mutateAsync({ id: contract.id, status: 'inactive' });
 
-    if (contract.client_id) {
-      const { data: { user } } = await supabase.auth.getUser();
+    if (!contract.client_id) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      try {
+    // Verifica se o cliente ainda tem outros contratos ativos
+    const { data: remaining } = await supabase
+      .from('contracts')
+      .select('id, status, end_date')
+      .eq('client_id', contract.client_id)
+      .eq('user_id', user.id)
+      .neq('id', contract.id);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const hasActiveContract = (remaining || []).some(c => {
+      if (c.status === 'active' || c.status === 'expiring') return true;
+      if (c.end_date) return new Date(c.end_date) >= today;
+      return false;
+    });
+
+    try {
+      if (hasActiveContract) {
+        // Cliente continua ativo — NÃO mexe na tag (evita o trigger cancelar tudo).
+        // Apenas regenera as faturas: remove pendentes e recria a partir dos contratos
+        // ainda ativos (assim as faturas do contrato cancelado somem, mas as outras ficam).
+        const { updateFinancialEntriesForClient } = await import('@/hooks/useGenerateFinancialEntries');
+        await updateFinancialEntriesForClient(contract.client_id, user.id);
+      } else {
+        // Nenhum contrato ativo restante — marca cliente como Inativo e remove faturas pendentes
         await updateClientMutation.mutateAsync({ id: contract.client_id, tags: ['Inativo'] });
-        queryClient.invalidateQueries({ queryKey: ['clients'] });
-      } catch (clientError) {
-        console.error('Erro ao atualizar tag do cliente:', clientError);
-      }
-
-      if (user) {
-        const { error: deleteError } = await supabase
+        await supabase
           .from('financial_entries')
           .delete()
           .eq('client_id', contract.client_id)
           .eq('user_id', user.id)
           .eq('status', 'pending');
-
-        if (deleteError) {
-          console.error('Erro ao deletar faturas pendentes:', deleteError);
-        } else {
-          queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
-        }
       }
+    } catch (err) {
+      console.error('Erro ao finalizar cancelamento do contrato:', err);
     }
+
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
+    queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
   };
 
   const handleConfirmCancel = async () => {
