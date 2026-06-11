@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
-import { generateFinancialEntriesForClient, updateFinancialEntriesForClient } from './useGenerateFinancialEntries';
+import { updateFinancialEntriesForClient } from './useGenerateFinancialEntries';
 import { geocodeAddress } from '@/lib/geocode';
 
 type Client = Tables<'clients'>;
@@ -85,52 +85,9 @@ export const useCreateClient = () => {
         payment_day: data.payment_day
       });
 
-      // Enviar webhook para o cliente criado
-      try {
-        console.log('DEBUG - Enviando webhook para cliente criado');
-        const { data: webhookResult, error: webhookError } = await supabase.functions.invoke('send-client-webhook', {
-          body: {
-            id: data.id,
-            company: data.company,
-            cnpj: data.cnpj,
-            responsible: data.responsible,
-            phone: data.phone,
-            email: data.email,
-            grupo_id: data.grupo_id,
-            plan: data.plan,
-            contract_end: data.contract_end,
-            start_date: data.start_date,
-            payment_day: data.payment_day,
-            monthly_value: data.monthly_value,
-            address: data.address,
-            tags: data.tags,
-            user_id: data.user_id,
-            created_at: data.created_at,
-            updated_at: data.updated_at
-          }
-        });
-
-        if (webhookError) {
-          console.error('Erro ao enviar webhook:', webhookError);
-          // Não falhar a criação do cliente por causa do webhook
-        } else {
-          console.log('Webhook enviado com sucesso:', webhookResult);
-        }
-      } catch (webhookErr) {
-        console.error('Erro ao chamar edge function do webhook:', webhookErr);
-        // Não falhar a criação do cliente por causa do webhook
-      }
-
-      // Gerar lançamentos financeiros automaticamente se cliente tem dados de contrato
-      if (client.monthly_value && client.contract_end && client.payment_day) {
-        console.log('DEBUG - Gerando lançamentos financeiros para cliente criado');
-        try {
-          await generateFinancialEntriesForClient(data.id, user.id);
-        } catch (finError) {
-          console.error('Erro ao gerar lançamentos financeiros:', finError);
-          // Não falhar a criação do cliente por causa dos lançamentos
-        }
-      }
+      // NOTA: a criação de cliente NÃO dispara mais o Asaas nem gera cobranças.
+      // Isso agora é responsabilidade exclusiva da criação de contrato (aba Contratos),
+      // evitando duplicação de cobranças e separando os fluxos.
 
       return data;
     },

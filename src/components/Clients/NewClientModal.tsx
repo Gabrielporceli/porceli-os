@@ -83,21 +83,8 @@ export function NewClientModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert monthlyValue from Brazilian format to number
-    const monthlyValueNumber = parseFloat(formData.monthly_value.replace(',', '.')) || 0;
-
-    // Convert empty strings to null for date fields and ensure proper date format
-    const formatDateForDatabase = (dateString: string) => {
-      if (!dateString || dateString.trim() === '') return null;
-      // Ensure the date is in YYYY-MM-DD format
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return null;
-      return date.toISOString().split('T')[0];
-    };
-
-    const contractEnd = formatDateForDatabase(formData.contract_end);
-    const startDate = formatDateForDatabase(formData.start_date);
-
+    // Cliente é criado SEM dados de contrato — plano, valores e datas
+    // são definidos depois ao criar um contrato na aba Contratos.
     const clientData = {
       company: formData.company,
       cnpj: formData.cnpj,
@@ -105,28 +92,14 @@ export function NewClientModal({
       phone: formData.phone,
       email: formData.email,
       grupo_id: formData.grupo_id || undefined,
-      plan: formData.plan,
-      contract_end: contractEnd,
-      start_date: startDate,
-      payment_day: parseInt(formData.payment_day) || 1,
-      monthly_value: monthlyValueNumber,
+      plan: "",
+      contract_end: null,
+      start_date: null,
+      payment_day: 1,
+      monthly_value: 0,
       address: formData.address,
-      tags: formData.tags,
+      tags: ["Ativo"],
     };
-
-    console.log('DEBUG - Dados do cliente sendo enviados:', clientData);
-    console.log('DEBUG - Tipos dos dados:', {
-      contract_end: typeof clientData.contract_end,
-      start_date: typeof clientData.start_date,
-      monthly_value: typeof clientData.monthly_value,
-      payment_day: typeof clientData.payment_day
-    });
-    console.log('DEBUG - Valores dos dados:', {
-      contract_end: clientData.contract_end,
-      start_date: clientData.start_date,
-      monthly_value: clientData.monthly_value,
-      payment_day: clientData.payment_day
-    });
 
     onSave(clientData);
     setFormData({
@@ -358,177 +331,26 @@ export function NewClientModal({
               </div>
             </div>
 
-            {/* Plano e Valores */}
+            {/* Localização */}
             <div className="space-y-6">
               <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
-                Plano e Valores
+                Localização
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="flex justify-between text-white/70 text-xs font-bold uppercase tracking-widest">
-                    Plano
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/20 h-6 px-2 text-[10px] font-bold uppercase tracking-wider"
-                      onClick={() => setShowAddPlan(!showAddPlan)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" /> Novo
-                    </Button>
-                  </Label>
-
-                  {showAddPlan && (
-                    <div className="space-y-4 p-4 rounded-xl border border-white/[0.05] bg-white/[0.02] animate-in fade-in slide-in-from-top-2">
-                      <div className="space-y-2">
-                        <Input
-                          value={newPlanName}
-                          onChange={(e) => setNewPlanName(e.target.value)}
-                          placeholder="Nome do novo plano"
-                          className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all text-sm"
-                          onKeyPress={(e) => e.key === "Enter" && handleAddCustomPlan()}
-                        />
-                      </div>
-
-                      <ColorPicker
-                        selectedColor={newPlanColor}
-                        onColorChange={setNewPlanColor}
-                        label="Cor do Plano"
-                      />
-
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddCustomPlan}
-                          className="bg-primary hover:bg-primary/90 text-white flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
-                        >
-                          Adicionar Plano
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => setShowAddPlan(false)}
-                          className="bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 transition-all flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  <Select value={formData.plan} onValueChange={(value) => handleChange("plan", value)}>
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {planOptions.map((plan) => (
-                        <SelectItem
-                          key={plan}
-                          value={plan}
-                          className="cursor-pointer"
-                        >
-                          {plan}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest">Valor Mensal (R$)</Label>
-                  <Input
-                    id="monthly_value"
-                    type="text"
-                    value={formData.monthly_value}
-                    onChange={handleMonthlyValueChange}
-                    onBlur={handleMonthlyValueBlur}
-                    onFocus={(e) => {
-                      if (e.target.value === "0,00") {
-                        e.target.value = "";
-                        setFormData((prev) => ({ ...prev, monthly_value: "" }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
-                    placeholder="0,00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest">Dia de Pagamento</Label>
-                  <Input
-                    id="payment_day"
-                    type="text"
-                    value={formData.payment_day}
-                    onChange={handlePaymentDayChange}
-                    onFocus={e => {
-                      if (e.target.value) {
-                        e.target.value = '';
-                        setFormData(prev => ({ ...prev, payment_day: '' }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
-                    placeholder="1-31"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Status</Label>
-                  <Select 
-                    value={formData.tags[0]} 
-                    onValueChange={(value) => handleChange("tags", [value])}
-                  >
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ativo" className="cursor-pointer">Ativo</SelectItem>
-                      <SelectItem value="A vencer" className="cursor-pointer">A vencer</SelectItem>
-                      <SelectItem value="Vencido" className="cursor-pointer">Vencido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-white/70 text-xs font-bold uppercase tracking-widest">Endereço</Label>
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 rounded-xl transition-all resize-none min-h-[100px]"
+                  placeholder="Endereço completo do cliente"
+                />
               </div>
-            </div>
 
-            {/* Datas e Localização */}
-            <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
-                Datas e Localização
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Data de Início</Label>
-                  <DatePicker
-                    date={formData.start_date ? parseISO(formData.start_date) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("start_date", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Fim do Contrato</Label>
-                  <DatePicker
-                    date={formData.contract_end ? parseISO(formData.contract_end) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("contract_end", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address" className="text-white/70 text-xs font-bold uppercase tracking-widest">Endereço</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 rounded-xl transition-all resize-none min-h-[100px]"
-                    placeholder="Endereço completo do cliente"
-                  />
-                </div>
-              </div>
+              <p className="text-white/30 text-xs">
+                💡 Plano, valores e datas são definidos ao criar um <strong className="text-white/50">contrato</strong> na aba Contratos.
+              </p>
             </div>
 
           </form>
