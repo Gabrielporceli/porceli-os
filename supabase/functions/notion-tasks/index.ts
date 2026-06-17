@@ -467,6 +467,9 @@ serve(async (req) => {
       })(),
       priority: t.priority,
       url: t.url,
+      // Persiste os clientes da tarefa em properties.clients para que automações
+      // (resumo diário, lembretes) possam exibir o cliente sem chamar a API do Notion.
+      properties: { clients: t.clients ?? [] },
       synced_at: new Date().toISOString()
     })).filter(t => t.due_date !== null) // Apenas tarefas com data interessam ao lembrete
 

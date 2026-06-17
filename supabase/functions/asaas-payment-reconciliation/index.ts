@@ -17,7 +17,7 @@ const EPS_PENALTY = 1.00;
 
 type AsaasCustomer = { id: string; name: string };
 type AsaasPayment  = { id: string; customer: string; dueDate: string; value: number; netValue: number; originalValue?: number; paymentDate?: string; confirmedDate?: string };
-type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string };
+type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string; reference?: string };
 
 async function asaasGetAll(path: string): Promise<unknown[]> {
   const all: unknown[] = []; let offset = 0;
@@ -106,7 +106,7 @@ serve(async (req) => {
       payIndex.get(key)!.push({ raw: p, dueIso, payDateIso, payValue: parseBRL(p.value), payNet: parseBRL(p.netValue), payOriginal: parseBRL(p.originalValue) });
     }
 
-    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number }> = [];
+    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string }> = [];
     let unmatchedCount = 0;
 
     for (const entry of (pendingEntries as SupabaseEntry[])) {
@@ -151,7 +151,7 @@ serve(async (req) => {
       if (bestIdx === -1) { unmatchedCount++; continue; }
 
       const chosen = list.splice(bestIdx, 1)[0];
-      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount });
+      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "" });
     }
 
     for (const m of matched) {
@@ -162,14 +162,36 @@ serve(async (req) => {
       await supabase.from("notification_logs").insert({ type: "reconciliation", channel: "system", status: "sent", metadata: { matched: matched.length, unmatched: unmatchedCount } });
     }
 
-    // Relatório compacto — sem listar nomes dos sem-match
+    // Relatório — agrupa baixas por cliente para deixar claro quando há
+    // MAIS DE UM boleto do mesmo cliente (ex: cliente com 2 contratos).
     if (matched.length > 0 || unmatchedCount > 0) {
       const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
       let report = `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n`;
-      report += `✅ *Pagamentos confirmados:* ${matched.length}\n`;
+      report += `✅ *Boletos com baixa confirmada:* ${matched.length}\n`;
+
       if (matched.length > 0) {
-        report += matched.map(m => `  • ${m.clientName} — R$${m.amount.toFixed(2)}`).join("\n") + "\n";
+        // Agrupa por cliente
+        const byClient = new Map<string, { amount: number; reference: string }[]>();
+        for (const m of matched) {
+          if (!byClient.has(m.clientName)) byClient.set(m.clientName, []);
+          byClient.get(m.clientName)!.push({ amount: m.amount, reference: m.reference });
+        }
+
+        for (const [client, items] of byClient) {
+          if (items.length === 1) {
+            report += `  • ${client} — R$${items[0].amount.toFixed(2)}\n`;
+          } else {
+            // Mais de um boleto do mesmo cliente — destaca a quantidade e o total
+            const total = items.reduce((s, i) => s + i.amount, 0);
+            report += `  • ${client} — *${items.length} boletos* (total R$${total.toFixed(2)})\n`;
+            for (const it of items) {
+              const ref = it.reference ? ` (${it.reference})` : "";
+              report += `      ↳ R$${it.amount.toFixed(2)}${ref}\n`;
+            }
+          }
+        }
       }
+
       if (unmatchedCount > 0) {
         report += `\n⚠️ *Sem correspondência (revisar no sistema):* ${unmatchedCount}`;
       }

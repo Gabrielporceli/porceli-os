@@ -30,7 +30,7 @@ serve(async (req) => {
     // 2. Buscar Tarefas do Notion de Hoje
     const { data: tasks } = await supabase
       .from('notion_tasks')
-      .select('title, status')
+      .select('title, status, properties')
       .gte('due_date', `${today}T00:00:00Z`)
       .lte('due_date', `${today}T23:59:59Z`)
       .neq('status', 'Concluído')
@@ -52,7 +52,13 @@ serve(async (req) => {
     if (tasks && tasks.length > 0) {
       message += `📝 *NOTION (Pendentes):*\n`
       tasks.forEach(t => {
-        message += `${statusDot(t.status)} ${t.title} [${t.status}]\n`
+        // Quando a tarefa tem cliente, mostra "Tarefa - Cliente" em vez do status.
+        // O status já é indicado pela bolinha colorida (🔴/🔵/🟢).
+        const clients: string[] = Array.isArray((t as any).properties?.clients)
+          ? (t as any).properties.clients
+          : []
+        const suffix = clients.length > 0 ? ` - ${clients.join(', ')}` : ''
+        message += `${statusDot(t.status)} ${t.title}${suffix}\n`
       })
     } else {
       message += `📝 *NOTION:* Sem tarefas pendentes para hoje.`
