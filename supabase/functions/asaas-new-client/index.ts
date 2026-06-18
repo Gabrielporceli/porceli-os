@@ -266,7 +266,7 @@ serve(async (req) => {
     if (phone) {
       const clientMsg =
         `Olá, ${responsible}! 👋\n\n` +
-        `Seu cadastro na *${company}* foi realizado com sucesso.\n\n` +
+        `Seu cadastro na *Porceli Company* foi realizado com sucesso.\n\n` +
         `*Detalhes do contrato:*\n` +
         `• Vigência: ${startBR} até ${endBR}\n` +
         `• Parcelas: ${installments}x de R$${monthly.toFixed(2)}\n` +
