@@ -36,9 +36,8 @@ export default function Financial() {
     expenseDescription: ""
   });
 
-  // Filtros de status — padrão "Em Aberto" mostra todas as cobranças futuras/pendentes
-  // (sem poluir com os pagos antigos), evitando a sensação de que faltam lançamentos.
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('pending');
+  // Filtros de status — padrão "Mês Atual" ao abrir a página.
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('currentMonth');
 
   // Filtro de despesas
   const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
@@ -627,7 +626,7 @@ export default function Financial() {
                       <Button
                         onClick={() => handleDeleteExpense(expense.id, expense.description)}
                         disabled={isDeleting}
-                        className="liquid-glass text-red-500 hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-all"
+                        className="btn-danger-glass rounded-xl h-9 px-4 font-bold transition-all"
                         size="sm"
                       >
                         Excluir
