@@ -1613,25 +1613,26 @@ export default function Calendar() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
+                  variant="ghost"
                   onClick={() => setIsEditActivityModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
+                  className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all"
                 >
                   Cancelar
                 </Button>
               </motion.div>
-              <motion.div 
-                className="flex-[2]" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                className="flex-[2]"
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2">
+                <Button onClick={handleSaveEdit} className="btn-primary-glass !text-white w-full h-11 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                   <Save className="w-4 h-4" />
                   Salvar
                 </Button>
               </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
@@ -1640,7 +1641,7 @@ export default function Calendar() {
                   variant="ghost"
                   size="icon"
                   onClick={handleDeleteActivity}
-                  className="btn-danger-glass h-12 w-12 rounded-xl transition-all"
+                  className="btn-danger-glass h-11 w-11 rounded-xl transition-all"
                   title="Excluir Atividade"
                 >
                   <Trash2 className="w-5 h-5" />
