@@ -1483,7 +1483,7 @@ export default function Calendar() {
               >
                 <Button
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
+                  className="btn-danger-glass w-full h-10 rounded-xl font-bold transition-all"
                 >
                   Cancelar
                 </Button>
@@ -1640,7 +1640,7 @@ export default function Calendar() {
                   variant="ghost"
                   size="icon"
                   onClick={handleDeleteActivity}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="btn-danger-glass h-12 w-12 rounded-xl transition-all"
                   title="Excluir Atividade"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -1667,9 +1667,9 @@ export default function Calendar() {
             <AlertDialogCancel className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 rounded-xl h-11 h-11 px-6 font-bold transition-all">
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmDeleteActivity}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-xl h-11 px-8 font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-wider text-xs"
+              className="btn-danger-glass rounded-xl h-11 px-8 font-bold transition-all uppercase tracking-wider text-xs"
             >
               Excluir
             </AlertDialogAction>
