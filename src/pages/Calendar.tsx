@@ -967,7 +967,7 @@ export default function Calendar() {
                 <button
                   onClick={handleConnectGoogle}
                   disabled={connectingGoogle}
-                  className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs disabled:opacity-60 font-bold uppercase tracking-widest border border-white/5"
+                  className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs disabled:opacity-60 font-bold uppercase tracking-widest"
                 >
                   {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                     <RefreshCw className="w-4 h-4" />
@@ -982,7 +982,7 @@ export default function Calendar() {
                   <button
                     onClick={fetchGoogleEvents}
                     disabled={loadingGoogle}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
+                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
                   >
                     {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                     Google
@@ -999,7 +999,7 @@ export default function Calendar() {
                   <button
                     onClick={handleConnectNotion}
                     disabled={connectingNotion}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
+                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
                   >
                     {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                     Notion
@@ -1013,7 +1013,7 @@ export default function Calendar() {
                   <button
                     onClick={() => fetchNotionTasks()}
                     disabled={loadingNotion}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
+                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
                   >
                     {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                     Notion

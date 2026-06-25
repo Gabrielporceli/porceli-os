@@ -22,7 +22,7 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
           >
             <Button
               variant="ghost"
-              className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5 hover:bg-white/[0.06] hover:text-white"
+              className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
               onClick={onSync}
               disabled={isSyncing}
               title="Gerar e Atualizar Lançamentos Faltantes"
