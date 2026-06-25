@@ -1641,10 +1641,10 @@ export default function Calendar() {
                   variant="ghost"
                   size="icon"
                   onClick={handleDeleteActivity}
-                  className="btn-danger-glass h-11 w-11 rounded-xl transition-all"
+                  className="btn-danger-glass h-11 w-11 rounded-xl transition-all !text-white"
                   title="Excluir Atividade"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-5 h-5 text-white" />
                 </Button>
               </motion.div>
             </div>
