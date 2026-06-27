@@ -147,6 +147,7 @@ export default function Calendar() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [panelDate, setPanelDate] = useState(new Date()); // dia exibido no painel lateral
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // ── Ordem customizada das atividades por dia (persistida em localStorage) ──
@@ -949,13 +950,12 @@ export default function Calendar() {
     return Object.entries(counts).map(([date, count]) => ({ date, count }));
   }, [googleEvents, notionTasks]);
 
-  // Atividades de hoje (para o painel lateral), ordenadas por horário
+  // Atividades do dia exibido no painel lateral, ordenadas por horário
   const todayItems = useMemo(() => {
-    const now = new Date();
     const match = calendarData.find(d =>
-      d.day.getFullYear() === now.getFullYear() &&
-      d.day.getMonth() === now.getMonth() &&
-      d.day.getDate() === now.getDate()
+      d.day.getFullYear() === panelDate.getFullYear() &&
+      d.day.getMonth() === panelDate.getMonth() &&
+      d.day.getDate() === panelDate.getDate()
     );
     return (match?.events ?? []).slice().sort((a, b) => {
       if (a.time && b.time) return a.time.localeCompare(b.time);
@@ -963,7 +963,25 @@ export default function Calendar() {
       if (b.time) return 1;
       return 0;
     });
-  }, [calendarData]);
+  }, [calendarData, panelDate]);
+
+  // Rótulo relativo do painel (Hoje / Amanhã / Ontem / data)
+  const panelLabel = (() => {
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diff = Math.round((startOfDay(panelDate) - startOfDay(new Date())) / 86400000);
+    if (diff === 0) return 'Atividades de Hoje';
+    if (diff === 1) return 'Atividades de Amanhã';
+    if (diff === -1) return 'Atividades de Ontem';
+    return 'Atividades';
+  })();
+
+  const shiftPanelDay = (delta: number) => {
+    setPanelDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + delta);
+      return d;
+    });
+  };
 
   // Abre o modal de edição a partir de um evento do calendário/painel
   const handleEventClick = (event: CalendarEvent) => {
@@ -1077,19 +1095,44 @@ export default function Calendar() {
         />
       </div>
 
-      {/* Painel lateral — Atividades de Hoje */}
+      {/* Painel lateral — Atividades do dia (navegável) */}
       <aside className="hidden lg:flex w-[340px] shrink-0 liquid-glass rounded-3xl overflow-hidden flex-col">
-        <div className="p-5 border-b border-white/5 shrink-0">
-          <h3 className="text-lg font-bold text-white tracking-tight">Atividades de Hoje</h3>
-          <p className="text-white/40 text-xs mt-0.5 capitalize">
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-          </p>
+        <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-white tracking-tight">{panelLabel}</h3>
+            <p className="text-white/40 text-xs mt-0.5 capitalize truncate">
+              {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => shiftPanelDay(-1)}
+              title="Dia anterior"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPanelDate(new Date())}
+              title="Hoje"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-primary hover:bg-white/5 transition-colors"
+            >
+              <CalendarIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => shiftPanelDay(1)}
+              title="Próximo dia"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
           {todayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
               <CalendarIcon className="w-10 h-10" />
-              <p className="text-sm text-white text-center">Nenhuma atividade<br />para hoje</p>
+              <p className="text-sm text-white text-center">Nenhuma atividade<br />neste dia</p>
             </div>
           ) : (
             todayItems.map((event) => {
