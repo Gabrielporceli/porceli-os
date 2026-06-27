@@ -49,6 +49,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { parseISO, format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -948,13 +949,58 @@ export default function Calendar() {
     return Object.entries(counts).map(([date, count]) => ({ date, count }));
   }, [googleEvents, notionTasks]);
 
+  // Atividades de hoje (para o painel lateral), ordenadas por horário
+  const todayItems = useMemo(() => {
+    const now = new Date();
+    const match = calendarData.find(d =>
+      d.day.getFullYear() === now.getFullYear() &&
+      d.day.getMonth() === now.getMonth() &&
+      d.day.getDate() === now.getDate()
+    );
+    return (match?.events ?? []).slice().sort((a, b) => {
+      if (a.time && b.time) return a.time.localeCompare(b.time);
+      if (a.time) return -1;
+      if (b.time) return 1;
+      return 0;
+    });
+  }, [calendarData]);
+
+  // Abre o modal de edição a partir de um evento do calendário/painel
+  const handleEventClick = (event: CalendarEvent) => {
+    const googleItem = googleEvents.find(i => i.id === event.id);
+    const notionItem = notionTasks.find(i => i.id === event.id);
+    if (googleItem) {
+      setEditingItem({ ...googleItem, type: 'google' as const });
+      setEditTitle(googleItem.title);
+      setEditDate(new Date(googleItem.start));
+      setEditTime(googleItem.start.includes('T') ? format(new Date(googleItem.start), "HH:mm") : "12:00");
+      setIsEditActivityModalOpen(true);
+    } else if (notionItem) {
+      setEditingItem({ ...notionItem, type: 'notion' as const });
+      setEditTitle(notionItem.title);
+      const dateStr = notionItem.dueDate!;
+      setEditDate(new Date(dateStr));
+      setEditTime(dateStr.includes('T') ? format(new Date(dateStr), "HH:mm") : "12:00");
+      setIsEditActivityModalOpen(true);
+    }
+  };
+
+  // Status visual de um evento do painel
+  const eventVisualStatus = (event: CalendarEvent): 'done' | 'ongoing' | 'pending' => {
+    if (['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '')
+      || (event.type === 'google' && event.datetime?.includes('T') && new Date() >= new Date(event.datetime))) return 'done';
+    if (['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '')) return 'ongoing';
+    return 'pending';
+  };
+
   if (!isReady) return <PageLoader />;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
       <GitHubCalendar data={contributionData} />
 
-      <div className="h-[calc(100vh-80px)] min-h-[650px] overflow-hidden rounded-3xl flex">
+      <div className="h-[calc(100vh-80px)] min-h-[650px] flex gap-4">
+      <div className="flex-1 min-w-0 overflow-hidden rounded-3xl flex">
         <FullScreenCalendar
           data={calendarData}
           onDaySelect={(date: Date) => setSelectedDay(date.getDate())}
@@ -1026,28 +1072,57 @@ export default function Calendar() {
             setNewEventDate(format(day, "yyyy-MM-dd"));
             setIsCreateModalOpen(true);
           }}
-          onEventClick={(event) => {
-            // Find the original item to populate the edit modal
-            const googleItem = googleEvents.find(i => i.id === event.id);
-            const notionItem = notionTasks.find(i => i.id === event.id);
-            
-            if (googleItem) {
-              setEditingItem({...googleItem, type: 'google' as const});
-              setEditTitle(googleItem.title);
-              setEditDate(new Date(googleItem.start));
-              setEditTime(googleItem.start.includes('T') ? format(new Date(googleItem.start), "HH:mm") : "12:00");
-              setIsEditActivityModalOpen(true);
-            } else if (notionItem) {
-              setEditingItem({...notionItem, type: 'notion' as const});
-              setEditTitle(notionItem.title);
-              const dateStr = notionItem.dueDate!;
-              setEditDate(new Date(dateStr));
-              setEditTime(dateStr.includes('T') ? format(new Date(dateStr), "HH:mm") : "12:00");
-              setIsEditActivityModalOpen(true);
-            }
-          }}
+          onEventClick={handleEventClick}
           onDateChange={(date) => setCurrentDate(date)}
         />
+      </div>
+
+      {/* Painel lateral — Atividades de Hoje */}
+      <aside className="hidden lg:flex w-[340px] shrink-0 liquid-glass rounded-3xl overflow-hidden flex-col">
+        <div className="p-5 border-b border-white/5 shrink-0">
+          <h3 className="text-lg font-bold text-white tracking-tight">Atividades de Hoje</h3>
+          <p className="text-white/40 text-xs mt-0.5 capitalize">
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
+          {todayItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
+              <CalendarIcon className="w-10 h-10" />
+              <p className="text-sm text-white text-center">Nenhuma atividade<br />para hoje</p>
+            </div>
+          ) : (
+            todayItems.map((event) => {
+              const st = eventVisualStatus(event);
+              return (
+                <div
+                  key={event.id}
+                  onClick={() => handleEventClick(event)}
+                  className={cn(
+                    "liquid-glass !rounded-2xl p-4 cursor-pointer hover:bg-white/[0.05] transition-all border",
+                    st === 'done' ? "!border-green-500/30" : st === 'ongoing' ? "!border-blue-500/30" : "!border-white/10"
+                  )}
+                >
+                  <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
+                  {event.clients && event.clients.length > 0 && (
+                    <p className="text-white/40 text-xs mt-1 truncate">{event.clients[0]}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-3 text-white/50">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[11px] font-bold">{event.time || 'Dia todo'}</span>
+                  </div>
+                  <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
+                    <div className={cn(
+                      "h-full rounded-full",
+                      st === 'done' ? "w-full bg-green-400" : st === 'ongoing' ? "w-1/2 bg-blue-400" : "w-1/4 bg-primary"
+                    )} />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
       </div>
 
 

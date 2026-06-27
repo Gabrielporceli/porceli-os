@@ -231,43 +231,36 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                     )}
                   </header>
                   
-                  <div className="flex-1 px-1.5 pb-1.5 overflow-hidden min-h-0">
-                    <div className="space-y-1">
-                      {data
+                  {/* Bolinhas — uma por atividade, cor por status */}
+                  <div className="flex-1 flex items-center justify-center px-2 pb-2 min-h-0">
+                    {(() => {
+                      const dayEvents = data
                         .filter((item) => isSameDay(item.day, day))
-                        .flatMap((item) => item.events)
-                        .slice(0, 2)
-                        .map((event) => (
-                          <motion.div
-                            key={event.id}
-                            onClick={(e) => { e.stopPropagation(); onEventClick?.(event); }}
-                            className={cn(
-                              "flex items-center justify-between gap-2 rounded-lg border px-2 py-1 text-[11px] leading-tight cursor-pointer transition-all hover:brightness-125 bg-black/40 backdrop-blur-md",
-                              ['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '') || (event.type === 'google' && event.datetime && event.datetime.includes('T') && new Date() >= new Date(event.datetime)) ? "border-green-500/30" :
-                              ['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '') ? "border-blue-500/30" :
-                              "border-white/10 text-white/80"
-                            )}
-                          >
-                            <p className="font-bold truncate">{event.name}</p>
-                            {event.time && <span className="text-[9px] font-black opacity-50 whitespace-nowrap shrink-0">{event.time}</span>}
-                          </motion.div>
-                        ))}
+                        .flatMap((item) => item.events);
+                      if (dayEvents.length === 0) return null;
 
-                      {(() => {
-                        const dayEvents = data
-                          .filter((item) => isSameDay(item.day, day))
-                          .flatMap((item) => item.events);
-
-                        if (dayEvents.length > 2) {
-                          return (
-                            <span className="block px-1 text-[9px] font-black text-white/30 uppercase tracking-widest">
-                              + {dayEvents.length - 2}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
+                      const visible = dayEvents.slice(0, 8);
+                      return (
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-full">
+                          {visible.map((event, i) => {
+                            // Escala de roxo do claro ao escuro conforme a posição/quantidade
+                            const t = visible.length > 1 ? i / (visible.length - 1) : 1;
+                            const opacity = 0.3 + t * 0.7; // 0.30 (claro) → 1.0 (forte)
+                            return (
+                              <span
+                                key={event.id}
+                                title={event.name}
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ background: `rgba(104, 41, 192, ${opacity})` }}
+                              />
+                            );
+                          })}
+                          {dayEvents.length > 8 && (
+                            <span className="text-[9px] font-black text-white/40 leading-none">+{dayEvents.length - 8}</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
