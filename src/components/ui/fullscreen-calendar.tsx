@@ -157,113 +157,103 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
       <div className="lg:flex lg:flex-auto lg:flex-col overflow-hidden">
         <div className="liquid-glass border-white/5 rounded-3xl overflow-hidden flex flex-col h-full isolate !shadow-none">
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 border-b border-white/5 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/30 bg-white/[0.02]">
-            <div className="py-2.5 border-r border-white/5">Dom</div>
-            <div className="py-2.5 border-r border-white/5">Seg</div>
-            <div className="py-2.5 border-r border-white/5">Ter</div>
-            <div className="py-2.5 border-r border-white/5">Qua</div>
-            <div className="py-2.5 border-r border-white/5">Qui</div>
-            <div className="py-2.5 border-r border-white/5">Sex</div>
-            <div className="py-2.5">Sáb</div>
+          <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/25 px-1.5 pt-3 pb-1">
+            <div>Dom</div>
+            <div>Seg</div>
+            <div>Ter</div>
+            <div>Qua</div>
+            <div>Qui</div>
+            <div>Sex</div>
+            <div>Sáb</div>
           </div>
 
-          {/* Calendar Days */}
+          {/* Calendar Days — cada dia é um card roxo flutuante, cor por quantidade */}
           <div className="flex text-xs leading-6 flex-auto min-h-0">
-            <div className="grid w-full grid-cols-7 auto-rows-fr bg-white/[0.01]">
-              {days.map((day, dayIdx) => (
-                <div
-                  key={day.toISOString()}
-                  onClick={() => { setSelectedDay(day); onDaySelect?.(day); }}
-                  className={cn(
-                    !isSameMonth(day, firstDayCurrentMonth) && "opacity-20 pointer-events-none",
-                    "relative flex flex-col border-b border-r border-white/[0.03] hover:bg-white/[0.02] focus:z-10 transition-colors group",
-                    isEqual(day, selectedDay) && "bg-white/[0.03]"
-                  )}
-                >
-                  <header className="flex items-center justify-between px-1.5 pt-1.5 pb-0.5 shrink-0">
-                    <button
-                      type="button"
+            <div className="grid w-full grid-cols-7 auto-rows-fr gap-1.5 p-1.5">
+              {days.map((day) => {
+                const dayEvents = data
+                  .filter((item) => isSameDay(item.day, day))
+                  .flatMap((item) => item.events);
+                const count = dayEvents.length;
+                const selected = isEqual(day, selectedDay);
+                const today = isToday(day);
+                const outside = !isSameMonth(day, firstDayCurrentMonth);
+
+                // Intensidade do roxo conforme a quantidade de atividades
+                const bg =
+                  count === 0 ? "rgba(255,255,255,0.02)" :
+                  count === 1 ? "rgba(104,41,192,0.20)" :
+                  count <= 3  ? "rgba(104,41,192,0.40)" :
+                  count <= 6  ? "rgba(104,41,192,0.62)" :
+                                "rgba(104,41,192,0.88)";
+
+                return (
+                  <div key={day.toISOString()} className={cn(outside && "opacity-30 pointer-events-none")}>
+                    <div
+                      onClick={() => { setSelectedDay(day); onDaySelect?.(day); }}
                       className={cn(
-                        "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black transition-all",
-                        isToday(day) && !isEqual(day, selectedDay) && "text-primary border border-primary/20 bg-primary/10",
-                        isEqual(day, selectedDay) && isToday(day) && "bg-primary text-white",
-                        isEqual(day, selectedDay) && !isToday(day) && "bg-white text-black",
-                        !isEqual(day, selectedDay) && !isToday(day) && "text-white/40 group-hover:text-white"
+                        "relative h-full rounded-2xl border flex flex-col cursor-pointer transition-all overflow-hidden hover:brightness-125 group",
+                        selected ? "border-white/60 ring-1 ring-white/25"
+                          : today ? "border-primary/70"
+                          : "border-white/[0.06]"
                       )}
+                      style={{ background: bg }}
                     >
-                      <time dateTime={format(day, "yyyy-MM-dd")}>
-                        {format(day, "d")}
-                      </time>
-                    </button>
-                    {/* Cadeado sempre visível quando trancado; controles só quando selecionado */}
-                    {isDayLocked?.(day) && !isEqual(day, selectedDay) && (
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-red-500/20 border border-red-500/40 text-red-400">
-                        <LockIcon size={10} />
-                      </div>
-                    )}
-                    {isEqual(day, selectedDay) && (
-                      <div className="flex items-center gap-1">
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          title={isDayLocked?.(day) ? "Destrancar dia" : "Trancar dia"}
-                          className={cn(
-                            "w-6 h-6 rounded-lg flex items-center justify-center transition-all border",
-                            isDayLocked?.(day)
-                              ? "bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30"
-                              : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-white"
-                          )}
-                          onClick={(e) => { e.stopPropagation(); onToggleLock?.(day); }}
-                        >
-                          {isDayLocked?.(day) ? <LockIcon size={10} /> : <LockOpenIcon size={10} />}
-                        </motion.button>
-                        {!isDayLocked?.(day) && (
-                          <motion.button
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all border border-white/5"
-                            onClick={(e) => { e.stopPropagation(); onAddEvent?.(day); }}
-                          >
-                            <PlusCircleIcon size={12} />
-                          </motion.button>
+                      <header className="flex items-center justify-between px-2.5 pt-2 shrink-0">
+                        <span className={cn(
+                          "text-xs font-black tabular-nums",
+                          selected ? "text-white" : today ? "text-white" : count > 0 ? "text-white/90" : "text-white/35"
+                        )}>
+                          {format(day, "d")}
+                        </span>
+
+                        {isDayLocked?.(day) && !selected && (
+                          <div className="w-5 h-5 rounded-md flex items-center justify-center bg-red-500/25 border border-red-500/40 text-red-300">
+                            <LockIcon size={9} />
+                          </div>
+                        )}
+                        {selected && (
+                          <div className="flex items-center gap-1">
+                            <motion.button
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              title={isDayLocked?.(day) ? "Destrancar dia" : "Trancar dia"}
+                              className={cn(
+                                "w-5 h-5 rounded-md flex items-center justify-center transition-all border",
+                                isDayLocked?.(day)
+                                  ? "bg-red-500/25 border-red-500/40 text-red-300 hover:bg-red-500/35"
+                                  : "bg-white/10 border-white/10 text-white/60 hover:bg-white/20 hover:text-white"
+                              )}
+                              onClick={(e) => { e.stopPropagation(); onToggleLock?.(day); }}
+                            >
+                              {isDayLocked?.(day) ? <LockIcon size={9} /> : <LockOpenIcon size={9} />}
+                            </motion.button>
+                            {!isDayLocked?.(day) && (
+                              <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="w-5 h-5 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all border border-white/10"
+                                onClick={(e) => { e.stopPropagation(); onAddEvent?.(day); }}
+                              >
+                                <PlusCircleIcon size={11} />
+                              </motion.button>
+                            )}
+                          </div>
+                        )}
+                      </header>
+
+                      {/* Contador de atividades no rodapé */}
+                      <div className="flex-1 flex items-end justify-end px-2.5 pb-1.5 min-h-0">
+                        {count > 0 && (
+                          <span className="text-[10px] font-black text-white/50 leading-none">
+                            {count} {count === 1 ? 'ativ.' : 'ativs.'}
+                          </span>
                         )}
                       </div>
-                    )}
-                  </header>
-                  
-                  {/* Bolinhas — uma por atividade, cor por status */}
-                  <div className="flex-1 flex items-center justify-center px-2 pb-2 min-h-0">
-                    {(() => {
-                      const dayEvents = data
-                        .filter((item) => isSameDay(item.day, day))
-                        .flatMap((item) => item.events);
-                      if (dayEvents.length === 0) return null;
-
-                      const visible = dayEvents.slice(0, 8);
-                      return (
-                        <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-full">
-                          {visible.map((event, i) => {
-                            // Escala de roxo do claro ao escuro conforme a posição/quantidade
-                            const t = visible.length > 1 ? i / (visible.length - 1) : 1;
-                            const opacity = 0.3 + t * 0.7; // 0.30 (claro) → 1.0 (forte)
-                            return (
-                              <span
-                                key={event.id}
-                                title={event.name}
-                                className="w-2 h-2 rounded-full shrink-0"
-                                style={{ background: `rgba(104, 41, 192, ${opacity})` }}
-                              />
-                            );
-                          })}
-                          {dayEvents.length > 8 && (
-                            <span className="text-[9px] font-black text-white/40 leading-none">+{dayEvents.length - 8}</span>
-                          )}
-                        </div>
-                      );
-                    })()}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
