@@ -20,16 +20,6 @@
   </head>
 
   <body>
-    <!-- Filtro de refração para o efeito Liquid Glass (lente que entorta o fundo nas bordas).
-         Referenciado no CSS via backdrop-filter: url(#liquidGlassRefract). -->
-    <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
-      <filter id="liquidGlassRefract" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.014" numOctaves="2" seed="7" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="2.4" result="softNoise" />
-        <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="14" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </svg>
-
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

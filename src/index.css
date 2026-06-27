@@ -219,99 +219,47 @@ button:focus-visible,
   }
 
   /* ─────────────────────────────────────────────────────────────────────
-     Botões Liquid Glass — inspirado na HIG da Apple (iOS 26 Liquid Glass)
-     Princípios aplicados:
-     • Tint translúcido com saturate/brightness (frost moderado, legível)
-     • Sheen gradient no topo (curvatura do vidro / luz incidente)
-     • Specular highlight: rim de luz forte na borda superior
-     • Lensing border: borda mais clara em cima, some nas laterais
-     • Sombra de elevação suave (separação do fundo)
-     • Estado :active (pressionado) recolhe brilho e afunda levemente
-     ───────────────────────────────────────────────────────────────────── */
+     BOTÕES DE VIDRO — superfície única (mesma do calendário "Hoje"/Google).
+       • NEUTRO   (.btn-glass / .liquid-glass)            → fundo escuro translúcido
+       • TINTADO  (.btn-glass-primary, .btn-primary-glass,
+                   .btn-success-glass, .btn-danger-glass) → mesmo vidro + cor translúcida
+     Todos compartilham: blur(18) saturate(180), borda fina, shine de 1px e
+     a mesma sombra de elevação. A única diferença é a cor do fundo. */
 
+  .btn-glass,
+  .btn-glass-primary,
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
   .btn-primary-glass,
   .btn-success-glass,
-  .btn-danger-glass,
-  .btn-glass {
+  .btn-danger-glass {
     position: relative;
-    isolation: isolate;
-    /* url(#liquidGlassRefract) = lente que entorta o fundo nas bordas (refração real).
-       Degrada graciosamente: navegadores sem suporte ignoram o url() e mantêm o blur. */
-    backdrop-filter: url(#liquidGlassRefract) blur(14px) saturate(1.6) brightness(1.05) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(1.6) brightness(1.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    border-top-color: rgba(255, 255, 255, 0.35) !important;
+    backdrop-filter: blur(18px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
     box-shadow:
-      inset 0 1px 0.5px rgba(255, 255, 255, 0.45),   /* specular highlight topo */
-      inset 0 -1px 1px rgba(0, 0, 0, 0.18),           /* sombra interna base */
-      0 4px 14px -4px rgba(0, 0, 0, 0.45),            /* elevação */
-      0 1px 2px rgba(0, 0, 0, 0.25) !important;
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 12px 32px rgba(0, 0, 0, 0.35) !important;
     color: #fff !important;
-    transition: background 200ms ease, box-shadow 200ms ease, transform 120ms ease !important;
+    transition: background 180ms ease !important;
   }
 
-  /* Sheen — brilho de vidro no terço superior */
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)::before,
-  .btn-primary-glass::before,
-  .btn-success-glass::before,
-  .btn-danger-glass::before,
-  .btn-glass::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    z-index: -1;
-    background: linear-gradient(to bottom,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.06) 38%,
-      rgba(255, 255, 255, 0) 60%);
-  }
+  /* ── Tints ── */
+  .btn-glass        { background: rgba(18, 18, 18, 0.50) !important; }
+  .btn-glass:hover  { background: rgba(28, 28, 30, 0.55) !important; }
 
-  /* ── Tints (cor translúcida do vidro) ── */
+  .btn-glass-primary,
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
-  .btn-primary-glass { background: rgba(104, 41, 192, 0.80) !important; }
-
-  .btn-success-glass { background: rgba(22, 163, 74, 0.78) !important; }
-
-  .btn-danger-glass  { background: rgba(220, 38, 38, 0.78) !important; }
-
-  /* Variante neutra (sem cor) — vidro escuro translúcido */
-  .btn-glass { background: rgba(255, 255, 255, 0.06) !important; }
-
-  /* ── Hover: intensifica o tint e o highlight ── */
+  .btn-primary-glass        { background: rgba(104, 41, 192, 0.55) !important; }
+  .btn-glass-primary:hover,
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover,
-  .btn-primary-glass:hover { background: rgba(116, 50, 208, 0.92) !important; }
-  .btn-success-glass:hover { background: rgba(22, 163, 74, 0.92) !important; }
-  .btn-danger-glass:hover  { background: rgba(230, 44, 44, 0.92) !important; }
-  .btn-glass:hover         { background: rgba(255, 255, 255, 0.12) !important; }
+  .btn-primary-glass:hover  { background: rgba(104, 41, 192, 0.70) !important; }
 
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover,
-  .btn-primary-glass:hover,
-  .btn-success-glass:hover,
-  .btn-danger-glass:hover,
-  .btn-glass:hover {
-    border-top-color: rgba(255, 255, 255, 0.5) !important;
-    box-shadow:
-      inset 0 1px 0.5px rgba(255, 255, 255, 0.6),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.18),
-      0 6px 18px -4px rgba(0, 0, 0, 0.5),
-      0 1px 2px rgba(0, 0, 0, 0.25) !important;
-  }
+  .btn-success-glass        { background: rgba(22, 163, 74, 0.55) !important; }
+  .btn-success-glass:hover  { background: rgba(22, 163, 74, 0.70) !important; }
 
-  /* ── Pressed (Liquid Glass "afunda" e recolhe o brilho) ── */
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):active,
-  .btn-primary-glass:active,
-  .btn-success-glass:active,
-  .btn-danger-glass:active,
-  .btn-glass:active {
-    transform: translateY(1px) scale(0.99) !important;
-    box-shadow:
-      inset 0 1px 1px rgba(0, 0, 0, 0.25),
-      inset 0 1px 0.5px rgba(255, 255, 255, 0.15),
-      0 2px 6px -2px rgba(0, 0, 0, 0.4) !important;
-  }
+  .btn-danger-glass         { background: rgba(220, 38, 38, 0.55) !important; }
+  .btn-danger-glass:hover   { background: rgba(220, 38, 38, 0.70) !important; }
 
   /* ── Disabled ── */
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):disabled,
@@ -319,38 +267,34 @@ button:focus-visible,
   .btn-primary-glass:disabled, .btn-primary-glass[disabled],
   .btn-success-glass:disabled, .btn-success-glass[disabled],
   .btn-danger-glass:disabled, .btn-danger-glass[disabled] {
-    background: rgba(104, 41, 192, 0.35) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.12) !important;
-    opacity: 0.6;
+    opacity: 0.5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
   }
-  .btn-success-glass:disabled, .btn-success-glass[disabled] { background: rgba(22, 163, 74, 0.35) !important; }
-  .btn-danger-glass:disabled, .btn-danger-glass[disabled]   { background: rgba(220, 38, 38, 0.35) !important; }
 
+  /* ── VIDRO NEUTRO BASE (cards, modais, sidebars) ──
+     Mesma física: blur + saturate (lê a cor do fundo). Tint neutro escuro,
+     levemente mais opaco para legibilidade, elevação contida. */
   .liquid-glass {
     position: relative;
-    /* overflow: hidden; -> Removido para evitar que o card suma ao subir no hover */
-    background: rgba(18, 18, 18, 0.4) !important;
-    backdrop-filter: blur(25px) brightness(1.2) !important;
-    -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
+    background: rgba(18, 18, 18, 0.5) !important;
+    backdrop-filter: blur(18px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
     border-radius: 1.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
   }
 
   /* Elementos liquid-glass aninhados: mesma cor de fundo dos modais */
   .liquid-glass .liquid-glass {
-    background: rgba(18, 18, 18, 0.4) !important;
-    backdrop-filter: blur(25px) brightness(1.2) !important;
-    -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
+    background: rgba(18, 18, 18, 0.5) !important;
+    backdrop-filter: blur(18px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
     box-shadow:
-      inset 1px 1px 1px rgba(255, 255, 255, 0.10),
-      inset -1px -1px 1px rgba(255, 255, 255, 0.05),
-      0 8px 32px rgba(0, 0, 0, 0.2) !important;
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 8px 24px rgba(0, 0, 0, 0.25) !important;
   }
 
   .sidebar-glass {
