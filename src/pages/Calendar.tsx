@@ -954,7 +954,7 @@ export default function Calendar() {
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
       <GitHubCalendar data={contributionData} />
 
-      <div className="min-h-[740px] overflow-hidden rounded-3xl">
+      <div className="h-[calc(100vh-80px)] min-h-[650px] overflow-hidden rounded-3xl flex">
         <FullScreenCalendar
           data={calendarData}
           onDaySelect={(date: Date) => setSelectedDay(date.getDate())}
