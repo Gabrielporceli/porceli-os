@@ -17,23 +17,18 @@ interface StatsCardProps {
 }
 
 /**
- * Card "desconstruído": chip (ícone + título) no canto superior-esquerdo,
+ * Card "desconstruído": chip (título) no canto superior-esquerdo,
  * conectado ao corpo por uma curva côncava — ver DeconstructedCard (uma
  * única caixa recortada via clip-path, sem costura entre chip e corpo).
  */
-export function StatsCard({ title, value, icon: Icon, trend, description, className }: StatsCardProps) {
+export function StatsCard({ title, value, trend, description, className }: StatsCardProps) {
   return (
     <DeconstructedCard
       className={cn("animate-premium-in", className)}
       chip={
-        <>
-          <div className="w-8 h-8 rounded-full bg-[rgba(104,41,192,0.35)] flex items-center justify-center shrink-0">
-            <Icon className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-white/70 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-            {title}
-          </span>
-        </>
+        <span className="text-white/70 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+          {title}
+        </span>
       }
     >
       <p className="text-3xl font-black text-white tabular-nums tracking-tighter">

@@ -345,8 +345,14 @@ button:focus-visible,
   }
 
   .dc-chip-row {
-    width: max-content;
-    padding: 10px 22px 10px 10px;
+    /* Largura FIXA (não mais max-content): todos os cards ficam com o
+       mesmo tamanho de chip, independente do texto. 240px cobre com folga
+       o label mais longo ("Contratos a vencer (30 dias)" ~219px natural). */
+    width: 240px;
+    /* padding esquerdo igual ao .dc-body-content (20px) — mesmo recuo do
+       label em relação ao valor logo abaixo. Vertical mais compacto agora
+       que não há mais avatar de ícone ocupando altura. */
+    padding: 8px 20px 8px 20px;
     display: flex;
     align-items: center;
     gap: 10px;
