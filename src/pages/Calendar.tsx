@@ -4,6 +4,7 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
 import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -1026,64 +1027,29 @@ export default function Calendar() {
           isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
             <div className="flex items-center gap-2">
-              {/* Botão Google Calendar */}
-              {!googleConnected ? (
-                <button
-                  onClick={handleConnectGoogle}
-                  disabled={connectingGoogle}
-                  className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs disabled:opacity-60 font-bold uppercase tracking-widest"
-                >
-                  {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                  Google
-                </button>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={fetchGoogleEvents}
-                    disabled={loadingGoogle}
-                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
-                  >
-                    {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Google
-                  </button>
-                </motion.div>
-              )}
+              {/* Botão Google Calendar — Apple Tahoe Liquid Glass */}
+              <LiquidGlassButton
+                onClick={googleConnected ? fetchGoogleEvents : handleConnectGoogle}
+                disabled={googleConnected ? loadingGoogle : connectingGoogle}
+                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                {(googleConnected ? loadingGoogle : connectingGoogle)
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                Google
+              </LiquidGlassButton>
 
-              {/* Botão Notion */}
-              {!notionConnected ? (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={handleConnectNotion}
-                    disabled={connectingNotion}
-                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
-                  >
-                    {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Notion
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={() => fetchNotionTasks()}
-                    disabled={loadingNotion}
-                    className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
-                  >
-                    {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Notion
-                  </button>
-                </motion.div>
-              )}
+              {/* Botão Notion — Apple Tahoe Liquid Glass */}
+              <LiquidGlassButton
+                onClick={notionConnected ? () => fetchNotionTasks() : handleConnectNotion}
+                disabled={notionConnected ? loadingNotion : connectingNotion}
+                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                {(notionConnected ? loadingNotion : connectingNotion)
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                Notion
+              </LiquidGlassButton>
             </div>
           }
           onAddEvent={(day) => {

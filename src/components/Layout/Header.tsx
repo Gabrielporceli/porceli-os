@@ -3,6 +3,7 @@ import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-
 import { useLocation, Link } from 'react-router-dom';
 import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
@@ -32,14 +33,15 @@ export const Header = () => {
     }
   });
 
-  // Mostrar o header se o mouse estiver no topo da tela
+  // Mostrar o header se o mouse estiver no topo da tela.
+  // Limiar de 90px cobre toda a altura do header (evita cruzar a linha ao
+  // passar o mouse por cima dele) e só atualiza o estado quando ele muda de
+  // verdade — assim não há re-render em rajada que faz o backdrop-filter
+  // piscar aquela "tarja" clara na emenda com os cards.
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY < 50) {
-        setIsMouseAtTop(true);
-      } else {
-        setIsMouseAtTop(false);
-      }
+      const atTop = e.clientY < 90;
+      setIsMouseAtTop((prev) => (prev === atTop ? prev : atTop));
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -53,9 +55,12 @@ export const Header = () => {
         initial={{ y: 0 }}
         animate={{ y: showHeader ? 0 : -100 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="w-full px-6 py-4 flex justify-center fixed top-0 left-0 right-0 z-[60] pointer-events-none"
+        className="w-full px-6 py-4 flex justify-center fixed top-0 left-0 right-0 z-[60] pointer-events-none will-change-transform"
       >
-        <header className="liquid-glass h-16 w-full max-w-7xl flex items-center px-6 gap-4 pointer-events-auto">
+        <header
+          className="liquid-glass h-16 w-full max-w-7xl flex items-center px-6 gap-4 pointer-events-auto"
+          style={{ willChange: "backdrop-filter, transform", transform: "translateZ(0)" }}
+        >
 
           {/* Logo Section */}
           <div className="flex items-center mr-4 pr-4 border-r border-white/5">
@@ -69,19 +74,40 @@ export const Header = () => {
               const Icon = item.icon;
               
               return (
-                <Link 
-                  key={item.title} 
+                <Link
+                  key={item.title}
                   to={item.url}
                   className="h-10 flex items-center shrink-0"
                 >
-                  <div className={`
-                    px-4 h-full flex items-center gap-2 text-sm font-medium transition-all duration-300 rounded-full
-                    ${isActive 
-                      ? "bg-white/10 text-white border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" 
-                      : "text-white/40 hover:text-white hover:bg-white/5"
-                    }
-                  `}>
-                    <span className="hidden lg:inline">{item.title}</span>
+                  {/*
+                    IMPORTANTE: o hover NUNCA deve mudar background-color aqui.
+                    background-color é uma propriedade de "paint" — muda-la força
+                    o Chrome a re-rasterizar a camada, o que recompõe o
+                    backdrop-filter do header e acende uma tarja sobre os cards
+                    abaixo. opacity/transform são compositor-only (não repintam),
+                    por isso o highlight de hover é uma camada separada que
+                    anima só opacidade — visualmente idêntico, sem o bug.
+                  */}
+                  <div className={cn(
+                    "group relative isolate px-4 h-full flex items-center gap-2 text-sm font-medium rounded-full transform-gpu will-change-transform"
+                  )}>
+                    {!isActive && (
+                      <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    )}
+                    {/* Pílula de vidro compartilhada: desliza até a página ativa */}
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active-pill"
+                        className="lqg-lens lqg-lens--nav absolute inset-0 -z-10 rounded-full pointer-events-none"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    <span className={cn(
+                      "relative z-10 hidden lg:inline",
+                      isActive ? "lqg-text text-white" : "text-white/40"
+                    )}>
+                      {item.title}
+                    </span>
                   </div>
                 </Link>
               );

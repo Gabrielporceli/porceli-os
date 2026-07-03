@@ -17,9 +17,9 @@ export function CRMLayout({ children }: CRMLayoutProps) {
       {/* Background fixo — não estica com o conteúdo */}
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url("/background.png")' }}
+        style={{ backgroundImage: 'url("/app-bg.webp")' }}
       >
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/25" />
       </div>
 
       {/* Noise texture overlay fixo */}

@@ -617,28 +617,24 @@ export default function Dashboard() {
           value={formatCurrency(monthlyRevenue)}
           icon={DollarSign}
           description="Contratos ativos"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="ARR (Anual)"
           value={formatCurrency(arr)}
           icon={TrendingUp}
           description="MRR × 12"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="Clientes Ativos"
           value={activeClients.toString()}
           icon={Users}
           description="Com tag Ativo"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="Contratos a vencer (30 dias)"
           value={expiringIn30Days.toString()}
           icon={Calendar}
           description="Risco de churn"
-          className={cn(CARD, "p-4")}
         />
       </div>
 

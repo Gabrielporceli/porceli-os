@@ -19,11 +19,11 @@ interface GitHubCalendarProps {
 const GitHubCalendar = ({ 
   data, 
   colors = [
-    "rgba(104, 41, 192, 0.05)", // Base/Vazio
-    "rgba(104, 41, 192, 0.2)",  // Nível 1
-    "rgba(104, 41, 192, 0.5)",  // Nível 2
-    "rgba(104, 41, 192, 0.8)",  // Nível 3
-    "#6829c0"                   // Nível 4 (Máximo)
+    "rgba(255, 255, 255, 0.07)", // Vazio — neutro, visível em qualquer fundo
+    "rgba(139, 92, 246, 0.40)",  // Nível 1 — violet vivo (contrasta com o roxo do fundo)
+    "rgba(139, 92, 246, 0.65)",  // Nível 2
+    "rgba(139, 92, 246, 0.85)",  // Nível 3
+    "#8b5cf6"                    // Nível 4 (Máximo)
   ],
   className
 }: GitHubCalendarProps) => {
@@ -74,7 +74,7 @@ const GitHubCalendar = ({
             return (
               <div
                 key={index}
-                className="w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/5"
+                className="w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/10"
                 style={{ backgroundColor: color }}
                 title={`${format(day, "PPP", { locale: ptBR })}: ${contribution?.count || 0} atividades`}
               />
@@ -96,7 +96,7 @@ const GitHubCalendar = ({
       // que causava meses duplicados (jan, jan / mai, mai) e dez faltando.
       const monthDate = new Date(year, i, 1);
       months.push(
-        <span key={i} className="text-[10px] font-black text-white/20 uppercase tracking-tighter">
+        <span key={i} className="text-[10px] font-black text-white/45 uppercase tracking-tighter">
           {format(monthDate, "MMM", { locale: ptBR })}
         </span>
       );
@@ -107,8 +107,10 @@ const GitHubCalendar = ({
   const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
 
   return (
-    <div className={cn("liquid-glass p-6 !rounded-3xl border border-white/5 bg-white/[0.02]", className)}>
-      <div className="flex flex-col gap-4">
+    <div className={cn("liquid-glass p-6 !rounded-3xl", className)}>
+      {/* Canvas escuro interno: dá base estável p/ o heatmap (roxo sobre roxo) */}
+      <div className="absolute inset-0 rounded-3xl bg-black/20 pointer-events-none" />
+      <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Histórico de Produtividade</h3>
         </div>
@@ -119,7 +121,7 @@ const GitHubCalendar = ({
             <div className="flex w-full">
               <div className="flex flex-col gap-[3px] mr-3 shrink-0 pt-[1px]">
                 {dayLabels.map((day, index) => (
-                  <span key={index} className="text-[9px] font-black text-white/10 uppercase w-3 h-[13px] flex items-center">
+                  <span key={index} className="text-[9px] font-black text-white/30 uppercase w-3 h-[13px] flex items-center">
                     {day}
                   </span>
                 ))}
@@ -130,10 +132,10 @@ const GitHubCalendar = ({
         </div>
 
         <div className="flex justify-center pt-2">
-          <div className="flex gap-2 text-[9px] items-center font-black text-white/20 uppercase tracking-widest">
+          <div className="flex gap-2 text-[9px] items-center font-black text-white/40 uppercase tracking-widest">
             <span>Menos</span>
             {colors.map((color, index) => (
-              <div key={index} className="w-2.5 h-2.5 rounded-[2px] border border-white/5" style={{ backgroundColor: color }} />
+              <div key={index} className="w-2.5 h-2.5 rounded-[2px] border border-white/10" style={{ backgroundColor: color }} />
             ))}
             <span>Mais</span>
           </div>

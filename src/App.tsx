@@ -20,6 +20,7 @@ import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
 import { PlansProvider } from "./contexts/PlansContext"
+import { LiquidGlassFilter } from "./components/ui/liquid-glass-button"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,8 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <PlansProvider>
+              {/* Filtro SVG compartilhado p/ vidro líquido (botões, cards, modais) */}
+              <LiquidGlassFilter />
               <Toaster />
               <BrowserRouter>
                 <Routes>

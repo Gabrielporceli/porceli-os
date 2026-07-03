@@ -28,6 +28,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button"
 import { Separator } from "@/components/ui/separator"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { motion, AnimatePresence } from "framer-motion"
@@ -107,7 +108,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
       <div className="flex flex-col space-y-4 p-4 md:flex-row md:items-center md:justify-between md:space-y-0 lg:flex-none border-b border-white/5">
         <div className="flex items-center gap-4">
           {leftActions}
-          <div className="inline-flex items-center rounded-2xl liquid-glass border border-white/5 p-1 bg-white/[0.02] !shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
+          <div className="inline-flex items-center rounded-2xl liquid-glass p-1">
             <Button
               onClick={previousMonth}
               className="rounded-xl shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
@@ -139,23 +140,19 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
         </div>
 
         <div className="flex items-center gap-3">          {rightActions}
-          <motion.div
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
+          <LiquidGlassButton
+            tint="primary"
+            onClick={() => onAddEvent?.(selectedDay)}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
           >
-            <button
-              onClick={() => onAddEvent?.(selectedDay)}
-              className="btn-glass-primary flex items-center justify-center gap-2 text-white h-11 px-6 rounded-xl transition-colors duration-300 text-xs font-bold uppercase tracking-widest"
-            >
-              <span>Novo Evento</span>
-            </button>
-          </motion.div>
+            <span>Novo Evento</span>
+          </LiquidGlassButton>
         </div>
       </div>
 
       {/* Calendar Grid */}
       <div className="lg:flex lg:flex-auto lg:flex-col overflow-hidden">
-        <div className="liquid-glass border-white/5 rounded-3xl overflow-hidden flex flex-col h-full isolate !shadow-none">
+        <div className="liquid-glass rounded-3xl overflow-hidden flex flex-col h-full isolate">
           {/* Week Days Header */}
           <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/25 px-1.5 pt-3 pb-1">
             <div>Dom</div>
@@ -179,13 +176,15 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                 const today = isToday(day);
                 const outside = !isSameMonth(day, firstDayCurrentMonth);
 
-                // Intensidade do roxo conforme a quantidade de atividades
+                // Intensidade do roxo conforme a quantidade de atividades.
+                // Roxo escuro da marca (#6829c0) com rampa forte: níveis nítidos
+                // e dias cheios em roxo sólido, destacando-se do fundo.
                 const bg =
-                  count === 0 ? "rgba(255,255,255,0.02)" :
-                  count === 1 ? "rgba(104,41,192,0.20)" :
-                  count <= 3  ? "rgba(104,41,192,0.40)" :
-                  count <= 6  ? "rgba(104,41,192,0.62)" :
-                                "rgba(104,41,192,0.88)";
+                  count === 0 ? "rgba(255,255,255,0.03)" :
+                  count === 1 ? "rgba(104,41,192,0.45)" :
+                  count <= 3  ? "rgba(104,41,192,0.68)" :
+                  count <= 6  ? "rgba(104,41,192,0.90)" :
+                                "#6829c0";
 
                 return (
                   <div key={day.toISOString()} className={cn(outside && "opacity-30 pointer-events-none")}>
