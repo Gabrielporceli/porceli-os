@@ -1019,7 +1019,9 @@ export default function Calendar() {
       <GitHubCalendar data={contributionData} />
 
       <div className="h-[calc(100vh-80px)] min-h-[650px] flex gap-4">
-      <div className="flex-1 min-w-0 overflow-hidden rounded-3xl flex">
+      {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
+          calendário, criando "pontas" escuras nos cantos. */}
+      <div className="flex-1 min-w-0 flex">
         <FullScreenCalendar
           data={calendarData}
           onDaySelect={(date: Date) => setSelectedDay(date.getDate())}

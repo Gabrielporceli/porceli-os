@@ -25,7 +25,7 @@ export function DeleteExpenseDialog({
 }: DeleteExpenseDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/5 text-white max-w-md shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300 outline-none">
+      <DialogContent className="border-white/5 text-white max-w-md shadow-2xl outline-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-white tracking-tight">Excluir Despesa</DialogTitle>
           <DialogDescription className="text-white/60 text-sm leading-relaxed mt-2">

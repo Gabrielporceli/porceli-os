@@ -108,10 +108,13 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
       <div className="flex flex-col space-y-4 p-4 md:flex-row md:items-center md:justify-between md:space-y-0 lg:flex-none border-b border-white/5">
         <div className="flex items-center gap-4">
           {leftActions}
-          <div className="inline-flex items-center rounded-2xl liquid-glass p-1">
+          {/* Cápsula de navegação do mês — mesma lente de vidro líquido
+              (refração SVG + bevel) dos botões Google/Notion */}
+          <div className="relative isolate inline-flex items-center rounded-full p-1">
+            <span className="lqg-lens absolute inset-0 -z-10 rounded-[inherit] pointer-events-none" />
             <Button
               onClick={previousMonth}
-              className="rounded-xl shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
+              className="rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
               variant="ghost"
               size="icon"
             >
@@ -119,14 +122,14 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
             <Button
               onClick={goToToday}
-              className="px-6 rounded-xl shadow-none hover:bg-white/5 text-white/60 border-none h-10 font-bold text-[10px] uppercase tracking-[0.2em]"
+              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 font-bold text-[10px] uppercase tracking-[0.2em]"
               variant="ghost"
             >
               Hoje
             </Button>
             <Button
               onClick={nextMonth}
-              className="rounded-xl shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
+              className="rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
               variant="ghost"
               size="icon"
             >
@@ -150,9 +153,12 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="lg:flex lg:flex-auto lg:flex-col overflow-hidden">
-        <div className="liquid-glass rounded-3xl overflow-hidden flex flex-col h-full isolate">
+      {/* Calendar Grid — SEM overflow-hidden aqui: um clip quadrado neste
+          wrapper cortava a sombra externa do card de vidro em linha reta,
+          deixando "pontas" escuras nos 4 cantos (o recorte entre a curva do
+          card e o canto quadrado do clip). O card interno já se auto-clipa. */}
+      <div className="lg:flex lg:flex-auto lg:flex-col min-h-0">
+        <div className="liquid-glass no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
           {/* Week Days Header */}
           <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/25 px-1.5 pt-3 pb-1">
             <div>Dom</div>

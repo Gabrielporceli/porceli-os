@@ -87,6 +87,15 @@
 }
 
 
+/* Oculta a barra de rolagem mantendo o scroll funcional */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge legado */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
 /* Remove foco visual do browser em inputs customizados */
 .chat-input:focus {
   outline: none !important;
@@ -279,11 +288,17 @@ button:focus-visible,
     background: rgba(28, 28, 34, 0.28) !important;
     backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border: none !important;
     border-radius: 1.5rem;
     /* Mesmo material do botão Apple Tahoe: rim de luz no topo + brilho especular.
-       Insets com um leve blur (2px) p/ contornarem a quina sem formar "bico". */
+       Insets com um leve blur (2px) p/ contornarem a quina sem formar "bico".
+       A borda (1ª linha) virou inset em vez de `border:` — em elementos
+       grandes, `border` + border-radius + backdrop-filter no mesmo elemento
+       gera uma emenda sutil e simétrica nos 4 cantos (a curva da borda e a
+       do recorte do backdrop são calculadas em passes de render diferentes
+       nesse combo específico). box-shadow inset não sofre desse problema. */
     box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
       inset 1.8px 3px 2px -2px color-mix(in srgb, white 80%, transparent),
       inset -2px -2px 2px -2px color-mix(in srgb, white 65%, transparent),
       inset -3px -8px 2px -6px color-mix(in srgb, white 50%, transparent),
@@ -301,13 +316,54 @@ button:focus-visible,
     background: rgba(28, 28, 34, 0.26) !important;
     backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
     -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border: none !important;
     box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
       inset 1.5px 2.5px 2px -2px color-mix(in srgb, white 55%, transparent),
       inset -1.5px -1.5px 2px -2px color-mix(in srgb, white 40%, transparent),
       inset 0px 2px 4px -2px color-mix(in srgb, black 14%, transparent),
       0 2px 6px rgba(0, 0, 0, 0.16),
       0 10px 28px rgba(0, 0, 0, 0.22) !important;
+  }
+
+  /* Vidro SEM sombras externas de elevação (mantém bevel + hairline).
+     Usado no card grande do calendário: num bloco que ocupa quase a tela
+     toda, a elevação não agrega — e as camadas escuras dela acumulavam
+     visualmente nos 4 cantos, lendo como "pontas". */
+  .liquid-glass.no-elevation {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 1.8px 3px 2px -2px color-mix(in srgb, white 80%, transparent),
+      inset -2px -2px 2px -2px color-mix(in srgb, white 65%, transparent),
+      inset -3px -8px 2px -6px color-mix(in srgb, white 50%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 3px -2px color-mix(in srgb, black 16%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 16%, transparent),
+      inset 2px -6.5px 2px -4px color-mix(in srgb, black 10%, transparent) !important;
+  }
+
+  /* Réplica COMPLETA do botão ativo do header (.lqg-lens--nav): mesmo
+     fundo claro rgba(255,255,255,0.13) sem backdrop-filter, mesmo bevel e
+     mesma sombra leve. (Valores do bevel resolvidos inline porque as vars
+     --glass-reflex-* do .lqg-lens não existem aqui.) Fica depois de
+     ".liquid-glass .liquid-glass" no arquivo de propósito: mesma
+     especificidade, e quem vem depois vence — vale também aninhado.
+     Usado nos mini-cards do Funil de Prospecção. */
+  .liquid-glass.shadow-header-btn {
+    background: rgba(255, 255, 255, 0.13) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: transparent !important;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 10%, transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white 90%, transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white 80%, transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white 60%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 20%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 20%, transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black 10%, transparent),
+      0px 1px 3px 0px rgba(0, 0, 0, 0.05) !important;
   }
 
   /*

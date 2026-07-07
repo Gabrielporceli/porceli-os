@@ -107,9 +107,15 @@ const GitHubCalendar = ({
   const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
 
   return (
-    <div className={cn("liquid-glass p-6 !rounded-3xl", className)}>
-      {/* Canvas escuro interno: dá base estável p/ o heatmap (roxo sobre roxo) */}
-      <div className="absolute inset-0 rounded-3xl bg-black/20 pointer-events-none" />
+    <div className={cn("liquid-glass p-6 !rounded-3xl overflow-hidden", className)}>
+      {/*
+        Canvas escuro interno: dá base estável p/ o heatmap (roxo sobre roxo).
+        SEM rounded-3xl aqui de propósito — dois cantos arredondados
+        renderizados separadamente (este + o do card pai) criam uma linha de
+        emenda visível na curva. O overflow-hidden do pai já recorta este
+        scrim na forma certa, então só uma curva é desenhada de fato.
+      */}
+      <div className="absolute inset-0 bg-black/20 pointer-events-none" />
       <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black text-white/40 uppercase tracking-[0.2em]">Histórico de Produtividade</h3>

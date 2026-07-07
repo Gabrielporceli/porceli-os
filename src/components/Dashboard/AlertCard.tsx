@@ -39,7 +39,7 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
         <h3 className="text-xl font-bold text-white tracking-tight">Alertas & Notificações</h3>
       </div>
 
-      <div className="overflow-y-auto overflow-x-hidden max-h-[560px]">
+      <div className="overflow-y-auto overflow-x-hidden max-h-[560px] scrollbar-hide">
         {alertsToShow.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 opacity-30">
             <AlertTriangle className="w-12 h-12 mb-2" />

@@ -603,7 +603,7 @@ export default function Dashboard() {
   const CARD = "liquid-glass dashboard-glow border-white/[0.05]";
   const SECTION_PAD = "p-5 md:p-6";
   const MINI = "bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] rounded-2xl p-4";
-  const MINI_TIGHT = "liquid-glass dashboard-glow rounded-xl p-3";
+  const MINI_TIGHT = "liquid-glass shadow-header-btn dashboard-glow rounded-xl p-3";
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
 
