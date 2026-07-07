@@ -121,7 +121,16 @@ const GrowFromClickOrigin = React.forwardRef<
       initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
       animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
       exit={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
-      transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+      // Opacidade resolve bem mais rápido que o scale/posição: o
+      // backdrop-blur do vidro é proporcional à opacidade da caixa, então
+      // se ela demora os mesmos ~400ms do spring pra chegar em 1, o blur
+      // "parece" surgir com atraso mesmo já estando pronto desde o 1º
+      // frame. Resolvendo a opacidade rápido, o blur já está lá quase
+      // instantaneamente, enquanto o resto continua crescendo suave.
+      transition={{
+        opacity: { duration: 0.12, ease: "easeOut" },
+        default: { type: "spring", bounce: 0.15, duration: 0.4 },
+      }}
       transformTemplate={(_, generated) => `translate(-50%, -50%) ${generated}`}
     >
       {children}
