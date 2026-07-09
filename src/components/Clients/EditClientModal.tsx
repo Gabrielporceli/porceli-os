@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -312,14 +313,14 @@ export function EditClientModal({
           {/* Footer fixo */}
           <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
             <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-              <Button type="button" onClick={onClose} className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all text-base">
+              <LiquidGlassButton tint="danger" type="button" onClick={onClose} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
             <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-              <Button type="submit" form="edit-client-form" className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-base">
+              <LiquidGlassButton tint="primary" type="submit" form="edit-client-form" className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                 Salvar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
           </div>
         </div>

@@ -15,8 +15,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { 
+import {
   Calendar as CalendarIcon, 
   ChevronLeft, 
   ChevronRight, 
@@ -1567,23 +1566,25 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="btn-danger-glass w-full h-10 rounded-xl font-bold transition-all"
+                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
                 >
                   Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
-              <motion.div 
-                className="flex-[2]" 
+              <motion.div
+                className="flex-[2]"
                 whileHover={!creatingEvent && newEventTitle.trim() && newEventDate ? { scale: 1.05, translateY: -2 } : {}}
                 whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="primary"
                   disabled={creatingEvent || !newEventTitle.trim() || !newEventDate || (createMeetLink && !newEventTime)}
                   onClick={() => handleCreateActivity(true)}
-                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2"
+                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
                 >
                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                      <>
@@ -1591,7 +1592,7 @@ export default function Calendar() {
                        Salvar
                      </>
                    )}
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             </div>
           </div>
@@ -1698,13 +1699,13 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
-                  variant="ghost"
+                <LiquidGlassButton
+                  tint="danger"
                   onClick={() => setIsEditActivityModalOpen(false)}
-                  className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all"
+                  className="w-full h-11 text-xs font-bold uppercase tracking-widest"
                 >
                   Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
               <motion.div
                 className="flex-[2]"
@@ -1712,26 +1713,25 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button onClick={handleSaveEdit} className="btn-primary-glass !text-white w-full h-11 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                   <Save className="w-4 h-4" />
                   Salvar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   onClick={handleDeleteActivity}
-                  className="btn-danger-glass h-11 w-11 rounded-xl transition-all !text-white"
+                  className="h-11 w-11"
                   title="Excluir Atividade"
                 >
-                  <Trash2 className="w-5 h-5 text-white" />
-                </Button>
+                  <Trash2 className="w-5 h-5" />
+                </LiquidGlassButton>
               </motion.div>
             </div>
         </div>
@@ -1751,14 +1751,19 @@ export default function Calendar() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 pt-4">
-            <AlertDialogCancel className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 rounded-xl h-11 h-11 px-6 font-bold transition-all">
-              Cancelar
+            <AlertDialogCancel asChild>
+              <LiquidGlassButton tint="danger" className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
+                Cancelar
+              </LiquidGlassButton>
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteActivity}
-              className="btn-danger-glass rounded-xl h-11 px-8 font-bold transition-all uppercase tracking-wider text-xs"
-            >
-              Excluir
+            <AlertDialogAction asChild>
+              <LiquidGlassButton
+                tint="danger"
+                onClick={confirmDeleteActivity}
+                className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
+              >
+                Excluir
+              </LiquidGlassButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

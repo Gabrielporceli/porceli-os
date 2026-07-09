@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, CreditCard, Landmark, QrCode, CheckSquare, Square, ToggleLeft, ToggleRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Label } from "@/components/ui/label";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -742,27 +743,29 @@ export function RenegotiationModal({
 
           {/* Footer */}
           <div className="flex gap-3 p-6 border-t border-white/5">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onClose}
-              disabled={isLoading}
-              className="flex-1 h-11 rounded-xl btn-danger-glass font-bold text-sm uppercase tracking-widest transition-colors"
-            >
-              Cancelar
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleConfirm}
-              disabled={isLoading || selectedIds.size === 0 || (mode === "parcelamento" ? parsedAmount <= 0 : customPayments.length === 0)}
-              className="flex-[2] h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(104,41,192,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
-            >
-              {isLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
-                : "Confirmar Renegociação"
-              }
-            </motion.button>
+            <motion.div className="flex-1" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <LiquidGlassButton
+                tint="danger"
+                onClick={onClose}
+                disabled={isLoading}
+                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                Cancelar
+              </LiquidGlassButton>
+            </motion.div>
+            <motion.div className="flex-[2]" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <LiquidGlassButton
+                tint="primary"
+                onClick={handleConfirm}
+                disabled={isLoading || selectedIds.size === 0 || (mode === "parcelamento" ? parsedAmount <= 0 : customPayments.length === 0)}
+                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                {isLoading
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+                  : "Confirmar Renegociação"
+                }
+              </LiquidGlassButton>
+            </motion.div>
           </div>
         </div>
       </motion.div>

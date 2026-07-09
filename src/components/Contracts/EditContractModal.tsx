@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -279,22 +279,24 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
           {/* Footer fixo */}
           <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
             <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 type="button"
                 onClick={onClose}
-                className="btn-danger-glass w-full h-10 rounded-xl transition-all uppercase tracking-widest text-[10px] font-bold"
+                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
             <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
+              <LiquidGlassButton
+                tint="primary"
                 type="submit"
                 form="edit-contract-form"
-                className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_15px_rgba(104,41,192,0.2)] font-bold uppercase tracking-widest text-[10px]"
+                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
               >
                 Salvar Alterações
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
           </div>
         </LiquidGlass>

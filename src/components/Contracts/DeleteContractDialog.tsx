@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -194,35 +194,37 @@ export function DeleteContractDialog({
           {step === 'confirm' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
               <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={handleClose}
-                  variant="ghost"
-                  className="btn-danger-glass h-12 px-6 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="h-12 px-6 text-xs font-bold uppercase tracking-widest"
                 >
                   Voltar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
 
               <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={onConfirm}
-                  className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                 >
                   {isExpired ? 'Remover' : 'Só Cancelar'}
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
 
               {!isExpired && (
                 <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                  <Button
+                  <LiquidGlassButton
+                    tint="danger"
                     type="button"
                     onClick={handleOpenFineForm}
-                    className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                    className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                   >
                     Cancelar + Multa
-                  </Button>
+                  </LiquidGlassButton>
                 </motion.div>
               )}
             </div>
@@ -232,25 +234,26 @@ export function DeleteContractDialog({
           {step === 'fine-form' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
               <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={() => setStep('confirm')}
-                  variant="ghost"
-                  className="btn-danger-glass h-12 px-6 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                  className="h-12 px-6 text-xs font-bold uppercase tracking-widest"
                 >
                   Voltar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
 
               <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={handleConfirmFine}
                   disabled={!isFineValid}
-                  className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                 >
                   Confirmar e Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             </div>
           )}

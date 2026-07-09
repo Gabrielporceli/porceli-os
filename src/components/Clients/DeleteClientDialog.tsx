@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   Dialog,
@@ -144,32 +144,33 @@ export function DeleteClientDialog({
 
           {/* Footer */}
           <div className="flex gap-4 p-6 border-t border-white/[0.05]">
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05 }} 
+            <motion.div
+              className="flex-1"
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 onClick={onClose}
-                variant="ghost"
-                className="w-full h-12 bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
                 disabled={isDeleting}
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05 }} 
+            <motion.div
+              className="flex-1"
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 onClick={handleConfirm}
                 disabled={isDeleting}
-                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-widest text-xs font-bold disabled:opacity-50"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 {isDeleting ? "Processando..." : "Confirmar Exclusão"}
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
           </div>
         </LiquidGlass>

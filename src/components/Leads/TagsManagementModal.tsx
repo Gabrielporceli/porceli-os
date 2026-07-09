@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -175,17 +176,18 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button
+                    <LiquidGlassButton
+                      tint="danger"
                       type="button"
                       onClick={() => {
                         setIsCreating(false);
                         setNewTagName("");
                         setNewTagColor(defaultColors[0]);
                       }}
-                      className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all"
+                      className="w-full h-11 text-xs font-bold uppercase tracking-widest"
                     >
                       Cancelar
-                    </Button>
+                    </LiquidGlassButton>
                   </motion.div>
                   <motion.div
                     className="flex-1"
@@ -193,10 +195,10 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold transition-all">
+                    <LiquidGlassButton tint="primary" onClick={handleCreateTag} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                       <Save className="w-4 h-4 mr-2" />
                       Salvar Tag
-                    </Button>
+                    </LiquidGlassButton>
                   </motion.div>
                 </div>
               </div>
@@ -243,22 +245,23 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button
+                            <LiquidGlassButton
+                              tint="danger"
                               onClick={() => setEditingTag(null)}
-                              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-4 rounded-xl font-bold transition-all"
+                              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
                             >
                               Cancelar
-                            </Button>
+                            </LiquidGlassButton>
                           </motion.div>
-                          <motion.div 
-                            whileHover={{ scale: 1.05, translateY: -2 }} 
+                          <motion.div
+                            whileHover={{ scale: 1.05, translateY: -2 }}
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold transition-all">
+                            <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="h-9 px-4 text-xs font-bold uppercase tracking-widest">
                               <Save className="w-4 h-4 mr-2" />
                               Salvar
-                            </Button>
+                            </LiquidGlassButton>
                           </motion.div>
                         </div>
                       </div>

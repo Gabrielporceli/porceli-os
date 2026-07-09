@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import {
   Dialog,
   DialogContent,
@@ -245,24 +246,26 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
             {/* Ações */}
             <div className="flex gap-4 pt-2 mt-2">
               <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={onClose}
-                  className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                 >
                   Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
               <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <Button
+                <LiquidGlassButton
+                  tint="primary"
                   onClick={handleSubmit}
                   disabled={!canSubmit || isCreating}
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50"
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                 >
                   {isCreating
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             </div>
         </div>

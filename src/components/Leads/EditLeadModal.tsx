@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -374,44 +375,44 @@ export function EditLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 onClick={() => onOpenChange(false)}
-                className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-[2]" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+            <motion.div
+              className="flex-[2]"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+              <LiquidGlassButton tint="primary" onClick={handleSave} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
                 <Save className="w-4 h-4 mr-2" />
                 Salvar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
             {onDeleteLead && (
-              <motion.div 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   onClick={() => {
                     if (lead) {
                       onDeleteLead(lead);
                     }
                   }}
-                  className="btn-danger-glass h-12 w-12 rounded-xl transition-all"
+                  className="h-12 w-12"
                   title="Excluir Lead"
                 >
                   <Trash2 className="w-5 h-5" />
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -263,23 +263,25 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             {/* Footer Buttons */}
                             <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
                                 <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
+                                    <LiquidGlassButton
+                                        tint="danger"
                                         type="button"
                                         onClick={onClose}
                                         disabled={isPending}
-                                        className="btn-danger-glass w-full h-12 rounded-xl transition-all uppercase tracking-widest text-xs font-bold"
+                                        className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                                     >
                                         Cancelar
-                                    </Button>
+                                    </LiquidGlassButton>
                                 </motion.div>
                                 <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
+                                    <LiquidGlassButton
+                                        tint="primary"
                                         type="submit"
                                         disabled={isPending}
-                                        className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold uppercase tracking-widest text-xs"
+                                        className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                                     >
                                         {isPending ? 'Processando...' : 'Confirmar Renovação'}
-                                    </Button>
+                                    </LiquidGlassButton>
                                 </motion.div>
                             </div>
                         </form>

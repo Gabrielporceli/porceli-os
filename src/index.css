@@ -435,8 +435,11 @@ button:focus-visible,
   */
   .lqg-lens {
     /* Defaults próprios: a lente funciona mesmo sem .lqg-btn no ancestral
-       (ex.: pílula animada do header). Sem isso o calc() invalida a box-shadow. */
-    --glass-reflex-light: 1;
+       (ex.: pílula animada do header). Sem isso o calc() invalida a box-shadow.
+       --glass-reflex-light abaixo de 1: o rim de luz batia muito mais claro
+       aqui que nos cards (.liquid-glass), pelo contraste com o fundo mais
+       sólido/tingido do botão — reduzido pra ficar "menos branco". */
+    --glass-reflex-light: 0.65;
     --glass-reflex-dark: 1;
     background-color: rgba(255, 255, 255, 0.05);
 
@@ -483,8 +486,8 @@ button:focus-visible,
   }
 
   /* Tons coloridos do vidro (mesmo material, cor translúcida na lente) */
-  .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.72); }
-  .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.82); }
+  .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.9); }
+  .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.98); }
   .lqg-lens--success { background-color: rgba(22, 163, 74, 0.55); }
   .lqg-btn:hover .lqg-lens--success { background-color: rgba(22, 163, 74, 0.72); }
   .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.55); }

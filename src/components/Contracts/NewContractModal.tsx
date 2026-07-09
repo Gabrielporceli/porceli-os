@@ -5,7 +5,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -339,13 +339,14 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button
+            <LiquidGlassButton
+              tint="danger"
               type="button"
               onClick={onClose}
-              className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-sm uppercase tracking-widest"
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
             >
               Cancelar
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
           <motion.div
             className="flex-1"
@@ -353,14 +354,15 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button
+            <LiquidGlassButton
+              tint="primary"
               type="submit"
               form="new-contract-form"
               disabled={isPending || !formData.client_id}
-              className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
             >
               {isPending ? 'Criando...' : 'Criar Contrato'}
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
         </div>
       </DialogContent>

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
 import {
@@ -161,14 +161,16 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
             </div>
 
             <div className="flex gap-2 pt-1">
-              <Button
-                className="btn-danger-glass flex-1 h-10 rounded-xl text-sm"
+              <LiquidGlassButton
+                tint="danger"
+                className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
                 onClick={onClose}
               >
                 Cancelar
-              </Button>
-              <Button
-                className="flex-1 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_15px_rgba(104,41,192,0.3)]"
+              </LiquidGlassButton>
+              <LiquidGlassButton
+                tint="primary"
+                className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
                 onClick={handleSave}
                 disabled={updateSchedule.isPending || isEveryMinute || isWebhook}
               >
@@ -176,7 +178,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
                   ? <Loader2 className="w-4 h-4 animate-spin" />
                   : <><Save className="w-4 h-4 mr-1.5" /> Salvar</>
                 }
-              </Button>
+              </LiquidGlassButton>
             </div>
           </div>
         </LiquidGlass>

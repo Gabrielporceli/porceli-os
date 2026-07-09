@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -132,45 +132,48 @@ export function EditStageModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="btn-danger-glass w-full h-12 rounded-xl font-bold transition-all text-base"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-[2]" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+            <motion.div
+              className="flex-[2]"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="primary"
                 type="submit"
-                className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 <Save className="w-4 h-4 mr-2" />
                 Salvar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
             {!stage.is_default && (
-              <motion.div 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
                   onClick={() => {
                     onDeleteStage(stage.id);
                     onOpenChange(false);
                   }}
-                  className="h-12 w-12 rounded-xl btn-danger-glass transition-all"
+                  className="h-12 w-12"
                   title="Excluir Etapa"
                 >
                   <Trash2 className="w-5 h-5" />
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             )}
           </div>

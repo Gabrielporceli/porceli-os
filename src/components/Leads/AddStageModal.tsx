@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,26 +104,28 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="btn-danger-glass w-full h-11 rounded-xl font-bold transition-all text-base"
+                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+            <motion.div
+              className="flex-1"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="primary"
                 type="submit"
-                className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold text-base transition-all"
+                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
               >
                 Adicionar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
           </DialogFooter>
         </form>
