@@ -49,8 +49,8 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
           {value || placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-52 p-0 bg-[#121212]/90 border border-white/10 z-[9999999] shadow-2xl backdrop-blur-3xl overflow-hidden pointer-events-auto rounded-xl" 
+      <PopoverContent
+        className="w-52 p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl overflow-hidden pointer-events-auto"
         align="start"
         onWheel={(e) => e.stopPropagation()}
       >
