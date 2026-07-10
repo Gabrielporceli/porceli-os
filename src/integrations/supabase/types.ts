@@ -374,6 +374,7 @@ export type Database = {
           due_date: string
           id: string
           name: string
+          paid_date: string | null
           reference: string
           status: string
           updated_at: string
@@ -386,6 +387,7 @@ export type Database = {
           due_date: string
           id?: string
           name: string
+          paid_date?: string | null
           reference: string
           status?: string
           updated_at?: string
@@ -398,6 +400,7 @@ export type Database = {
           due_date?: string
           id?: string
           name?: string
+          paid_date?: string | null
           reference?: string
           status?: string
           updated_at?: string

@@ -55,6 +55,12 @@ export const useFinancialEntries = () => {
         .from('financial_entries')
         .update({
           status: 'paid',
+          // Data real da baixa manual (hoje) — sem isso, a única forma de
+          // saber "quando foi pago" seria updated_at, que só reflete quando
+          // a AÇÃO foi registrada no banco, não necessariamente uma data de
+          // pagamento confiável de verdade (ex.: outras rotinas também
+          // tocam updated_at).
+          paid_date: new Date().toISOString().slice(0, 10),
           updated_at: new Date().toISOString()
         })
         .eq('id', entryId)

@@ -106,7 +106,7 @@ serve(async (req) => {
       payIndex.get(key)!.push({ raw: p, dueIso, payDateIso, payValue: parseBRL(p.value), payNet: parseBRL(p.netValue), payOriginal: parseBRL(p.originalValue) });
     }
 
-    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string }> = [];
+    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null }> = [];
     let unmatchedCount = 0;
 
     for (const entry of (pendingEntries as SupabaseEntry[])) {
@@ -146,16 +146,24 @@ serve(async (req) => {
         }
       }
 
-      // Estratégia 4 (fallback): único candidato com mesmo nome+data
-      if (bestIdx === -1 && list.length === 1) bestIdx = 0;
+      // SEM fallback "único candidato" aqui de propósito: quando duas
+      // entradas pendentes do mesmo cliente compartilham nome+data de
+      // vencimento (ex.: dois boletos de valores diferentes vencendo no
+      // mesmo dia), bastava UM pagamento recebido nesse dia pra "roubar" a
+      // baixa de qualquer uma das duas — sem checar se o VALOR batia. Já
+      // causou baixa incorreta em produção (entrada de R$150 marcada como
+      // paga por um pagamento de R$640 do mesmo cliente/dia). Se nenhuma das
+      // estratégias 1-3 (que sempre comparam valor) bateu, é mais seguro
+      // deixar sem correspondência pra revisão manual do que arriscar dar
+      // baixa na entrada errada.
       if (bestIdx === -1) { unmatchedCount++; continue; }
 
       const chosen = list.splice(bestIdx, 1)[0];
-      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "" });
+      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "", paidDate: chosen.payDateIso });
     }
 
     for (const m of matched) {
-      await supabase.from("financial_entries").update({ status: "paid" }).eq("id", m.entryId);
+      await supabase.from("financial_entries").update({ status: "paid", paid_date: m.paidDate }).eq("id", m.entryId);
     }
 
     if (matched.length > 0) {
