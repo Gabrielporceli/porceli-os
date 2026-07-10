@@ -210,7 +210,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
             <h4 className="font-semibold text-white mb-4">Tags Existentes</h4>
             {tags.length === 0 ? (
               <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/[0.05] rounded-xl">
-                <p className="text-white/30 text-sm">Nenhuma tag criada ainda</p>
+                <p className="text-white/40 text-sm">Nenhuma tag criada ainda</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
@@ -269,7 +269,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                       <>
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${tag.color}`} />
-                          <span className="font-semibold text-white/90">{tag.name}</span>
+                          <span className="font-semibold text-white">{tag.name}</span>
                         </div>
                         <div className="flex gap-2 transition-opacity">
                           <motion.div 
@@ -281,7 +281,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                               onClick={() => handleEditTag(tag)}
                               size="sm"
                               variant="ghost"
-                              className="h-8 px-3 rounded-xl font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all"
+                              className="h-8 px-3 rounded-xl font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all"
                             >
                               <Edit className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                               Editar

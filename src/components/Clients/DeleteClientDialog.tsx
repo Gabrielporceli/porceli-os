@@ -104,34 +104,34 @@ export function DeleteClientDialog({
 
             {/* Client Info Section */}
             <div className="space-y-4">
-              <h4 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2 ml-1">
+              <h4 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2 ml-1">
                 Dados do Alvo
               </h4>
               
               <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 space-y-6">
                 <div className="space-y-1">
-                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Nome da Empresa</span>
+                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Nome da Empresa</span>
                   <p className="text-white font-bold text-lg tracking-tight">{client.company}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Responsável</span>
+                    <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Responsável</span>
                     <p className="text-white font-medium text-sm">{client.responsible || "Não informado"}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Plano Atual</span>
+                    <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Plano Atual</span>
                     <p className="text-white font-medium text-sm">{client.plan || "Nenhum"}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">CNPJ</span>
+                    <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">CNPJ</span>
                     <p className="text-white font-medium text-sm">{client.cnpj || "Não informado"}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Status</span>
+                    <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Status</span>
                     <p className={cn(
                       "font-bold text-sm",
                       client.tags?.[0] === 'Ativo' ? "text-green-400" : "text-red-400"

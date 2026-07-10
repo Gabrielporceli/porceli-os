@@ -118,6 +118,26 @@ button:focus-visible,
   box-shadow: none !important;
 }
 
+/*
+  ===== PADRÃO DE COR DE TEXTO (hierarquia de 5 níveis) =====
+  Escala única de brilho pra texto sobre o fundo escuro. Antes o sistema
+  tinha 12+ valores de opacidade soltos (/10 /20 /25 /30 /35 /40 /45 /50 /60
+  /70 /80 /90), o que fazia o mesmo tipo de texto aparecer ora claro demais,
+  ora escuro demais dependendo da tela. Consolidado nestes 5 papéis (passos
+  válidos da escala de opacidade do Tailwind — o modificador /N só gera regra
+  pra 0,5,10,20,25,30,40,50,60,70,75,80,90,95,100):
+
+    Título / valor-chave  →  text-white        (100%)  h1-h4, R$, nomes
+    Corpo / leitura       →  text-white/70     (70%)   parágrafos, valores de campo
+    Label / metadado      →  text-white/50     (50%)   labels de form, timestamps
+    Apoio / placeholder   →  text-white/40     (40%)   hints, "opcional", captions
+    Fraco / decorativo    →  text-white/20     (20%)   ícones inativos, empty states
+
+  Ao adicionar texto novo, use SEMPRE um destes 5 — não invente opacidades
+  intermediárias. Cores de acento (text-primary roxo, text-destructive
+  vermelho, verde/azul de status) são intencionais e ficam fora desta escala.
+*/
+
 /* Porceli Company Theme - Dark Mode with Purple Accents */
 @layer base {
   :root {
@@ -492,6 +512,29 @@ button:focus-visible,
   .lqg-btn:hover .lqg-lens--success { background-color: rgba(22, 163, 74, 0.72); }
   .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.55); }
   .lqg-btn:hover .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.72); }
+
+  /* ===== Cards de atividade (dia selecionado / painel "hoje") =====
+     Tentamos cor chapada (verde/azul) preenchendo o card inteiro e ficou
+     destoando da identidade do resto do app (vidro escuro + roxo) — duas
+     cores novas e saturadas em blocos grandes brigavam com tudo ao redor.
+     Voltou a ser o MESMO vidro neutro dos outros cards (só com sombra mais
+     leve, sem o dashboard-glow pesado) — o status agora é só um selinho de
+     texto pequeno ao lado do título (ver .status-badge--* em Calendar.tsx),
+     sem tingir o fundo do card. */
+  .status-card {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+      inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.35),
+      inset -2px -2px 2px -2px rgba(255, 255, 255, 0.28),
+      inset -0.3px -1px 4px 0px rgba(0, 0, 0, 0.12),
+      inset 0px 3px 4px -2px rgba(0, 0, 0, 0.16),
+      0px 1px 5px 0px rgba(0, 0, 0, 0.12),
+      0px 6px 16px 0px rgba(0, 0, 0, 0.1);
+  }
 
   .lqg-text {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);

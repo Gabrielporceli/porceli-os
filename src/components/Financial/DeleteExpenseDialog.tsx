@@ -28,7 +28,7 @@ export function DeleteExpenseDialog({
       <DialogContent className="border-white/5 text-white max-w-md shadow-2xl outline-none">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-white tracking-tight">Excluir Despesa</DialogTitle>
-          <DialogDescription className="text-white/60 text-sm leading-relaxed mt-2">
+          <DialogDescription className="text-white/70 text-sm leading-relaxed mt-2">
             Tem certeza que deseja excluir a despesa <span className="text-white font-bold">"{expenseDescription}"</span>? Essa ação não poderá ser desfeita e os dados serão removidos permanentemente.
           </DialogDescription>
         </DialogHeader>

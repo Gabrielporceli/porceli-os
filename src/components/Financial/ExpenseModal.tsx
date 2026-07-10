@@ -143,8 +143,8 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
             <Label htmlFor="category" className="text-white/70 text-sm font-medium ml-1">Categoria *</Label>
             <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
               <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner">
-                <SelectValue placeholder={<span className="text-white/30">Selecione uma categoria</span>}>
-                  {formData.category && <span className="text-white/80">{formData.category}</span>}
+                <SelectValue placeholder={<span className="text-white/40">Selecione uma categoria</span>}>
+                  {formData.category && <span className="text-white/70">{formData.category}</span>}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10 text-white rounded-xl">
@@ -185,9 +185,9 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
               <Label htmlFor="recurrence" className="text-white/70 text-sm font-medium ml-1">Recorrência</Label>
               <Select value={formData.recurrence} onValueChange={(value) => setFormData({ ...formData, recurrence: value })}>
                 <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner">
-                  <SelectValue placeholder={<span className="text-white/30">Selecione a recorrência</span>}>
+                  <SelectValue placeholder={<span className="text-white/40">Selecione a recorrência</span>}>
                     {formData.recurrence && (
-                      <span className="text-white/80">
+                      <span className="text-white/70">
                         {formData.recurrence === 'weekly' && 'Semanal'}
                         {formData.recurrence === 'monthly' && 'Mensal'}
                         {formData.recurrence === 'quarterly' && 'Trimestral'}

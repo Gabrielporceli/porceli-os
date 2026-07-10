@@ -1108,12 +1108,19 @@ export default function Calendar() {
                 <div
                   key={event.id}
                   onClick={() => handleEventClick(event)}
-                  className={cn(
-                    "liquid-glass !rounded-2xl p-4 cursor-pointer hover:bg-white/[0.05] transition-all border",
-                    st === 'done' ? "!border-green-500/30" : st === 'ongoing' ? "!border-blue-500/30" : "!border-white/10"
-                  )}
+                  className="status-card rounded-2xl p-4 cursor-pointer transition-all hover:brightness-110"
                 >
-                  <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
+                    {st !== 'pending' && (
+                      <span className={cn(
+                        "shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                        st === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
+                      )}>
+                        {st === 'done' ? 'Concluído' : 'Andamento'}
+                      </span>
+                    )}
+                  </div>
                   {event.clients && event.clients.length > 0 && (
                     <p className="text-white/40 text-xs mt-1 truncate">{event.clients[0]}</p>
                   )}
@@ -1121,10 +1128,10 @@ export default function Calendar() {
                     <Clock className="w-3.5 h-3.5 text-primary" />
                     <span className="text-[11px] font-bold">{event.time || 'Dia todo'}</span>
                   </div>
-                  <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
+                  <div className="mt-3 h-1 rounded-full bg-white/10 overflow-hidden">
                     <div className={cn(
                       "h-full rounded-full",
-                      st === 'done' ? "w-full bg-green-400" : st === 'ongoing' ? "w-1/2 bg-blue-400" : "w-1/4 bg-primary"
+                      st === 'done' ? "w-full bg-green-400" : st === 'ongoing' ? "w-1/2 bg-blue-400" : "w-1/4 bg-white/30"
                     )} />
                   </div>
                 </div>
@@ -1259,7 +1266,7 @@ export default function Calendar() {
               }
 
               if (sortedItems.length === 0) {
-                return <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhum evento neste dia.</p>;
+                return <p className="text-sm text-white/50 text-center py-4">Nenhum evento neste dia.</p>;
               }
 
               const handleDragEnd = (result: DropResult) => {
@@ -1278,6 +1285,12 @@ export default function Calendar() {
                         {sortedItems.map((item, index) => (
                           <Draggable key={item.id} draggableId={item.id} index={index}>
                             {(prov, snapshot) => {
+                              const cardStatus: 'done' | 'ongoing' | 'pending' =
+                                item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
+                                  ? 'done'
+                                  : item.status === 'Em andamento' || isOngoing(item)
+                                  ? 'ongoing'
+                                  : 'pending';
                               const cardEl = (
                 <div
                   ref={prov.innerRef}
@@ -1286,13 +1299,10 @@ export default function Calendar() {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer border
-                    ${snapshot.isDragging ? 'ring-2 ring-primary/40 shadow-xl' : ''}
-                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
-                      ? '!border-green-500/30 hover:!border-green-500/60'
-                      : item.status === 'Em andamento' || isOngoing(item)
-                      ? '!border-blue-500/30 hover:!border-blue-500/60'
-                      : 'border-white/[0.05] hover:!border-white/[0.15]'}`}
+                  className={cn(
+                    "status-card p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
+                    snapshot.isDragging && "ring-2 ring-primary/40 shadow-xl"
+                  )}
                 >
                   {/* Handle de arrastar */}
                   <div
@@ -1306,6 +1316,21 @@ export default function Calendar() {
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
+                      {/* Selo de status na própria linha, ANTES do título: se
+                          ficasse ao lado do título (mesma linha flex), um
+                          título longo que quebra em várias linhas empurra o
+                          selo pro meio do bloco (items-center centraliza na
+                          altura toda) — cada card ficava com o selo numa
+                          posição diferente. Numa linha fixa em cima, sempre
+                          alinhado igual em todo card. */}
+                      {cardStatus !== 'pending' && (
+                        <span className={cn(
+                          "inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          cardStatus === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
+                        )}>
+                          {cardStatus === 'done' ? 'Concluído' : 'Andamento'}
+                        </span>
+                      )}
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
                           {item.title}
@@ -1351,7 +1376,7 @@ export default function Calendar() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-1">
-                            <Tag className="w-3 h-3 text-white/10 flex-shrink-0" />
+                            <Tag className="w-3 h-3 text-white/20 flex-shrink-0" />
                             <span className="text-[11px] text-white/20 font-semibold tracking-tight">
                               Sem cliente
                             </span>
@@ -1398,7 +1423,7 @@ export default function Calendar() {
                 <div className="flex items-center gap-2">
                   {selectedDay && isDayLocked(selectedDay)
                     ? <LockIcon className="w-4 h-4 text-red-400" />
-                    : <LockOpenIcon className="w-4 h-4 text-white/30" />}
+                    : <LockOpenIcon className="w-4 h-4 text-white/40" />}
                   <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/40'}`}>
                     {selectedDay && isDayLocked(selectedDay) ? 'Dia Trancado' : 'Trancar Dia'}
                   </span>
@@ -1412,7 +1437,7 @@ export default function Calendar() {
 
               {/* Formulário */}
               <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em]">
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]">
                   {createMeetLink ? "Novo evento no Google" : "Nova tarefa no Notion"}
                 </p>
 
@@ -1437,9 +1462,9 @@ export default function Calendar() {
                 />
 
                 <div className="space-y-1.5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrência</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrência</label>
                   <Select value={recurrenceType || "none"} onValueChange={(val) => setRecurrenceType(val === "none" ? "" as any : val as any)}>
-                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9 text-sm">
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1453,8 +1478,8 @@ export default function Calendar() {
 
                 <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                   <div>
-                    <Label className="text-white font-medium text-sm cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
-                    <p className="text-white/40 text-[11px]">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
+                    <Label className="text-xs font-bold text-white/40 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
+                    <p className="text-white/40 text-[11px] mt-0.5">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
                   </div>
                   <Switch checked={createMeetLink} onCheckedChange={setCreateMeetLink} />
                 </div>
@@ -1487,7 +1512,7 @@ export default function Calendar() {
           </DialogHeader>
           <div className="p-5 space-y-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 placeholder="Ex: Reunião com Cliente"
@@ -1498,7 +1523,7 @@ export default function Calendar() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Cliente</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Cliente</label>
               <input 
                 type="text"
                 placeholder="Nome do cliente"
@@ -1510,14 +1535,14 @@ export default function Calendar() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={newEventDate ? new Date(newEventDate + 'T12:00:00') : undefined}
                   setDate={(date) => setNewEventDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={newEventTime}
                   onChange={setNewEventTime}
@@ -1526,7 +1551,7 @@ export default function Calendar() {
             </div>
 
             <div className="space-y-1 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
-               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
+               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrencia</label>
                <Select
                  value={recurrenceType || "none"}
                  onValueChange={(val) => {
@@ -1534,7 +1559,7 @@ export default function Calendar() {
                    setRecurrenceType(type as any);
                  }}
                >
-                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9">
+                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9">
                    <SelectValue placeholder="Selecione a recorrência" />
                  </SelectTrigger>
                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1548,8 +1573,8 @@ export default function Calendar() {
 
             <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
               <div className="space-y-0.5">
-                <Label className="text-white font-medium cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
-                <p className="text-white/40 text-xs text-balance">
+                <Label className="text-xs font-bold text-white/40 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
+                <p className="text-white/40 text-[11px] text-balance mt-0.5">
                   {createMeetLink ? "Será criado um evento com Call no Meet." : "Será criada uma linha no Notion."}
                 </p>
               </div>
@@ -1615,7 +1640,7 @@ export default function Calendar() {
           
           <div className="p-5 space-y-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 value={editTitle}
@@ -1626,14 +1651,14 @@ export default function Calendar() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={editDate}
                   setDate={setEditDate}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={editTime}
                   onChange={setEditTime} 
@@ -1643,7 +1668,7 @@ export default function Calendar() {
 
             {(editingItem?.type === 'notion' || editingItem?.type === 'crm') && (
                <div className="space-y-2 pt-1">
-                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status da Atividade</label>
+                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Status da Atividade</label>
                  <div className="grid grid-cols-2 gap-3 w-full">
                    <motion.div
                      whileHover={{ scale: 1.05, translateY: -2 }}
@@ -1745,7 +1770,7 @@ export default function Calendar() {
               <AlertCircle className="w-5 h-5 text-red-500" />
               Confirmar Exclusão
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-white/70">
               Tem certeza que deseja excluir esta {editingItem?.type === 'google' ? 'atividade' : 'tarefa'}? 
               {editingItem?.type === 'google' ? ' Esta ação também removerá o evento do Google Calendar.' : ' Esta ação removerá permanentemente do Notion.'}
             </AlertDialogDescription>

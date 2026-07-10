@@ -114,7 +114,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             <span className="lqg-lens absolute inset-0 -z-10 rounded-[inherit] pointer-events-none" />
             <Button
               onClick={previousMonth}
-              className="rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
+              className="rounded-full shadow-none hover:bg-white/5 text-white/70 border-none h-10 w-10 flex items-center justify-center"
               variant="ghost"
               size="icon"
             >
@@ -122,14 +122,14 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
             <Button
               onClick={goToToday}
-              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 font-bold text-[10px] uppercase tracking-[0.2em]"
+              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/70 border-none h-10 font-bold text-[10px] uppercase tracking-[0.2em]"
               variant="ghost"
             >
               Hoje
             </Button>
             <Button
               onClick={nextMonth}
-              className="rounded-full shadow-none hover:bg-white/5 text-white/60 border-none h-10 w-10 flex items-center justify-center"
+              className="rounded-full shadow-none hover:bg-white/5 text-white/70 border-none h-10 w-10 flex items-center justify-center"
               variant="ghost"
               size="icon"
             >
@@ -160,7 +160,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
       <div className="lg:flex lg:flex-auto lg:flex-col min-h-0">
         <div className="liquid-glass no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/25 px-1.5 pt-3 pb-1">
+          <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/20 px-1.5 pt-3 pb-1">
             <div>Dom</div>
             <div>Seg</div>
             <div>Ter</div>
@@ -207,7 +207,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                       <header className="flex items-center justify-between px-2.5 pt-2 shrink-0">
                         <span className={cn(
                           "text-xs font-black tabular-nums",
-                          selected ? "text-white" : today ? "text-white" : count > 0 ? "text-white/90" : "text-white/35"
+                          selected ? "text-white" : today ? "text-white" : count > 0 ? "text-white" : "text-white/40"
                         )}>
                           {format(day, "d")}
                         </span>
@@ -227,7 +227,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                                 "w-5 h-5 rounded-md flex items-center justify-center transition-all border",
                                 isDayLocked?.(day)
                                   ? "bg-red-500/25 border-red-500/40 text-red-300 hover:bg-red-500/35"
-                                  : "bg-white/10 border-white/10 text-white/60 hover:bg-white/20 hover:text-white"
+                                  : "bg-white/10 border-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                               )}
                               onClick={(e) => { e.stopPropagation(); onToggleLock?.(day); }}
                             >
@@ -237,7 +237,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                               <motion.button
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="w-5 h-5 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all border border-white/10"
+                                className="w-5 h-5 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all border border-white/10"
                                 onClick={(e) => { e.stopPropagation(); onAddEvent?.(day); }}
                               >
                                 <PlusCircleIcon size={11} />

@@ -251,7 +251,7 @@ export function NewClientModal({
           <form id="new-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
@@ -262,7 +262,7 @@ export function NewClientModal({
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
@@ -274,7 +274,7 @@ export function NewClientModal({
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="00.000.000/0000-00"
                     required
                   />
@@ -286,7 +286,7 @@ export function NewClientModal({
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Nome do responsável"
                     required
                   />
@@ -298,7 +298,7 @@ export function NewClientModal({
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="(11) 99999-9999"
                     required
                   />
@@ -311,7 +311,7 @@ export function NewClientModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="cliente@empresa.com"
                     required
                   />
@@ -324,7 +324,7 @@ export function NewClientModal({
                     type="text"
                     value={formData.grupo_id}
                     onChange={(e) => handleChange("grupo_id", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="ID do grupo"
                   />
                 </div>
@@ -333,7 +333,7 @@ export function NewClientModal({
 
             {/* Localização */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Localização
               </h3>
 
@@ -343,12 +343,12 @@ export function NewClientModal({
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 rounded-xl transition-all resize-none min-h-[100px]"
+                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none min-h-[100px]"
                   placeholder="Endereço completo do cliente"
                 />
               </div>
 
-              <p className="text-white/30 text-xs">
+              <p className="text-white/40 text-xs">
                 💡 Plano, valores e datas são definidos ao criar um <strong className="text-white/50">contrato</strong> na aba Contratos.
               </p>
             </div>

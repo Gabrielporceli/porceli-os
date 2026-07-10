@@ -141,7 +141,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
         <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
           {/* Cliente (opcional) */}
           <div className="space-y-2">
-            <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/30 lowercase">(opcional)</span></Label>
+            <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/40 lowercase">(opcional)</span></Label>
             <Select 
               value={clientId || "none"} 
               onValueChange={(value) => {
@@ -168,7 +168,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Destinatário */}
             <div className="space-y-1.5">
-              <label className="text-white/60 text-xs font-medium">Enviar para</label>
+              <label className="text-white/70 text-xs font-medium">Enviar para</label>
               <div className="grid grid-cols-3 gap-2">
                 {(["responsible", "group", "custom"] as RecipientType[]).map(type => (
                   <button
@@ -202,7 +202,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
                   {resolvedPhone
                     ? <span className="text-white/70">{resolvedPhone}</span>
-                    : <span className="text-white/25">
+                    : <span className="text-white/20">
                         {recipientType === "responsible"
                           ? "Selecione um cliente para ver o número"
                           : "Selecione um cliente para ver o grupo"}
@@ -214,7 +214,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Mensagem */}
             <div className="space-y-1.5">
-              <label className="text-white/60 text-xs font-medium">Mensagem</label>
+              <label className="text-white/70 text-xs font-medium">Mensagem</label>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
@@ -222,20 +222,20 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 placeholder="Digite a mensagem que será enviada..."
                 className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-primary/40 resize-none"
               />
-              <p className="text-white/25 text-xs text-right">{message.length} caracteres</p>
+              <p className="text-white/20 text-xs text-right">{message.length} caracteres</p>
             </div>
 
             {/* Data e Hora */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={schedDate ? new Date(schedDate + 'T12:00:00') : undefined}
                   setDate={(date) => setSchedDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={schedTime}
                   onChange={setSchedTime}
@@ -305,7 +305,7 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
           <span className="text-white font-semibold text-sm">
             {msg.client_name ?? "Sem cliente"}
           </span>
-          <span className="text-white/30 text-xs">•</span>
+          <span className="text-white/40 text-xs">•</span>
           <span className="text-white/50 text-xs">{RECIPIENT_LABELS[msg.recipient_type]}: {msg.phone}</span>
         </div>
         <p className="text-white/40 text-xs line-clamp-1 leading-relaxed">{msg.message}</p>
@@ -319,14 +319,14 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
         <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", cfg.className)}>
           {cfg.label}
         </span>
-        <span className="text-white/30 text-xs whitespace-nowrap">
+        <span className="text-white/40 text-xs whitespace-nowrap">
           {formatDateTimeBRT(msg.status === "sent" && msg.sent_at ? msg.sent_at : msg.scheduled_at)}
         </span>
         {msg.status === "pending" && (
           <button
             onClick={() => onCancel(msg.id)}
             disabled={isCancelling}
-            className="text-white/25 hover:text-amber-400 text-xs transition-colors"
+            className="text-white/20 hover:text-amber-400 text-xs transition-colors"
           >
             Cancelar
           </button>
@@ -380,7 +380,7 @@ export default function ScheduledMessages() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white/30 text-sm">
+        <div className="flex items-center gap-2 text-white/40 text-sm">
           <Clock className="w-4 h-4" />
           <span>{counts.pending} agendada{counts.pending !== 1 ? "s" : ""}</span>
         </div>
@@ -422,7 +422,7 @@ export default function ScheduledMessages() {
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Mensagens</h3>
-            <p className="text-white/30 text-sm mt-0.5">{filtered.length} mensagem{filtered.length !== 1 ? "ns" : ""}</p>
+            <p className="text-white/40 text-sm mt-0.5">{filtered.length} mensagem{filtered.length !== 1 ? "ns" : ""}</p>
           </div>
         </div>
 
@@ -431,7 +431,7 @@ export default function ScheduledMessages() {
             <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
               <Clock className="w-6 h-6 text-white/20" />
             </div>
-            <p className="text-white/30 text-sm">
+            <p className="text-white/40 text-sm">
               {filter === "all" ? "Nenhuma mensagem agendada ainda" : `Nenhuma mensagem ${STATUS_CONFIG[filter as MessageStatus]?.label.toLowerCase()}`}
             </p>
             {filter === "all" && (

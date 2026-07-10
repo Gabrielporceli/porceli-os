@@ -35,7 +35,7 @@ export function StatsCard({ title, value, trend, description, className }: Stats
         <AnimatedValue value={String(value)} />
       </p>
       {description && (
-        <p className="text-white/30 text-[10px] mt-1 leading-relaxed font-medium">{description}</p>
+        <p className="text-white/40 text-[10px] mt-1 leading-relaxed font-medium">{description}</p>
       )}
       {trend && (
         <div className="flex items-center mt-2.5">

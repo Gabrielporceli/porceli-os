@@ -147,7 +147,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
             <div className="space-y-10">
               {/* Nome da Empresa */}
               <div className="space-y-4">
-                <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                   Empresa
                 </h3>
                 <div className="space-y-2">
@@ -157,14 +157,14 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                     placeholder="Buscar por nome..."
                     value={localFilters.location}
                     onChange={(e) => setLocalFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
               </div>
 
               {/* Status */}
               <div className="space-y-4">
-                <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                   Status do Cliente
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
@@ -187,7 +187,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                       />
                       <Label
                         htmlFor={`status-${status}`}
-                        className="text-white/80 font-medium cursor-pointer flex-1"
+                        className="text-white/70 font-medium cursor-pointer flex-1"
                       >
                         {status}
                       </Label>
@@ -198,7 +198,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
 
               {/* Tipo de Plano */}
               <div className="space-y-4">
-                <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                   Tipo de Plano
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
@@ -224,7 +224,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                         />
                         <Label
                           htmlFor={`plan-${plan}`}
-                          className="text-white/80 font-medium cursor-pointer flex-1"
+                          className="text-white/70 font-medium cursor-pointer flex-1"
                         >
                           {plan}
                         </Label>
@@ -236,7 +236,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
 
               {/* Período do Fim de Contrato */}
               <div className="space-y-4">
-                <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                   Vencimento de Contrato
                 </h3>
                 <div className="grid grid-cols-1 gap-4">

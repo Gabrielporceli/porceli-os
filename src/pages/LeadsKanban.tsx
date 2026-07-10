@@ -541,7 +541,7 @@ export default function LeadsKanban() {
                       <h3 className="font-bold text-white text-sm uppercase tracking-wider whitespace-nowrap">
                         {stage.name}
                       </h3>
-                      <Badge className="bg-white/5 text-white/60 text-[10px] border-white/5 px-2 py-0">
+                      <Badge className="bg-white/5 text-white/70 text-[10px] border-white/5 px-2 py-0">
                         {filteredLeads.length}
                       </Badge>
                     </div>
@@ -600,7 +600,7 @@ export default function LeadsKanban() {
                                             data-dnd-handle
                                             // ✅ garante que o browser não tente “interpretar gesto” e travar eixo
                                             style={{ touchAction: "none" }}
-                                            className="relative z-[2] touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-Porceli-gray-400 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+                                            className="relative z-[2] touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-white/50 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
                                             title="Arrastar"
                                           >
                                             <GripVertical className="w-4 h-4" />
@@ -627,7 +627,7 @@ export default function LeadsKanban() {
                                               <h4 className="font-semibold text-white text-sm truncate leading-snug mb-1">
                                                 {lead.name}
                                               </h4>
-                                              <p className="text-Porceli-gray-400 text-[11px] truncate leading-snug">
+                                              <p className="text-white/50 text-[11px] truncate leading-snug">
                                                 {lead.company || lead.phone}
                                               </p>
                                             </div>
@@ -657,7 +657,7 @@ export default function LeadsKanban() {
                                         )}
 
                                         <div className="flex items-center justify-between text-xs pt-2 border-t border-Porceli-gray-700 mt-2">
-                                          <span className="text-Porceli-gray-500 flex-shrink-0">
+                                          <span className="text-white/40 flex-shrink-0">
                                             Atualizado: {isMobile
                                               ? new Date(lead.updated_at).toLocaleDateString(
                                                 "pt-BR",
@@ -711,7 +711,7 @@ export default function LeadsKanban() {
 
                         {filteredLeads.length === 0 && (
                           <div className="border-2 border-dashed border-white/[0.05] rounded-2xl p-4 sm:p-6 text-center">
-                            <p className="text-Porceli-gray-400 text-xs sm:text-sm">
+                            <p className="text-white/50 text-xs sm:text-sm">
                               {isMobile ? "Arraste leads" : "Arraste leads para cá"}
                             </p>
                           </div>

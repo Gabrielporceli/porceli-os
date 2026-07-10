@@ -33,7 +33,7 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                         // cinza que o variant="outline" aplica quando o popover
                         // abre — o botão deve ficar igual, aberto ou fechado.
                         "w-full justify-start text-left font-medium bg-white/[0.03] border-white/[0.05] text-white/70 hover:bg-white/[0.06] hover:border-white/[0.1] hover:text-white data-[state=open]:bg-white/[0.03] data-[state=open]:text-white/70 transition-all rounded-xl h-11 px-4",
-                        !date && "text-white/30",
+                        !date && "text-white/40",
                         className
                     )}
                 >

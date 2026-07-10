@@ -738,34 +738,34 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold text-base">Funil de Prospecção</span>
               </div>
-              <p className="text-Porceli-gray-400 text-sm mt-1">
+              <p className="text-white/50 text-sm mt-1">
                 Acompanhamento operacional (prospecção fria).
               </p>
             </div>
 
-            <span className="text-Porceli-gray-300 text-sm">{totalLeadsInFunnel} lead(s)</span>
+            <span className="text-white/70 text-sm">{totalLeadsInFunnel} lead(s)</span>
           </div>
 
           {/* KPIs operacionais */}
           <div className={`grid grid-cols-2 md:grid-cols-5 gap-3 mb-3`}>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Sem atendimento</p>
+              <p className="text-white/50 text-xs mb-1">Sem atendimento</p>
               <p className="text-xl font-bold text-white">{semAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Em atendimento</p>
+              <p className="text-white/50 text-xs mb-1">Em atendimento</p>
               <p className="text-xl font-bold text-white">{emAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Reuniões</p>
+              <p className="text-white/50 text-xs mb-1">Reuniões</p>
               <p className="text-xl font-bold text-white">{reunioesAgendadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Propostas</p>
+              <p className="text-white/50 text-xs mb-1">Propostas</p>
               <p className="text-xl font-bold text-white">{propostasEnviadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Follow-up</p>
+              <p className="text-white/50 text-xs mb-1">Follow-up</p>
               <p className="text-xl font-bold text-white">{followUp}</p>
             </div>
           </div>
@@ -820,7 +820,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-Porceli-gray-400">Nenhum dado disponível para exibir</p>
+                <p className="text-white/50">Nenhum dado disponível para exibir</p>
               </div>
             )}
           </div>
@@ -837,7 +837,7 @@ export default function Dashboard() {
 
           {clients.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-white/30">Nenhum cliente cadastrado ainda</p>
+              <p className="text-white/40">Nenhum cliente cadastrado ainda</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">
@@ -851,7 +851,7 @@ export default function Dashboard() {
                     <p className="text-white/40 text-xs mt-0.5">Responsável: {client.responsible}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-white/30 text-xs">
+                    <span className="text-white/40 text-xs">
                       {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
                     </span>
                     {client.plan && <p className="text-primary text-xs mt-0.5">{client.plan}</p>}

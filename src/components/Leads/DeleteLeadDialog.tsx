@@ -139,13 +139,13 @@ export function DeleteLeadDialog({
                 {lead.phone && (
                   <div>
                     <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">Telefone</span>
-                    <p className="text-white/80 text-xs truncate">{lead.phone}</p>
+                    <p className="text-white/70 text-xs truncate">{lead.phone}</p>
                   </div>
                 )}
                 {lead.email && (
                   <div>
                     <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">E-mail</span>
-                    <p className="text-white/80 text-xs truncate" title={lead.email}>{lead.email}</p>
+                    <p className="text-white/70 text-xs truncate" title={lead.email}>{lead.email}</p>
                   </div>
                 )}
               </div>

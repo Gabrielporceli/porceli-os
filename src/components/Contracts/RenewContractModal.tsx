@@ -130,7 +130,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-bold text-white tracking-tight">Renovação de Contrato</DialogTitle>
                                 <p className="text-white/40 text-sm">
-                                    Editando: <span className="text-white/60 font-black uppercase tracking-widest text-[10px] ml-1">{contract.client}</span>
+                                    Editando: <span className="text-white/70 font-black uppercase tracking-widest text-[10px] ml-1">{contract.client}</span>
                                 </p>
                             </DialogHeader>
                         </div>
@@ -148,21 +148,21 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             {/* Current Contract Info */}
                             <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Contrato Vigente</span>
-                                    <FileText className="w-4 h-4 text-white/10" />
+                                    <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Contrato Vigente</span>
+                                    <FileText className="w-4 h-4 text-white/20" />
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-white/20 uppercase font-black tracking-widest">Plano</p>
-                                        <p className="text-sm font-bold text-white/90">{contract.type}</p>
+                                        <p className="text-sm font-bold text-white">{contract.type}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-white/20 uppercase font-black tracking-widest">Valor</p>
-                                        <p className="text-sm font-bold text-white/90">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contract.monthlyValue)}</p>
+                                        <p className="text-sm font-bold text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contract.monthlyValue)}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-white/20 uppercase font-black tracking-widest">Pagamento</p>
-                                        <p className="text-sm font-bold text-white/90">Dia {contract.payment_day || contract.paymentDay || 1}</p>
+                                        <p className="text-sm font-bold text-white">Dia {contract.payment_day || contract.paymentDay || 1}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-white/20 uppercase font-black tracking-widest">Expiração</p>

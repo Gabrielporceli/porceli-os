@@ -327,7 +327,7 @@ export default function Financial() {
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
-              <p className="text-white/30 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
+              <p className="text-white/40 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
             </div>
             <span className="text-red-500 font-black text-xl">
               {formatCurrency(overdueEntries.reduce((sum: number, e: any) => sum + Number(e.amount), 0))}
@@ -393,15 +393,15 @@ export default function Financial() {
                             >
                               <div className="flex items-center gap-12">
                                 <div>
-                                  <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                                  <p className="text-white/80 font-medium">{entry.reference}</p>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
+                                  <p className="text-white/70 font-medium">{entry.reference}</p>
                                 </div>
                                 <div>
-                                  <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                                  <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
+                                  <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
                                 </div>
                                 <div>
-                                  <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
                                   <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                                 </div>
                               </div>
@@ -432,7 +432,7 @@ export default function Financial() {
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Lançamentos Financeiros</h3>
-            <p className="text-white/30 text-sm mt-1">Todos os lançamentos do sistema</p>
+            <p className="text-white/40 text-sm mt-1">Todos os lançamentos do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {/* Filter buttons */}
@@ -468,12 +468,12 @@ export default function Financial() {
           {financialEntriesLoading ? (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Carregando lançamentos...</p>
+              <p className="text-white/50">Carregando lançamentos...</p>
             </div>
           ) : normalEntries.length === 0 ? (
             <div className="text-center py-8">
-              <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Nenhum lançamento encontrado</p>
+              <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+              <p className="text-white/50">Nenhum lançamento encontrado</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">
@@ -484,16 +484,16 @@ export default function Financial() {
                     <h4 className="text-white font-semibold text-lg w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
                     <div className="flex items-center gap-12 flex-1">
                       <div>
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
                         <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                       </div>
                       <div>
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                        <p className="text-white/80 font-medium">{entry.reference}</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
+                        <p className="text-white/70 font-medium">{entry.reference}</p>
                       </div>
                       <div>
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                        <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
+                        <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -523,7 +523,7 @@ export default function Financial() {
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Despesas</h3>
-            <p className="text-white/30 text-sm mt-1">Todas as despesas do sistema</p>
+            <p className="text-white/40 text-sm mt-1">Todas as despesas do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {/* Filter buttons */}
@@ -557,7 +557,7 @@ export default function Financial() {
           {expensesLoading ? (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Carregando despesas...</p>
+              <p className="text-white/50">Carregando despesas...</p>
             </div>
           ) : (() => {
             const filteredExpenses = expenses.filter((expense) => {
@@ -572,8 +572,8 @@ export default function Financial() {
             if (filteredExpenses.length === 0) {
               return (
                 <div className="text-center py-8">
-                  <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
-                  <p className="text-Porceli-gray-400">Nenhuma despesa encontrada</p>
+                  <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                  <p className="text-white/50">Nenhuma despesa encontrada</p>
                 </div>
               );
             }
@@ -585,18 +585,18 @@ export default function Financial() {
                     <div className="w-1/3 min-w-0 pr-6">
                       <h4 className="text-white font-semibold text-lg truncate">{expense.description}</h4>
                       {expense.category && (
-                        <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mt-0.5">{expense.category}</p>
+                        <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-0.5">{expense.category}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-12 flex-1">
                       <div>
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
-                        <p className="text-white/80 font-medium">{formatDateBR(expense.date)}</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
+                        <p className="text-white/70 font-medium">{formatDateBR(expense.date)}</p>
                       </div>
                       {expense.is_recurring && (
                         <div>
-                          <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Recorrência</p>
-                          <Badge className="bg-white/5 text-white/60 border border-white/10 rounded-lg py-0.5 px-2 text-xs">
+                          <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Recorrência</p>
+                          <Badge className="bg-white/5 text-white/70 border border-white/10 rounded-lg py-0.5 px-2 text-xs">
                             {expense.recurrence_type === 'monthly' && 'Mensal'}
                             {expense.recurrence_type === 'yearly' && 'Anual'}
                             {expense.recurrence_type === 'quarterly' && 'Trimestral'}
@@ -606,7 +606,7 @@ export default function Financial() {
                         </div>
                       )}
                       <div>
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
                         <p className="text-white font-bold">{formatCurrency(Number(expense.amount))}</p>
                       </div>
                     </div>

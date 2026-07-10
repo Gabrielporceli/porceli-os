@@ -151,7 +151,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
           <form id="new-contract-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Dados do Contrato
               </h3>
 
@@ -194,7 +194,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="Ex: Gestão de Tráfego"
                     value={formData.type}
                     onChange={(e) => handleChange('type', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     required
                   />
                 </div>
@@ -215,7 +215,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                             handleChange('monthly_value', "");
                           }
                         }}
-                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl pl-10 transition-all font-bold"
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl pl-10 transition-all font-bold"
                         placeholder="0,00"
                         required
                       />
@@ -240,7 +240,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                           handleChange('payment_day', e.target.value);
                         }
                       }}
-                      className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="Ex: 10"
                       required
                     />
@@ -255,7 +255,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="https://..."
                     value={formData.contract_url}
                     onChange={(e) => handleChange('contract_url', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
 

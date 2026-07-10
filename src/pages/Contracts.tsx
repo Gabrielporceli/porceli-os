@@ -381,10 +381,10 @@ export default function Contracts() {
         {contracts.length === 0 ? (
           <div className="p-20 text-center">
             <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
-              <FileText className="w-10 h-10 text-white/10" />
+              <FileText className="w-10 h-10 text-white/20" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
-            <p className="text-white/30 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
+            <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">
@@ -451,7 +451,7 @@ export default function Contracts() {
                     {getStatusBadge(contract.status)}
                   </div>
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
                     <div className="flex items-center gap-2">
                       <DollarSign className={cn(
                         "w-3.5 h-3.5 opacity-50",
@@ -465,8 +465,8 @@ export default function Contracts() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
-                    <div className="flex items-center gap-2 text-white/80 font-medium">
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
+                    <div className="flex items-center gap-2 text-white/70 font-medium">
                       <Calendar className="w-3.5 h-3.5 opacity-30" />
                       <span>{formatDate(contract.startDate)}</span>
                       <span className="opacity-20">→</span>
@@ -474,8 +474,8 @@ export default function Contracts() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
-                    <p className="text-white/60 font-medium truncate">{contract.type}</p>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
+                    <p className="text-white/70 font-medium truncate">{contract.type}</p>
                   </div>
                 </div>
               </div>

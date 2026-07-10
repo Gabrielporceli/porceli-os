@@ -132,11 +132,11 @@ export function DeleteContractDialog({
 
                   <div className="text-left bg-white/[0.02] p-6 rounded-2xl border border-white/[0.05] space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Meses Restantes</span>
+                      <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Meses Restantes</span>
                       <span className="text-white font-bold">{monthsRemaining}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Valor Restante</span>
+                      <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Valor Restante</span>
                       <span className="text-white font-bold">{formatCurrency(remainingValue)}</span>
                     </div>
                     <div className="pt-4 border-t border-white/[0.05] flex justify-between items-center">
@@ -154,7 +154,7 @@ export function DeleteContractDialog({
             <div className="p-7 space-y-6">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">
+                  <label className="text-white/40 text-[10px] font-black uppercase tracking-widest">
                     Valor da Multa (R$)
                   </label>
                   <Input
@@ -172,7 +172,7 @@ export function DeleteContractDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">
+                  <label className="text-white/40 text-[10px] font-black uppercase tracking-widest">
                     Data de Vencimento
                   </label>
                   <Input

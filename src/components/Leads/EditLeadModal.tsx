@@ -281,7 +281,7 @@ export function EditLeadModal({
                 <SelectValue>
                   {(() => {
                     const selected = tags.find(t => t.name === formData.tags[0]);
-                    if (!selected) return <span className="text-white/30">Selecione uma tag</span>;
+                    if (!selected) return <span className="text-white/40">Selecione uma tag</span>;
                     return (
                       <span className="flex items-center gap-2 font-medium">
                         <span className={`w-2.5 h-2.5 rounded-full ${selected.color}`} />

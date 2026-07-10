@@ -100,7 +100,7 @@ export function EditStageModal({
                 disabled={stage.is_default}
               />
               {stage.is_default && (
-                <p className="text-xs text-white/30">
+                <p className="text-xs text-white/40">
                   Etapas padrão não podem ter o nome alterado
                 </p>
               )}

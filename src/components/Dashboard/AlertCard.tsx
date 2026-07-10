@@ -56,7 +56,7 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
                   <h4 className="text-white font-semibold text-sm">{alert.title}</h4>
                   <p className="text-white/40 text-xs mt-0.5 truncate">{alert.description}</p>
                 </div>
-                <span className="text-white/30 text-xs shrink-0">{alert.timestamp}</span>
+                <span className="text-white/40 text-xs shrink-0">{alert.timestamp}</span>
               </div>
             ))}
           </div>

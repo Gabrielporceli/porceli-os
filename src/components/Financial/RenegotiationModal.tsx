@@ -360,7 +360,7 @@ export function RenegotiationModal({
             </div>
             <button
               onClick={onClose}
-              className="text-white/30 hover:text-white/70 transition-colors"
+              className="text-white/40 hover:text-white/70 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -371,7 +371,7 @@ export function RenegotiationModal({
             {/* Seleção de cobranças */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-white/60 text-xs font-black uppercase tracking-widest">
+                <p className="text-white/70 text-xs font-black uppercase tracking-widest">
                   Cobranças em Atraso
                 </p>
                 <button
@@ -395,16 +395,16 @@ export function RenegotiationModal({
                       )}
                     >
                       {selected
-                        ? <CheckSquare className="w-4 h-4 text-white/60 flex-shrink-0" />
+                        ? <CheckSquare className="w-4 h-4 text-white/70 flex-shrink-0" />
                         : <Square className="w-4 h-4 text-white/20 flex-shrink-0" />
                       }
                       <div className="flex-1 min-w-0">
                         <p className="text-white/70 text-sm truncate">{entry.reference}</p>
-                        <p className="text-white/30 text-xs">Venc. {formatDateBR(entry.due_date)}</p>
+                        <p className="text-white/40 text-xs">Venc. {formatDateBR(entry.due_date)}</p>
                       </div>
                       <span className={cn(
                         "text-sm font-bold flex-shrink-0",
-                        selected ? "text-red-500" : "text-white/30"
+                        selected ? "text-red-500" : "text-white/40"
                       )}>
                         {formatCurrency(Number(entry.amount))}
                       </span>
@@ -415,7 +415,7 @@ export function RenegotiationModal({
 
               {selectedIds.size > 0 && (
                 <p className="text-white/40 text-xs text-right">
-                  {selectedIds.size} selecionada{selectedIds.size !== 1 ? "s" : ""} · Total original: <span className="text-white/60 font-bold">{formatCurrency(selectedTotal)}</span>
+                  {selectedIds.size} selecionada{selectedIds.size !== 1 ? "s" : ""} · Total original: <span className="text-white/70 font-bold">{formatCurrency(selectedTotal)}</span>
                 </p>
               )}
             </div>
@@ -469,7 +469,7 @@ export function RenegotiationModal({
                       <div className="p-4 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Valor</label>
+                            <label className="text-white/40 text-[10px] font-black uppercase tracking-widest">Valor</label>
                             <input
                               type="text"
                               inputMode="numeric"
@@ -480,7 +480,7 @@ export function RenegotiationModal({
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Vencimento</label>
+                            <label className="text-white/40 text-[10px] font-black uppercase tracking-widest">Vencimento</label>
                             <DatePicker
                               date={p.dueDate ? parseISO(p.dueDate) : undefined}
                               setDate={(d) => updateCustomPayment(p.id, "dueDate", d ? format(d, "yyyy-MM-dd") : "")}
@@ -515,7 +515,7 @@ export function RenegotiationModal({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={addCustomPayment}
-                    className="w-full h-10 rounded-xl border border-dashed border-white/10 text-white/30 hover:border-primary/30 hover:text-primary text-xs font-bold uppercase tracking-widest transition-all"
+                    className="w-full h-10 rounded-xl border border-dashed border-white/10 text-white/40 hover:border-primary/30 hover:text-primary text-xs font-bold uppercase tracking-widest transition-all"
                   >
                     + Adicionar Pagamento
                   </motion.button>
@@ -589,7 +589,7 @@ export function RenegotiationModal({
 
                 {hasEntrada && parsedEntrada > 0 && baseForInstallments > 0 && (
                   <p className="text-white/40 text-xs text-right">
-                    Restante a parcelar: <span className="text-white/60 font-bold">{formatCurrency(baseForInstallments)}</span>
+                    Restante a parcelar: <span className="text-white/70 font-bold">{formatCurrency(baseForInstallments)}</span>
                   </p>
                 )}
               </div>
@@ -647,7 +647,7 @@ export function RenegotiationModal({
                   ))}
                 </div>
                 {billingType === "CREDIT_CARD" && (
-                  <p className="text-white/30 text-xs mt-1">
+                  <p className="text-white/40 text-xs mt-1">
                     O cliente receberá um link seguro para inserir os dados do cartão.
                   </p>
                 )}
@@ -675,7 +675,7 @@ export function RenegotiationModal({
               {/* Resumo */}
               {(mode === "parcelamento" ? parsedAmount > 0 : customTotal > 0) && (
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-1.5">
-                  <p className="text-white/30 text-xs font-black uppercase tracking-widest mb-2">Resumo</p>
+                  <p className="text-white/40 text-xs font-black uppercase tracking-widest mb-2">Resumo</p>
 
                   {mode === "personalizado" ? (
                     <>

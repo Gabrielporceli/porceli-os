@@ -96,7 +96,7 @@ const GitHubCalendar = ({
       // que causava meses duplicados (jan, jan / mai, mai) e dez faltando.
       const monthDate = new Date(year, i, 1);
       months.push(
-        <span key={i} className="text-[10px] font-black text-white/45 uppercase tracking-tighter">
+        <span key={i} className="text-[10px] font-black text-white/50 uppercase tracking-tighter">
           {format(monthDate, "MMM", { locale: ptBR })}
         </span>
       );
@@ -127,7 +127,7 @@ const GitHubCalendar = ({
             <div className="flex w-full">
               <div className="flex flex-col gap-[3px] mr-3 shrink-0 pt-[1px]">
                 {dayLabels.map((day, index) => (
-                  <span key={index} className="text-[9px] font-black text-white/30 uppercase w-3 h-[13px] flex items-center">
+                  <span key={index} className="text-[9px] font-black text-white/40 uppercase w-3 h-[13px] flex items-center">
                     {day}
                   </span>
                 ))}
