@@ -7,7 +7,7 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, Trash2, CalendarOff } from "lucide-react";
+import { Save, X, Trash2, CalendarOff, ExternalLink } from "lucide-react";
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -148,26 +148,37 @@ export function EditLeadModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0">
-        {/* QR CODE CONTAINER - VISIBLE ONLY ON DESKTOP E POSICIONADO À DIREITA */}
-        {lead?.id && (
-          <div className="absolute top-0 -right-[340px] hidden lg:block w-[320px]">
-            <div className="liquid-glass rounded-2xl border border-white/[0.05] p-7 shadow-2xl flex flex-col items-center">
-              <div className="mb-5 w-full flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-white/40">Acesso Rápido</p>
-                  <h3 className="text-xl font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
+        {/* QR de acesso rápido à conversa — só desktop, flutuando à direita.
+            Tile branco + módulos escuros (estilo QR de pagamento): contraste
+            máximo pra câmera e visual limpo. O QR inteiro é um botão que abre
+            a mesma conversa do link codificado. */}
+        {lead?.id && (() => {
+          const conversationUrl = lead.phone
+            ? `https://wa.me/${lead.phone.replace(/\D/g, "")}`
+            : `https://porceli.com/lead/${lead.id}`;
+          return (
+            <div className="absolute top-0 -right-[300px] hidden lg:block w-[280px]">
+              <div className="liquid-glass rounded-3xl p-6 flex flex-col items-center gap-4">
+                <div className="w-full text-center space-y-0.5">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Conversa</p>
+                  <h3 className="text-base font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => window.open(conversationUrl, "_blank", "noopener,noreferrer")}
+                  title="Abrir conversa"
+                  className="rounded-2xl bg-white p-4 cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                >
+                  <QRCode value={conversationUrl} size={188} fgColor="#18181d" />
+                </button>
+                <p className="text-[11px] text-white/40 flex items-center gap-1.5">
+                  <ExternalLink className="w-3 h-3" />
+                  Clique para abrir a conversa
+                </p>
               </div>
-              <QRCode
-                value={lead.phone ? `https://wa.me/${lead.phone.replace(/\D/g, "")}` : `https://porceli.com/lead/${lead.id}`}
-                size={260}
-                fgColor="#f8fafc"
-                bgColor="#121212"
-                className="rounded-xl border border-white/5"
-              />
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="p-6 border-b border-white/[0.05]">
           <DialogHeader>

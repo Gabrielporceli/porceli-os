@@ -894,6 +894,16 @@ export default function Calendar() {
   const calendarData = useMemo(() => {
     const dataMap = new Map<string, CalendarEvent[]>();
 
+    // "00:00" na prática nunca é um horário real de reunião/tarefa — é o
+    // Notion/Google preenchendo meia-noite quando nenhum horário específico
+    // foi escolhido. Tratar como "sem horário" (undefined) pra cair no
+    // fallback "Dia todo" em vez de mostrar um 00:00 enganoso.
+    const extractTimeOrAllDay = (iso: string): string | undefined => {
+      if (!iso.includes('T')) return undefined;
+      const hhmm = format(new Date(iso), "HH:mm");
+      return hhmm === "00:00" ? undefined : hhmm;
+    };
+
     googleEvents.forEach(e => {
       const parts = extractLocalDateParts(e.start);
       if (!parts) return;
@@ -902,7 +912,7 @@ export default function Calendar() {
       dataMap.get(dateKey)!.push({
         id: e.id,
         name: e.title,
-        time: e.start.includes('T') ? format(new Date(e.start), "HH:mm") : undefined,
+        time: extractTimeOrAllDay(e.start),
         datetime: e.start,
         type: 'google',
         status: e.status
@@ -918,7 +928,7 @@ export default function Calendar() {
       dataMap.get(dateKey)!.push({
         id: t.id,
         name: t.title,
-        time: t.dueDate.includes('T') ? format(new Date(t.dueDate), "HH:mm") : undefined,
+        time: extractTimeOrAllDay(t.dueDate),
         datetime: t.dueDate,
         type: 'notion',
         status: t.status,
@@ -1095,7 +1105,7 @@ export default function Calendar() {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-4 space-y-3 min-h-0">
           {todayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
               <CalendarIcon className="w-10 h-10" />
@@ -1177,7 +1187,7 @@ export default function Calendar() {
             `}</style>
 
             {/* Esquerda: lista de atividades */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 border-r border-white/[0.05]">
+            <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]">
               <div>
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
@@ -1484,15 +1494,19 @@ export default function Calendar() {
                   <Switch checked={createMeetLink} onCheckedChange={setCreateMeetLink} />
                 </div>
 
-                <motion.button
+                <motion.div
                   whileHover={!creatingEvent && newEventTitle.trim() ? { scale: 1.02 } : {}}
                   whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.97 } : {}}
-                  disabled={creatingEvent || !newEventTitle.trim()}
-                  onClick={() => handleCreateActivity(false)}
-                  className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl h-10 text-xs font-bold transition-all flex items-center justify-center uppercase tracking-wider"
                 >
-                  {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
-                </motion.button>
+                  <LiquidGlassButton
+                    tint="primary"
+                    disabled={creatingEvent || !newEventTitle.trim()}
+                    onClick={() => handleCreateActivity(false)}
+                    className="w-full h-10 text-xs font-bold uppercase tracking-widest"
+                  >
+                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
+                  </LiquidGlassButton>
+                </motion.div>
               </div>
             </div>
 

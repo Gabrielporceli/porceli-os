@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Edit,
@@ -58,6 +59,89 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
   result.splice(endIndex, 0, removed);
   return result;
 };
+
+/**
+ * Camada que devolve o vidro líquido REAL aos cards do kanban.
+ *
+ * O problema: a faixa do kanban tem overflow-x-auto, e qualquer overflow
+ * diferente de "visible" vira o "backdrop root" do backdrop-filter dos
+ * descendentes — o recorte acontece ANTES do filtro ser aplicado, então o
+ * blur dos cards não alcança o wallpaper fixed da página (outra camada de
+ * composição) e o vidro fica "morto".
+ *
+ * A solução: pintar uma réplica do wallpaper DENTRO da própria faixa, com
+ * position: sticky (left: 0, largura = área visível, pegada zero no layout
+ * via margin-right negativa) pra ela ficar pinada na janela visível do
+ * scroll. O JS alinha background-size/position ao viewport (mesma conta do
+ * background-size: cover centrado do CRMLayout), então a réplica fica pixel
+ * a pixel idêntica ao wallpaper real atrás — invisível como "caixa" — e o
+ * backdrop-filter dos cards finalmente tem conteúdo real pra desfocar.
+ */
+function KanbanGlassBackdrop() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let natW = 0;
+    let natH = 0;
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+      const node = ref.current;
+      if (!node || !natW || !natH) return;
+      const rect = node.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // Reproduz "background-size: cover; background-position: center"
+      // calculado contra o VIEWPORT (não contra este elemento).
+      const scale = Math.max(vw / natW, vh / natH);
+      const w = natW * scale;
+      const h = natH * scale;
+      const x = (vw - w) / 2 - rect.left;
+      const y = (vh - h) / 2 - rect.top;
+      node.style.backgroundSize = `100% 100%, ${w}px ${h}px`;
+      node.style.backgroundPosition = `0 0, ${x}px ${y}px`;
+    };
+
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    const img = new Image();
+    img.onload = () => {
+      natW = img.naturalWidth;
+      natH = img.naturalHeight;
+      schedule();
+    };
+    img.src = "/app-bg.webp";
+
+    window.addEventListener("scroll", schedule, { passive: true, capture: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="sticky left-0 -z-10 self-stretch shrink-0 pointer-events-none"
+      style={{
+        minWidth: "100%",
+        marginRight: "-100%",
+        backgroundImage:
+          'linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)), url("/app-bg.webp")',
+        backgroundRepeat: "no-repeat",
+      }}
+    />
+  );
+}
 
 export default function LeadsKanban() {
   const navigate = useNavigate();
@@ -274,7 +358,7 @@ export default function LeadsKanban() {
   // ===== Helpers =====
   const tagColorClass = (tagName: string) => {
     const t = tags.find((x) => x.name === tagName);
-    return t?.color ?? "bg-Porceli-gray-600";
+    return t?.color ?? "bg-zinc-600";
   };
 
   const getLeadsByStage = (stageId: string) =>
@@ -449,53 +533,60 @@ export default function LeadsKanban() {
 
   return (
     <main className="relative">
+      {/* Cabeçalho no mesmo padrão do Calendário: título forte à esquerda,
+          pills de vidro líquido à direita. */}
       <div
-        className="liquid-glass dashboard-glow border border-white/5 rounded-3xl mb-8 overflow-hidden"
+        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
-        <div className="max-w-[1600px] mx-auto w-full px-6 py-4">
-            <div className="flex flex-row items-center justify-end gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="liquid-glass text-white border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs hover:text-white hover:bg-white/10"
-                    onClick={() => setIsTagsModalOpen(true)}
-                  >
-                    {isMobile ? "Tags" : "Gerenciar Tags"}
-                  </Button>
-                </motion.div>
+        <div>
+          <h2 className="text-lg font-black text-white tracking-tight leading-none">
+            Funil de Prospecção
+          </h2>
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-2">
+            {optimisticLeads.length} {optimisticLeads.length === 1 ? "lead no funil" : "leads no funil"}
+          </p>
+        </div>
+        <div className="flex flex-row items-center gap-3">
+        <motion.div
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        >
+          <LiquidGlassButton
+            onClick={() => setIsTagsModalOpen(true)}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+          >
+            {isMobile ? "Tags" : "Gerenciar Tags"}
+          </LiquidGlassButton>
+        </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Button
-                    variant="ghost"
-                    className="liquid-glass text-white border-white/5 h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs hover:text-white hover:bg-white/10"
-                    onClick={() => setIsAddStageModalOpen(true)}
-                  >
-                    {isMobile ? "Etapa" : "Nova Etapa"}
-                  </Button>
-                </motion.div>
+        <motion.div
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        >
+          <LiquidGlassButton
+            onClick={() => setIsAddStageModalOpen(true)}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+          >
+            {isMobile ? "Etapa" : "Nova Etapa"}
+          </LiquidGlassButton>
+        </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-all font-bold uppercase tracking-widest text-xs"
-                    onClick={() => setIsNewLeadModalOpen(true)}
-                  >
-                    {isMobile ? "Lead" : "Novo Lead"}
-                  </Button>
-                </motion.div>
-            </div>
+        <motion.div
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        >
+          <LiquidGlassButton
+            tint="primary"
+            onClick={() => setIsNewLeadModalOpen(true)}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+          >
+            {isMobile ? "Lead" : "Novo Lead"}
+          </LiquidGlassButton>
+        </motion.div>
         </div>
       </div>
 
@@ -524,10 +615,12 @@ export default function LeadsKanban() {
             onPointerUp={onPointerUpPan}
             onPointerCancel={onPointerCancelPan}
           >
-
+            <KanbanGlassBackdrop />
             {stages.map((stage: Stage) => {
               const stageLeads = getLeadsByStage(stage.id);
               const filteredLeads = getFilteredLeads(stageLeads);
+
+              const count = filteredLeads.length;
 
               return (
                 <div
@@ -535,15 +628,17 @@ export default function LeadsKanban() {
                   className={`flex-shrink-0 space-y-3 sm:space-y-4 ${isMobile ? "w-72" : "w-80"
                     }`}
                 >
-                  <div className="flex items-center justify-between gap-2 pt-4 pb-4 px-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl shadow-sm">
+                  {/* Cápsula de vidro líquido (mesmo material dos cards) —
+                      o blur funciona aqui pelo KanbanGlassBackdrop. */}
+                  <div className="liquid-glass no-elevation !rounded-full flex items-center justify-between gap-2 py-2.5 px-5 transition-all hover:brightness-110">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`w-3 h-3 rounded-full ${stage.color} shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]`} />
-                      <h3 className="font-bold text-white text-sm uppercase tracking-wider whitespace-nowrap">
+                      <div className={`w-2.5 h-2.5 rounded-full ${stage.color} flex-shrink-0`} />
+                      <h3 className="font-black text-white text-xs uppercase tracking-[0.15em] truncate">
                         {stage.name}
                       </h3>
-                      <Badge className="bg-white/5 text-white/70 text-[10px] border-white/5 px-2 py-0">
-                        {filteredLeads.length}
-                      </Badge>
+                      <span className="text-[10px] font-black text-white/50 leading-none flex-shrink-0">
+                        {count} {count === 1 ? "lead" : "leads"}
+                      </span>
                     </div>
 
                     <motion.div
@@ -554,7 +649,7 @@ export default function LeadsKanban() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-white/20 hover:bg-white/5 hover:text-white w-8 h-8 rounded-lg"
+                        className="text-white/40 hover:bg-white/10 hover:text-white w-8 h-8 rounded-lg"
                         onClick={() => handleEditStage(stage)}
                         data-no-pan
                       >
@@ -568,7 +663,7 @@ export default function LeadsKanban() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`space-y-4 min-h-[300px] sm:min-h-[400px] p-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? "bg-white/[0.02]" : ""
+                        className={`space-y-4 min-h-[300px] sm:min-h-[400px] p-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? "bg-primary/[0.08] ring-1 ring-primary/25" : ""
                           }`}
                       >
                         {filteredLeads.map((lead, index) => (
@@ -584,8 +679,13 @@ export default function LeadsKanban() {
                                   <ContextMenuTrigger asChild>
                                     <Card
                                       className={cn(
-                                        'liquid-glass border-white/[0.05] p-2.5 sm:p-3 rounded-2xl dashboard-glow relative group cursor-pointer',
-                                        snapshot.isDragging && 'border-primary/50 shadow-2xl scale-[1.02]'
+                                        // Vidro líquido REAL (blur + bevel Apple Tahoe): funciona
+                                        // porque o KanbanGlassBackdrop pinta a réplica do wallpaper
+                                        // dentro do backdrop root da faixa. no-elevation = sem as
+                                        // sombras externas pesadas, só bisel + hairline.
+                                        'liquid-glass no-elevation rounded-2xl p-2.5 sm:p-3 relative group cursor-pointer',
+                                        'transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110',
+                                        snapshot.isDragging && 'ring-2 ring-primary/50 scale-[1.02]'
                                       )}
                                     >
                                       <div
@@ -600,7 +700,7 @@ export default function LeadsKanban() {
                                             data-dnd-handle
                                             // ✅ garante que o browser não tente “interpretar gesto” e travar eixo
                                             style={{ touchAction: "none" }}
-                                            className="relative z-[2] touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-white/50 hover:bg-Porceli-gray-700/60 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+                                            className="relative z-[2] touch-none h-7 w-7 sm:h-8 sm:w-8 grid place-items-center rounded-md text-white/50 hover:bg-white/10 hover:text-white transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
                                             title="Arrastar"
                                           >
                                             <GripVertical className="w-4 h-4" />
@@ -615,19 +715,19 @@ export default function LeadsKanban() {
                                                 handleEditLead(lead);
                                               }}
                                             >
-                                              <Avatar className="w-10 h-10 shadow-md transition-all">
+                                              <Avatar className="w-10 h-10 ring-1 ring-white/10 transition-all">
                                                 <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
-                                                <AvatarFallback className="bg-primary/5 text-primary">
+                                                <AvatarFallback className="bg-primary/10 text-primary">
                                                   <User className="w-5 h-5" />
                                                 </AvatarFallback>
                                               </Avatar>
                                             </div>
 
                                             <div className="flex-1 min-w-0 py-1.5">
-                                              <h4 className="font-semibold text-white text-sm truncate leading-snug mb-1">
+                                              <h4 className="font-bold text-white text-sm tracking-tight truncate leading-snug mb-1">
                                                 {lead.name}
                                               </h4>
-                                              <p className="text-white/50 text-[11px] truncate leading-snug">
+                                              <p className="text-white/40 text-[11px] truncate leading-snug">
                                                 {lead.company || lead.phone}
                                               </p>
                                             </div>
@@ -651,32 +751,30 @@ export default function LeadsKanban() {
 
 
                                         {lead.value != null && (
-                                          <div className="text-Porceli-purple font-semibold text-xs sm:text-sm">
+                                          <div className="text-primary font-bold text-xs sm:text-sm tabular-nums">
                                             R$ {lead.value.toLocaleString("pt-BR")}
                                           </div>
                                         )}
 
-                                        <div className="flex items-center justify-between text-xs pt-2 border-t border-Porceli-gray-700 mt-2">
-                                          <span className="text-white/40 flex-shrink-0">
-                                            Atualizado: {isMobile
+                                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06] mt-2">
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-white/20 flex-shrink-0">
+                                            {isMobile
                                               ? new Date(lead.updated_at).toLocaleDateString(
                                                 "pt-BR",
                                                 { day: "2-digit", month: "2-digit" }
                                               )
-                                              : new Date(lead.updated_at).toLocaleDateString("pt-BR")}
+                                              : `Atualizado ${new Date(lead.updated_at).toLocaleDateString("pt-BR")}`}
                                           </span>
-                                           {lead.meeting_date && !lead.reuniao_realizada ? (
-                                             <span className="text-Porceli-purple font-semibold uppercase truncate ml-2">
-                                               Reunião: {new Date(lead.meeting_date).toLocaleString('pt-BR', { 
-                                                 day: '2-digit', 
+                                           {lead.meeting_date && !lead.reuniao_realizada && (
+                                             <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary truncate">
+                                               Reunião {new Date(lead.meeting_date).toLocaleString('pt-BR', {
+                                                 day: '2-digit',
                                                  month: '2-digit',
                                                  hour: '2-digit',
                                                  minute: '2-digit'
                                                })}
                                              </span>
-                                           ) : (
-                                            <span></span>
-                                          )}
+                                           )}
                                         </div>
                                       </div>
                                     </Card>
@@ -685,7 +783,7 @@ export default function LeadsKanban() {
                                   <ContextMenuContent className="liquid-glass border-white/[0.05]">
                                     <ContextMenuItem
                                       onClick={() => handleEditLead(lead)}
-                                      className="text-white data-[highlighted]:bg-Porceli-purple/80 data-[highlighted]:text-white"
+                                      className="text-white data-[highlighted]:bg-primary/80 data-[highlighted]:text-white"
                                     >
                                       <Edit className="w-4 h-4 mr-2" />
                                       Editar Lead
@@ -710,8 +808,8 @@ export default function LeadsKanban() {
                         {provided.placeholder}
 
                         {filteredLeads.length === 0 && (
-                          <div className="border-2 border-dashed border-white/[0.05] rounded-2xl p-4 sm:p-6 text-center">
-                            <p className="text-white/50 text-xs sm:text-sm">
+                          <div className="border-2 border-dashed border-white/[0.06] rounded-2xl p-6 text-center">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
                               {isMobile ? "Arraste leads" : "Arraste leads para cá"}
                             </p>
                           </div>
