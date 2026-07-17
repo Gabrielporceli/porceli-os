@@ -247,6 +247,44 @@ export default function Contracts() {
           } else {
             queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
           }
+
+          // Gera a cobrança de verdade no Asaas — antes, a multa só era
+          // gravada em financial_entries, nunca chegava a existir no Asaas
+          // (bug real: cliente não foi cobrado, precisou gerar a fatura
+          // manualmente). Multa é sempre uma cobrança avulsa (installments:
+          // 1), então usamos asaas-renegotiation diretamente em vez do
+          // fluxo de parcelamento de contrato.
+          const { data: clientRow } = await supabase
+            .from('clients')
+            .select('company, cnpj, email, phone')
+            .eq('id', deletingContract.client_id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (clientRow?.cnpj) {
+            try {
+              const { data, error } = await supabase.functions.invoke('asaas-renegotiation', {
+                body: {
+                  cnpj: clientRow.cnpj,
+                  company_name: clientRow.company,
+                  email: clientRow.email,
+                  phone: clientRow.phone,
+                  total_amount: amount,
+                  due_date: dueDate,
+                  installments: 1,
+                  billing_type: 'BOLETO',
+                  description: `Multa Rescisória — ${deletingContract.client}`,
+                },
+              });
+              if (error || !data?.success) {
+                console.error('Erro ao gerar cobrança da multa no Asaas:', data?.error || error?.message);
+              }
+            } catch (asaasErr) {
+              console.error('Erro ao chamar asaas-renegotiation:', asaasErr);
+            }
+          } else {
+            console.warn('Cliente sem CNPJ cadastrado — multa gravada só no sistema, sem cobrança no Asaas.');
+          }
         }
       }
 

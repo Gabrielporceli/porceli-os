@@ -46,7 +46,7 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
     // 2. Buscar contratos ativos do cliente
     const { data: activeContracts } = await supabase
       .from('contracts')
-      .select('id, monthly_value, start_date, end_date, type')
+      .select('id, monthly_value, start_date, end_date, type, single_payment')
       .eq('client_id', clientId)
       .eq('user_id', userId)
       .in('status', ['active', 'expiring']);
@@ -87,8 +87,33 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       const monthlyValue = Number(contract.monthly_value);
       if (!monthlyValue || !contract.end_date || !contract.start_date) continue;
 
+      // Pagamento único: uma cobrança só, valor cheio, na data escolhida
+      // (start_date) — não entra no loop mensal de payment_day abaixo.
+      if (contract.single_payment) {
+        const key = `${contract.start_date}_${monthlyValue}`;
+        (desiredByKey[key] ||= []).push({
+          client_id: clientId,
+          user_id:   userId,
+          name:      client.company,
+          amount:    monthlyValue,
+          due_date:  contract.start_date,
+          reference: 'Pagamento único',
+          status:    'pending',
+        });
+        continue;
+      }
+
       const startDate = new Date(contract.start_date + 'T00:00:00');
-      const endDate   = new Date(contract.end_date   + 'T23:59:59');
+      // Meia-noite do end_date, não 23:59:59: o próprio dia do fim do
+      // contrato já pertence ao próximo período de serviço (ou, numa
+      // renovação sem intervalo, é literalmente o dia de início do
+      // contrato seguinte) — não deve gerar uma cobrança aqui. Com
+      // 23:59:59 + comparação ">" o loop tratava o end_date como ainda
+      // dentro do período faturável e criava uma parcela extra nesse dia,
+      // que duplicava com a 1ª parcela de um contrato renovado que começa
+      // no mesmo dia (bug real: Campel teve 2 cobranças de R$640 em
+      // 23/07/2026, uma sobrando do contrato vencido e uma do renovado).
+      const endDate = new Date(contract.end_date + 'T00:00:00');
 
       let currentDate = new Date(startDate);
       if (startDate.getDate() > paymentDay) {
@@ -99,7 +124,7 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       while (true) {
         const paymentDate = new Date(currentDate);
         paymentDate.setHours(0, 0, 0, 0);
-        if (paymentDate > endDate) break;
+        if (paymentDate >= endDate) break;
 
         const year     = paymentDate.getFullYear();
         const monthStr = String(paymentDate.getMonth() + 1).padStart(2, '0');

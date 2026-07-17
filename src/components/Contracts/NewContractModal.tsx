@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -29,6 +30,7 @@ interface NewContractModalProps {
     payment_day: number;
     status: string;
     contract_url?: string;
+    single_payment?: boolean;
   }) => void;
   isPending?: boolean;
 }
@@ -36,8 +38,9 @@ interface NewContractModalProps {
 export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewContractModalProps) {
   useScrollLock(isOpen);
   const { data: clients = [] } = useClients();
-  
+
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX" | "CREDIT_CARD">("BOLETO");
+  const [singlePayment, setSinglePayment] = useState(false);
   const [formData, setFormData] = useState({
     client_id: '',
     type: '',
@@ -62,10 +65,12 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       type: formData.type,
       monthly_value: monthlyValueNumber,
       start_date: formData.start_date,
-      end_date: formData.end_date,
+      // Pagamento único não tem "vigência" — a cobrança é só na data de início.
+      end_date: singlePayment ? formData.start_date : formData.end_date,
       payment_day: parseInt(formData.payment_day) || 1,
       status: formData.status,
       contract_url: formData.contract_url,
+      single_payment: singlePayment,
       billing_type: billingType,
     } as any);
   };
@@ -199,9 +204,24 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                   />
                 </div>
 
+                <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <div className="space-y-0.5">
+                    <Label className="text-white font-medium">Pagamento Único</Label>
+                    <p className="text-white/40 text-xs text-balance">
+                      Cobra o valor total de uma vez, na data de início — em vez de mensalmente.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={singlePayment}
+                    onCheckedChange={setSinglePayment}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
+                    <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
+                      {singlePayment ? "Valor Total (R$) *" : "Valor Mensal (R$) *"}
+                    </Label>
                     <div className="relative group">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                       <Input
@@ -222,29 +242,31 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
-                    <Input
-                      id="payment_day"
-                      type="number"
-                      min="1"
-                      max="28"
-                      value={formData.payment_day}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (val > 28) {
-                          handleChange('payment_day', "28");
-                        } else if (val < 1 && e.target.value !== "") {
-                          handleChange('payment_day', "1");
-                        } else {
-                          handleChange('payment_day', e.target.value);
-                        }
-                      }}
-                      className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Ex: 10"
-                      required
-                    />
-                  </div>
+                  {!singlePayment && (
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
+                      <Input
+                        id="payment_day"
+                        type="number"
+                        min="1"
+                        max="28"
+                        value={formData.payment_day}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 28) {
+                            handleChange('payment_day', "28");
+                          } else if (val < 1 && e.target.value !== "") {
+                            handleChange('payment_day', "1");
+                          } else {
+                            handleChange('payment_day', e.target.value);
+                          }
+                        }}
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Ex: 10"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -261,7 +283,9 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Início *</Label>
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
+                      {singlePayment ? "Data de Vencimento *" : "Data de Início *"}
+                    </Label>
                     <DatePicker
                       date={formData.start_date ? parseISO(formData.start_date) : undefined}
                       setDate={(newDate) => {
@@ -272,17 +296,19 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Término *</Label>
-                    <DatePicker
-                    date={formData.end_date ? parseISO(formData.end_date) : undefined}
-                    setDate={(newDate) => {
-                      if (newDate) {
-                        handleChange('end_date', format(newDate, "yyyy-MM-dd"));
-                      }
-                    }}
-                  />
-                  </div>
+                  {!singlePayment && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Término *</Label>
+                      <DatePicker
+                      date={formData.end_date ? parseISO(formData.end_date) : undefined}
+                      setDate={(newDate) => {
+                        if (newDate) {
+                          handleChange('end_date', format(newDate, "yyyy-MM-dd"));
+                        }
+                      }}
+                    />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">

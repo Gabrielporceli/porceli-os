@@ -127,6 +127,7 @@ export const useCreateContract = () => {
               start_date: data.start_date,
               payment_day: finalPaymentDay,
               monthly_value: data.monthly_value,
+              single_payment: data.single_payment,
               billing_type: billing_type || 'BOLETO',
               event: 'contract_created',
               updated_at: new Date().toISOString()
@@ -363,7 +364,8 @@ export const useRenewContract = () => {
       startDate,
       endDate,
       paymentDay,
-      contract_url
+      contract_url,
+      singlePayment
     }: {
       contractId: string,
       type?: string,
@@ -371,7 +373,8 @@ export const useRenewContract = () => {
       startDate?: string,
       endDate?: string,
       paymentDay?: number,
-      contract_url?: string
+      contract_url?: string,
+      singlePayment?: boolean
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -429,7 +432,8 @@ export const useRenewContract = () => {
           start_date: finalStartDate,
           end_date: finalEndDate,
           status: 'active',
-          contract_url: contract_url
+          contract_url: contract_url,
+          single_payment: singlePayment ?? false
         })
         .select(`
           *,
@@ -492,6 +496,7 @@ export const useRenewContract = () => {
               start_date: newContract.start_date,
               payment_day: finalPaymentDay,
               monthly_value: newContract.monthly_value,
+              single_payment: newContract.single_payment,
               address: newContract.client.address,
               tags: newContract.client.tags,
               user_id: newContract.client.user_id,
