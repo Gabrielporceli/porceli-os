@@ -158,7 +158,7 @@ export default function Clients() {
       responsible: client.responsible,
       phone: client.phone,
       email: client.email,
-      grupoId: '',
+      grupoId: client.group_id || '',
       contractEnd: client.contract_end || '',
       paymentDay: client.payment_day || 1,
       tags: client.tags || [],
