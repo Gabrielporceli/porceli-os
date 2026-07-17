@@ -143,16 +143,24 @@ export default function Dashboard() {
   })();
 
   // Cálculo do Churn (taxa de cancelamento)
-  // Clientes perdidos = clientes inativos/vencidos
+  // Clientes perdidos = todos os contratos do cliente já venceram, sem
+  // nenhum outro ativo/a vencer no lugar (ver update_client_tags_from_contracts
+  // no banco — essa é a única condição que gera a tag Inativo/Vencido).
   const lostClients = clients.filter((client: any) => {
     const tags = client?.tags || [];
     return tags.includes("Inativo") || tags.includes("Vencido");
   }).length;
 
-  // Total de clientes no início = clientes ativos + clientes perdidos
-  const totalClientsInitial = activeClients + lostClients;
+  // Total de clientes no início = TODOS os clientes com contrato, perdidos
+  // ou não — não só os com tag "Ativo". Antes isso usava `activeClients`
+  // (só tag "Ativo"), que exclui quem está "A vencer" (contrato ainda
+  // válido, só vencendo em até 30 dias — ex.: cliente que acabou de
+  // renovar/assinar um contrato novo mais curto). Esses clientes não são
+  // nem "perdidos" nem contados como base, e sumiam do cálculo inteiro,
+  // inflando artificialmente a taxa de churn.
+  const totalClientsInitial = clients.length;
 
-  // Churn = (Clientes Perdidos / Total de Clientes Iniciais) * 100
+  // Churn = (Clientes Perdidos / Total de Clientes) * 100
   const churnRate =
     totalClientsInitial > 0 ? (lostClients / totalClientsInitial) * 100 : 0;
 
