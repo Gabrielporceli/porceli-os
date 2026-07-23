@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound"
 import Calendar from "./pages/Calendar"
 import Automations from "./pages/Automations"
 import ScheduledMessages from "./pages/ScheduledMessages"
+import FunnelMaps from "./pages/FunnelMaps"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -122,6 +123,16 @@ function App() {
                       <ProtectedRoute>
                         <CRMLayout>
                           <ScheduledMessages />
+                        </CRMLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/funnel-maps"
+                    element={
+                      <ProtectedRoute>
+                        <CRMLayout>
+                          <FunnelMaps />
                         </CRMLayout>
                       </ProtectedRoute>
                     }

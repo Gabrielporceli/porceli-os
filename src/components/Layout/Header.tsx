@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock } from 'lucide-react';
+import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock, Workflow } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
+  { title: "Mapas de Funil", url: "/funnel-maps", icon: Workflow },
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
