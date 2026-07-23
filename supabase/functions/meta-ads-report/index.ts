@@ -7,8 +7,8 @@ const corsHeaders = {
 }
 
 const EVOLUTION_URL = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
-const EVOLUTION_API_KEY = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim()
-const EVOLUTION_INSTANCE = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim()
+const EVOLUTION_API_KEY = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
+const EVOLUTION_INSTANCE = "agencia03"
 const META_GRAPH_VERSION = 'v24.0'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

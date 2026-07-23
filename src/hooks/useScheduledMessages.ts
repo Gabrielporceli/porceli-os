@@ -78,6 +78,22 @@ export function useScheduledMessages() {
     onError: (err: Error) => toast.error("Erro ao cancelar: " + err.message),
   });
 
+  const deleteMessage = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("scheduled_messages")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["scheduled-messages"] });
+      toast.success("Mensagem excluída.");
+    },
+    onError: (err: Error) => toast.error("Erro ao excluir: " + err.message),
+  });
+
   return {
     messages,
     isLoading,
@@ -85,5 +101,7 @@ export function useScheduledMessages() {
     isCreating:     createMessage.isPending,
     cancelMessage:  cancelMessage.mutate,
     isCancelling:   cancelMessage.isPending,
+    deleteMessage:  deleteMessage.mutate,
+    isDeleting:     deleteMessage.isPending,
   };
 }

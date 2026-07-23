@@ -40,8 +40,11 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
           type="button"
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-medium bg-white/[0.03] border-white/[0.05] text-white/70 hover:bg-white/[0.06] hover:border-white/[0.1] hover:text-white transition-all rounded-xl h-11 px-4",
-            !value && "text-white/30",
+            // data-[state=open] sobrescreve pra não pegar o bg-accent cinza
+            // que o variant="outline" aplica por padrão quando o popover abre
+            // — o botão deve ficar igual, aberto ou fechado.
+            "w-full justify-start text-left font-medium bg-white/[0.03] border-white/[0.05] text-white/70 hover:bg-white/[0.06] hover:border-white/[0.1] hover:text-white data-[state=open]:bg-white/[0.03] data-[state=open]:text-white/70 transition-all rounded-xl h-11 px-4",
+            !value && "text-white/40",
             className
           )}
         >
@@ -49,8 +52,8 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
           {value || placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-52 p-0 bg-[#121212]/90 border border-white/10 z-[9999999] shadow-2xl backdrop-blur-3xl overflow-hidden pointer-events-auto rounded-xl" 
+      <PopoverContent
+        className="w-52 p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl overflow-hidden pointer-events-auto"
         align="start"
         onWheel={(e) => e.stopPropagation()}
       >
@@ -60,13 +63,13 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
             onWheel={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col p-3 gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-white/30 font-bold mb-3 px-2 text-center">Hora</div>
+              <div className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-3 px-2 text-center">Hora</div>
               {hours.map((hour) => (
                 <Button
                   key={hour}
                   variant="ghost"
                   className={cn(
-                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/60 transition-all rounded-lg",
+                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/70 transition-all rounded-lg",
                     selectedHour === hour && "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(104,41,192,0.2)]"
                   )}
                   onClick={() => handleHourSelect(hour)}
@@ -81,13 +84,13 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
             onWheel={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col p-3 gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-white/30 font-bold mb-3 px-2 text-center">Minutos</div>
+              <div className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-3 px-2 text-center">Minutos</div>
               {minutes.filter(m => parseInt(m) % 5 === 0).map((minute) => (
                 <Button
                   key={minute}
                   variant="ghost"
                   className={cn(
-                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/60 transition-all rounded-lg",
+                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/70 transition-all rounded-lg",
                     selectedMinute === minute && "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(104,41,192,0.2)]"
                   )}
                   onClick={() => handleMinuteSelect(minute)}

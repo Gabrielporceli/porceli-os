@@ -8,8 +8,8 @@ const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY    = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_BASE   = "https://api.asaas.com/v3";
 const EVO_URL      = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const EVO_INSTANCE = "agencia03";
+const EVO_KEY      = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 const ADMIN_GROUP  = Deno.env.get("ASAAS_ADMIN_GROUP_JID") ?? "120363162167738258@g.us";
 
 const EPS         = 0.50;
@@ -17,7 +17,7 @@ const EPS_PENALTY = 1.00;
 
 type AsaasCustomer = { id: string; name: string };
 type AsaasPayment  = { id: string; customer: string; dueDate: string; value: number; netValue: number; originalValue?: number; paymentDate?: string; confirmedDate?: string };
-type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string };
+type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string; reference?: string };
 
 async function asaasGetAll(path: string): Promise<unknown[]> {
   const all: unknown[] = []; let offset = 0;
@@ -86,6 +86,9 @@ serve(async (req) => {
     const { data: pendingEntries } = await supabase.from("financial_entries").select("*").eq("status", "pending");
 
     if (!pendingEntries?.length || !received.length) {
+      const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const reason = !pendingEntries?.length ? "Nenhuma entrada pendente no sistema." : "Nenhum pagamento recebido no Asaas nos últimos 6 meses.";
+      await sendWhatsApp(ADMIN_GROUP, `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n✅ Nada a conciliar hoje.\n_${reason}_`);
       await supabase.from("automations").update({ last_triggered_at: new Date().toISOString() }).eq("jobname", "asaas-reconciliacao");
       return new Response(JSON.stringify({ success: true, matched: 0, unmatched: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -103,7 +106,7 @@ serve(async (req) => {
       payIndex.get(key)!.push({ raw: p, dueIso, payDateIso, payValue: parseBRL(p.value), payNet: parseBRL(p.netValue), payOriginal: parseBRL(p.originalValue) });
     }
 
-    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number }> = [];
+    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null }> = [];
     let unmatchedCount = 0;
 
     for (const entry of (pendingEntries as SupabaseEntry[])) {
@@ -143,30 +146,60 @@ serve(async (req) => {
         }
       }
 
-      // Estratégia 4 (fallback): único candidato com mesmo nome+data
-      if (bestIdx === -1 && list.length === 1) bestIdx = 0;
+      // SEM fallback "único candidato" aqui de propósito: quando duas
+      // entradas pendentes do mesmo cliente compartilham nome+data de
+      // vencimento (ex.: dois boletos de valores diferentes vencendo no
+      // mesmo dia), bastava UM pagamento recebido nesse dia pra "roubar" a
+      // baixa de qualquer uma das duas — sem checar se o VALOR batia. Já
+      // causou baixa incorreta em produção (entrada de R$150 marcada como
+      // paga por um pagamento de R$640 do mesmo cliente/dia). Se nenhuma das
+      // estratégias 1-3 (que sempre comparam valor) bateu, é mais seguro
+      // deixar sem correspondência pra revisão manual do que arriscar dar
+      // baixa na entrada errada.
       if (bestIdx === -1) { unmatchedCount++; continue; }
 
       const chosen = list.splice(bestIdx, 1)[0];
-      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount });
+      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "", paidDate: chosen.payDateIso });
     }
 
     for (const m of matched) {
-      await supabase.from("financial_entries").update({ status: "paid" }).eq("id", m.entryId);
+      await supabase.from("financial_entries").update({ status: "paid", paid_date: m.paidDate }).eq("id", m.entryId);
     }
 
     if (matched.length > 0) {
       await supabase.from("notification_logs").insert({ type: "reconciliation", channel: "system", status: "sent", metadata: { matched: matched.length, unmatched: unmatchedCount } });
     }
 
-    // Relatório compacto — sem listar nomes dos sem-match
+    // Relatório — agrupa baixas por cliente para deixar claro quando há
+    // MAIS DE UM boleto do mesmo cliente (ex: cliente com 2 contratos).
     if (matched.length > 0 || unmatchedCount > 0) {
       const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
       let report = `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n`;
-      report += `✅ *Pagamentos confirmados:* ${matched.length}\n`;
+      report += `✅ *Boletos com baixa confirmada:* ${matched.length}\n`;
+
       if (matched.length > 0) {
-        report += matched.map(m => `  • ${m.clientName} — R$${m.amount.toFixed(2)}`).join("\n") + "\n";
+        // Agrupa por cliente
+        const byClient = new Map<string, { amount: number; reference: string }[]>();
+        for (const m of matched) {
+          if (!byClient.has(m.clientName)) byClient.set(m.clientName, []);
+          byClient.get(m.clientName)!.push({ amount: m.amount, reference: m.reference });
+        }
+
+        for (const [client, items] of byClient) {
+          if (items.length === 1) {
+            report += `  • ${client} — R$${items[0].amount.toFixed(2)}\n`;
+          } else {
+            // Mais de um boleto do mesmo cliente — destaca a quantidade e o total
+            const total = items.reduce((s, i) => s + i.amount, 0);
+            report += `  • ${client} — *${items.length} boletos* (total R$${total.toFixed(2)})\n`;
+            for (const it of items) {
+              const ref = it.reference ? ` (${it.reference})` : "";
+              report += `      ↳ R$${it.amount.toFixed(2)}${ref}\n`;
+            }
+          }
+        }
       }
+
       if (unmatchedCount > 0) {
         report += `\n⚠️ *Sem correspondência (revisar no sistema):* ${unmatchedCount}`;
       }

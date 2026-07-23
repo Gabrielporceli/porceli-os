@@ -2,10 +2,11 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock, Send, Users, MessageSquare, Phone,
-  CheckCircle2, AlertCircle, Ban, Loader2, ChevronDown,
+  CheckCircle2, AlertCircle, Ban, Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import {
   Dialog,
   DialogContent,
@@ -140,7 +141,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
         <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
           {/* Cliente (opcional) */}
           <div className="space-y-2">
-            <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/30 lowercase">(opcional)</span></Label>
+            <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/40 lowercase">(opcional)</span></Label>
             <Select 
               value={clientId || "none"} 
               onValueChange={(value) => {
@@ -167,7 +168,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Destinatário */}
             <div className="space-y-1.5">
-              <label className="text-white/60 text-xs font-medium">Enviar para</label>
+              <label className="text-white/70 text-xs font-medium">Enviar para</label>
               <div className="grid grid-cols-3 gap-2">
                 {(["responsible", "group", "custom"] as RecipientType[]).map(type => (
                   <button
@@ -177,8 +178,8 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                     className={cn(
                       "py-2 px-3 rounded-xl text-xs font-medium border transition-all",
                       recipientType === type
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06]"
+                        ? "btn-primary-glass text-white border-primary/40"
+                        : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     )}
                   >
                     {type === "responsible" && <><Phone className="w-3 h-3 inline mr-1" />Responsável</>}
@@ -201,7 +202,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
                   {resolvedPhone
                     ? <span className="text-white/70">{resolvedPhone}</span>
-                    : <span className="text-white/25">
+                    : <span className="text-white/20">
                         {recipientType === "responsible"
                           ? "Selecione um cliente para ver o número"
                           : "Selecione um cliente para ver o grupo"}
@@ -213,7 +214,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Mensagem */}
             <div className="space-y-1.5">
-              <label className="text-white/60 text-xs font-medium">Mensagem</label>
+              <label className="text-white/70 text-xs font-medium">Mensagem</label>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
@@ -221,20 +222,20 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 placeholder="Digite a mensagem que será enviada..."
                 className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-primary/40 resize-none"
               />
-              <p className="text-white/25 text-xs text-right">{message.length} caracteres</p>
+              <p className="text-white/20 text-xs text-right">{message.length} caracteres</p>
             </div>
 
             {/* Data e Hora */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={schedDate ? new Date(schedDate + 'T12:00:00') : undefined}
                   setDate={(date) => setSchedDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={schedTime}
                   onChange={setSchedTime}
@@ -244,22 +245,28 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
             {/* Ações */}
             <div className="flex gap-4 pt-2 mt-2">
-              <Button
-                type="button"
-                onClick={onClose}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 flex-1 h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!canSubmit || isCreating}
-                className="bg-primary hover:bg-primary/90 text-white flex-1 h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
-              >
-                {isCreating
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
-              </Button>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <LiquidGlassButton
+                  tint="danger"
+                  type="button"
+                  onClick={onClose}
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                >
+                  Cancelar
+                </LiquidGlassButton>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <LiquidGlassButton
+                  tint="primary"
+                  onClick={handleSubmit}
+                  disabled={!canSubmit || isCreating}
+                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                >
+                  {isCreating
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
+                </LiquidGlassButton>
+              </motion.div>
             </div>
         </div>
       </DialogContent>
@@ -269,11 +276,13 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
 // ── Row ───────────────────────────────────────────────────────────────────────
 
-function MessageRow({ msg, index, onCancel, isCancelling }: {
+function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }: {
   msg: ScheduledMessage;
   index: number;
   onCancel: (id: string) => void;
   isCancelling: boolean;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
 }) {
   const cfg = STATUS_CONFIG[msg.status];
   const StatusIcon = cfg.icon;
@@ -283,7 +292,7 @@ function MessageRow({ msg, index, onCancel, isCancelling }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
-      className="flex items-start gap-4 p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.03] transition-all"
+      className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
     >
       {/* Ícone de status */}
       <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border", cfg.className)}>
@@ -291,38 +300,49 @@ function MessageRow({ msg, index, onCancel, isCancelling }: {
       </div>
 
       {/* Info principal */}
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-white font-semibold text-sm">
             {msg.client_name ?? "Sem cliente"}
           </span>
-          <span className="text-white/30 text-xs">•</span>
+          <span className="text-white/40 text-xs">•</span>
           <span className="text-white/50 text-xs">{RECIPIENT_LABELS[msg.recipient_type]}: {msg.phone}</span>
         </div>
-        <p className="text-white/50 text-sm line-clamp-2 leading-relaxed">{msg.message}</p>
+        <p className="text-white/40 text-xs line-clamp-1 leading-relaxed">{msg.message}</p>
         {msg.error_message && (
-          <p className="text-red-400/70 text-xs mt-1">Erro: {msg.error_message}</p>
+          <p className="text-red-400/70 text-xs">Erro: {msg.error_message}</p>
         )}
       </div>
 
       {/* Data e status */}
-      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
         <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", cfg.className)}>
           {cfg.label}
         </span>
-        <span className="text-white/35 text-xs whitespace-nowrap">
+        <span className="text-white/40 text-xs whitespace-nowrap">
           {formatDateTimeBRT(msg.status === "sent" && msg.sent_at ? msg.sent_at : msg.scheduled_at)}
         </span>
         {msg.status === "pending" && (
           <button
             onClick={() => onCancel(msg.id)}
             disabled={isCancelling}
-            className="text-white/25 hover:text-red-400 text-xs transition-colors"
+            className="text-white/20 hover:text-amber-400 text-xs transition-colors"
           >
             Cancelar
           </button>
         )}
       </div>
+
+      {/* Excluir */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onDelete(msg.id)}
+        disabled={isDeleting}
+        className="btn-danger-glass h-9 px-4 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 text-sm font-medium"
+      >
+        Excluir
+      </motion.button>
     </motion.div>
   );
 }
@@ -330,7 +350,7 @@ function MessageRow({ msg, index, onCancel, isCancelling }: {
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export default function ScheduledMessages() {
-  const { messages, isLoading, createMessage, isCreating, cancelMessage, isCancelling } = useScheduledMessages();
+  const { messages, isLoading, createMessage, isCreating, cancelMessage, isCancelling, deleteMessage, isDeleting } = useScheduledMessages();
   const { data: clients = [] } = useClients();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter]           = useState<MessageStatus | "all">("all");
@@ -360,7 +380,7 @@ export default function ScheduledMessages() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white/30 text-sm">
+        <div className="flex items-center gap-2 text-white/40 text-sm">
           <Clock className="w-4 h-4" />
           <span>{counts.pending} agendada{counts.pending !== 1 ? "s" : ""}</span>
         </div>
@@ -374,7 +394,7 @@ export default function ScheduledMessages() {
               key={tab.value}
               onClick={() => setFilter(tab.value)}
               className={cn(
-                "px-4 py-1.5 rounded-xl text-xs font-medium border transition-all",
+                "h-9 px-4 rounded-xl text-xs font-medium border transition-all",
                 filter === tab.value
                   ? "bg-primary/20 border-primary/40 text-primary"
                   : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
@@ -387,56 +407,58 @@ export default function ScheduledMessages() {
             </button>
           ))}
         </div>
-        <Button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setIsModalOpen(true)}
-          className="h-10 px-5 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)]"
+          className="h-11 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-colors"
         >
           Agendar Mensagem
-        </Button>
+        </motion.button>
       </div>
 
       {/* Lista */}
-      <Card className="liquid-glass border-white/5 overflow-hidden">
+      <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Mensagens</h3>
-            <p className="text-white/30 text-sm mt-0.5">{filtered.length} mensagem{filtered.length !== 1 ? "ns" : ""}</p>
+            <p className="text-white/40 text-sm mt-0.5">{filtered.length} mensagem{filtered.length !== 1 ? "ns" : ""}</p>
           </div>
         </div>
 
-        <div className="p-6">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white/20" />
-              </div>
-              <p className="text-white/30 text-sm">
-                {filter === "all" ? "Nenhuma mensagem agendada ainda" : `Nenhuma mensagem ${STATUS_CONFIG[filter as MessageStatus]?.label.toLowerCase()}`}
-              </p>
-              {filter === "all" && (
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsModalOpen(true)}
-                  className="text-primary hover:text-primary/80 text-sm"
-                >
-                  Agendar primeira mensagem
-                </Button>
-              )}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+              <Clock className="w-6 h-6 text-white/20" />
             </div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map((msg, i) => (
-                <MessageRow
-                  key={msg.id}
-                  msg={msg}
-                  index={i}
-                  onCancel={cancelMessage}
-                  isCancelling={isCancelling}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+            <p className="text-white/40 text-sm">
+              {filter === "all" ? "Nenhuma mensagem agendada ainda" : `Nenhuma mensagem ${STATUS_CONFIG[filter as MessageStatus]?.label.toLowerCase()}`}
+            </p>
+            {filter === "all" && (
+              <Button
+                variant="ghost"
+                onClick={() => setIsModalOpen(true)}
+                className="text-primary hover:text-primary/80 text-sm"
+              >
+                Agendar primeira mensagem
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {filtered.map((msg, i) => (
+              <MessageRow
+                key={msg.id}
+                msg={msg}
+                index={i}
+                onCancel={cancelMessage}
+                isCancelling={isCancelling}
+                onDelete={deleteMessage}
+                isDeleting={isDeleting}
+              />
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Modal */}

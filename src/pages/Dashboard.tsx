@@ -93,17 +93,74 @@ export default function Dashboard() {
   const ticketMedioContratosAtivos =
     activeContracts.length > 0 ? monthlyRevenue / activeContracts.length : 0;
 
+  // LTV = Ticket Médio × Tempo Médio de Vida Real de cada cliente
+  // Agrupa contratos por cliente → primeiro contrato até hoje (ativo) ou último contrato (inativo)
+  const ltv = (() => {
+    if (!contracts || contracts.length === 0) return 0;
+
+    // Agrupa todos os contratos por client_id
+    const byClient: Record<string, any[]> = {};
+    for (const c of contracts) {
+      const id = c.client_id || c.clientId;
+      if (!id) continue;
+      if (!byClient[id]) byClient[id] = [];
+      byClient[id].push(c);
+    }
+
+    const lifetimes: number[] = [];
+    const now = new Date();
+
+    for (const clientContracts of Object.values(byClient)) {
+      const starts = clientContracts
+        .map((c: any) => new Date(c.start_date || c.startDate).getTime())
+        .filter(t => !isNaN(t));
+      if (starts.length === 0) continue;
+
+      const firstStart = new Date(Math.min(...starts));
+      const isActive = clientContracts.some((c: any) =>
+        c.status === 'active' || c.status === 'expiring'
+      );
+
+      let endDate: Date;
+      if (isActive) {
+        endDate = now;
+      } else {
+        const ends = clientContracts
+          .map((c: any) => new Date(c.end_date || c.endDate).getTime())
+          .filter(t => !isNaN(t));
+        endDate = ends.length > 0 ? new Date(Math.max(...ends)) : now;
+      }
+
+      const months =
+        (endDate.getFullYear() - firstStart.getFullYear()) * 12 +
+        (endDate.getMonth() - firstStart.getMonth());
+      lifetimes.push(Math.max(1, months));
+    }
+
+    if (lifetimes.length === 0) return 0;
+    const avgLifetime = lifetimes.reduce((a, b) => a + b, 0) / lifetimes.length;
+    return ticketMedioContratosAtivos * avgLifetime;
+  })();
+
   // Cálculo do Churn (taxa de cancelamento)
-  // Clientes perdidos = clientes inativos/vencidos
+  // Clientes perdidos = todos os contratos do cliente já venceram, sem
+  // nenhum outro ativo/a vencer no lugar (ver update_client_tags_from_contracts
+  // no banco — essa é a única condição que gera a tag Inativo/Vencido).
   const lostClients = clients.filter((client: any) => {
     const tags = client?.tags || [];
     return tags.includes("Inativo") || tags.includes("Vencido");
   }).length;
 
-  // Total de clientes no início = clientes ativos + clientes perdidos
-  const totalClientsInitial = activeClients + lostClients;
+  // Total de clientes no início = TODOS os clientes com contrato, perdidos
+  // ou não — não só os com tag "Ativo". Antes isso usava `activeClients`
+  // (só tag "Ativo"), que exclui quem está "A vencer" (contrato ainda
+  // válido, só vencendo em até 30 dias — ex.: cliente que acabou de
+  // renovar/assinar um contrato novo mais curto). Esses clientes não são
+  // nem "perdidos" nem contados como base, e sumiam do cálculo inteiro,
+  // inflando artificialmente a taxa de churn.
+  const totalClientsInitial = clients.length;
 
-  // Churn = (Clientes Perdidos / Total de Clientes Iniciais) * 100
+  // Churn = (Clientes Perdidos / Total de Clientes) * 100
   const churnRate =
     totalClientsInitial > 0 ? (lostClients / totalClientsInitial) * 100 : 0;
 
@@ -554,7 +611,7 @@ export default function Dashboard() {
   const CARD = "liquid-glass dashboard-glow border-white/[0.05]";
   const SECTION_PAD = "p-5 md:p-6";
   const MINI = "bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] rounded-2xl p-4";
-  const MINI_TIGHT = "liquid-glass dashboard-glow rounded-xl p-3";
+  const MINI_TIGHT = "liquid-glass shadow-header-btn dashboard-glow rounded-xl p-3";
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative">
 
@@ -568,28 +625,24 @@ export default function Dashboard() {
           value={formatCurrency(monthlyRevenue)}
           icon={DollarSign}
           description="Contratos ativos"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="ARR (Anual)"
           value={formatCurrency(arr)}
           icon={TrendingUp}
           description="MRR × 12"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="Clientes Ativos"
           value={activeClients.toString()}
           icon={Users}
           description="Com tag Ativo"
-          className={cn(CARD, "p-4")}
         />
         <StatsCard
           title="Contratos a vencer (30 dias)"
           value={expiringIn30Days.toString()}
           icon={Calendar}
           description="Risco de churn"
-          className={cn(CARD, "p-4")}
         />
       </div>
 
@@ -693,34 +746,34 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold text-base">Funil de Prospecção</span>
               </div>
-              <p className="text-Porceli-gray-400 text-sm mt-1">
+              <p className="text-white/50 text-sm mt-1">
                 Acompanhamento operacional (prospecção fria).
               </p>
             </div>
 
-            <span className="text-Porceli-gray-300 text-sm">{totalLeadsInFunnel} lead(s)</span>
+            <span className="text-white/70 text-sm">{totalLeadsInFunnel} lead(s)</span>
           </div>
 
           {/* KPIs operacionais */}
           <div className={`grid grid-cols-2 md:grid-cols-5 gap-3 mb-3`}>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Sem atendimento</p>
+              <p className="text-white/50 text-xs mb-1">Sem atendimento</p>
               <p className="text-xl font-bold text-white">{semAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Em atendimento</p>
+              <p className="text-white/50 text-xs mb-1">Em atendimento</p>
               <p className="text-xl font-bold text-white">{emAtendimento}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Reuniões</p>
+              <p className="text-white/50 text-xs mb-1">Reuniões</p>
               <p className="text-xl font-bold text-white">{reunioesAgendadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Propostas</p>
+              <p className="text-white/50 text-xs mb-1">Propostas</p>
               <p className="text-xl font-bold text-white">{propostasEnviadas}</p>
             </div>
             <div className={`${MINI_TIGHT} flex flex-col items-center justify-center text-center`}>
-              <p className="text-Porceli-gray-400 text-xs mb-1">Follow-up</p>
+              <p className="text-white/50 text-xs mb-1">Follow-up</p>
               <p className="text-xl font-bold text-white">{followUp}</p>
             </div>
           </div>
@@ -775,7 +828,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-Porceli-gray-400">Nenhum dado disponível para exibir</p>
+                <p className="text-white/50">Nenhum dado disponível para exibir</p>
               </div>
             )}
           </div>
@@ -785,42 +838,49 @@ export default function Dashboard() {
       {/* Clientes Recentes + Cards Futuros */}
       <div className={`grid grid-cols-1 lg:grid-cols-2 ${PAGE_GAP}`}>
         {/* Clientes Recentes */}
-        <Card className={`${CARD} p-4 md:p-5`}>
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-lg font-semibold text-white">Clientes Recentes</h3>
+        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5">
+            <h3 className="text-xl font-bold text-white tracking-tight">Clientes Recentes</h3>
           </div>
 
-          <div className="space-y-3">
-            {clients.slice(0, 4).map((client: any, index: number) => (
-              <div
-                key={client.id}
-                className="flex items-center justify-between p-3 rounded-lg liquid-glass border-white/[0.05] dashboard-glow"
-              >
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{client.company}</p>
-                  <p className="text-Porceli-gray-400 text-xs truncate">Responsável: {client.responsible}</p>
+          {clients.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-white/40">Nenhum cliente cadastrado ainda</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {clients.slice(0, 4).map((client: any) => (
+                <div
+                  key={client.id}
+                  className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{client.company}</p>
+                    <p className="text-white/40 text-xs mt-0.5">Responsável: {client.responsible}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-white/40 text-xs">
+                      {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
+                    </span>
+                    {client.plan && <p className="text-primary text-xs mt-0.5">{client.plan}</p>}
+                  </div>
                 </div>
-                <div className="text-right shrink-0 pl-4">
-                  <span className="text-Porceli-gray-500 text-xs">
-                    {new Date(client.created_at || "").toLocaleDateString("pt-BR")}
-                  </span>
-                  {client.plan && <p className="text-Porceli-purple text-xs mt-1">{client.plan}</p>}
-                </div>
-              </div>
-            ))}
-
-            {clients.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-Porceli-gray-400">Nenhum cliente cadastrado ainda</p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Cards Futuros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-          <MiniSparklineCard 
-            title="Ticket Médio" 
+          <MiniSparklineCard
+            title="LTV"
+            value={formatCurrency(ltv)}
+            description="Ticket médio × duração média dos contratos"
+            data={revenueTrend.map(r => ({ value: r.value * 6 }))}
+          />
+
+          <MiniSparklineCard
+            title="Ticket Médio"
             value={formatCurrency(ticketMedioContratosAtivos)} 
             description="Contratos ativos"
             data={revenueTrend.map(r => ({ value: r.value / Math.max(1, activeClients) }))}

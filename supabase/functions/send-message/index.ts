@@ -152,8 +152,8 @@ serve(async (req) => {
 
     // PASSO 4: Enviar mensagem DIRETAMENTE via Evolution API
     const evolutionUrl = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
-    const evolutionApiKey = (Deno.env.get('EVOLUTION_API_KEY') || '2C2B8ACDE0FB-44EA-BD01-59E39E4A9E76').trim()
-    const evolutionInstance = (Deno.env.get('EVOLUTION_INSTANCE') || 'agencia02').trim()
+    const evolutionApiKey = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
+    const evolutionInstance = "agencia03"
 
     // Limpeza do número: apenas dígitos
     let target_number = numero.split('@')[0].replace(/[^0-9]/g, '')

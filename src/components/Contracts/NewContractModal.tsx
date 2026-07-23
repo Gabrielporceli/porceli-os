@@ -5,16 +5,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X, FileText, DollarSign } from "lucide-react";
+import { X, FileText, DollarSign, Landmark, QrCode, CreditCard } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 
 interface NewContractModalProps {
@@ -29,6 +30,7 @@ interface NewContractModalProps {
     payment_day: number;
     status: string;
     contract_url?: string;
+    single_payment?: boolean;
   }) => void;
   isPending?: boolean;
 }
@@ -36,7 +38,9 @@ interface NewContractModalProps {
 export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewContractModalProps) {
   useScrollLock(isOpen);
   const { data: clients = [] } = useClients();
-  
+
+  const [billingType, setBillingType] = useState<"BOLETO" | "PIX" | "CREDIT_CARD">("BOLETO");
+  const [singlePayment, setSinglePayment] = useState(false);
   const [formData, setFormData] = useState({
     client_id: '',
     type: '',
@@ -61,11 +65,14 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       type: formData.type,
       monthly_value: monthlyValueNumber,
       start_date: formData.start_date,
-      end_date: formData.end_date,
+      // Pagamento único não tem "vigência" — a cobrança é só na data de início.
+      end_date: singlePayment ? formData.start_date : formData.end_date,
       payment_day: parseInt(formData.payment_day) || 1,
       status: formData.status,
-      contract_url: formData.contract_url
-    });
+      contract_url: formData.contract_url,
+      single_payment: singlePayment,
+      billing_type: billingType,
+    } as any);
   };
 
   const handleChange = (field: string, value: any) => {
@@ -111,7 +118,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] flex flex-col overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
@@ -125,7 +132,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
         </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto flex-1 custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -147,9 +154,9 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             }
           `}</style>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form id="new-contract-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Dados do Contrato
               </h3>
 
@@ -192,14 +199,29 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="Ex: Gestão de Tráfego"
                     value={formData.type}
                     onChange={(e) => handleChange('type', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     required
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <div className="space-y-0.5">
+                    <Label className="text-white font-medium">Pagamento Único</Label>
+                    <p className="text-white/40 text-xs text-balance">
+                      Cobra o valor total de uma vez, na data de início — em vez de mensalmente.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={singlePayment}
+                    onCheckedChange={setSinglePayment}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Valor Mensal (R$) *</Label>
+                    <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
+                      {singlePayment ? "Valor Total (R$) *" : "Valor Mensal (R$) *"}
+                    </Label>
                     <div className="relative group">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                       <Input
@@ -213,36 +235,38 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                             handleChange('monthly_value', "");
                           }
                         }}
-                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl pl-10 transition-all font-bold"
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl pl-10 transition-all font-bold"
                         placeholder="0,00"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
-                    <Input
-                      id="payment_day"
-                      type="number"
-                      min="1"
-                      max="28"
-                      value={formData.payment_day}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (val > 28) {
-                          handleChange('payment_day', "28");
-                        } else if (val < 1 && e.target.value !== "") {
-                          handleChange('payment_day', "1");
-                        } else {
-                          handleChange('payment_day', e.target.value);
-                        }
-                      }}
-                      className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Ex: 10"
-                      required
-                    />
-                  </div>
+                  {!singlePayment && (
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Dia de Pagamento (1-28) *</Label>
+                      <Input
+                        id="payment_day"
+                        type="number"
+                        min="1"
+                        max="28"
+                        value={formData.payment_day}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 28) {
+                            handleChange('payment_day', "28");
+                          } else if (val < 1 && e.target.value !== "") {
+                            handleChange('payment_day', "1");
+                          } else {
+                            handleChange('payment_day', e.target.value);
+                          }
+                        }}
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Ex: 10"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -253,13 +277,15 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="https://..."
                     value={formData.contract_url}
                     onChange={(e) => handleChange('contract_url', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Início *</Label>
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
+                      {singlePayment ? "Data de Vencimento *" : "Data de Início *"}
+                    </Label>
                     <DatePicker
                       date={formData.start_date ? parseISO(formData.start_date) : undefined}
                       setDate={(newDate) => {
@@ -270,17 +296,19 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Término *</Label>
-                    <DatePicker
-                    date={formData.end_date ? parseISO(formData.end_date) : undefined}
-                    setDate={(newDate) => {
-                      if (newDate) {
-                        handleChange('end_date', format(newDate, "yyyy-MM-dd"));
-                      }
-                    }}
-                  />
-                  </div>
+                  {!singlePayment && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Data de Término *</Label>
+                      <DatePicker
+                      date={formData.end_date ? parseISO(formData.end_date) : undefined}
+                      setDate={(newDate) => {
+                        if (newDate) {
+                          handleChange('end_date', format(newDate, "yyyy-MM-dd"));
+                        }
+                      }}
+                    />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -300,38 +328,68 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
               </div>
             </div>
 
-            {/* Botões */}
-            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="submit"
-                  disabled={isPending || !formData.client_id}
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPending ? 'Criando...' : 'Criar Contrato'}
-                </Button>
-              </motion.div>
+            {/* Forma de Pagamento */}
+            <div className="space-y-2 pt-2">
+              <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Forma de Pagamento</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: "BOLETO",      label: "Boleto",  Icon: Landmark  },
+                  { value: "PIX",         label: "PIX",     Icon: QrCode    },
+                  { value: "CREDIT_CARD", label: "Cartão",  Icon: CreditCard },
+                ] as const).map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setBillingType(value)}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
+                      billingType === value
+                        ? "btn-primary-glass text-white border-primary/40"
+                        : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
+
           </form>
+        </div>
+
+        {/* Footer fixo */}
+        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton
+              tint="danger"
+              type="button"
+              onClick={onClose}
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+            >
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton
+              tint="primary"
+              type="submit"
+              form="new-contract-form"
+              disabled={isPending || !formData.client_id}
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+            >
+              {isPending ? 'Criando...' : 'Criar Contrato'}
+            </LiquidGlassButton>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

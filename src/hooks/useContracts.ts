@@ -50,7 +50,7 @@ export const useCreateContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ payment_day, ...contract }: Omit<ContractInsert, 'user_id'> & { payment_day?: number }) => {
+    mutationFn: async ({ payment_day, billing_type, ...contract }: Omit<ContractInsert, 'user_id'> & { payment_day?: number; billing_type?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -127,6 +127,8 @@ export const useCreateContract = () => {
               start_date: data.start_date,
               payment_day: finalPaymentDay,
               monthly_value: data.monthly_value,
+              single_payment: data.single_payment,
+              billing_type: billing_type || 'BOLETO',
               event: 'contract_created',
               updated_at: new Date().toISOString()
             }
@@ -158,6 +160,14 @@ export const useUpdateContract = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Buscar valores atuais ANTES da edição, para detectar se houve mudança
+      // em campos que impactam as cobranças (valor, datas, dia de pagamento).
+      const { data: before } = await supabase
+        .from('contracts')
+        .select('monthly_value, start_date, end_date, client:clients(payment_day)')
+        .eq('id', id)
+        .single();
+
       const { data, error } = await supabase
         .from('contracts')
         .update(updates)
@@ -172,6 +182,14 @@ export const useUpdateContract = () => {
         console.error('Error updating contract:', error);
         throw error;
       }
+
+      // Detecta se algum campo relevante ao pagamento foi alterado
+      const paymentFieldsChanged =
+        !before ||
+        (updates.monthly_value !== undefined && Number(updates.monthly_value) !== Number(before.monthly_value)) ||
+        (updates.start_date !== undefined && updates.start_date !== before.start_date) ||
+        (updates.end_date !== undefined && updates.end_date !== before.end_date) ||
+        (payment_day !== undefined && payment_day !== (before as any).client?.payment_day);
 
       // Sync with client table if it's the most recent contract or if we want to force update
       if (data.client_id) {
@@ -213,32 +231,38 @@ export const useUpdateContract = () => {
           .eq('id', data.client_id)
           .eq('user_id', user.id);
 
-        // Refresh financial entries
-        try {
-          const { updateFinancialEntriesForClient } = await import('./useGenerateFinancialEntries');
-          await updateFinancialEntriesForClient(data.client_id, user.id);
-        } catch (err) {
-          console.error('Error updating financial entries:', err);
+        // Regenerar faturas APENAS se campos de pagamento mudaram.
+        // Editar campos como link do contrato não recria cobranças.
+        if (paymentFieldsChanged) {
+          try {
+            const { updateFinancialEntriesForClient } = await import('./useGenerateFinancialEntries');
+            await updateFinancialEntriesForClient(data.client_id, user.id);
+          } catch (err) {
+            console.error('Error updating financial entries:', err);
+          }
         }
 
-        // Trigger webhook
-        try {
-          const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
-          
-          await supabase.functions.invoke('send-client-webhook', {
-            body: {
-              ...data.client,
-              plan: data.type,
-              contract_end: data.end_date,
-              start_date: data.start_date,
-              payment_day: finalPaymentDay,
-              monthly_value: data.monthly_value,
-              event: 'contract_updated',
-              updated_at: new Date().toISOString()
-            }
-          });
-        } catch (webhookErr) {
-          console.error('Erro ao enviar webhook de atualização:', webhookErr);
+        // Trigger webhook — só dispara o Asaas se houve mudança nos dados de pagamento,
+        // e nunca ao cancelar (status inactive), para não recriar cobranças à toa.
+        if (updates.status !== 'inactive' && paymentFieldsChanged) {
+          try {
+            const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
+
+            await supabase.functions.invoke('send-client-webhook', {
+              body: {
+                ...data.client,
+                plan: data.type,
+                contract_end: data.end_date,
+                start_date: data.start_date,
+                payment_day: finalPaymentDay,
+                monthly_value: data.monthly_value,
+                event: 'contract_updated',
+                updated_at: new Date().toISOString()
+              }
+            });
+          } catch (webhookErr) {
+            console.error('Erro ao enviar webhook de atualização:', webhookErr);
+          }
         }
       }
 
@@ -340,7 +364,8 @@ export const useRenewContract = () => {
       startDate,
       endDate,
       paymentDay,
-      contract_url
+      contract_url,
+      singlePayment
     }: {
       contractId: string,
       type?: string,
@@ -348,7 +373,8 @@ export const useRenewContract = () => {
       startDate?: string,
       endDate?: string,
       paymentDay?: number,
-      contract_url?: string
+      contract_url?: string,
+      singlePayment?: boolean
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -406,7 +432,8 @@ export const useRenewContract = () => {
           start_date: finalStartDate,
           end_date: finalEndDate,
           status: 'active',
-          contract_url: contract_url
+          contract_url: contract_url,
+          single_payment: singlePayment ?? false
         })
         .select(`
           *,
@@ -469,6 +496,7 @@ export const useRenewContract = () => {
               start_date: newContract.start_date,
               payment_day: finalPaymentDay,
               monthly_value: newContract.monthly_value,
+              single_payment: newContract.single_payment,
               address: newContract.client.address,
               tags: newContract.client.tags,
               user_id: newContract.client.user_id,

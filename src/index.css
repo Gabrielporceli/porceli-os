@@ -2,13 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Founders Grotesk Font Family */
+/* Founders Grotesk Font Family
+   ascent-override e descent-override calculados a partir das métricas reais da fonte:
+   UPM=1000, capHeight=630 → centro óptico = capHeight/2 = 315 acima da baseline
+   Para alinhar o centro da line-box ao centro óptico:
+   new_ascent = (capHeight + UPM) / 2 = 815 → 81.5%
+   new_descent = UPM - new_ascent = 185 → 18.5%
+*/
 @font-face {
   font-family: 'Founders Grotesk';
   src: url('/fonts/FoundersGrotesk-Light.otf') format('opentype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -17,6 +26,9 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -25,6 +37,9 @@
   font-weight: 500;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -33,6 +48,9 @@
   font-weight: 600;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -41,6 +59,9 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -49,6 +70,9 @@
   font-weight: 300;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -57,8 +81,20 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  ascent-override: 81.5%;
+  descent-override: 18.5%;
+  line-gap-override: 0%;
 }
 
+
+/* Oculta a barra de rolagem mantendo o scroll funcional */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge legado */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
 
 /* Remove foco visual do browser em inputs customizados */
 .chat-input:focus {
@@ -81,6 +117,26 @@ button:focus-visible,
   outline: none !important;
   box-shadow: none !important;
 }
+
+/*
+  ===== PADRÃO DE COR DE TEXTO (hierarquia de 5 níveis) =====
+  Escala única de brilho pra texto sobre o fundo escuro. Antes o sistema
+  tinha 12+ valores de opacidade soltos (/10 /20 /25 /30 /35 /40 /45 /50 /60
+  /70 /80 /90), o que fazia o mesmo tipo de texto aparecer ora claro demais,
+  ora escuro demais dependendo da tela. Consolidado nestes 5 papéis (passos
+  válidos da escala de opacidade do Tailwind — o modificador /N só gera regra
+  pra 0,5,10,20,25,30,40,50,60,70,75,80,90,95,100):
+
+    Título / valor-chave  →  text-white        (100%)  h1-h4, R$, nomes
+    Corpo / leitura       →  text-white/70     (70%)   parágrafos, valores de campo
+    Label / metadado      →  text-white/50     (50%)   labels de form, timestamps
+    Apoio / placeholder   →  text-white/40     (40%)   hints, "opcional", captions
+    Fraco / decorativo    →  text-white/20     (20%)   ícones inativos, empty states
+
+  Ao adicionar texto novo, use SEMPRE um destes 5 — não invente opacidades
+  intermediárias. Cores de acento (text-primary roxo, text-destructive
+  vermelho, verde/azul de status) são intencionais e ficam fora desta escala.
+*/
 
 /* Porceli Company Theme - Dark Mode with Purple Accents */
 @layer base {
@@ -145,6 +201,9 @@ button:focus-visible,
     overflow-x: hidden;
   }
 
+  /* Centralização vertical corrigida via ascent-override/descent-override
+     nos @font-face acima — nenhum hack manual necessário aqui. */
+
   h1,
   h2,
   h3,
@@ -153,6 +212,22 @@ button:focus-visible,
   h6 {
     color: #eaeaea !important;
     @apply font-bold;
+  }
+
+  /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
+  .liquid-glass-ghost {
+    background: transparent !important;
+    backdrop-filter: blur(10px) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .liquid-glass-ghost:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
   }
 
   .gradient-text {
@@ -172,29 +247,307 @@ button:focus-visible,
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 
-  .liquid-glass {
+  /* ─────────────────────────────────────────────────────────────────────
+     BOTÕES DE VIDRO — superfície única (mesma do calendário "Hoje"/Google).
+       • NEUTRO   (.btn-glass / .liquid-glass)            → fundo escuro translúcido
+       • TINTADO  (.btn-glass-primary, .btn-primary-glass,
+                   .btn-success-glass, .btn-danger-glass) → mesmo vidro + cor translúcida
+     Todos compartilham: blur(18) saturate(180), borda fina, shine de 1px e
+     a mesma sombra de elevação. A única diferença é a cor do fundo. */
+
+  .btn-glass,
+  .btn-glass-primary,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
+  .btn-primary-glass,
+  .btn-success-glass,
+  .btn-danger-glass {
     position: relative;
-    /* overflow: hidden; -> Removido para evitar que o card suma ao subir no hover */
-    background: rgba(18, 18, 18, 0.4) !important;
-    backdrop-filter: blur(25px) brightness(1.2) !important;
-    -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 1.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(18px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 12px 32px rgba(0, 0, 0, 0.35) !important;
+    color: #fff !important;
+    transition: background 180ms ease !important;
   }
 
-  /* Elementos liquid-glass aninhados: mesma cor de fundo dos modais */
-  .liquid-glass .liquid-glass {
-    background: rgba(18, 18, 18, 0.4) !important;
-    backdrop-filter: blur(25px) brightness(1.2) !important;
-    -webkit-backdrop-filter: blur(25px) brightness(1.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  /* ── Tints ── */
+  .btn-glass        { background: rgba(18, 18, 18, 0.50) !important; }
+  .btn-glass:hover  { background: rgba(28, 28, 30, 0.55) !important; }
+
+  .btn-glass-primary,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
+  .btn-primary-glass        { background: rgba(104, 41, 192, 0.55) !important; }
+  .btn-glass-primary:hover,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover,
+  .btn-primary-glass:hover  { background: rgba(104, 41, 192, 0.70) !important; }
+
+  .btn-success-glass        { background: rgba(22, 163, 74, 0.55) !important; }
+  .btn-success-glass:hover  { background: rgba(22, 163, 74, 0.70) !important; }
+
+  .btn-danger-glass         { background: rgba(220, 38, 38, 0.55) !important; }
+  .btn-danger-glass:hover   { background: rgba(220, 38, 38, 0.70) !important; }
+
+  /* ── Disabled ── */
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):disabled,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)[disabled],
+  .btn-primary-glass:disabled, .btn-primary-glass[disabled],
+  .btn-success-glass:disabled, .btn-success-glass[disabled],
+  .btn-danger-glass:disabled, .btn-danger-glass[disabled] {
+    opacity: 0.5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+  }
+
+  /* ── VIDRO NEUTRO BASE (cards, modais, sidebars) ──
+     Mesma física: blur + saturate (lê a cor do fundo). Tint neutro escuro,
+     levemente mais opaco para legibilidade, elevação contida. */
+  .liquid-glass {
+    position: relative;
+    background: rgba(28, 28, 34, 0.28) !important;
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    border: none !important;
+    border-radius: 1.5rem;
+    /* Mesmo material do botão Apple Tahoe: rim de luz no topo + brilho especular.
+       Insets com um leve blur (2px) p/ contornarem a quina sem formar "bico".
+       A borda (1ª linha) virou inset em vez de `border:` — em elementos
+       grandes, `border` + border-radius + backdrop-filter no mesmo elemento
+       gera uma emenda sutil e simétrica nos 4 cantos (a curva da borda e a
+       do recorte do backdrop são calculadas em passes de render diferentes
+       nesse combo específico). box-shadow inset não sofre desse problema. */
     box-shadow:
-      inset 1px 1px 1px rgba(255, 255, 255, 0.10),
-      inset -1px -1px 1px rgba(255, 255, 255, 0.05),
-      0 8px 32px rgba(0, 0, 0, 0.2) !important;
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 1.8px 3px 2px -2px color-mix(in srgb, white 80%, transparent),
+      inset -2px -2px 2px -2px color-mix(in srgb, white 65%, transparent),
+      inset -3px -8px 2px -6px color-mix(in srgb, white 50%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 3px -2px color-mix(in srgb, black 16%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 16%, transparent),
+      inset 2px -6.5px 2px -4px color-mix(in srgb, black 10%, transparent),
+      /* Sombra leve atrás: separa do fundo colorido p/ leitura confortável */
+      0 2px 8px rgba(0, 0, 0, 0.18),
+      0 14px 36px rgba(0, 0, 0, 0.26) !important;
+  }
+
+  /* Elementos liquid-glass aninhados: mesmo material, bevel mais suave */
+  .liquid-glass .liquid-glass {
+    background: rgba(28, 28, 34, 0.26) !important;
+    backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
+    border: none !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 1.5px 2.5px 2px -2px color-mix(in srgb, white 55%, transparent),
+      inset -1.5px -1.5px 2px -2px color-mix(in srgb, white 40%, transparent),
+      inset 0px 2px 4px -2px color-mix(in srgb, black 14%, transparent),
+      0 2px 6px rgba(0, 0, 0, 0.16),
+      0 10px 28px rgba(0, 0, 0, 0.22) !important;
+  }
+
+  /* Vidro SEM sombras externas de elevação (mantém bevel + hairline).
+     Usado no card grande do calendário: num bloco que ocupa quase a tela
+     toda, a elevação não agrega — e as camadas escuras dela acumulavam
+     visualmente nos 4 cantos, lendo como "pontas". */
+  .liquid-glass.no-elevation {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 1.8px 3px 2px -2px color-mix(in srgb, white 80%, transparent),
+      inset -2px -2px 2px -2px color-mix(in srgb, white 65%, transparent),
+      inset -3px -8px 2px -6px color-mix(in srgb, white 50%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 3px -2px color-mix(in srgb, black 16%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 16%, transparent),
+      inset 2px -6.5px 2px -4px color-mix(in srgb, black 10%, transparent) !important;
+  }
+
+  /* Réplica COMPLETA do botão ativo do header (.lqg-lens--nav): mesmo
+     fundo claro rgba(255,255,255,0.13) sem backdrop-filter, mesmo bevel e
+     mesma sombra leve. (Valores do bevel resolvidos inline porque as vars
+     --glass-reflex-* do .lqg-lens não existem aqui.) Fica depois de
+     ".liquid-glass .liquid-glass" no arquivo de propósito: mesma
+     especificidade, e quem vem depois vence — vale também aninhado.
+     Usado nos mini-cards do Funil de Prospecção. */
+  .liquid-glass.shadow-header-btn {
+    background: rgba(255, 255, 255, 0.13) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: transparent !important;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 10%, transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white 90%, transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white 80%, transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white 60%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 20%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 20%, transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black 10%, transparent),
+      0px 1px 3px 0px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /*
+    ===== Card "Desconstruído" — superfície ÚNICA (chip + corpo) =====
+    Silhueta: chip no canto superior-esquerdo (avatar + label) conectado ao
+    corpo por uma curva côncava. A área entre o chip e a borda direita é
+    transparente.
+
+    Por que uma única caixa (clip-path) e não 3 peças com background/
+    backdrop-filter separados: box-shadow (o bevel) é sempre calculado em
+    relação à caixa retangular DAQUELA peça. Com 3 caixas diferentes, por
+    mais que os valores sejam idênticos, a fronteira entre elas sempre gera
+    uma linha (cada caixa "acha" que aquele é seu próprio limite). Recortando
+    UMA caixa só com clip-path, o bevel é computado uma vez só para o
+    contorno real do cartão — sem costura possível, porque não há duas
+    caixas se tocando.
+
+    O path (calculado em DeconstructedCard via ResizeObserver, já que
+    clip-path: path() exige coordenadas absolutas) já embute os cantos
+    arredondados do chip, a curva côncava de transição e os cantos
+    arredondados do corpo.
+  */
+  .dc-single {
+    position: relative;
+    background: rgba(28, 28, 34, 0.28);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    /* SEM box-shadow aqui: box-shadow calcula pela caixa retangular e não
+       enxerga o clip-path — o bevel (rim de luz/sombras internas) é feito
+       geometricamente no SVG do DeconstructedCard, seguindo o contorno real.
+       Aqui fica só a elevação (drop-shadow acompanha a forma recortada). */
+    filter:
+      drop-shadow(0 2px 8px rgba(0, 0, 0, 0.18))
+      drop-shadow(0 14px 36px rgba(0, 0, 0, 0.26));
+  }
+
+  .dc-chip-row {
+    /* Largura FIXA (não mais max-content): todos os cards ficam com o
+       mesmo tamanho de chip, independente do texto. 240px cobre com folga
+       o label mais longo ("Contratos a vencer (30 dias)" ~219px natural). */
+    width: 240px;
+    /* padding esquerdo igual ao .dc-body-content (20px) — mesmo recuo do
+       label em relação ao valor logo abaixo. Vertical mais compacto agora
+       que não há mais avatar de ícone ocupando altura. */
+    padding: 8px 20px 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dc-body-content {
+    padding: 20px;
+  }
+
+  /* ===== Apple Tahoe Liquid Glass Button (easemize) ===== */
+  .lqg-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.95);
+    --glass-reflex-light: 1;
+    --glass-reflex-dark: 1;
+  }
+
+  /*
+     A CAMADA-LENTE (-z-10) precisa ficar VAZIA de conteúdo. Como está vazia,
+     o backdrop-filter do Chrome captura apenas o fundo atrás do botão,
+     garantindo refração sem "fantasma" do texto.
+  */
+  .lqg-lens {
+    /* Defaults próprios: a lente funciona mesmo sem .lqg-btn no ancestral
+       (ex.: pílula animada do header). Sem isso o calc() invalida a box-shadow.
+       --glass-reflex-light abaixo de 1: o rim de luz batia muito mais claro
+       aqui que nos cards (.liquid-glass), pelo contraste com o fundo mais
+       sólido/tingido do botão — reduzido pra ficar "menos branco". */
+    --glass-reflex-light: 0.65;
+    --glass-reflex-dark: 1;
+    background-color: rgba(255, 255, 255, 0.05);
+
+    /* Chrome/Edge refratam via SVG; Safari cai de volta para blur. */
+    backdrop-filter: blur(8px) url(#liquid-glass-refraction) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 80%), transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white calc(var(--glass-reflex-light) * 60%), transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 12%), transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
+      0px 1px 5px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
+      0px 6px 16px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 8%), transparent);
+
+    transition: background-color 400ms cubic-bezier(1, 0, 0.4, 1),
+      box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
+  }
+
+  /* Pílula do header: SEM backdrop-filter de propósito.
+     Vidro aninhado (pílula com backdrop-filter dentro do header, que também
+     tem backdrop-filter) fazia o Chrome recompor as camadas a cada repaint
+     (ex.: hover nos itens do menu) e "acender" uma tarja sobre os cards.
+     Como o backdrop da pílula só enxergava o fundo chapado do header, um
+     fill translúcido equivalente fica visualmente idêntico — sem o bug. */
+  .lqg-lens--nav {
+    background-color: rgba(255, 255, 255, 0.13) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 80%), transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white calc(var(--glass-reflex-light) * 60%), transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 12%), transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
+      0px 1px 3px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 5%), transparent) !important;
+  }
+
+  /* Tons coloridos do vidro (mesmo material, cor translúcida na lente) */
+  .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.9); }
+  .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.98); }
+  .lqg-lens--success { background-color: rgba(22, 163, 74, 0.55); }
+  .lqg-btn:hover .lqg-lens--success { background-color: rgba(22, 163, 74, 0.72); }
+  .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.55); }
+  .lqg-btn:hover .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.72); }
+
+  /* ===== Cards de atividade (dia selecionado / painel "hoje") =====
+     Tentamos cor chapada (verde/azul) preenchendo o card inteiro e ficou
+     destoando da identidade do resto do app (vidro escuro + roxo) — duas
+     cores novas e saturadas em blocos grandes brigavam com tudo ao redor.
+     Voltou a ser o MESMO vidro neutro dos outros cards (só com sombra mais
+     leve, sem o dashboard-glow pesado) — o status agora é só um selinho de
+     texto pequeno ao lado do título (ver .status-badge--* em Calendar.tsx),
+     sem tingir o fundo do card. */
+  .status-card {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+      inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.35),
+      inset -2px -2px 2px -2px rgba(255, 255, 255, 0.28),
+      inset -0.3px -1px 4px 0px rgba(0, 0, 0, 0.12),
+      inset 0px 3px 4px -2px rgba(0, 0, 0, 0.16),
+      0px 1px 5px 0px rgba(0, 0, 0, 0.12),
+      0px 6px 16px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  .lqg-text {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: color 400ms cubic-bezier(1, 0, 0.4, 1);
+  }
+
+  @media (hover: hover) {
+    .lqg-btn:not(:disabled):hover {
+      transform: scale(1.03);
+    }
+  }
+  .lqg-btn:not(:disabled):active {
+    transform: scale(0.96);
   }
 
   .sidebar-glass {

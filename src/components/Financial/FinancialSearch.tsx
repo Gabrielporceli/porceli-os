@@ -13,10 +13,10 @@ export function FinancialSearch({ searchTerm, onSearchChange, onFiltersOpen }: F
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-Porceli-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
         <Input
           placeholder="Buscar transações..."
-          className="pl-10 bg-Porceli-gray-800 border-Porceli-gray-600 text-white placeholder:text-Porceli-gray-400"
+          className="pl-10 bg-Porceli-gray-800 border-Porceli-gray-600 text-white placeholder:text-white/50"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
         />

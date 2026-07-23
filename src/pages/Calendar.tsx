@@ -4,6 +4,7 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
 import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -14,8 +15,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { 
+import {
   Calendar as CalendarIcon, 
   ChevronLeft, 
   ChevronRight, 
@@ -37,15 +37,19 @@ import {
   LockOpenIcon,
   Unlock,
   Repeat,
-  Tag
+  Tag,
+  GripVertical
 } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { parseISO, format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -143,7 +147,30 @@ export default function Calendar() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [panelDate, setPanelDate] = useState(new Date()); // dia exibido no painel lateral
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // ── Ordem customizada das atividades por dia (persistida em localStorage) ──
+  const ORDER_STORAGE_KEY = "calendar_activity_order";
+  const [activityOrder, setActivityOrder] = useState<Record<string, string[]>>(() => {
+    try {
+      const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const dayKey = (day: number) =>
+    `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+  const saveActivityOrder = (key: string, ids: string[]) => {
+    setActivityOrder(prev => {
+      const next = { ...prev, [key]: ids };
+      try { localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000); // atualiza a cada 30 seg
@@ -523,6 +550,12 @@ export default function Calendar() {
       const timeStr = newEventTime || "12:00";
       const startDateTime = `${dateStr}T${timeStr}:00-03:00`;
 
+      // Calcula o fim como start + 1 hora (evita hardcode que quebrava horários após 13:00)
+      const [startHour, startMin] = timeStr.split(':').map(Number);
+      const endHour = startHour + 1 >= 24 ? 23 : startHour + 1;
+      const endTimeStr = `${String(endHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+      const endDateTime = `${dateStr}T${endTimeStr}:00-03:00`;
+
       let meetingLink = "";
       if (createMeetLink) {
         toast({ title: "Gerando link Google Meet..." });
@@ -532,7 +565,7 @@ export default function Calendar() {
             action: "CREATE_EVENT",
             title: newEventTitle,
             start: startDateTime,
-            end: `${dateStr}T13:00:00-03:00`,
+            end: endDateTime,
             createMeetLink: true
           },
         });
@@ -861,6 +894,16 @@ export default function Calendar() {
   const calendarData = useMemo(() => {
     const dataMap = new Map<string, CalendarEvent[]>();
 
+    // "00:00" na prática nunca é um horário real de reunião/tarefa — é o
+    // Notion/Google preenchendo meia-noite quando nenhum horário específico
+    // foi escolhido. Tratar como "sem horário" (undefined) pra cair no
+    // fallback "Dia todo" em vez de mostrar um 00:00 enganoso.
+    const extractTimeOrAllDay = (iso: string): string | undefined => {
+      if (!iso.includes('T')) return undefined;
+      const hhmm = format(new Date(iso), "HH:mm");
+      return hhmm === "00:00" ? undefined : hhmm;
+    };
+
     googleEvents.forEach(e => {
       const parts = extractLocalDateParts(e.start);
       if (!parts) return;
@@ -869,7 +912,7 @@ export default function Calendar() {
       dataMap.get(dateKey)!.push({
         id: e.id,
         name: e.title,
-        time: e.start.includes('T') ? format(new Date(e.start), "HH:mm") : undefined,
+        time: extractTimeOrAllDay(e.start),
         datetime: e.start,
         type: 'google',
         status: e.status
@@ -885,7 +928,7 @@ export default function Calendar() {
       dataMap.get(dateKey)!.push({
         id: t.id,
         name: t.title,
-        time: t.dueDate.includes('T') ? format(new Date(t.dueDate), "HH:mm") : undefined,
+        time: extractTimeOrAllDay(t.dueDate),
         datetime: t.dueDate,
         type: 'notion',
         status: t.status,
@@ -917,13 +960,77 @@ export default function Calendar() {
     return Object.entries(counts).map(([date, count]) => ({ date, count }));
   }, [googleEvents, notionTasks]);
 
+  // Atividades do dia exibido no painel lateral, ordenadas por horário
+  const todayItems = useMemo(() => {
+    const match = calendarData.find(d =>
+      d.day.getFullYear() === panelDate.getFullYear() &&
+      d.day.getMonth() === panelDate.getMonth() &&
+      d.day.getDate() === panelDate.getDate()
+    );
+    return (match?.events ?? []).slice().sort((a, b) => {
+      if (a.time && b.time) return a.time.localeCompare(b.time);
+      if (a.time) return -1;
+      if (b.time) return 1;
+      return 0;
+    });
+  }, [calendarData, panelDate]);
+
+  // Rótulo relativo do painel (Hoje / Amanhã / Ontem / data)
+  const panelLabel = (() => {
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diff = Math.round((startOfDay(panelDate) - startOfDay(new Date())) / 86400000);
+    if (diff === 0) return 'Atividades de Hoje';
+    if (diff === 1) return 'Atividades de Amanhã';
+    if (diff === -1) return 'Atividades de Ontem';
+    return 'Atividades';
+  })();
+
+  const shiftPanelDay = (delta: number) => {
+    setPanelDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + delta);
+      return d;
+    });
+  };
+
+  // Abre o modal de edição a partir de um evento do calendário/painel
+  const handleEventClick = (event: CalendarEvent) => {
+    const googleItem = googleEvents.find(i => i.id === event.id);
+    const notionItem = notionTasks.find(i => i.id === event.id);
+    if (googleItem) {
+      setEditingItem({ ...googleItem, type: 'google' as const });
+      setEditTitle(googleItem.title);
+      setEditDate(new Date(googleItem.start));
+      setEditTime(googleItem.start.includes('T') ? format(new Date(googleItem.start), "HH:mm") : "12:00");
+      setIsEditActivityModalOpen(true);
+    } else if (notionItem) {
+      setEditingItem({ ...notionItem, type: 'notion' as const });
+      setEditTitle(notionItem.title);
+      const dateStr = notionItem.dueDate!;
+      setEditDate(new Date(dateStr));
+      setEditTime(dateStr.includes('T') ? format(new Date(dateStr), "HH:mm") : "12:00");
+      setIsEditActivityModalOpen(true);
+    }
+  };
+
+  // Status visual de um evento do painel
+  const eventVisualStatus = (event: CalendarEvent): 'done' | 'ongoing' | 'pending' => {
+    if (['Realizado', 'REALIZADO', 'done'].includes(event.status ?? '')
+      || (event.type === 'google' && event.datetime?.includes('T') && new Date() >= new Date(event.datetime))) return 'done';
+    if (['Em andamento', 'EM ANDAMENTO'].includes(event.status ?? '')) return 'ongoing';
+    return 'pending';
+  };
+
   if (!isReady) return <PageLoader />;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
       <GitHubCalendar data={contributionData} />
 
-      <div className="min-h-[740px] overflow-hidden rounded-3xl">
+      <div className="h-[calc(100vh-80px)] min-h-[650px] flex gap-4">
+      {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
+          calendário, criando "pontas" escuras nos cantos. */}
+      <div className="flex-1 min-w-0 flex">
         <FullScreenCalendar
           data={calendarData}
           onDaySelect={(date: Date) => setSelectedDay(date.getDate())}
@@ -931,92 +1038,118 @@ export default function Calendar() {
           isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
             <div className="flex items-center gap-2">
-              {/* Botão Google Calendar */}
-              {!googleConnected ? (
-                <button
-                  onClick={handleConnectGoogle}
-                  disabled={connectingGoogle}
-                  className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs disabled:opacity-60 font-bold uppercase tracking-widest border border-white/5"
-                >
-                  {connectingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                  Google
-                </button>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={fetchGoogleEvents}
-                    disabled={loadingGoogle}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
-                  >
-                    {loadingGoogle ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Google
-                  </button>
-                </motion.div>
-              )}
+              {/* Botão Google Calendar — Apple Tahoe Liquid Glass */}
+              <LiquidGlassButton
+                onClick={googleConnected ? fetchGoogleEvents : handleConnectGoogle}
+                disabled={googleConnected ? loadingGoogle : connectingGoogle}
+                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                {(googleConnected ? loadingGoogle : connectingGoogle)
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                Google
+              </LiquidGlassButton>
 
-              {/* Botão Notion */}
-              {!notionConnected ? (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={handleConnectNotion}
-                    disabled={connectingNotion}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
-                  >
-                    {connectingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Notion
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button
-                    onClick={() => fetchNotionTasks()}
-                    disabled={loadingNotion}
-                    className="liquid-glass flex items-center justify-center gap-2 text-white/70 px-4 h-10 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest border border-white/5"
-                  >
-                    {loadingNotion ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Notion
-                  </button>
-                </motion.div>
-              )}
+              {/* Botão Notion — Apple Tahoe Liquid Glass */}
+              <LiquidGlassButton
+                onClick={notionConnected ? () => fetchNotionTasks() : handleConnectNotion}
+                disabled={notionConnected ? loadingNotion : connectingNotion}
+                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+              >
+                {(notionConnected ? loadingNotion : connectingNotion)
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                Notion
+              </LiquidGlassButton>
             </div>
           }
           onAddEvent={(day) => {
             setNewEventDate(format(day, "yyyy-MM-dd"));
             setIsCreateModalOpen(true);
           }}
-          onEventClick={(event) => {
-            // Find the original item to populate the edit modal
-            const googleItem = googleEvents.find(i => i.id === event.id);
-            const notionItem = notionTasks.find(i => i.id === event.id);
-            
-            if (googleItem) {
-              setEditingItem({...googleItem, type: 'google' as const});
-              setEditTitle(googleItem.title);
-              setEditDate(new Date(googleItem.start));
-              setEditTime(googleItem.start.includes('T') ? format(new Date(googleItem.start), "HH:mm") : "12:00");
-              setIsEditActivityModalOpen(true);
-            } else if (notionItem) {
-              setEditingItem({...notionItem, type: 'notion' as const});
-              setEditTitle(notionItem.title);
-              const dateStr = notionItem.dueDate!;
-              setEditDate(new Date(dateStr));
-              setEditTime(dateStr.includes('T') ? format(new Date(dateStr), "HH:mm") : "12:00");
-              setIsEditActivityModalOpen(true);
-            }
-          }}
+          onEventClick={handleEventClick}
           onDateChange={(date) => setCurrentDate(date)}
         />
+      </div>
+
+      {/* Painel lateral — Atividades do dia (navegável) */}
+      <aside className="hidden lg:flex w-[340px] shrink-0 liquid-glass rounded-3xl overflow-hidden flex-col">
+        <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-white tracking-tight">{panelLabel}</h3>
+            <p className="text-white/40 text-xs mt-0.5 capitalize truncate">
+              {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => shiftPanelDay(-1)}
+              title="Dia anterior"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPanelDate(new Date())}
+              title="Hoje"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-primary hover:bg-white/5 transition-colors"
+            >
+              <CalendarIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => shiftPanelDay(1)}
+              title="Próximo dia"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-4 space-y-3 min-h-0">
+          {todayItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
+              <CalendarIcon className="w-10 h-10" />
+              <p className="text-sm text-white text-center">Nenhuma atividade<br />neste dia</p>
+            </div>
+          ) : (
+            todayItems.map((event) => {
+              const st = eventVisualStatus(event);
+              return (
+                <div
+                  key={event.id}
+                  onClick={() => handleEventClick(event)}
+                  className="status-card rounded-2xl p-4 cursor-pointer transition-all hover:brightness-110"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
+                    {st !== 'pending' && (
+                      <span className={cn(
+                        "shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                        st === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
+                      )}>
+                        {st === 'done' ? 'Concluído' : 'Andamento'}
+                      </span>
+                    )}
+                  </div>
+                  {event.clients && event.clients.length > 0 && (
+                    <p className="text-white/40 text-xs mt-1 truncate">{event.clients[0]}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-3 text-white/50">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[11px] font-bold">{event.time || 'Dia todo'}</span>
+                  </div>
+                  <div className="mt-3 h-1 rounded-full bg-white/10 overflow-hidden">
+                    <div className={cn(
+                      "h-full rounded-full",
+                      st === 'done' ? "w-full bg-green-400" : st === 'ongoing' ? "w-1/2 bg-blue-400" : "w-1/4 bg-white/30"
+                    )} />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
       </div>
 
 
@@ -1054,8 +1187,8 @@ export default function Calendar() {
             `}</style>
 
             {/* Esquerda: lista de atividades */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 border-r border-white/[0.05]">
-              <div className="space-y-3">
+            <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]">
+              <div>
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
               const dayTasks = getNotionTasksForDay(selectedDay);
@@ -1110,8 +1243,8 @@ export default function Calendar() {
                 })
               ];
 
-              // Ordenar: Com hora primeiro, sem hora por último
-              const sortedItems = [...allItems].sort((a, b) => {
+              // Ordenação padrão: com hora primeiro, sem hora por último
+              const defaultSorted = [...allItems].sort((a, b) => {
                 const hasTimeA = a.time && !(a as any).isAllDay;
                 const hasTimeB = b.time && !(b as any).isAllDay;
 
@@ -1123,27 +1256,91 @@ export default function Calendar() {
                 return 0;
               });
 
-              if (sortedItems.length === 0) {
-                return <p className="text-sm text-Porceli-gray-400 text-center py-4">Nenhum evento neste dia.</p>;
+              // Aplica ordem customizada salva (se existir), mantendo novos itens no fim
+              const key = dayKey(selectedDay);
+              const savedOrder = activityOrder[key];
+              let sortedItems = defaultSorted;
+              if (savedOrder && savedOrder.length > 0) {
+                const indexOf = (id: string) => {
+                  const i = savedOrder.indexOf(id);
+                  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+                };
+                sortedItems = [...allItems].sort((a, b) => {
+                  const ia = indexOf(a.id), ib = indexOf(b.id);
+                  if (ia === ib) {
+                    // ambos novos (não salvos): usa ordem padrão por tempo
+                    return defaultSorted.indexOf(a) - defaultSorted.indexOf(b);
+                  }
+                  return ia - ib;
+                });
               }
 
-              return sortedItems.map((item) => (
-                <div 
-                  key={item.id} 
+              if (sortedItems.length === 0) {
+                return <p className="text-sm text-white/50 text-center py-4">Nenhum evento neste dia.</p>;
+              }
+
+              const handleDragEnd = (result: DropResult) => {
+                if (!result.destination) return;
+                const reordered = [...sortedItems];
+                const [moved] = reordered.splice(result.source.index, 1);
+                reordered.splice(result.destination.index, 0, moved);
+                saveActivityOrder(key, reordered.map(i => i.id));
+              };
+
+              return (
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="day-activities">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                        {sortedItems.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index}>
+                            {(prov, snapshot) => {
+                              const cardStatus: 'done' | 'ongoing' | 'pending' =
+                                item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
+                                  ? 'done'
+                                  : item.status === 'Em andamento' || isOngoing(item)
+                                  ? 'ongoing'
+                                  : 'pending';
+                              const cardEl = (
+                <div
+                  ref={prov.innerRef}
+                  {...prov.draggableProps}
                   onClick={() => {
                     setEditingItem(item);
                     setIsEditActivityModalOpen(true);
                   }}
-                  className={`liquid-glass p-3 sm:p-4 rounded-2xl dashboard-glow relative group grid grid-cols-[1fr_90px] items-center gap-2 transition-all cursor-pointer border
-                    ${item.status === 'Realizado' || item.status === 'done' || isPastMeeting(item)
-                      ? '!border-green-500/30 hover:!border-green-500/60'
-                      : item.status === 'Em andamento' || isOngoing(item)
-                      ? '!border-blue-500/30 hover:!border-blue-500/60'
-                      : 'border-white/[0.05] hover:!border-white/[0.15]'}`}
+                  className={cn(
+                    "status-card p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
+                    snapshot.isDragging && "ring-2 ring-primary/40 shadow-xl"
+                  )}
                 >
+                  {/* Handle de arrastar */}
+                  <div
+                    {...prov.dragHandleProps}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-center text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing transition-colors -ml-1"
+                    title="Arraste para reordenar"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
                   {/* Coluna 1: Info */}
                   <div className="flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
+                      {/* Selo de status na própria linha, ANTES do título: se
+                          ficasse ao lado do título (mesma linha flex), um
+                          título longo que quebra em várias linhas empurra o
+                          selo pro meio do bloco (items-center centraliza na
+                          altura toda) — cada card ficava com o selo numa
+                          posição diferente. Numa linha fixa em cima, sempre
+                          alinhado igual em todo card. */}
+                      {cardStatus !== 'pending' && (
+                        <span className={cn(
+                          "inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          cardStatus === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
+                        )}>
+                          {cardStatus === 'done' ? 'Concluído' : 'Andamento'}
+                        </span>
+                      )}
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
                           {item.title}
@@ -1189,7 +1386,7 @@ export default function Calendar() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-1">
-                            <Tag className="w-3 h-3 text-white/10 flex-shrink-0" />
+                            <Tag className="w-3 h-3 text-white/20 flex-shrink-0" />
                             <span className="text-[11px] text-white/20 font-semibold tracking-tight">
                               Sem cliente
                             </span>
@@ -1213,7 +1410,17 @@ export default function Calendar() {
                     </button>
                   </div>
                 </div>
-              ));
+                              );
+                              return snapshot.isDragging ? createPortal(cardEl, document.body) : cardEl;
+                            }}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              );
             })()}
             </div>
             </div>
@@ -1226,7 +1433,7 @@ export default function Calendar() {
                 <div className="flex items-center gap-2">
                   {selectedDay && isDayLocked(selectedDay)
                     ? <LockIcon className="w-4 h-4 text-red-400" />
-                    : <LockOpenIcon className="w-4 h-4 text-white/30" />}
+                    : <LockOpenIcon className="w-4 h-4 text-white/40" />}
                   <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/40'}`}>
                     {selectedDay && isDayLocked(selectedDay) ? 'Dia Trancado' : 'Trancar Dia'}
                   </span>
@@ -1240,7 +1447,7 @@ export default function Calendar() {
 
               {/* Formulário */}
               <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em]">
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]">
                   {createMeetLink ? "Novo evento no Google" : "Nova tarefa no Notion"}
                 </p>
 
@@ -1265,9 +1472,9 @@ export default function Calendar() {
                 />
 
                 <div className="space-y-1.5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrência</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrência</label>
                   <Select value={recurrenceType || "none"} onValueChange={(val) => setRecurrenceType(val === "none" ? "" as any : val as any)}>
-                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9 text-sm">
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1281,21 +1488,25 @@ export default function Calendar() {
 
                 <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                   <div>
-                    <Label className="text-white font-medium text-sm cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
-                    <p className="text-white/40 text-[11px]">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
+                    <Label className="text-xs font-bold text-white/40 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
+                    <p className="text-white/40 text-[11px] mt-0.5">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
                   </div>
                   <Switch checked={createMeetLink} onCheckedChange={setCreateMeetLink} />
                 </div>
 
-                <motion.button
+                <motion.div
                   whileHover={!creatingEvent && newEventTitle.trim() ? { scale: 1.02 } : {}}
                   whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.97 } : {}}
-                  disabled={creatingEvent || !newEventTitle.trim()}
-                  onClick={() => handleCreateActivity(false)}
-                  className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl h-10 text-xs font-bold transition-all flex items-center justify-center uppercase tracking-wider"
                 >
-                  {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
-                </motion.button>
+                  <LiquidGlassButton
+                    tint="primary"
+                    disabled={creatingEvent || !newEventTitle.trim()}
+                    onClick={() => handleCreateActivity(false)}
+                    className="w-full h-10 text-xs font-bold uppercase tracking-widest"
+                  >
+                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adicionar"}
+                  </LiquidGlassButton>
+                </motion.div>
               </div>
             </div>
 
@@ -1315,7 +1526,7 @@ export default function Calendar() {
           </DialogHeader>
           <div className="p-5 space-y-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 placeholder="Ex: Reunião com Cliente"
@@ -1326,7 +1537,7 @@ export default function Calendar() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Cliente</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Cliente</label>
               <input 
                 type="text"
                 placeholder="Nome do cliente"
@@ -1338,14 +1549,14 @@ export default function Calendar() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={newEventDate ? new Date(newEventDate + 'T12:00:00') : undefined}
                   setDate={(date) => setNewEventDate(date ? format(date, "yyyy-MM-dd") : "")}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={newEventTime}
                   onChange={setNewEventTime}
@@ -1354,7 +1565,7 @@ export default function Calendar() {
             </div>
 
             <div className="space-y-1 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
-               <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Recorrencia</label>
+               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrencia</label>
                <Select
                  value={recurrenceType || "none"}
                  onValueChange={(val) => {
@@ -1362,7 +1573,7 @@ export default function Calendar() {
                    setRecurrenceType(type as any);
                  }}
                >
-                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9">
+                 <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9">
                    <SelectValue placeholder="Selecione a recorrência" />
                  </SelectTrigger>
                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1376,8 +1587,8 @@ export default function Calendar() {
 
             <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mt-1">
               <div className="space-y-0.5">
-                <Label className="text-white font-medium cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
-                <p className="text-white/40 text-xs text-balance">
+                <Label className="text-xs font-bold text-white/40 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet / Call</Label>
+                <p className="text-white/40 text-[11px] text-balance mt-0.5">
                   {createMeetLink ? "Será criado um evento com Call no Meet." : "Será criada uma linha no Notion."}
                 </p>
               </div>
@@ -1394,23 +1605,25 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
+                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
                 >
                   Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
-              <motion.div 
-                className="flex-[2]" 
+              <motion.div
+                className="flex-[2]"
                 whileHover={!creatingEvent && newEventTitle.trim() && newEventDate ? { scale: 1.05, translateY: -2 } : {}}
                 whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="primary"
                   disabled={creatingEvent || !newEventTitle.trim() || !newEventDate || (createMeetLink && !newEventTime)}
                   onClick={() => handleCreateActivity(true)}
-                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2"
+                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
                 >
                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                      <>
@@ -1418,7 +1631,7 @@ export default function Calendar() {
                        Salvar
                      </>
                    )}
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             </div>
           </div>
@@ -1441,7 +1654,7 @@ export default function Calendar() {
           
           <div className="p-5 space-y-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Título</label>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
                 type="text"
                 value={editTitle}
@@ -1452,14 +1665,14 @@ export default function Calendar() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Data</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Data</label>
                 <DatePicker 
                   date={editDate}
                   setDate={setEditDate}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Horário</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
                 <TimePicker 
                   value={editTime}
                   onChange={setEditTime} 
@@ -1469,7 +1682,7 @@ export default function Calendar() {
 
             {(editingItem?.type === 'notion' || editingItem?.type === 'crm') && (
                <div className="space-y-2 pt-1">
-                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Status da Atividade</label>
+                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Status da Atividade</label>
                  <div className="grid grid-cols-2 gap-3 w-full">
                    <motion.div
                      whileHover={{ scale: 1.05, translateY: -2 }}
@@ -1525,39 +1738,39 @@ export default function Calendar() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   onClick={() => setIsEditActivityModalOpen(false)}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-10 rounded-xl font-bold transition-all"
+                  className="w-full h-11 text-xs font-bold uppercase tracking-widest"
                 >
                   Cancelar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
-              <motion.div 
-                className="flex-[2]" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                className="flex-[2]"
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all flex items-center justify-center gap-2">
+                <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                   <Save className="w-4 h-4" />
                   Salvar
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   onClick={handleDeleteActivity}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="h-11 w-11"
                   title="Excluir Atividade"
                 >
                   <Trash2 className="w-5 h-5" />
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             </div>
         </div>
@@ -1571,20 +1784,25 @@ export default function Calendar() {
               <AlertCircle className="w-5 h-5 text-red-500" />
               Confirmar Exclusão
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-white/70">
               Tem certeza que deseja excluir esta {editingItem?.type === 'google' ? 'atividade' : 'tarefa'}? 
               {editingItem?.type === 'google' ? ' Esta ação também removerá o evento do Google Calendar.' : ' Esta ação removerá permanentemente do Notion.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 pt-4">
-            <AlertDialogCancel className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 rounded-xl h-11 h-11 px-6 font-bold transition-all">
-              Cancelar
+            <AlertDialogCancel asChild>
+              <LiquidGlassButton tint="danger" className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
+                Cancelar
+              </LiquidGlassButton>
             </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteActivity}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-xl h-11 px-8 font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all uppercase tracking-wider text-xs"
-            >
-              Excluir
+            <AlertDialogAction asChild>
+              <LiquidGlassButton
+                tint="danger"
+                onClick={confirmDeleteActivity}
+                className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
+              >
+                Excluir
+              </LiquidGlassButton>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -114,7 +114,7 @@ export function ClientGlobe({ markers }: ClientGlobeProps) {
           {markers.slice(0, 6).map((m) => (
             <span
               key={m.id}
-              className="flex items-center gap-1 text-xs text-white/60 bg-white/5 px-2 py-0.5 rounded-full border border-white/[0.05]"
+              className="flex items-center gap-1 text-xs text-white/70 bg-white/5 px-2 py-0.5 rounded-full border border-white/[0.05]"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
               {m.company}
@@ -129,7 +129,7 @@ export function ClientGlobe({ markers }: ClientGlobeProps) {
       )}
 
       {markers.length === 0 && (
-        <p className="mt-3 text-xs text-white/30 text-center">
+        <p className="mt-3 text-xs text-white/40 text-center">
           Adicione endereços nos clientes para ver no globo
         </p>
       )}

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink } from "lucide-react";
+import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
@@ -41,6 +41,13 @@ export default function Contracts() {
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
+  const [expandedClients, setExpandedClients] = useState<string[]>([]);
+
+  const toggleClient = (client: string) => {
+    setExpandedClients(prev =>
+      prev.includes(client) ? prev.filter(c => c !== client) : [...prev, client]
+    );
+  };
   const createContractMutation = useCreateContract();
 
   const isReady = usePageReady(isLoading);
@@ -69,7 +76,7 @@ export default function Contracts() {
       case 'concluded':
         return <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 transition-all font-bold px-3 py-1 rounded-full">Concluído</Badge>;
       case 'inactive':
-        return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 transition-all font-bold px-3 py-1 rounded-full">Inativo</Badge>;
       default:
         return <Badge variant="outline" className="bg-white/5 text-white/50 border-white/10 font-bold px-3 py-1 rounded-full">Desconhecido</Badge>;
     }
@@ -152,53 +159,138 @@ export default function Contracts() {
     }
   };
 
+  // Lógica compartilhada de cancelamento.
+  // ATENÇÃO: existe um trigger no banco (sync_client_contract_status) que, ao mudar
+  // a tag do cliente para 'Inativo', marca TODOS os contratos do cliente como inactive.
+  // Por isso, só marcamos o cliente como Inativo se NÃO houver outros contratos ativos.
+  const cancelContractBase = async (contract: Contract) => {
+    await updateContractMutation.mutateAsync({ id: contract.id, status: 'inactive' });
+
+    if (!contract.client_id) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Verifica se o cliente ainda tem outros contratos ativos
+    const { data: remaining } = await supabase
+      .from('contracts')
+      .select('id, status, end_date')
+      .eq('client_id', contract.client_id)
+      .eq('user_id', user.id)
+      .neq('id', contract.id);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const hasActiveContract = (remaining || []).some(c => {
+      if (c.status === 'active' || c.status === 'expiring') return true;
+      if (c.end_date) return new Date(c.end_date) >= today;
+      return false;
+    });
+
+    try {
+      if (hasActiveContract) {
+        // Cliente continua ativo — NÃO mexe na tag (evita o trigger cancelar tudo).
+        // Apenas regenera as faturas: remove pendentes e recria a partir dos contratos
+        // ainda ativos (assim as faturas do contrato cancelado somem, mas as outras ficam).
+        const { updateFinancialEntriesForClient } = await import('@/hooks/useGenerateFinancialEntries');
+        await updateFinancialEntriesForClient(contract.client_id, user.id);
+      } else {
+        // Nenhum contrato ativo restante — marca cliente como Inativo e remove faturas pendentes
+        await updateClientMutation.mutateAsync({ id: contract.client_id, tags: ['Inativo'] });
+        await supabase
+          .from('financial_entries')
+          .delete()
+          .eq('client_id', contract.client_id)
+          .eq('user_id', user.id)
+          .eq('status', 'pending');
+      }
+    } catch (err) {
+      console.error('Erro ao finalizar cancelamento do contrato:', err);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['clients'] });
+    queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+  };
+
   const handleConfirmCancel = async () => {
-    if (deletingContract) {
-      try {
-        // Atualizar status do contrato para inactive
-        await updateContractMutation.mutateAsync({ id: deletingContract.id, status: 'inactive' });
+    if (!deletingContract) return;
+    try {
+      await cancelContractBase(deletingContract);
+      setDeletingContract(null);
+    } catch (error) {
+      console.error('Error canceling contract:', error);
+    }
+  };
 
-        // Atualizar tag do cliente para "Inativo" e deletar faturas pendentes se houver client_id
-        if (deletingContract.client_id) {
-          try {
-            // Atualizar tag do cliente
-            await updateClientMutation.mutateAsync({
-              id: deletingContract.client_id,
-              tags: ['Inativo']
+  const handleConfirmCancelWithFine = async (amount: number, dueDate: string) => {
+    if (!deletingContract) return;
+    try {
+      await cancelContractBase(deletingContract);
+
+      // Inserir fatura de multa rescisória
+      if (deletingContract.client_id) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error: fineError } = await supabase
+            .from('financial_entries')
+            .insert({
+              client_id: deletingContract.client_id,
+              user_id: user.id,
+              name: `Multa Rescisória — ${deletingContract.client}`,
+              amount,
+              due_date: dueDate,
+              reference: 'Multa Rescisória',
+              status: 'pending',
             });
-            console.log('Tag do cliente atualizada para Inativo');
 
-            // Invalidar query de clientes para atualizar a UI
-            queryClient.invalidateQueries({ queryKey: ['clients'] });
+          if (fineError) {
+            console.error('Erro ao inserir multa rescisória:', fineError);
+          } else {
+            queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+          }
 
-            // Deletar todas as faturas pendentes (não pagas) do cliente
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { error: deleteError } = await supabase
-                .from('financial_entries')
-                .delete()
-                .eq('client_id', deletingContract.client_id)
-                .eq('user_id', user.id)
-                .eq('status', 'pending');
+          // Gera a cobrança de verdade no Asaas — antes, a multa só era
+          // gravada em financial_entries, nunca chegava a existir no Asaas
+          // (bug real: cliente não foi cobrado, precisou gerar a fatura
+          // manualmente). Multa é sempre uma cobrança avulsa (installments:
+          // 1), então usamos asaas-renegotiation diretamente em vez do
+          // fluxo de parcelamento de contrato.
+          const { data: clientRow } = await supabase
+            .from('clients')
+            .select('company, cnpj, email, phone')
+            .eq('id', deletingContract.client_id)
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-              if (deleteError) {
-                console.error('Erro ao deletar faturas pendentes:', deleteError);
-              } else {
-                console.log('Faturas pendentes deletadas com sucesso');
-                // Invalidar queries de faturas para atualizar a UI
-                queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+          if (clientRow?.cnpj) {
+            try {
+              const { data, error } = await supabase.functions.invoke('asaas-renegotiation', {
+                body: {
+                  cnpj: clientRow.cnpj,
+                  company_name: clientRow.company,
+                  email: clientRow.email,
+                  phone: clientRow.phone,
+                  total_amount: amount,
+                  due_date: dueDate,
+                  installments: 1,
+                  billing_type: 'BOLETO',
+                  description: `Multa Rescisória — ${deletingContract.client}`,
+                },
+              });
+              if (error || !data?.success) {
+                console.error('Erro ao gerar cobrança da multa no Asaas:', data?.error || error?.message);
               }
+            } catch (asaasErr) {
+              console.error('Erro ao chamar asaas-renegotiation:', asaasErr);
             }
-          } catch (clientError) {
-            console.error('Erro ao atualizar tag do cliente ou deletar faturas:', clientError);
-            // Não falhar o cancelamento do contrato se a atualização do cliente falhar
+          } else {
+            console.warn('Cliente sem CNPJ cadastrado — multa gravada só no sistema, sem cobrança no Asaas.');
           }
         }
-
-        setDeletingContract(null);
-      } catch (error) {
-        console.error('Error updating contract:', error);
       }
+
+      setDeletingContract(null);
+    } catch (error) {
+      console.error('Error canceling contract with fine:', error);
     }
   };
 
@@ -236,7 +328,7 @@ export default function Contracts() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-white/5 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-white/5 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
             <FileText className="w-16 h-16 text-white" />
           </div>
@@ -244,7 +336,7 @@ export default function Contracts() {
           <p className="text-3xl font-bold text-white tracking-tight">{contracts.length}</p>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-green-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-green-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
             <FileText className="w-16 h-16" style={{ stroke: "#22c55e" }} />
           </div>
@@ -254,7 +346,7 @@ export default function Contracts() {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-yellow-500/30 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-yellow-500/30 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.15] group-hover:opacity-[0.25] transition-opacity">
             <AlertTriangle className="w-16 h-16" style={{ stroke: "#eab308" }} />
           </div>
@@ -264,52 +356,48 @@ export default function Contracts() {
           </div>
         </motion.div>
 
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass border-red-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
+        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-red-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
             <FileText className="w-16 h-16" style={{ stroke: "#ef4444" }} />
           </div>
-          <p className="text-red-400/50 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Inativos</p>
+          <p className="text-red-500/60 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Inativos</p>
           <p className="text-3xl font-bold text-white tracking-tight">{inactiveContracts.length}</p>
         </motion.div>
       </div>
 
       {/* Expiring Contracts Alert */}
       {expiringContracts.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
+        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5 flex items-center gap-3">
             <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Atenção Prioritária</span>
+            <h3 className="text-xl font-bold text-white tracking-tight">Atenção Prioritária</h3>
           </div>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="divide-y divide-white/5">
             {expiringContracts.map((contract) => (
               <motion.div
                 key={contract.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="liquid-glass border-yellow-500/20 bg-yellow-500/[0.02] p-4 flex items-center justify-between"
+                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shrink-0">
                     <Calendar className="w-5 h-5 text-yellow-500" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold">{contract.client}</h4>
+                    <h4 className="text-white font-semibold">{contract.client}</h4>
                     <p className="text-white/40 text-xs">{contract.type} • Vence em {formatDate(contract.endDate)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 shrink-0">
                   <div className="text-right">
-                    <p className="text-xs text-yellow-500/60 font-bold uppercase tracking-wider">Restam</p>
+                    <p className="text-[10px] text-yellow-500/60 font-black uppercase tracking-widest">Restam</p>
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
-                  <motion.div 
-                    whileHover={{ scale: 1.05, translateY: -2 }} 
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
+                  <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                     <Button
                       onClick={() => handleRenewClick(contract)}
-                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-11 px-8 rounded-2xl transition-all"
+                      className="btn-danger-glass h-9 px-6 rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
                     >
                       Renovar Agora
                     </Button>
@@ -318,62 +406,72 @@ export default function Contracts() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Contracts List */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-white/40" />
-          <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Lista de Contratos</h3>
+      <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-xl font-bold text-white tracking-tight">Lista de Contratos</h3>
+          <p className="text-[10px] text-white/20 font-medium">Sincronizado automaticamente</p>
         </div>
-        <p className="text-[10px] text-white/20 font-medium">Sincronizado automaticamente</p>
-      </div>
 
-      {contracts.length === 0 ? (
-        <div className="liquid-glass border-white/5 p-20 text-center">
-          <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
-            <FileText className="w-10 h-10 text-white/10" />
+        {contracts.length === 0 ? (
+          <div className="p-20 text-center">
+            <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
+              <FileText className="w-10 h-10 text-white/20" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
+            <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
-          <p className="text-white/30 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 pb-10">
-          {contracts.map((contract) => (
-            <motion.div
-              key={contract.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              whileHover={{ scale: 1.005, translateY: -2 }}
-              className="liquid-glass border-white/5 p-5 flex items-center justify-between group transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] min-h-[100px]"
-            >
+        ) : (
+          <div className="divide-y divide-white/5">
+            {(() => {
+              const groups = contracts.reduce<Record<string, typeof contracts>>((acc, c) => {
+                const key = c.client || 'Sem cliente';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(c);
+                return acc;
+              }, {});
+
+              return Object.entries(groups).map(([clientName, clientContracts]) => {
+                const isExpanded = expandedClients.includes(clientName);
+
+                return (
+                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
+                    {/* Header do grupo */}
+                    <div
+                      className="flex items-center justify-between p-6 cursor-pointer transition-all duration-300"
+                      onClick={() => toggleClient(clientName)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          {isExpanded
+                            ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                          }
+                        </div>
+                        <h4 className="text-white font-semibold text-lg">{clientName}</h4>
+                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                          {clientContracts.length} {clientContracts.length === 1 ? 'contrato' : 'contratos'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contratos do grupo */}
+                    {isExpanded && (
+                      <div className="px-6 pb-4">
+                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
+                          {clientContracts.map((contract) => (
+              <div
+                key={contract.id}
+                className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
+              >
               <div className="flex items-center gap-6 flex-1">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center transition-all duration-500",
-                  contract.status === 'active' && "group-hover:bg-green-500/10 group-hover:border-green-500/20",
-                  contract.status === 'concluded' && "group-hover:bg-blue-500/10 group-hover:border-blue-500/20",
-                  contract.status === 'expiring' && "group-hover:bg-yellow-500/10 group-hover:border-yellow-500/20",
-                  contract.status === 'inactive' && "group-hover:bg-red-500/10 group-hover:border-red-500/20"
-                )}>
-                  <FileText className={cn(
-                    "w-6 h-6 text-white/20 transition-colors duration-500",
-                    contract.status === 'active' && "group-hover:text-green-400",
-                    contract.status === 'concluded' && "group-hover:text-blue-400",
-                    contract.status === 'expiring' && "group-hover:text-yellow-400",
-                    contract.status === 'inactive' && "group-hover:text-red-400"
-                  )} />
-                </div>
                 <div className="grid grid-cols-4 gap-8 flex-1 items-center">
                   <div>
                     <div className="flex items-center gap-2 mb-1 min-w-0">
-                      <h4 className={cn(
-                        "text-white font-bold text-lg tracking-tight transition-colors truncate m-0",
-                        contract.status === 'active' && "group-hover:text-green-400",
-                        contract.status === 'concluded' && "group-hover:text-blue-400",
-                        contract.status === 'expiring' && "group-hover:text-yellow-400",
-                        contract.status === 'inactive' && "group-hover:text-red-400"
-                      )} title={contract.client}>{contract.client}</h4>
+                      <h4 className="text-white font-bold text-lg tracking-tight truncate m-0" title={contract.client}>{contract.client}</h4>
                       {contract.contract_url && (
                         <motion.a
                           href={contract.contract_url}
@@ -391,7 +489,7 @@ export default function Contracts() {
                     {getStatusBadge(contract.status)}
                   </div>
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
                     <div className="flex items-center gap-2">
                       <DollarSign className={cn(
                         "w-3.5 h-3.5 opacity-50",
@@ -405,8 +503,8 @@ export default function Contracts() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
-                    <div className="flex items-center gap-2 text-white/80 font-medium">
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
+                    <div className="flex items-center gap-2 text-white/70 font-medium">
                       <Calendar className="w-3.5 h-3.5 opacity-30" />
                       <span>{formatDate(contract.startDate)}</span>
                       <span className="opacity-20">→</span>
@@ -414,8 +512,8 @@ export default function Contracts() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
-                    <p className="text-white/60 font-medium truncate">{contract.type}</p>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
+                    <p className="text-white/70 font-medium truncate">{contract.type}</p>
                   </div>
                 </div>
               </div>
@@ -430,7 +528,7 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setEditingContract(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     Editar
                   </Button>
@@ -444,7 +542,7 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleRenewClick(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     {contract.status === 'active' ? 'Estender' : 'Renovar'}
                   </Button>
@@ -458,16 +556,24 @@ export default function Contracts() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setDeletingContract(contract)}
-                    className="liquid-glass text-red-500 hover:bg-white/10 hover:text-red-400 border border-white/5 rounded-2xl px-8 h-11 font-bold transition-all"
+                    className="btn-danger-glass rounded-xl px-6 h-9 font-bold transition-all"
                   >
                     Cancelar
                   </Button>
                 </motion.div>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
+      </Card>
       <EditContractModal
         isOpen={!!editingContract}
         contract={editingContract}
@@ -479,6 +585,7 @@ export default function Contracts() {
         contract={deletingContract}
         onClose={() => setDeletingContract(null)}
         onConfirm={handleConfirmCancel}
+        onConfirmWithFine={handleConfirmCancelWithFine}
       />
       <RenewContractModal
         isOpen={!!renewingContract}

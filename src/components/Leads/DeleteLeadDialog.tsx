@@ -2,6 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, X, AlertTriangle, Users } from "lucide-react";
@@ -138,13 +139,13 @@ export function DeleteLeadDialog({
                 {lead.phone && (
                   <div>
                     <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">Telefone</span>
-                    <p className="text-white/80 text-xs truncate">{lead.phone}</p>
+                    <p className="text-white/70 text-xs truncate">{lead.phone}</p>
                   </div>
                 )}
                 {lead.email && (
                   <div>
                     <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">E-mail</span>
-                    <p className="text-white/80 text-xs truncate" title={lead.email}>{lead.email}</p>
+                    <p className="text-white/70 text-xs truncate" title={lead.email}>{lead.email}</p>
                   </div>
                 )}
               </div>
@@ -160,25 +161,27 @@ export function DeleteLeadDialog({
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button
+            <LiquidGlassButton
+              tint="danger"
               onClick={onClose}
-              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 text-sm font-bold rounded-2xl transition-all"
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
               disabled={isDeleting}
             >
               Cancelar
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
-          
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
+
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button
+            <LiquidGlassButton
+              tint="danger"
               onClick={handleConfirm}
               disabled={isDeleting}
-              className="w-full h-11 text-sm font-bold bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-200 disabled:opacity-50"
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">
@@ -188,7 +191,7 @@ export function DeleteLeadDialog({
               ) : (
                 'Confirmar Exclusão'
               )}
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
         </div>
       </div>

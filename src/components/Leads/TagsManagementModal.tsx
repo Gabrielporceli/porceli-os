@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +137,6 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     onClick={() => setIsCreating(true)}
                     className="bg-primary hover:bg-primary/90 text-white h-9 px-5 rounded-xl font-bold transition-all shadow-lg shadow-primary/20"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
                     Adicionar
                   </Button>
                 </motion.div>
@@ -176,28 +176,29 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button
+                    <LiquidGlassButton
+                      tint="danger"
                       type="button"
                       onClick={() => {
                         setIsCreating(false);
                         setNewTagName("");
                         setNewTagColor(defaultColors[0]);
                       }}
-                      className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-11 rounded-xl font-bold transition-all"
+                      className="w-full h-11 text-xs font-bold uppercase tracking-widest"
                     >
                       Cancelar
-                    </Button>
+                    </LiquidGlassButton>
                   </motion.div>
-                  <motion.div 
-                    className="flex-1" 
-                    whileHover={{ scale: 1.05, translateY: -2 }} 
+                  <motion.div
+                    className="flex-1"
+                    whileHover={{ scale: 1.05, translateY: -2 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button onClick={handleCreateTag} className="bg-primary hover:bg-primary/90 text-white w-full h-11 rounded-xl font-bold transition-all">
+                    <LiquidGlassButton tint="primary" onClick={handleCreateTag} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                       <Save className="w-4 h-4 mr-2" />
                       Salvar Tag
-                    </Button>
+                    </LiquidGlassButton>
                   </motion.div>
                 </div>
               </div>
@@ -209,7 +210,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
             <h4 className="font-semibold text-white mb-4">Tags Existentes</h4>
             {tags.length === 0 ? (
               <div className="py-8 text-center bg-white/[0.01] border border-dashed border-white/[0.05] rounded-xl">
-                <p className="text-white/30 text-sm">Nenhuma tag criada ainda</p>
+                <p className="text-white/40 text-sm">Nenhuma tag criada ainda</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
@@ -244,22 +245,23 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button
+                            <LiquidGlassButton
+                              tint="danger"
                               onClick={() => setEditingTag(null)}
-                              className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-9 px-4 rounded-xl font-bold transition-all"
+                              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
                             >
                               Cancelar
-                            </Button>
+                            </LiquidGlassButton>
                           </motion.div>
-                          <motion.div 
-                            whileHover={{ scale: 1.05, translateY: -2 }} 
+                          <motion.div
+                            whileHover={{ scale: 1.05, translateY: -2 }}
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
-                            <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90 text-white h-9 px-4 rounded-xl font-bold transition-all">
+                            <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="h-9 px-4 text-xs font-bold uppercase tracking-widest">
                               <Save className="w-4 h-4 mr-2" />
                               Salvar
-                            </Button>
+                            </LiquidGlassButton>
                           </motion.div>
                         </div>
                       </div>
@@ -267,7 +269,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                       <>
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${tag.color}`} />
-                          <span className="font-semibold text-white/90">{tag.name}</span>
+                          <span className="font-semibold text-white">{tag.name}</span>
                         </div>
                         <div className="flex gap-2 transition-opacity">
                           <motion.div 
@@ -279,7 +281,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                               onClick={() => handleEditTag(tag)}
                               size="sm"
                               variant="ghost"
-                              className="h-8 px-3 rounded-xl font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all"
+                              className="h-8 px-3 rounded-xl font-bold text-white/70 hover:bg-white/10 hover:text-white transition-all"
                             >
                               <Edit className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                               Editar

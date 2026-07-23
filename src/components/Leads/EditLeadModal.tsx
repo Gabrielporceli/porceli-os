@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, Trash2, CalendarOff } from "lucide-react";
+import { Save, X, Trash2, CalendarOff, ExternalLink } from "lucide-react";
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -147,26 +148,37 @@ export function EditLeadModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0">
-        {/* QR CODE CONTAINER - VISIBLE ONLY ON DESKTOP E POSICIONADO À DIREITA */}
-        {lead?.id && (
-          <div className="absolute top-0 -right-[340px] hidden lg:block w-[320px]">
-            <div className="liquid-glass rounded-3xl border-white/[0.05] p-7 shadow-2xl flex flex-col items-center">
-              <div className="mb-5 w-full flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm text-white/40">Acesso Rápido</p>
-                  <h3 className="text-xl font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
+        {/* QR de acesso rápido à conversa — só desktop, flutuando à direita.
+            Tile branco + módulos escuros (estilo QR de pagamento): contraste
+            máximo pra câmera e visual limpo. O QR inteiro é um botão que abre
+            a mesma conversa do link codificado. */}
+        {lead?.id && (() => {
+          const conversationUrl = lead.phone
+            ? `https://wa.me/${lead.phone.replace(/\D/g, "")}`
+            : `https://porceli.com/lead/${lead.id}`;
+          return (
+            <div className="absolute top-0 -right-[300px] hidden lg:block w-[280px]">
+              <div className="liquid-glass rounded-3xl p-6 flex flex-col items-center gap-4">
+                <div className="w-full text-center space-y-0.5">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Conversa</p>
+                  <h3 className="text-base font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => window.open(conversationUrl, "_blank", "noopener,noreferrer")}
+                  title="Abrir conversa"
+                  className="rounded-2xl bg-white p-4 cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                >
+                  <QRCode value={conversationUrl} size={188} fgColor="#18181d" />
+                </button>
+                <p className="text-[11px] text-white/40 flex items-center gap-1.5">
+                  <ExternalLink className="w-3 h-3" />
+                  Clique para abrir a conversa
+                </p>
               </div>
-              <QRCode
-                value={lead.phone ? `https://wa.me/${lead.phone.replace(/\D/g, "")}` : `https://porceli.com/lead/${lead.id}`}
-                size={260}
-                fgColor="#f8fafc"
-                bgColor="#121212"
-                className="rounded-xl border border-white/5"
-              />
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="p-6 border-b border-white/[0.05]">
           <DialogHeader>
@@ -280,7 +292,7 @@ export function EditLeadModal({
                 <SelectValue>
                   {(() => {
                     const selected = tags.find(t => t.name === formData.tags[0]);
-                    if (!selected) return <span className="text-white/30">Selecione uma tag</span>;
+                    if (!selected) return <span className="text-white/40">Selecione uma tag</span>;
                     return (
                       <span className="flex items-center gap-2 font-medium">
                         <span className={`w-2.5 h-2.5 rounded-full ${selected.color}`} />
@@ -374,44 +386,44 @@ export function EditLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-[2]" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+            <motion.div
+              className="flex-[2]"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+              <LiquidGlassButton tint="primary" onClick={handleSave} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
                 <Save className="w-4 h-4 mr-2" />
                 Salvar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
             {onDeleteLead && (
-              <motion.div 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
+              <motion.div
+                whileHover={{ scale: 1.05, translateY: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Button
+                <LiquidGlassButton
+                  tint="danger"
                   type="button"
-                  variant="ghost"
-                  size="icon"
                   onClick={() => {
                     if (lead) {
                       onDeleteLead(lead);
                     }
                   }}
-                  className="h-12 w-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 text-red-500 border border-white/5 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                  className="h-12 w-12"
                   title="Excluir Lead"
                 >
                   <Trash2 className="w-5 h-5" />
-                </Button>
+                </LiquidGlassButton>
               </motion.div>
             )}
           </div>

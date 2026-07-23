@@ -50,6 +50,7 @@ export type Database = {
           phone: string
           plan: string | null
           responsible: string
+          single_payment: boolean
           start_date: string | null
           tags: string[] | null
           updated_at: string | null
@@ -69,6 +70,7 @@ export type Database = {
           phone: string
           plan?: string | null
           responsible: string
+          single_payment?: boolean
           start_date?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           phone?: string
           plan?: string | null
           responsible?: string
+          single_payment?: boolean
           start_date?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -129,6 +132,7 @@ export type Database = {
           end_date: string
           id: string
           monthly_value: number
+          single_payment: boolean
           start_date: string
           status: string | null
           type: string
@@ -141,6 +145,7 @@ export type Database = {
           end_date: string
           id?: string
           monthly_value: number
+          single_payment?: boolean
           start_date: string
           status?: string | null
           type: string
@@ -153,6 +158,7 @@ export type Database = {
           end_date?: string
           id?: string
           monthly_value?: number
+          single_payment?: boolean
           start_date?: string
           status?: string | null
           type?: string
@@ -374,6 +380,7 @@ export type Database = {
           due_date: string
           id: string
           name: string
+          paid_date: string | null
           reference: string
           status: string
           updated_at: string
@@ -386,6 +393,7 @@ export type Database = {
           due_date: string
           id?: string
           name: string
+          paid_date?: string | null
           reference: string
           status?: string
           updated_at?: string
@@ -398,6 +406,7 @@ export type Database = {
           due_date?: string
           id?: string
           name?: string
+          paid_date?: string | null
           reference?: string
           status?: string
           updated_at?: string

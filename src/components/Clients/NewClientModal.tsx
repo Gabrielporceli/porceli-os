@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,21 +83,8 @@ export function NewClientModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert monthlyValue from Brazilian format to number
-    const monthlyValueNumber = parseFloat(formData.monthly_value.replace(',', '.')) || 0;
-
-    // Convert empty strings to null for date fields and ensure proper date format
-    const formatDateForDatabase = (dateString: string) => {
-      if (!dateString || dateString.trim() === '') return null;
-      // Ensure the date is in YYYY-MM-DD format
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return null;
-      return date.toISOString().split('T')[0];
-    };
-
-    const contractEnd = formatDateForDatabase(formData.contract_end);
-    const startDate = formatDateForDatabase(formData.start_date);
-
+    // Cliente é criado SEM dados de contrato — plano, valores e datas
+    // são definidos depois ao criar um contrato na aba Contratos.
     const clientData = {
       company: formData.company,
       cnpj: formData.cnpj,
@@ -105,28 +92,14 @@ export function NewClientModal({
       phone: formData.phone,
       email: formData.email,
       grupo_id: formData.grupo_id || undefined,
-      plan: formData.plan,
-      contract_end: contractEnd,
-      start_date: startDate,
-      payment_day: parseInt(formData.payment_day) || 1,
-      monthly_value: monthlyValueNumber,
+      plan: "",
+      contract_end: null,
+      start_date: null,
+      payment_day: 1,
+      monthly_value: 0,
       address: formData.address,
-      tags: formData.tags,
+      tags: ["Ativo"],
     };
-
-    console.log('DEBUG - Dados do cliente sendo enviados:', clientData);
-    console.log('DEBUG - Tipos dos dados:', {
-      contract_end: typeof clientData.contract_end,
-      start_date: typeof clientData.start_date,
-      monthly_value: typeof clientData.monthly_value,
-      payment_day: typeof clientData.payment_day
-    });
-    console.log('DEBUG - Valores dos dados:', {
-      contract_end: clientData.contract_end,
-      start_date: clientData.start_date,
-      monthly_value: clientData.monthly_value,
-      payment_day: clientData.payment_day
-    });
 
     onSave(clientData);
     setFormData({
@@ -239,7 +212,7 @@ export function NewClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 h-[90vh] !flex flex-col overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
@@ -253,7 +226,7 @@ export function NewClientModal({
         </div>
 
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto flex-1 custom-scrollbar">
+        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -275,10 +248,10 @@ export function NewClientModal({
             }
           `}</style>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form id="new-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
@@ -289,7 +262,7 @@ export function NewClientModal({
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
@@ -301,7 +274,7 @@ export function NewClientModal({
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="00.000.000/0000-00"
                     required
                   />
@@ -313,7 +286,7 @@ export function NewClientModal({
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Nome do responsável"
                     required
                   />
@@ -325,7 +298,7 @@ export function NewClientModal({
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="(11) 99999-9999"
                     required
                   />
@@ -338,7 +311,7 @@ export function NewClientModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="cliente@empresa.com"
                     required
                   />
@@ -351,217 +324,50 @@ export function NewClientModal({
                     type="text"
                     value={formData.grupo_id}
                     onChange={(e) => handleChange("grupo_id", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/10 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="ID do grupo"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Plano e Valores */}
+            {/* Localização */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
-                Plano e Valores
+              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+                Localização
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="flex justify-between text-white/70 text-xs font-bold uppercase tracking-widest">
-                    Plano
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/20 h-6 px-2 text-[10px] font-bold uppercase tracking-wider"
-                      onClick={() => setShowAddPlan(!showAddPlan)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" /> Novo
-                    </Button>
-                  </Label>
-
-                  {showAddPlan && (
-                    <div className="space-y-4 p-4 rounded-xl border border-white/[0.05] bg-white/[0.02] animate-in fade-in slide-in-from-top-2">
-                      <div className="space-y-2">
-                        <Input
-                          value={newPlanName}
-                          onChange={(e) => setNewPlanName(e.target.value)}
-                          placeholder="Nome do novo plano"
-                          className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all text-sm"
-                          onKeyPress={(e) => e.key === "Enter" && handleAddCustomPlan()}
-                        />
-                      </div>
-
-                      <ColorPicker
-                        selectedColor={newPlanColor}
-                        onColorChange={setNewPlanColor}
-                        label="Cor do Plano"
-                      />
-
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddCustomPlan}
-                          className="bg-primary hover:bg-primary/90 text-white flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
-                        >
-                          Adicionar Plano
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => setShowAddPlan(false)}
-                          className="bg-white/[0.05] hover:bg-white/10 text-white/70 border border-white/5 transition-all flex-1 h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  <Select value={formData.plan} onValueChange={(value) => handleChange("plan", value)}>
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {planOptions.map((plan) => (
-                        <SelectItem
-                          key={plan}
-                          value={plan}
-                          className="cursor-pointer"
-                        >
-                          {plan}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest">Valor Mensal (R$)</Label>
-                  <Input
-                    id="monthly_value"
-                    type="text"
-                    value={formData.monthly_value}
-                    onChange={handleMonthlyValueChange}
-                    onBlur={handleMonthlyValueBlur}
-                    onFocus={(e) => {
-                      if (e.target.value === "0,00") {
-                        e.target.value = "";
-                        setFormData((prev) => ({ ...prev, monthly_value: "" }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
-                    placeholder="0,00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="payment_day" className="text-white/70 text-xs font-bold uppercase tracking-widest">Dia de Pagamento</Label>
-                  <Input
-                    id="payment_day"
-                    type="text"
-                    value={formData.payment_day}
-                    onChange={handlePaymentDayChange}
-                    onFocus={e => {
-                      if (e.target.value) {
-                        e.target.value = '';
-                        setFormData(prev => ({ ...prev, payment_day: '' }));
-                      }
-                    }}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 h-11 rounded-xl transition-all"
-                    placeholder="1-31"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Status</Label>
-                  <Select 
-                    value={formData.tags[0]} 
-                    onValueChange={(value) => handleChange("tags", [value])}
-                  >
-                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ativo" className="cursor-pointer">Ativo</SelectItem>
-                      <SelectItem value="A vencer" className="cursor-pointer">A vencer</SelectItem>
-                      <SelectItem value="Vencido" className="cursor-pointer">Vencido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-white/70 text-xs font-bold uppercase tracking-widest">Endereço</Label>
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none min-h-[100px]"
+                  placeholder="Endereço completo do cliente"
+                />
               </div>
+
+              <p className="text-white/40 text-xs">
+                💡 Plano, valores e datas são definidos ao criar um <strong className="text-white/50">contrato</strong> na aba Contratos.
+              </p>
             </div>
 
-            {/* Datas e Localização */}
-            <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
-                Datas e Localização
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Data de Início</Label>
-                  <DatePicker
-                    date={formData.start_date ? parseISO(formData.start_date) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("start_date", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Fim do Contrato</Label>
-                  <DatePicker
-                    date={formData.contract_end ? parseISO(formData.contract_end) : undefined}
-                    setDate={(newDate) => {
-                      handleChange("contract_end", newDate ? format(newDate, "yyyy-MM-dd") : "");
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address" className="text-white/70 text-xs font-bold uppercase tracking-widest">Endereço</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/10 rounded-xl transition-all resize-none min-h-[100px]"
-                    placeholder="Endereço completo do cliente"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Botões */}
-            <div className="flex gap-4 pt-6 mt-6 border-t border-white/[0.05]">
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Cancelar
-                </Button>
-              </motion.div>
-              <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
-                >
-                  Salvar Cliente
-                </Button>
-              </motion.div>
-            </div>
           </form>
+        </div>
+
+        {/* Footer fixo */}
+        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <LiquidGlassButton tint="danger" type="button" onClick={onClose} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <LiquidGlassButton tint="primary" type="submit" form="new-client-form" className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+              Salvar Cliente
+            </LiquidGlassButton>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

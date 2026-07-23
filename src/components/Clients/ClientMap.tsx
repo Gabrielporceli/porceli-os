@@ -157,7 +157,7 @@ export function ClientMap({ markers }: ClientMapProps) {
       </ComposableMap>
 
       {markers.length === 0 && (
-        <p className="text-center text-sm text-white/30 py-4">
+        <p className="text-center text-sm text-white/40 py-4">
           Adicione endereços nos clientes para vê-los no mapa
         </p>
       )}

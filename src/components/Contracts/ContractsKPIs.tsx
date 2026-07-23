@@ -32,7 +32,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{contracts.length}</p>
-            <p className="text-Porceli-gray-400 text-sm">Total de Contratos</p>
+            <p className="text-white/50 text-sm">Total de Contratos</p>
           </div>
         </div>
       </Card>
@@ -44,7 +44,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{activeContracts}</p>
-            <p className="text-Porceli-gray-400 text-sm">Contratos Ativos</p>
+            <p className="text-white/50 text-sm">Contratos Ativos</p>
           </div>
         </div>
       </Card>
@@ -56,7 +56,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{pendingContracts}</p>
-            <p className="text-Porceli-gray-400 text-sm">Pendentes</p>
+            <p className="text-white/50 text-sm">Pendentes</p>
           </div>
         </div>
       </Card>
@@ -70,7 +70,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
             <p className="text-2xl font-bold text-white">
               R$ {totalValue.toLocaleString('pt-BR')}
             </p>
-            <p className="text-Porceli-gray-400 text-sm">Valor Total</p>
+            <p className="text-white/50 text-sm">Valor Total</p>
           </div>
         </div>
       </Card>

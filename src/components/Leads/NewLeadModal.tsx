@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -251,7 +252,7 @@ export function NewLeadModal({
                 <SelectValue>
                   {(() => {
                     const selected = tags.find(t => t.name === formData.tags[0]);
-                    if (!selected) return <span className="text-white/30">Selecione uma tag</span>;
+                    if (!selected) return <span className="text-white/40">Selecione uma tag</span>;
                     return (
                       <span className="flex items-center gap-2 font-medium">
                         <span className={`w-2.5 h-2.5 rounded-full ${selected.color}`} />
@@ -335,23 +336,24 @@ export function NewLeadModal({
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button
+              <LiquidGlassButton
+                tint="danger"
                 onClick={() => onOpenChange(false)}
-                className="liquid-glass hover:bg-white/10 text-white/70 border-white/5 w-full h-12 rounded-2xl font-bold transition-all"
+                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
               >
                 Cancelar
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+            <motion.div
+              className="flex-1"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-2xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all">
+              <LiquidGlassButton tint="primary" onClick={handleSubmit} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
                 <Plus className="w-5 h-5 mr-2" />
                 Criar Lead
-              </Button>
+              </LiquidGlassButton>
             </motion.div>
           </div>
         </div>

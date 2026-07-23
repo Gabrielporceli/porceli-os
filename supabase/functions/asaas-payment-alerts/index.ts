@@ -8,8 +8,8 @@ const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY    = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_BASE   = "https://api.asaas.com/v3";
 const EVO_URL      = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia03";
+const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 
 // ── Feriados ───────────────────────────────────────────────────────────────────
 
@@ -135,21 +135,21 @@ function overdueConfig(d: number): { type: string; withinDays: number; urgency: 
 
 function msgPending(name: string, desc: string, due: string, val: string, url: string, days: number): string {
   const intro = days === 0
-    ? `Olá! ⚠️ Sua fatura vence *hoje*. Segue o resumo:`
-    : `Olá! Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
+    ? `Ola! Sua fatura vence *hoje*. Segue o resumo:`
+    : `Ola! Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
   const footer = days === 0
-    ? `Regularize ainda hoje para manter o serviço ativo. Se já pagou, pode ignorar. 😊`
-    : `Pague dentro do prazo e evite imprevistos. 😊`;
-  return `${intro}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)}\n*Valor:* ${val}\n\n*Link para pagamento:* ${url}\n\n${footer}`;
+    ? `Regularize ainda hoje para manter o servico ativo. Se ja pagou, pode ignorar.`
+    : `Pague dentro do prazo e evite imprevistos.`;
+  return `${intro}\n\n*Cliente:* ${name}\n*Descricao:* ${desc}\n*Vencimento:* ${fmtDate(due)}\n*Valor:* ${val}\n\n*Link para pagamento:* ${url}\n\n${footer}`;
 }
 
 function msgOverdue(name: string, desc: string, due: string, val: string, url: string, urgency: "mild" | "urgent" | "persistent"): string {
   const headers = {
-    mild:       `Olá! 😊 Identificamos um pagamento em aberto:`,
-    urgent:     `Olá! ⚠️ Seu pagamento está em atraso. Regularize o quanto antes:`,
-    persistent: `Olá! 🔴 Fatura em atraso. Evite bloqueio do serviço:`,
+    mild:       `Ola! Identificamos um pagamento em aberto:`,
+    urgent:     `Ola! Seu pagamento esta em atraso. Regularize o quanto antes:`,
+    persistent: `Ola! Fatura em atraso. Evite bloqueio do servico:`,
   };
-  return `${headers[urgency]}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)} + juros de atraso\n*Valor base:* ${val}\n\n*Link para pagamento:* ${url}\n\nSe já realizou o pagamento, favor desconsiderar este aviso.`;
+  return `${headers[urgency]}\n\n*Cliente:* ${name}\n*Descricao:* ${desc}\n*Vencimento:* ${fmtDate(due)} + juros de atraso\n*Valor base:* ${val}\n\n*Link para pagamento:* ${url}\n\nSe ja realizou o pagamento, favor desconsiderar este aviso.`;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────

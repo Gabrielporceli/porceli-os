@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useLayoutEffect, useRef, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 interface LiquidGlassProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,14 +27,31 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
         },
         ref
     ) => {
+        // Sempre mede a partir do ref INTERNO — nunca do `ref` externo
+        // diretamente: quando este componente é envolvido por
+        // motion.create() (framer-motion), o `ref` recebido é uma callback
+        // ref (função), não um objeto com `.current`, então usá-lo direto
+        // como containerRef fazia a medição de tamanho falhar sempre (a
+        // ResizeObserver nunca era criada), e o filtro SVG de refração
+        // nunca entrava em cena. O DOM real é repassado pro `ref` externo
+        // (objeto ou função) separadamente, abaixo.
         const internalRef = useRef<HTMLDivElement>(null);
-        // Use the forwarded ref if provided, otherwise use internal ref
-        const containerRef = (ref as any) || internalRef;
+        const containerRef = internalRef;
+
+        useLayoutEffect(() => {
+            if (typeof ref === "function") ref(internalRef.current);
+            else if (ref) ref.current = internalRef.current;
+        }, [ref]);
 
         const [size, setSize] = useState({ width: 0, height: 0 });
         const [filterId] = useState(() => `liquid-glass-${Math.random().toString(36).substr(2, 9)}`);
 
-        useEffect(() => {
+        // useLayoutEffect (não useEffect): mede e aplica o filtro SVG ANTES do
+        // navegador pintar o primeiro frame. Com useEffect (roda depois do
+        // paint) o modal aparecia 1 frame sem o blur/refração — só o
+        // fallback plano — e então "pulava" pro efeito real no frame
+        // seguinte, um pop visível.
+        useLayoutEffect(() => {
             if (!containerRef.current) return;
 
             const updateSize = () => {

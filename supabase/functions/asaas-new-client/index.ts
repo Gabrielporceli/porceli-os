@@ -11,8 +11,8 @@ const SERVICE_KEY      = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY        = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_URL        = "https://api.asaas.com/v3";
 const EVO_URL          = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE     = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia02";
-const EVO_KEY          = Deno.env.get("EVOLUTION_API_KEY") ?? "";
+const EVO_INSTANCE     = "agencia03";
+const EVO_KEY          = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 const ADMIN_GROUP      = Deno.env.get("ASAAS_ADMIN_GROUP_JID") ?? "120363162167738258@g.us";
 
 // ── Feriados nacionais brasileiros ─────────────────────────────────────────
@@ -165,6 +165,7 @@ serve(async (req) => {
       contract_end?: string;
       payment_day?: number;
       monthly_value?: number;
+      single_payment?: boolean;
     };
 
     // Disparo manual do painel (sem dados reais)
@@ -175,7 +176,8 @@ serve(async (req) => {
       );
     }
 
-    const { company, cnpj, responsible, phone, email, start_date, contract_end, payment_day, monthly_value } = client;
+    const { company, cnpj, responsible, phone, email, start_date, contract_end, payment_day, monthly_value, single_payment } = client;
+    const billingType = (body as any).billing_type ?? "BOLETO";
 
     // 1. Verifica se cliente já existe no Asaas
     const existing = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
@@ -201,31 +203,62 @@ serve(async (req) => {
     const payDay      = Number(payment_day);
     const monthly     = Number(monthly_value);
     const today       = new Date(); today.setHours(0, 0, 0, 0);
-    const base        = startDate > today ? startDate : today;
     const holidays    = holidaysForRange(startDate.getFullYear(), endDate.getFullYear());
-    const firstDue    = calcFirstDueDate(base, payDay);
-    const effDue      = effectiveDueDate(firstDue, holidays);
 
-    // Diferença em meses entre firstDue e (endDate - 1 dia)
-    const dayBefore   = new Date(endDate); dayBefore.setDate(dayBefore.getDate() - 1);
-    let months = (dayBefore.getFullYear() - firstDue.getFullYear()) * 12
-               + (dayBefore.getMonth() - firstDue.getMonth());
-    if (dayBefore.getDate() < firstDue.getDate()) months--;
-    const installments = Math.max(1, months + 1);
-    const totalValue   = monthly * installments;
-    const firstDueDateISO = effDue.toISOString().slice(0, 10);
+    let installments: number;
+    let totalValue: number;
+    let firstDueDateISO: string;
+    let dueDateWasAdjusted: boolean;
 
-    // 4. Cria cobrança parcelada no Asaas
-    await asaasPost("/payments", {
+    if (single_payment) {
+      // Pagamento único: cobra o valor total de uma vez, na data escolhida
+      // (start_date) — não faz sentido "encaixar" no payment_day recorrente
+      // do cliente aqui, é uma data explícita.
+      const effDue = effectiveDueDate(startDate, holidays);
+      installments = 1;
+      totalValue = monthly;
+      firstDueDateISO = effDue.toISOString().slice(0, 10);
+      dueDateWasAdjusted = effDue.getTime() !== startDate.getTime();
+    } else {
+      const base     = startDate > today ? startDate : today;
+      const firstDue = calcFirstDueDate(base, payDay);
+      const effDue   = effectiveDueDate(firstDue, holidays);
+
+      // Diferença em meses entre firstDue e (endDate - 1 dia)
+      const dayBefore = new Date(endDate); dayBefore.setDate(dayBefore.getDate() - 1);
+      let months = (dayBefore.getFullYear() - firstDue.getFullYear()) * 12
+                 + (dayBefore.getMonth() - firstDue.getMonth());
+      if (dayBefore.getDate() < firstDue.getDate()) months--;
+      installments = Math.max(1, months + 1);
+      totalValue = monthly * installments;
+      firstDueDateISO = effDue.toISOString().slice(0, 10);
+      dueDateWasAdjusted = effDue.getTime() !== firstDue.getTime();
+    }
+
+    // 4. Cria cobrança no Asaas. `installmentCount` só faz sentido pra 2+
+    // parcelas — é o campo que faz o Asaas montar um PARCELAMENTO de
+    // verdade. Mandar installmentCount:1 é um caso degenerado que a API
+    // aceita (retorna sucesso) mas não gera uma cobrança cobrável normal —
+    // foi exatamente isso que aconteceu num contrato de rescisão de 1 mês
+    // (nosso log interno registrou "sucesso" mas nada apareceu no Asaas).
+    // Pra 1 parcela/pagamento único, usa `value` — cobrança avulsa comum,
+    // o mesmo branch que asaas-renegotiation já usa corretamente.
+    const paymentBody: Record<string, unknown> = {
       customer: asaasCustomerId,
-      billingType: "BOLETO",
-      installmentCount: installments,
-      totalValue,
+      billingType,
       dueDate: firstDueDateISO,
-      description: "Parcelamento de contrato",
+      description: single_payment ? "Pagamento único" : "Parcelamento de contrato",
+      notificationDisabled: true,
       interest: { value: 1 },
       fine: { value: 2 },
-    });
+    };
+    if (installments > 1) {
+      paymentBody.installmentCount = installments;
+      paymentBody.totalValue = totalValue;
+    } else {
+      paymentBody.value = totalValue;
+    }
+    await asaasPost("/payments", paymentBody);
 
     // 5. Busca group_id do cliente no Supabase
     let groupId = ADMIN_GROUP;
@@ -252,11 +285,11 @@ serve(async (req) => {
       `Telefone: ${phone}\n` +
       `Início do contrato: ${startBR}\n` +
       `Fim do contrato: ${endBR}\n` +
-      `Nº de parcelas: ${installments}\n` +
-      `Dia do pagamento: ${payDay}\n` +
-      `Valor mensal: R$${monthly.toFixed(2)}\n` +
+      (single_payment
+        ? `Pagamento único\n`
+        : `Nº de parcelas: ${installments}\n` + `Dia do pagamento: ${payDay}\n` + `Valor mensal: R$${monthly.toFixed(2)}\n`) +
       `Valor total: R$${totalValue.toFixed(2)}\n` +
-      `Primeiro vencimento: ${firstBR}${effDue.getTime() !== firstDue.getTime() ? " (antecipado — dia útil)" : ""}`;
+      `Vencimento: ${firstBR}${dueDateWasAdjusted ? " (antecipado — dia útil)" : ""}`;
 
     await sendWhatsApp(groupId, groupMsg);
 
@@ -264,12 +297,13 @@ serve(async (req) => {
     if (phone) {
       const clientMsg =
         `Olá, ${responsible}! 👋\n\n` +
-        `Seu cadastro na *${company}* foi realizado com sucesso.\n\n` +
+        `Seu cadastro na *Porceli Company* foi realizado com sucesso.\n\n` +
         `*Detalhes do contrato:*\n` +
         `• Vigência: ${startBR} até ${endBR}\n` +
-        `• Parcelas: ${installments}x de R$${monthly.toFixed(2)}\n` +
-        `• Vencimento todo dia ${payDay}\n` +
-        `• Primeiro boleto: ${firstBR}\n\n` +
+        (single_payment
+          ? `• Pagamento único: R$${totalValue.toFixed(2)}\n`
+          : `• Parcelas: ${installments}x de R$${monthly.toFixed(2)}\n` + `• Vencimento todo dia ${payDay}\n`) +
+        `• Boleto: ${firstBR}\n\n` +
         `Em breve você receberá o link do boleto. Qualquer dúvida, estamos à disposição!`;
       await sendWhatsApp(formatPhoneBR(phone), clientMsg);
     }

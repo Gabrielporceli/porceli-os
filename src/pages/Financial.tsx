@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, AlertCircle, TrendingDown, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, TrendingDown, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { FinancialKPIs } from "@/components/Financial/FinancialKPIs";
 import { FinancialHeader } from "@/components/Financial/FinancialHeader";
 import { ExpenseModal } from "@/components/Financial/ExpenseModal";
@@ -11,7 +11,9 @@ import { useContracts } from "@/hooks/useContracts";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useFinancialEntries } from "@/hooks/useFinancialEntries";
 import { DeleteExpenseDialog } from "@/components/Financial/DeleteExpenseDialog";
+import { RenegotiationModal } from "@/components/Financial/RenegotiationModal";
 import { useState, useMemo, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
@@ -34,13 +36,22 @@ export default function Financial() {
     expenseDescription: ""
   });
 
-  // Filtros de status
+  // Filtros de status — padrão "Mês Atual" ao abrir a página.
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'paid' | 'currentMonth'>('currentMonth');
 
   // Filtro de despesas
   const [expenseFilter, setExpenseFilter] = useState<'all' | 'currentMonth'>('currentMonth');
 
+  const queryClient = useQueryClient();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expandedOverdueClients, setExpandedOverdueClients] = useState<string[]>([]);
+  const [renegotiating, setRenegotiating] = useState<{ clientName: string; clientId: string; entries: any[] } | null>(null);
+
+  const toggleOverdueClient = (clientName: string) => {
+    setExpandedOverdueClients(prev =>
+      prev.includes(clientName) ? prev.filter(n => n !== clientName) : [...prev, clientName]
+    );
+  };
 
   useEffect(() => {
     const onFocus = () => {
@@ -164,6 +175,23 @@ export default function Financial() {
       return d.getFullYear() === thisYear;
     })
     .reduce((sum: number, entry: any) => sum + (Number(entry.amount) || 0), 0);
+
+  // Totais mensais reais (a partir das faturas) — fonte da verdade para o gráfico,
+  // garantindo que a curva bata exatamente com os lançamentos financeiros.
+  const monthlyData2026 = (() => {
+    const totals = Array(12).fill(0);
+    for (const entry of financialEntries as any[]) {
+      if (!entry?.due_date) continue;
+      if (entry?.status !== 'paid' && entry?.status !== 'pending') continue;
+      const d = parseLocalDate(entry.due_date);
+      if (d.getFullYear() !== thisYear) continue;
+      totals[d.getMonth()] += Number(entry.amount) || 0;
+    }
+    return totals.map((value, i) => {
+      const name = new Date(thisYear, i, 1).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      return { period: name.charAt(0).toUpperCase() + name.slice(1), value };
+    });
+  })();
 
   const handleAddExpense = (expenseData: any) => {
     console.log('DEBUG - Dados recebidos para despesa:', expenseData);
@@ -295,51 +323,106 @@ export default function Financial() {
 
       {/* Pagamentos em Atraso */}
       {overdueEntries.length > 0 && (
-        <Card className="liquid-glass border-red-500/20 shadow-[0_20px_50px_rgba(239,68,68,0.1)] overflow-hidden">
-          <div className="p-6 flex items-center gap-3 border-b border-red-500/10 bg-red-500/[0.02]">
-            <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/10">
-              <AlertCircle className="w-5 h-5 text-red-400" />
+        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
+              <p className="text-white/40 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
             </div>
-            <h3 className="text-xl font-bold text-red-200 tracking-tight">Pagamentos em Atraso</h3>
+            <span className="text-red-500 font-black text-xl">
+              {formatCurrency(overdueEntries.reduce((sum: number, e: any) => sum + Number(e.amount), 0))}
+            </span>
           </div>
-          <div className="p-6 space-y-4">
-            {overdueEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all">
-                <div className="flex-1 grid grid-cols-5 gap-6 items-center">
-                  <div>
-                    <h4 className="text-white font-bold mb-1 tracking-tight">{entry.name}</h4>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                    <p className="text-white font-bold text-lg">{formatCurrency(Number(entry.amount))}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                    <p className="text-white/80 font-medium">{entry.reference}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                    <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
-                  </div>
-                  <div className="flex justify-center">
-                    <motion.div
-                      whileHover={{ scale: 1.05, translateY: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+
+          <div className="divide-y divide-white/5">
+            {(() => {
+              const groups = overdueEntries.reduce((acc: Record<string, typeof overdueEntries>, entry: any) => {
+                const key = entry.name;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(entry);
+                return acc;
+              }, {});
+
+              return Object.entries(groups).map(([clientName, entries]: [string, any[]]) => {
+                const totalAmount = entries.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+                const isExpanded = expandedOverdueClients.includes(clientName);
+                return (
+                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
+                    {/* Linha do cliente — clicável */}
+                    <div
+                      className="p-6 cursor-pointer flex items-center justify-between"
+                      onClick={() => toggleOverdueClient(clientName)}
                     >
-                      <Button
-                        onClick={() => handleMarkAsPaid(entry.id)}
-                        disabled={isMarkingAsPaid}
-                        className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-8 font-bold transition-all"
-                        size="sm"
-                      >
-                        Confirmar
-                      </Button>
-                    </motion.div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          {isExpanded
+                            ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                          }
+                        </div>
+                        <h4 className="text-white font-semibold text-lg">{clientName}</h4>
+                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                          {entries.length} {entries.length === 1 ? 'fatura' : 'faturas'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.05, translateY: -1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const clientId = entries[0]?.client_id ?? "";
+                            setRenegotiating({ clientName, clientId, entries });
+                          }}
+                          className="btn-danger-glass h-9 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors"
+                        >
+                          Renegociar
+                        </motion.button>
+                        <span className="text-red-500 font-bold text-sm">{formatCurrency(totalAmount)}</span>
+                      </div>
+                    </div>
+
+                    {/* Faturas individuais — visíveis só quando expandido */}
+                    {isExpanded && (
+                      <div className="px-6 pb-6 pt-0">
+                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
+                          {entries.map((entry: any, i: number) => (
+                            <div
+                              key={entry.id}
+                              className={`flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 ${i > 0 ? 'border-t border-white/5' : ''}`}
+                            >
+                              <div className="flex items-center gap-12">
+                                <div>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
+                                  <p className="text-white/70 font-medium">{entry.reference}</p>
+                                </div>
+                                <div>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
+                                  <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                                  <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
+                                </div>
+                              </div>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleMarkAsPaid(entry.id)}
+                                disabled={isMarkingAsPaid}
+                                className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-colors"
+                              >
+                                Confirmar
+                              </motion.button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         </Card>
       )}
@@ -349,7 +432,7 @@ export default function Financial() {
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Lançamentos Financeiros</h3>
-            <p className="text-white/30 text-sm mt-1">Todos os lançamentos do sistema</p>
+            <p className="text-white/40 text-sm mt-1">Todos os lançamentos do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {/* Filter buttons */}
@@ -366,12 +449,13 @@ export default function Financial() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
+                  variant="ghost"
                   onClick={() => setStatusFilter(btn.id as any)}
                   className={cn(
-                    "h-10 px-5 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
+                    "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     statusFilter === btn.id
-                      ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
-                      : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
+                      ? "btn-primary-glass text-white border-primary/40"
+                      : "liquid-glass text-white/70 hover:text-white border-white/5"
                   )}
                   size="sm"
                 >
@@ -381,66 +465,57 @@ export default function Financial() {
             ))}
           </div>
         </div>
-        <div className="p-6">
           {financialEntriesLoading ? (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Carregando lançamentos...</p>
+              <p className="text-white/50">Carregando lançamentos...</p>
             </div>
           ) : normalEntries.length === 0 ? (
             <div className="text-center py-8">
-              <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Nenhum lançamento encontrado</p>
+              <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+              <p className="text-white/50">Nenhum lançamento encontrado</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-white/5">
               {normalEntries.map((entry) => {
                 const statusTag = getStatusTag(entry);
                 return (
-                  <div key={entry.id} className="flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all group">
-                    <div className="flex-1 grid grid-cols-5 gap-6 items-center">
+                  <div key={entry.id} className="flex items-center justify-between gap-8 p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                    <h4 className="text-white font-semibold text-lg w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
+                    <div className="flex items-center gap-12 flex-1">
                       <div>
-                        <h4 className="text-white font-bold mb-1 tracking-tight">{entry.name}</h4>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                        <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                        <p className="text-white font-bold text-lg">{formatCurrency(Number(entry.amount))}</p>
+                      <div>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
+                        <p className="text-white/70 font-medium">{entry.reference}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                        <p className="text-white/80 font-medium">{entry.reference}</p>
+                      <div>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
+                        <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                        <p className="text-white/80 font-medium">{formatDateBR(entry.due_date)}</p>
-                      </div>
-                      <div className="flex justify-center">
-                        {entry.status === 'pending' ? (
-                          <motion.div
-                            whileHover={{ scale: 1.05, translateY: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                          >
-                            <Button
-                              onClick={() => handleMarkAsPaid(entry.id)}
-                              disabled={isMarkingAsPaid}
-                              className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-8 font-bold transition-all"
-                              size="sm"
-                            >
-                              Confirmar
-                            </Button>
-                          </motion.div>
-                        ) : (
-                          <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
-                        )}
-                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {entry.status === 'pending' ? (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleMarkAsPaid(entry.id)}
+                          disabled={isMarkingAsPaid}
+                          className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-colors"
+                        >
+                          Confirmar
+                        </motion.button>
+                      ) : (
+                        <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
       </Card>
 
       {/* Despesas Section */}
@@ -448,7 +523,7 @@ export default function Financial() {
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Despesas</h3>
-            <p className="text-white/30 text-sm mt-1">Todas as despesas do sistema</p>
+            <p className="text-white/40 text-sm mt-1">Todas as despesas do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {/* Filter buttons */}
@@ -463,12 +538,13 @@ export default function Financial() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <Button
+                  variant="ghost"
                   onClick={() => setExpenseFilter(btn.id as any)}
                   className={cn(
-                    "h-10 px-5 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
+                    "h-9 px-4 rounded-xl transition-all font-bold text-xs tracking-tight w-full",
                     expenseFilter === btn.id
-                      ? "liquid-glass text-primary border-primary/20 shadow-[0_0_15px_rgba(104,41,192,0.1)]"
-                      : "liquid-glass text-white/40 hover:text-white hover:bg-white/5 border-white/5"
+                      ? "btn-primary-glass text-white border-primary/40"
+                      : "liquid-glass text-white/70 hover:text-white border-white/5"
                   )}
                   size="sm"
                 >
@@ -478,14 +554,12 @@ export default function Financial() {
             ))}
           </div>
         </div>
-        <div className="p-6">
           {expensesLoading ? (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-Porceli-gray-400">Carregando despesas...</p>
+              <p className="text-white/50">Carregando despesas...</p>
             </div>
           ) : (() => {
-            // Filtrar despesas conforme o filtro selecionado
             const filteredExpenses = expenses.filter((expense) => {
               if (expenseFilter === 'all') return true;
               if (expenseFilter === 'currentMonth') {
@@ -498,90 +572,82 @@ export default function Financial() {
             if (filteredExpenses.length === 0) {
               return (
                 <div className="text-center py-8">
-                  <TrendingDown className="w-16 h-16 text-Porceli-gray-600 mx-auto mb-4" />
-                  <p className="text-Porceli-gray-400">Nenhuma despesa encontrada</p>
+                  <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                  <p className="text-white/50">Nenhuma despesa encontrada</p>
                 </div>
               );
             }
 
             return (
-              <div className="space-y-4">
+              <div className="divide-y divide-white/5">
                 {filteredExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-5 rounded-2xl liquid-glass border border-white/5 hover:bg-white/[0.04] transition-all group">
-                    <div className="flex-1 grid grid-cols-5 gap-6 items-center">
+                  <div key={expense.id} className="flex items-center justify-between p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                    <div className="w-1/3 min-w-0 pr-6">
+                      <h4 className="text-white font-semibold text-lg truncate">{expense.description}</h4>
+                      {expense.category && (
+                        <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-0.5">{expense.category}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-12 flex-1">
                       <div>
-                        <h4 className="text-white font-bold mb-1 tracking-tight">{expense.description}</h4>
-                        <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{expense.category}</p>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
+                        <p className="text-white/70 font-medium">{formatDateBR(expense.date)}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-white/30 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
-                        <p className="text-white font-medium">{formatDateBR(expense.date)}</p>
-                      </div>
-                      <div className="text-center">
-                        {expense.is_recurring ? (
-                          <Badge className="bg-white/5 text-white/60 border border-white/10 rounded-lg py-1 px-3">
+                      {expense.is_recurring && (
+                        <div>
+                          <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Recorrência</p>
+                          <Badge className="bg-white/5 text-white/70 border border-white/10 rounded-lg py-0.5 px-2 text-xs">
                             {expense.recurrence_type === 'monthly' && 'Mensal'}
                             {expense.recurrence_type === 'yearly' && 'Anual'}
                             {expense.recurrence_type === 'quarterly' && 'Trimestral'}
                             {expense.recurrence_type === 'semesterly' && 'Semestral'}
                             {!['monthly', 'yearly', 'quarterly', 'semesterly'].includes(expense.recurrence_type) && expense.recurrence_type?.charAt(0).toUpperCase() + expense.recurrence_type?.slice(1)}
                           </Badge>
-                        ) : null}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
+                        <p className="text-white font-bold">{formatCurrency(Number(expense.amount))}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-white font-bold text-xl tracking-tight">{formatCurrency(Number(expense.amount))}</p>
-                      </div>
-                      <div className="flex justify-center gap-3">
-                        {expense.status === 'pending' ? (
-                          <motion.div
-                            whileHover={{ scale: 1.05, translateY: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                          >
-                            <Button
-                              onClick={() => handlePayExpense(expense.id)}
-                              disabled={isPaying}
-                              className="liquid-glass text-green-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-6 font-bold transition-all"
-                              size="sm"
-                            >
-                              Pagar
-                            </Button>
-                          </motion.div>
-                        ) : (
-                          <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
-                        )}
-                        <motion.div
-                          whileHover={{ scale: 1.05, translateY: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    </div>
+                    <div className="flex gap-2">
+                      {expense.status === 'pending' ? (
+                        <Button
+                          onClick={() => handlePayExpense(expense.id)}
+                          disabled={isPaying}
+                          className="btn-success-glass rounded-xl h-9 px-4 font-bold transition-all"
+                          size="sm"
                         >
-                          <Button
-                            onClick={() => handleDeleteExpense(expense.id, expense.description)}
-                            disabled={isDeleting}
-                            className="liquid-glass text-red-500 hover:bg-white/10 border border-white/5 rounded-xl h-11 px-6 font-bold transition-all"
-                            size="sm"
-                          >
-                            Excluir
-                          </Button>
-                        </motion.div>
-                      </div>
+                          Pagar
+                        </Button>
+                      ) : (
+                        <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
+                      )}
+                      <Button
+                        onClick={() => handleDeleteExpense(expense.id, expense.description)}
+                        disabled={isDeleting}
+                        className="btn-danger-glass rounded-xl h-9 px-4 font-bold transition-all"
+                        size="sm"
+                      >
+                        Excluir
+                      </Button>
                     </div>
                   </div>
                 ))}
-                <div className="flex justify-between items-center mt-6 p-6 rounded-2xl liquid-glass border border-white/5">
-                  <span className="text-white/40 font-bold uppercase tracking-widest text-xs">Total de Despesas Pendentes:</span>
+                <div className="flex justify-between items-center p-6">
+                  <span className="text-white/40 font-bold uppercase tracking-widest text-xs">Total de Despesas Pendentes</span>
                   <span className="text-white font-black text-2xl tracking-tighter">{formatCurrency(filteredExpenses.filter(e => e.status === 'pending').reduce((acc, e) => acc + Number(e.amount), 0))}</span>
                 </div>
               </div>
             );
           })()}
-        </div>
       </Card>
 
       <ProjectionChart
         contracts={contractProjections}
         activeContractsCount={activeContractsCount}
         financialEntriesTotal2026={total2026FromEntries}
+        monthlyData={monthlyData2026}
       />
 
       <DeleteExpenseDialog
@@ -590,6 +656,16 @@ export default function Financial() {
         onConfirm={confirmDeleteExpense}
         expenseDescription={deleteExpenseDialog.expenseDescription}
       />
+
+      {renegotiating && (
+        <RenegotiationModal
+          clientName={renegotiating.clientName}
+          clientId={renegotiating.clientId}
+          overdueEntries={renegotiating.entries}
+          onClose={() => setRenegotiating(null)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["financial-entries"] })}
+        />
+      )}
     </div>
   );
 }

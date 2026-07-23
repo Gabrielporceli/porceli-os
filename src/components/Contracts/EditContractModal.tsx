@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -132,8 +132,8 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
-        <LiquidGlass className="w-full flex flex-col !p-0">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] overflow-hidden !rounded-3xl flex flex-col">
+        <LiquidGlass className="w-full flex flex-col flex-1 min-h-0 !p-0">
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-white/[0.05] shrink-0">
             <div className="flex items-center gap-3">
@@ -147,7 +147,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto custom-scrollbar p-6">
+          <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
@@ -161,7 +161,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
               }
             `}</style>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form id="edit-contract-form" onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="client" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Cliente</Label>
@@ -273,26 +273,31 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 </Select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-5 border-t border-white/[0.05]">
-                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    type="button"
-                    onClick={onClose}
-                    className="w-full h-10 bg-white/[0.03] hover:bg-white/10 text-white/60 border border-white/5 rounded-xl transition-all uppercase tracking-widest text-[10px] font-bold"
-                  >
-                    Cancelar
-                  </Button>
-                </motion.div>
-                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    type="submit"
-                    className="bg-primary hover:bg-primary/90 text-white w-full h-10 rounded-xl shadow-[0_0_15px_rgba(104,41,192,0.2)] font-bold uppercase tracking-widest text-[10px]"
-                  >
-                    Salvar Alterações
-                  </Button>
-                </motion.div>
-              </div>
             </form>
+          </div>
+
+          {/* Footer fixo */}
+          <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <LiquidGlassButton
+                tint="danger"
+                type="button"
+                onClick={onClose}
+                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
+              >
+                Cancelar
+              </LiquidGlassButton>
+            </motion.div>
+            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <LiquidGlassButton
+                tint="primary"
+                type="submit"
+                form="edit-contract-form"
+                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
+              >
+                Salvar Alterações
+              </LiquidGlassButton>
+            </motion.div>
           </div>
         </LiquidGlass>
       </DialogContent>
