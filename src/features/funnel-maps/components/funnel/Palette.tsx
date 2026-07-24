@@ -109,7 +109,7 @@ export function Palette({ onDragStart }: PaletteProps) {
       </div>
 
       {/* Grid */}
-      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-3">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pb-24 pt-3">
         {trafficGroups ? (
           trafficGroups.map(({ group, items }) => (
             <Section key={group} title={group}>
