@@ -109,9 +109,10 @@ export function Palette({ onDragStart }: PaletteProps) {
       </div>
 
       {/* Grid — the scroll area itself is capped short of the panel's full
-          height (pb-10 on this non-scrolling wrapper), so there's always a
-          visible gap below it, not just after scrolling all the way down. */}
-      <div className="flex min-h-0 flex-1 flex-col pb-10">
+          height (pb-3 on this non-scrolling wrapper), so there's always a
+          small visible gap below it, not just after scrolling all the way
+          down. */}
+      <div className="flex min-h-0 flex-1 flex-col pb-3">
         <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pt-3">
           {trafficGroups ? (
             trafficGroups.map(({ group, items }) => (
