@@ -108,41 +108,45 @@ export function Palette({ onDragStart }: PaletteProps) {
         ))}
       </div>
 
-      {/* Grid */}
-      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pb-24 pt-3">
-        {trafficGroups ? (
-          trafficGroups.map(({ group, items }) => (
-            <Section key={group} title={group}>
-              <Grid category={tab} items={items} onDragStart={onDragStart} />
-            </Section>
-          ))
-        ) : (
-          <Grid category={tab} items={filtered} onDragStart={onDragStart} />
-        )}
+      {/* Grid — the scroll area itself is capped short of the panel's full
+          height (pb-10 on this non-scrolling wrapper), so there's always a
+          visible gap below it, not just after scrolling all the way down. */}
+      <div className="flex min-h-0 flex-1 flex-col pb-10">
+        <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pt-3">
+          {trafficGroups ? (
+            trafficGroups.map(({ group, items }) => (
+              <Section key={group} title={group}>
+                <Grid category={tab} items={items} onDragStart={onDragStart} />
+              </Section>
+            ))
+          ) : (
+            <Grid category={tab} items={filtered} onDragStart={onDragStart} />
+          )}
 
-        {/* Custom card */}
-        <Section title="Personalizado">
-          <div
-            draggable
-            onDragStart={(e) => onDragStart(e, payloadFor(tab, 'custom'))}
-            title="Card personalizado com todas as métricas"
-            className="flex w-16 cursor-grab flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/5 active:cursor-grabbing"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/20 text-white/40">
-              <Plus size={18} />
-            </span>
-            <span className="w-full truncate text-center text-[9px] leading-tight text-white/50">Criar</span>
-          </div>
-        </Section>
+          {/* Custom card */}
+          <Section title="Personalizado">
+            <div
+              draggable
+              onDragStart={(e) => onDragStart(e, payloadFor(tab, 'custom'))}
+              title="Card personalizado com todas as métricas"
+              className="flex w-16 cursor-grab flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/5 active:cursor-grabbing"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/20 text-white/40">
+                <Plus size={18} />
+              </span>
+              <span className="w-full truncate text-center text-[9px] leading-tight text-white/50">Criar</span>
+            </div>
+          </Section>
 
-        {/* Tools */}
-        <Section title="Ferramentas">
-          <div className="flex flex-wrap gap-1.5">
-            <ToolChip icon={StickyNote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
-            <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
-            <ToolChip icon={LineChart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
-          </div>
-        </Section>
+          {/* Tools */}
+          <Section title="Ferramentas">
+            <div className="flex flex-wrap gap-1.5">
+              <ToolChip icon={StickyNote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
+              <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
+              <ToolChip icon={LineChart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
+            </div>
+          </Section>
+        </div>
       </div>
     </aside>
   );
