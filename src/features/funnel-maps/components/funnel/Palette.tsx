@@ -62,7 +62,7 @@ export function Palette({ onDragStart }: PaletteProps) {
         type="button"
         onClick={() => setCollapsed(false)}
         title="Mostrar elementos"
-        className="liquid-glass no-elevation flex w-9 shrink-0 flex-col items-center rounded-none rounded-l-2xl pt-3 text-white/40 hover:text-white"
+        className="flex w-9 shrink-0 flex-col items-center border-r border-white/5 pt-3 text-white/40 hover:text-white"
       >
         <PanelLeftOpen size={16} />
       </button>
@@ -70,7 +70,7 @@ export function Palette({ onDragStart }: PaletteProps) {
   }
 
   return (
-    <aside className="liquid-glass no-elevation flex w-72 shrink-0 flex-col rounded-none rounded-l-2xl text-white">
+    <aside className="flex w-72 shrink-0 flex-col border-r border-white/5 text-white">
       {/* Search + collapse */}
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
@@ -109,7 +109,7 @@ export function Palette({ onDragStart }: PaletteProps) {
       </div>
 
       {/* Grid */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-3">
         {trafficGroups ? (
           trafficGroups.map(({ group, items }) => (
             <Section key={group} title={group}>

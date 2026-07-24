@@ -19,12 +19,7 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <header className="liquid-glass no-elevation flex h-16 shrink-0 items-center gap-3 rounded-t-2xl border-b border-white/5 px-4">
-      <div className="flex items-center gap-2 pr-3 border-r border-white/5">
-        <div className="h-6 w-6 rounded-full bg-gradient-porceli" />
-        <span className="hidden text-sm font-semibold text-white sm:inline">Porceli Funnelytics</span>
-      </div>
-
+    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/5 px-4">
       <input
         value={map.name}
         onChange={(e) => onRename(e.target.value)}

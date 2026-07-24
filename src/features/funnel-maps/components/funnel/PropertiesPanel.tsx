@@ -23,7 +23,7 @@ export function PropertiesPanel({ node, onUpdate, onDelete }: PropertiesPanelPro
   const computed = data.computed;
 
   return (
-    <aside className="liquid-glass no-elevation flex w-72 shrink-0 flex-col overflow-y-auto rounded-none rounded-r-2xl text-white">
+    <aside className="scrollbar-hide flex w-72 shrink-0 flex-col overflow-y-auto border-l border-white/5 text-white">
       <div className="border-b border-white/5 px-4 py-3">
         <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: def.color }}>
           {def.label}

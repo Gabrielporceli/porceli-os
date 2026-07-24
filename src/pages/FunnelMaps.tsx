@@ -105,7 +105,7 @@ export default function FunnelMaps() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl">
+    <div className="liquid-glass no-elevation flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl">
       <Toolbar
         map={activeMap}
         maps={maps}
