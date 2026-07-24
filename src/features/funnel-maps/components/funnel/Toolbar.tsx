@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { Download, Upload, Plus, Trash2, Check } from 'lucide-react';
+import { Download, Upload, Plus, Trash2, Check, ChevronDown } from 'lucide-react';
+import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import type { FunnelMap } from '../../types/funnel';
 
 interface ToolbarProps {
@@ -18,34 +19,35 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-porceli-gray-800 bg-porceli-gray-900/80 px-4">
-      <div className="flex items-center gap-2">
-        <div className="h-6 w-6 rounded bg-gradient-porceli" />
-        <span className="text-sm font-semibold text-porceli-gray-100">Porceli Funnelytics</span>
+    <header className="liquid-glass no-elevation flex h-16 shrink-0 items-center gap-3 rounded-t-2xl border-b border-white/5 px-4">
+      <div className="flex items-center gap-2 pr-3 border-r border-white/5">
+        <div className="h-6 w-6 rounded-full bg-gradient-porceli" />
+        <span className="hidden text-sm font-semibold text-white sm:inline">Porceli Funnelytics</span>
       </div>
-
-      <div className="mx-2 h-6 w-px bg-porceli-gray-800" />
 
       <input
         value={map.name}
         onChange={(e) => onRename(e.target.value)}
-        className="w-56 rounded bg-transparent px-2 py-1 text-sm font-medium text-porceli-gray-100 outline-none hover:bg-porceli-gray-800 focus:bg-porceli-gray-800"
         placeholder="Nome do mapa"
+        className="w-48 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
       />
 
-      <select
-        value={map.id}
-        onChange={(e) => onSwitch(e.target.value)}
-        className="rounded border border-porceli-gray-800 bg-porceli-gray-900 px-2 py-1 text-xs text-porceli-gray-300 outline-none"
-      >
-        {maps.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name || 'Sem nome'}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          value={map.id}
+          onChange={(e) => onSwitch(e.target.value)}
+          className="appearance-none rounded-lg bg-white/[0.03] py-1.5 pl-3 pr-7 text-xs text-white/70 outline-none transition-colors hover:bg-white/[0.06]"
+        >
+          {maps.map((m) => (
+            <option key={m.id} value={m.id} className="bg-porceli-gray-900 text-white">
+              {m.name || 'Sem nome'}
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40" />
+      </div>
 
-      <span className="flex items-center gap-1 text-[11px] text-porceli-gray-500">
+      <span className="flex items-center gap-1 text-[11px] text-white/40">
         {saved ? (
           <>
             <Check size={12} className="text-emerald-400" /> salvo
@@ -55,28 +57,16 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
         )}
       </span>
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onNew}
-          className="flex items-center gap-1 rounded-md border border-porceli-gray-800 px-2.5 py-1.5 text-xs text-porceli-gray-300 hover:bg-porceli-gray-800"
-        >
+      <div className="ml-auto flex items-center gap-2">
+        <LiquidGlassButton onClick={onNew} className="h-9 px-4 text-xs font-medium">
           <Plus size={13} /> Novo mapa
-        </button>
-        <button
-          type="button"
-          onClick={onExport}
-          className="flex items-center gap-1 rounded-md border border-porceli-gray-800 px-2.5 py-1.5 text-xs text-porceli-gray-300 hover:bg-porceli-gray-800"
-        >
+        </LiquidGlassButton>
+        <LiquidGlassButton onClick={onExport} className="h-9 px-4 text-xs font-medium">
           <Download size={13} /> Exportar
-        </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 rounded-md border border-porceli-gray-800 px-2.5 py-1.5 text-xs text-porceli-gray-300 hover:bg-porceli-gray-800"
-        >
+        </LiquidGlassButton>
+        <LiquidGlassButton onClick={() => fileInputRef.current?.click()} className="h-9 px-4 text-xs font-medium">
           <Upload size={13} /> Importar
-        </button>
+        </LiquidGlassButton>
         <input
           ref={fileInputRef}
           type="file"
@@ -88,15 +78,15 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
             e.target.value = '';
           }}
         />
-        <button
-          type="button"
+        <LiquidGlassButton
+          tint="danger"
           onClick={onDelete}
           disabled={maps.length <= 1}
           title={maps.length <= 1 ? 'Mantenha ao menos um mapa' : 'Excluir mapa'}
-          className="flex items-center gap-1 rounded-md border border-porceli-gray-800 px-2.5 py-1.5 text-xs text-red-400 hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-30"
+          className="h-9 w-9 text-red-300"
         >
           <Trash2 size={13} />
-        </button>
+        </LiquidGlassButton>
       </div>
     </header>
   );

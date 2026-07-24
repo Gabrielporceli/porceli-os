@@ -98,14 +98,14 @@ export default function FunnelMaps() {
 
   if (isLoading || !activeMap) {
     return (
-      <div className="flex h-64 items-center justify-center gap-2 text-porceli-gray-400">
+      <div className="flex h-64 items-center justify-center gap-2 text-white/50">
         <Loader2 size={16} className="animate-spin" /> Carregando mapas de funil…
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl border border-white/5">
+    <div className="flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl">
       <Toolbar
         map={activeMap}
         maps={maps}
