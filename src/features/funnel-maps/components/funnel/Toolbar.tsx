@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download, Upload, Plus, Trash2, Check, ChevronDown } from 'lucide-react';
 import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import type { FunnelMap } from '../../types/funnel';
@@ -18,11 +18,26 @@ interface ToolbarProps {
 export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete, onExport, onImport }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Typing updates this local draft instantly (so the field feels responsive
+  // and never gets overwritten mid-keystroke); the actual save only fires on
+  // blur/Enter — "parou de digitar", not a timer that can still land between
+  // letters if you type with pauses.
+  const [draftName, setDraftName] = useState(map.name);
+  useEffect(() => setDraftName(map.name), [map.id, map.name]);
+
+  const commitName = () => {
+    if (draftName !== map.name) onRename(draftName);
+  };
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/5 px-4">
       <input
-        value={map.name}
-        onChange={(e) => onRename(e.target.value)}
+        value={draftName}
+        onChange={(e) => setDraftName(e.target.value)}
+        onBlur={commitName}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+        }}
         placeholder="Nome do mapa"
         className="w-48 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
       />
