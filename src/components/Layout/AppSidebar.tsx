@@ -1,4 +1,4 @@
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight, Clock } from "lucide-react";
+import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight, Clock, Workflow } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
+  { title: "Mapas de Funil", url: "/funnel-maps", icon: Workflow },
   { title: "Contratos", url: "/contracts", icon: FileText },
   { title: "Financeiro", url: "/financial", icon: DollarSign },
 
