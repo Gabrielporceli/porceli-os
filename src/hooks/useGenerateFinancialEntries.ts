@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { calcFirstDueDate, effectiveDueDate, holidaysForRange } from "@/lib/businessDays";
 
 const monthNames = [
   'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
@@ -87,23 +88,28 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       const monthlyValue = Number(contract.monthly_value);
       if (!monthlyValue || !contract.end_date || !contract.start_date) continue;
 
-      // Pagamento único: uma cobrança só, valor cheio, na data escolhida
-      // (start_date) — não entra no loop mensal de payment_day abaixo.
+      const startDate = new Date(contract.start_date + 'T00:00:00');
+      const endDate   = new Date(contract.end_date + 'T00:00:00');
+      const holidays  = holidaysForRange(startDate.getFullYear(), endDate.getFullYear());
+
+      // Pagamento único: uma cobrança só, valor cheio, na data escolhida —
+      // com o mesmo antecipo de dia útil que o Asaas aplica (asaas-new-client),
+      // pra não gravar um vencimento local diferente do que existe lá.
       if (contract.single_payment) {
-        const key = `${contract.start_date}_${monthlyValue}`;
+        const dueDateISO = effectiveDueDate(startDate, holidays).toISOString().slice(0, 10);
+        const key = `${dueDateISO}_${monthlyValue}`;
         (desiredByKey[key] ||= []).push({
           client_id: clientId,
           user_id:   userId,
           name:      client.company,
           amount:    monthlyValue,
-          due_date:  contract.start_date,
+          due_date:  dueDateISO,
           reference: 'Pagamento único',
           status:    'pending',
         });
         continue;
       }
 
-      const startDate = new Date(contract.start_date + 'T00:00:00');
       // Meia-noite do end_date, não 23:59:59: o próprio dia do fim do
       // contrato já pertence ao próximo período de serviço (ou, numa
       // renovação sem intervalo, é literalmente o dia de início do
@@ -113,13 +119,23 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       // que duplicava com a 1ª parcela de um contrato renovado que começa
       // no mesmo dia (bug real: Campel teve 2 cobranças de R$640 em
       // 23/07/2026, uma sobrando do contrato vencido e uma do renovado).
-      const endDate = new Date(contract.end_date + 'T00:00:00');
 
-      let currentDate = new Date(startDate);
-      if (startDate.getDate() > paymentDay) {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-      }
-      currentDate = setPaymentDay(currentDate, paymentDay);
+      // 1º vencimento com o MESMO ajuste de dia útil do asaas-new-client
+      // (antecipa se cair em fim de semana/feriado). O Asaas, ao gerar o
+      // parcelamento a partir desse 1º vencimento, cascateia o MESMO dia
+      // do mês (clampado) pras parcelas seguintes — sem reconferir dia
+      // útil em cada uma. Por isso ancoramos no dia efetivo, não no
+      // payment_day cru: senão nosso vencimento local diverge do Asaas
+      // todo mês em que o payment_day cair em fim de semana/feriado (foi
+      // o que aconteceu com o Mayke Arruda: Asaas mostrava 31/07, 31/08,
+      // 30/09... e o nosso banco tinha 01/08, 01/09, 01/10...).
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const base = startDate > today ? startDate : today;
+      const firstDue = calcFirstDueDate(base, paymentDay);
+      const effDue = effectiveDueDate(firstDue, holidays);
+      const anchorDay = effDue.getDate();
+
+      let currentDate = new Date(effDue);
 
       while (true) {
         const paymentDate = new Date(currentDate);
@@ -142,9 +158,14 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
           status:    'pending',
         });
 
-        const nextMonth = new Date(currentDate);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        currentDate = setPaymentDay(nextMonth, paymentDay);
+        // IMPORTANTE: nextMonth precisa nascer com dia=1, não copiar o dia
+        // 31 de currentDate e só depois somar o mês — `setMonth` num Date
+        // com dia 31 pulando pra um mês de 30 dias transborda pro mês
+        // SEGUINTE (ex.: 31/ago + 1 mês vira 01/out, pulando setembro
+        // inteiro). anchorDay agora pode ser 29/30/31 (antes o payment_day
+        // cru era sempre ≤28, então esse transbordo nunca acontecia).
+        const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        currentDate = setPaymentDay(nextMonth, anchorDay);
       }
     }
 

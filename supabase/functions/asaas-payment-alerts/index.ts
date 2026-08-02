@@ -95,14 +95,27 @@ async function asaasGetAll(path: string): Promise<unknown[]> {
 
 // ── Evolution API ──────────────────────────────────────────────────────────────
 
-async function sendWhatsApp(number: string, text: string): Promise<void> {
+// Antes isso só disparava o fetch e nunca conferia a resposta — se o
+// Evolution API rejeitasse (instância desconectada, número inválido, rate
+// limit), o erro sumia em silêncio e o notification_logs ainda registrava
+// "sent". Foi exatamente esse ponto cego que fez um cliente não ser avisado
+// de um boleto (Mayke Arruda, parcela de R$1000) enquanto o sistema "achava"
+// que tinha dado certo.
+async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean; error?: string }> {
   try {
-    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
+    const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: EVO_KEY },
       body: JSON.stringify({ number, text }),
     });
-  } catch (e) { console.error("sendWhatsApp:", (e as Error).message); }
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      return { ok: false, error: `Evolution API ${r.status}: ${txt.slice(0, 300)}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
 }
 
 // ── Deduplicação ───────────────────────────────────────────────────────────────
@@ -135,21 +148,21 @@ function overdueConfig(d: number): { type: string; withinDays: number; urgency: 
 
 function msgPending(name: string, desc: string, due: string, val: string, url: string, days: number): string {
   const intro = days === 0
-    ? `Ola! Sua fatura vence *hoje*. Segue o resumo:`
-    : `Ola! Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
+    ? `Olá! ⚠️ Sua fatura vence *hoje*. Segue o resumo:`
+    : `Olá! Sua fatura vence em *${days} dias* (${fmtDate(due)}). Segue o resumo:`;
   const footer = days === 0
-    ? `Regularize ainda hoje para manter o servico ativo. Se ja pagou, pode ignorar.`
-    : `Pague dentro do prazo e evite imprevistos.`;
-  return `${intro}\n\n*Cliente:* ${name}\n*Descricao:* ${desc}\n*Vencimento:* ${fmtDate(due)}\n*Valor:* ${val}\n\n*Link para pagamento:* ${url}\n\n${footer}`;
+    ? `Regularize ainda hoje para manter o serviço ativo. Se já pagou, pode ignorar. 😊`
+    : `Pague dentro do prazo e evite imprevistos. 😊`;
+  return `${intro}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)}\n*Valor:* ${val}\n\n*Link para pagamento:* ${url}\n\n${footer}`;
 }
 
 function msgOverdue(name: string, desc: string, due: string, val: string, url: string, urgency: "mild" | "urgent" | "persistent"): string {
   const headers = {
-    mild:       `Ola! Identificamos um pagamento em aberto:`,
-    urgent:     `Ola! Seu pagamento esta em atraso. Regularize o quanto antes:`,
-    persistent: `Ola! Fatura em atraso. Evite bloqueio do servico:`,
+    mild:       `Olá! 😊 Identificamos um pagamento em aberto:`,
+    urgent:     `Olá! ⚠️ Seu pagamento está em atraso. Regularize o quanto antes:`,
+    persistent: `Olá! 🔴 Fatura em atraso. Evite bloqueio do serviço:`,
   };
-  return `${headers[urgency]}\n\n*Cliente:* ${name}\n*Descricao:* ${desc}\n*Vencimento:* ${fmtDate(due)} + juros de atraso\n*Valor base:* ${val}\n\n*Link para pagamento:* ${url}\n\nSe ja realizou o pagamento, favor desconsiderar este aviso.`;
+  return `${headers[urgency]}\n\n*Cliente:* ${name}\n*Descrição:* ${desc}\n*Vencimento:* ${fmtDate(due)} + juros de atraso\n*Valor base:* ${val}\n\n*Link para pagamento:* ${url}\n\nSe já realizou o pagamento, favor desconsiderar este aviso.`;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
@@ -217,11 +230,21 @@ serve(async (req) => {
         const effISO   = effDue.toISOString().slice(0, 10);
         const msg      = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
 
-        if (cust.phone) await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        // Status do log reflete a entrega REAL ao telefone do cliente — o
+        // grupo interno é só uma cópia e não bloqueia o status, mas o erro
+        // dele também fica registrado no metadata.
+        let clientSend: { ok: boolean; error?: string } = { ok: true };
+        if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
         const gid = groupMap.get(cust.name.toLowerCase());
-        if (gid) await sendWhatsApp(gid, msg);
+        const groupSend = gid ? await sendWhatsApp(gid, msg) : { ok: true };
 
-        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, status: "sent", metadata: { daysLeft, effISO } });
+        await logNotif(supabase, {
+          asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
+          asaas_payment_id: p.id,
+          status: clientSend.ok ? "sent" : "failed",
+          error_message: clientSend.ok ? undefined : clientSend.error,
+          metadata: { daysLeft, effISO, groupSendOk: groupSend.ok, groupSendError: groupSend.error },
+        });
         results.pending++;
       } catch (e) { console.error("pending:", (e as Error).message); results.errors++; }
     }
@@ -243,11 +266,18 @@ serve(async (req) => {
 
         const msg = msgOverdue(cust.name, p.description ?? "", p.dueDate, fmtBRL(p.value), p.invoiceUrl ?? "", urgency);
 
-        if (cust.phone) await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        let clientSend: { ok: boolean; error?: string } = { ok: true };
+        if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
         const gid = groupMap.get(cust.name.toLowerCase());
-        if (gid) await sendWhatsApp(gid, msg);
+        const groupSend = gid ? await sendWhatsApp(gid, msg) : { ok: true };
 
-        await logNotif(supabase, { asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp", asaas_payment_id: p.id, days_overdue: daysLate, status: "sent", metadata: { urgency } });
+        await logNotif(supabase, {
+          asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
+          asaas_payment_id: p.id, days_overdue: daysLate,
+          status: clientSend.ok ? "sent" : "failed",
+          error_message: clientSend.ok ? undefined : clientSend.error,
+          metadata: { urgency, groupSendOk: groupSend.ok, groupSendError: groupSend.error },
+        });
         results.overdue++;
       } catch (e) { console.error("overdue:", (e as Error).message); results.errors++; }
     }

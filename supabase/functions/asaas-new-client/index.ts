@@ -119,12 +119,27 @@ function formatPhoneBR(phone: string): string {
 
 // ── Evolution API helper ───────────────────────────────────────────────────
 
-async function sendWhatsApp(number: string, text: string): Promise<void> {
-  await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: EVO_KEY },
-    body: JSON.stringify({ number, text }),
-  });
+// Antes isso só disparava o fetch e nunca conferia a resposta — se o
+// Evolution API rejeitasse (instância desconectada, número inválido, rate
+// limit), o erro sumia em silêncio e o log ainda registrava "sent". Foi
+// exatamente esse ponto cego que fez um cliente não ser avisado de um
+// boleto (Mayke Arruda, parcela de R$1000) enquanto o sistema "achava"
+// que tinha dado certo.
+async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: EVO_KEY },
+      body: JSON.stringify({ number, text }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      return { ok: false, error: `Evolution API ${r.status}: ${txt.slice(0, 300)}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
 }
 
 // ── Supabase log ───────────────────────────────────────────────────────────
@@ -291,9 +306,10 @@ serve(async (req) => {
       `Valor total: R$${totalValue.toFixed(2)}\n` +
       `Vencimento: ${firstBR}${dueDateWasAdjusted ? " (antecipado — dia útil)" : ""}`;
 
-    await sendWhatsApp(groupId, groupMsg);
+    const groupSend = await sendWhatsApp(groupId, groupMsg);
 
     // 8. Mensagem de boas-vindas para o cliente
+    let clientSend: { ok: boolean; error?: string } = { ok: true };
     if (phone) {
       const clientMsg =
         `Olá, ${responsible}! 👋\n\n` +
@@ -305,17 +321,20 @@ serve(async (req) => {
           : `• Parcelas: ${installments}x de R$${monthly.toFixed(2)}\n` + `• Vencimento todo dia ${payDay}\n`) +
         `• Boleto: ${firstBR}\n\n` +
         `Em breve você receberá o link do boleto. Qualquer dúvida, estamos à disposição!`;
-      await sendWhatsApp(formatPhoneBR(phone), clientMsg);
+      clientSend = await sendWhatsApp(formatPhoneBR(phone), clientMsg);
     }
 
-    // 9. Log de notificações
+    // 9. Log de notificações — status reflete a entrega real ao CLIENTE
+    // (o grupo interno é só uma cópia, não bloqueia o status; o erro dele
+    // ainda vai pro metadata caso também tenha falhado).
     await logNotification(supabase, {
       asaas_customer_id: asaasCustomerId,
       client_name: company,
       type: "new_client",
       channel: "group",
-      status: "sent",
-      metadata: { installments, totalValue, firstDueDateISO },
+      status: clientSend.ok ? "sent" : "failed",
+      error_message: clientSend.ok ? undefined : clientSend.error,
+      metadata: { installments, totalValue, firstDueDateISO, groupSendOk: groupSend.ok, groupSendError: groupSend.error },
     });
 
     // 10. Atualiza last_triggered_at da automação
