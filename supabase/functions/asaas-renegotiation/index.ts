@@ -29,6 +29,17 @@ async function asaasPost(path: string, body: unknown) {
   return r.json();
 }
 
+// O campo mobilePhone do Asaas espera o formato LOCAL (DDD + número, sem
+// código de país) — mandar com "55" na frente faz o Asaas truncar/corromper
+// o número salvo (ver mesma correção em asaas-new-client).
+function toAsaasLocalPhone(phone: string): string {
+  const clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("55") && (clean.length === 13 || clean.length === 12)) {
+    return clean.slice(2);
+  }
+  return clean;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -67,7 +78,7 @@ serve(async (req) => {
         name: company_name,
         cpfCnpj: cnpj.replace(/\D/g, ""),
         email: email ?? undefined,
-        mobilePhone: phone ?? undefined,
+        mobilePhone: phone ? toAsaasLocalPhone(phone) : undefined,
         notificationDisabled: true,
       });
       asaasCustomerId = created.id;

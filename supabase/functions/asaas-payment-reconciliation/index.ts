@@ -17,7 +17,7 @@ const EPS_PENALTY = 1.00;
 
 type AsaasCustomer = { id: string; name: string };
 type AsaasPayment  = { id: string; customer: string; dueDate: string; value: number; netValue: number; originalValue?: number; paymentDate?: string; confirmedDate?: string };
-type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string; reference?: string };
+type SupabaseEntry = { id: string; name: string; due_date: string; amount: number; status: string; reference?: string; asaas_payment_id?: string | null };
 
 async function asaasGetAll(path: string): Promise<unknown[]> {
   const all: unknown[] = []; let offset = 0;
@@ -85,10 +85,22 @@ serve(async (req) => {
     const received = (await asaasGetAll(`/payments?status=RECEIVED&dueDateGe=${since}`)) as AsaasPayment[];
     const { data: pendingEntries } = await supabase.from("financial_entries").select("*").eq("status", "pending");
 
-    if (!pendingEntries?.length || !received.length) {
+    // Pagamentos do Asaas já vinculados a alguma financial_entries (paga ou
+    // pendente) em execuções anteriores — nunca podem ser candidatos de novo.
+    // Sem isso, o MESMO pagamento RECEIVED do Asaas (que nunca "some" de lá)
+    // podia dar baixa em DUAS entradas locais distintas em dias diferentes,
+    // porque o `payIndex` é reconstruído do zero a cada execução e o
+    // `list.splice()` só evita reuso DENTRO da mesma execução (caso real: CP
+    // Cann, duas entradas de R$800 com due_date igual, o mesmo pagamento
+    // "Parcela 6/6" deu baixa nas duas em dias distintos).
+    const { data: alreadyLinked } = await supabase
+      .from("financial_entries").select("asaas_payment_id")
+      .not("asaas_payment_id", "is", null);
+    const usedPaymentIds = new Set((alreadyLinked ?? []).map((r: { asaas_payment_id: string }) => r.asaas_payment_id));
+
+    if (!pendingEntries?.length) {
       const nowBR = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      const reason = !pendingEntries?.length ? "Nenhuma entrada pendente no sistema." : "Nenhum pagamento recebido no Asaas nos últimos 6 meses.";
-      await sendWhatsApp(ADMIN_GROUP, `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n✅ Nada a conciliar hoje.\n_${reason}_`);
+      await sendWhatsApp(ADMIN_GROUP, `📊 *Dá Baixa no Sistema* — ${nowBR}\n\n✅ Nada a conciliar hoje.\n_Nenhuma entrada pendente no sistema._`);
       await supabase.from("automations").update({ last_triggered_at: new Date().toISOString() }).eq("jobname", "asaas-reconciliacao");
       return new Response(JSON.stringify({ success: true, matched: 0, unmatched: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -97,6 +109,7 @@ serve(async (req) => {
     const payIndex = new Map<string, RI[]>();
 
     for (const p of received) {
+      if (usedPaymentIds.has(p.id)) continue;
       const name    = customerNameMap.get(p.customer) ?? "";
       const dueIso  = normalizeIsoDate(p.dueDate);
       const key     = buildKey(name, dueIso);
@@ -159,15 +172,69 @@ serve(async (req) => {
       if (bestIdx === -1) { unmatchedCount++; continue; }
 
       const chosen = list.splice(bestIdx, 1)[0];
+      usedPaymentIds.add(chosen.raw.id);
       matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "", paidDate: chosen.payDateIso });
     }
 
     for (const m of matched) {
-      await supabase.from("financial_entries").update({ status: "paid", paid_date: m.paidDate }).eq("id", m.entryId);
+      await supabase.from("financial_entries").update({ status: "paid", paid_date: m.paidDate, asaas_payment_id: m.paymentId }).eq("id", m.entryId);
     }
 
     if (matched.length > 0) {
       await supabase.from("notification_logs").insert({ type: "reconciliation", channel: "system", status: "sent", metadata: { matched: matched.length, unmatched: unmatchedCount } });
+    }
+
+    // Passada 2: vincula (sem mexer em status/paid_date) as entradas que
+    // continuam pendentes a um boleto PENDING do Asaas — assim toda cobrança
+    // já nasce/fica com o asaas_payment_id preenchido assim que o Asaas tiver
+    // o boleto correspondente, em vez de só ganhar o vínculo no dia em que
+    // for paga. Mesma regra de nunca reusar um id já vinculado a outra
+    // entrada (usedPaymentIds acumula os da passada 1 também).
+    const paidNowIds = new Set(matched.map((m) => m.entryId));
+    const stillPending = (pendingEntries as SupabaseEntry[]).filter(
+      (e) => !paidNowIds.has(e.id) && !e.asaas_payment_id
+    );
+
+    let linked = 0;
+    if (stillPending.length > 0) {
+      const pendingAsaas = (await asaasGetAll(`/payments?status=PENDING&dueDateGe=${since}`)) as AsaasPayment[];
+      const pendIndex = new Map<string, RI[]>();
+      for (const p of pendingAsaas) {
+        if (usedPaymentIds.has(p.id)) continue;
+        const name   = customerNameMap.get(p.customer) ?? "";
+        const dueIso = normalizeIsoDate(p.dueDate);
+        const key    = buildKey(name, dueIso);
+        if (!key || !dueIso) continue;
+        if (!pendIndex.has(key)) pendIndex.set(key, []);
+        pendIndex.get(key)!.push({ raw: p, dueIso, payDateIso: null, payValue: parseBRL(p.value), payNet: null, payOriginal: parseBRL(p.originalValue) });
+      }
+
+      for (const entry of stillPending) {
+        const dueIso = normalizeIsoDate(entry.due_date);
+        const key    = buildKey(entry.name ?? "", dueIso);
+        if (!key) continue;
+        const list = pendIndex.get(key);
+        if (!list?.length) continue;
+
+        const amount = Number(entry.amount);
+        if (!Number.isFinite(amount)) continue;
+
+        let bestIdx = -1, bestDiff = Infinity;
+        for (let i = 0; i < list.length; i++) {
+          const c = list[i];
+          const av = [c.payValue, c.payOriginal].filter((v): v is number => v !== null);
+          for (const v of av) {
+            const diff = Math.abs(v - amount);
+            if (diff <= EPS && diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+          }
+        }
+        if (bestIdx === -1) continue;
+
+        const chosen = list.splice(bestIdx, 1)[0];
+        usedPaymentIds.add(chosen.raw.id);
+        await supabase.from("financial_entries").update({ asaas_payment_id: chosen.raw.id }).eq("id", entry.id);
+        linked++;
+      }
     }
 
     // Relatório — agrupa baixas por cliente para deixar claro quando há
@@ -207,7 +274,7 @@ serve(async (req) => {
     }
 
     await supabase.from("automations").update({ last_triggered_at: new Date().toISOString() }).eq("jobname", "asaas-reconciliacao");
-    return new Response(JSON.stringify({ success: true, matched: matched.length, unmatched: unmatchedCount }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ success: true, matched: matched.length, unmatched: unmatchedCount, linked }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: unknown) {
     const e = err as Error;

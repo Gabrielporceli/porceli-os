@@ -8,8 +8,14 @@ const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ASAAS_KEY    = Deno.env.get("ASAAS_API_KEY") ?? "";
 const ASAAS_BASE   = "https://api.asaas.com/v3";
 const EVO_URL      = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
-const EVO_INSTANCE = Deno.env.get("EVOLUTION_INSTANCE") ?? "agencia03";
-const EVO_KEY      = Deno.env.get("EVOLUTION_API_KEY") ?? "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
+const EVO_INSTANCE = "agencia03";
+// Fixo, igual asaas-new-client e asaas-payment-reconciliation — não lê de
+// env var. Achamos um secret "EVOLUTION_API_KEY" configurado no projeto com
+// um valor diferente deste (mesmo tamanho, mas inválido/revogado); como só
+// esta function lia dessa variável, era a ÚNICA que usava a chave errada —
+// causou 401 Unauthorized só no envio direto ao cliente (Mayke Arruda não
+// recebeu 2 avisos seguidos por causa disso).
+const EVO_KEY       = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 
 // ── Feriados ───────────────────────────────────────────────────────────────────
 
@@ -120,6 +126,13 @@ async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean
 
 // ── Deduplicação ───────────────────────────────────────────────────────────────
 
+// Só conta como "já notificado" uma tentativa que REALMENTE chegou
+// (status "sent"). Antes contava qualquer log, inclusive "failed" — desde
+// que passamos a registrar falha de verdade (ver sendWhatsApp), isso
+// travava o reenvio: a tentativa que falhou "ocupava" a dedupe do dia e
+// nenhuma nova tentativa saía até a janela expirar (foi o que aconteceu
+// com o Mayke Arruda dois dias seguidos, por causa do bug do EVO_KEY
+// lido de env var — ver comentário acima).
 async function wasNotified(
   supabase: ReturnType<typeof createClient>,
   paymentId: string, type: string, withinDays: number
@@ -127,7 +140,7 @@ async function wasNotified(
   const since = new Date(); since.setDate(since.getDate() - withinDays);
   const { data } = await supabase
     .from("notification_logs").select("id")
-    .eq("asaas_payment_id", paymentId).eq("type", type)
+    .eq("asaas_payment_id", paymentId).eq("type", type).eq("status", "sent")
     .gte("sent_at", since.toISOString()).limit(1);
   return (data ?? []).length > 0;
 }

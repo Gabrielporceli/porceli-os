@@ -117,6 +117,19 @@ function formatPhoneBR(phone: string): string {
   return phone;
 }
 
+// O campo mobilePhone do Asaas espera o formato LOCAL (DDD + número, sem
+// código de país) — mandar com "55" na frente faz o Asaas truncar/corromper
+// o número salvo (bug real: Mayke Arruda ficou com "55659811788" salvo, um
+// número que não existe, porque o clients.phone dele tinha os 13 dígitos
+// com "55" incluso e foi mandado direto sem normalizar).
+function toAsaasLocalPhone(phone: string): string {
+  const clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("55") && (clean.length === 13 || clean.length === 12)) {
+    return clean.slice(2);
+  }
+  return clean;
+}
+
 // ── Evolution API helper ───────────────────────────────────────────────────
 
 // Antes isso só disparava o fetch e nunca conferia a resposta — se o
@@ -206,7 +219,7 @@ serve(async (req) => {
         name: company,
         cpfCnpj: cnpj,
         email,
-        mobilePhone: phone,
+        mobilePhone: phone ? toAsaasLocalPhone(phone) : phone,
         notificationDisabled: true,
       });
       asaasCustomerId = created.id;
