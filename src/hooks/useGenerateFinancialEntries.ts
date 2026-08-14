@@ -207,12 +207,19 @@ export const updateFinancialEntriesForClient = async (clientId: string, userId: 
   try {
     console.log('DEBUG - Atualizando lançamentos financeiros para cliente:', clientId);
 
+    // Só apaga pendentes com vencimento AINDA NÃO passado. generateFinancialEntriesForClient
+    // só cria parcelas a partir de hoje pra frente (base = max(startDate, hoje)) — então um
+    // pendente já vencido nunca seria recriado se fosse apagado aqui. Apagar sem esse filtro
+    // apagava boletos vencidos e não pagos pra sempre, sem substituto (caso real: Nova House,
+    // 5 meses de cobrança vencida em aberto sumiram do sistema ao editar o contrato).
+    const todayISO = new Date().toISOString().slice(0, 10);
     await supabase
       .from('financial_entries')
       .delete()
       .eq('client_id', clientId)
       .eq('user_id', userId)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .gte('due_date', todayISO);
 
     await generateFinancialEntriesForClient(clientId, userId);
 
