@@ -106,8 +106,39 @@ serve(async (req) => {
     }
 
     type RI = { raw: AsaasPayment; dueIso: string; payDateIso: string | null; payValue: number | null; payNet: number | null; payOriginal: number | null };
-    const payIndex = new Map<string, RI[]>();
 
+    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null }> = [];
+    let unmatchedCount = 0;
+
+    // Fase 1: entradas que JÁ têm asaas_payment_id (vinculadas numa execução
+    // anterior, ex.: passada 2 abaixo, enquanto o boleto ainda estava
+    // PENDING) — checa direto se ESSE pagamento específico virou RECEIVED.
+    // Não passa pelo usedPaymentIds/payIndex: como o vínculo é 1-pra-1 (índice
+    // único no banco), reconhecer o próprio pagamento nunca é "reuso". Isso é
+    // essencial — sem essa fase, o pagamento já constava em usedPaymentIds
+    // (por já estar vinculado) e a fase 2 o excluía do payIndex pra sempre,
+    // travando a entrada em "pending" mesmo depois de paga de verdade (bug
+    // real: Escobar e Growth Hub pagaram e nunca receberam baixa).
+    const receivedById = new Map(received.map((p) => [p.id, p]));
+    const stillNeedsMatch: SupabaseEntry[] = [];
+
+    for (const entry of (pendingEntries as SupabaseEntry[])) {
+      if (entry.asaas_payment_id) {
+        const p = receivedById.get(entry.asaas_payment_id);
+        if (p) {
+          const payDateIso = p.paymentDate ? normalizeIsoDate(p.paymentDate) : p.confirmedDate ? normalizeIsoDate(p.confirmedDate) : null;
+          matched.push({ entryId: entry.id, paymentId: p.id, clientName: entry.name ?? "", amount: Number(entry.amount), reference: entry.reference ?? "", paidDate: payDateIso });
+        }
+        // Ainda não recebido no Asaas — normal, não é "sem correspondência".
+        continue;
+      }
+      stillNeedsMatch.push(entry);
+    }
+
+    // Fase 2: fuzzy match (nome+data+valor) só pras entradas que ainda não
+    // têm nenhum vínculo — aqui sim o payIndex exclui pagamentos já usados
+    // por QUALQUER entrada, pra nunca reaproveitar o mesmo pagamento em duas.
+    const payIndex = new Map<string, RI[]>();
     for (const p of received) {
       if (usedPaymentIds.has(p.id)) continue;
       const name    = customerNameMap.get(p.customer) ?? "";
@@ -119,10 +150,7 @@ serve(async (req) => {
       payIndex.get(key)!.push({ raw: p, dueIso, payDateIso, payValue: parseBRL(p.value), payNet: parseBRL(p.netValue), payOriginal: parseBRL(p.originalValue) });
     }
 
-    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null }> = [];
-    let unmatchedCount = 0;
-
-    for (const entry of (pendingEntries as SupabaseEntry[])) {
+    for (const entry of stillNeedsMatch) {
       const dueIso = normalizeIsoDate(entry.due_date);
       const key    = buildKey(entry.name ?? "", dueIso);
       if (!key) continue;
