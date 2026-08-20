@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
+import { ContractBillingPreview } from "./ContractBillingPreview";
 
 interface Contract {
     id: string;
@@ -81,6 +82,8 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
             });
         }
     }, [contract]);
+
+    const monthlyValueNumber = parseFloat(formData.monthlyValue.replace('.', '').replace(',', '.')) || 0;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -280,6 +283,14 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     </div>
                                 )}
                             </div>
+
+                            <ContractBillingPreview
+                                startDate={formData.startDate}
+                                endDate={singlePayment ? formData.startDate : formData.endDate}
+                                paymentDay={parseInt(formData.paymentDay) || 1}
+                                value={monthlyValueNumber}
+                                singlePayment={singlePayment}
+                            />
 
                             <div className="flex items-start gap-4 p-5 rounded-2xl bg-yellow-500/5 border border-yellow-500/10">
                                 <AlertCircle className="w-5 h-5 text-yellow-500/60 mt-0.5 shrink-0" />

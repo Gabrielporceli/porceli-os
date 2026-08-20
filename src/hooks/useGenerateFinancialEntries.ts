@@ -1,21 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { calcFirstDueDate, effectiveDueDate, holidaysForRange } from "@/lib/businessDays";
-
-const monthNames = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-];
-
-// Ajusta a data para o dia de pagamento do mês, respeitando o último dia do mês
-const setPaymentDay = (date: Date, day: number): Date => {
-  const newDate = new Date(date);
-  newDate.setDate(1);
-  const lastDay = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
-  newDate.setDate(Math.min(day, lastDay));
-  newDate.setHours(0, 0, 0, 0);
-  return newDate;
-};
+import { computeContractBilling } from "@/lib/contractBilling";
 
 /**
  * Gera lançamentos financeiros para o cliente iterando sobre TODOS os contratos
@@ -86,86 +71,31 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
 
     for (const contract of activeContracts) {
       const monthlyValue = Number(contract.monthly_value);
-      if (!monthlyValue || !contract.end_date || !contract.start_date) continue;
+      if (!monthlyValue || !contract.start_date) continue;
+      if (!contract.single_payment && !contract.end_date) continue;
 
-      const startDate = new Date(contract.start_date + 'T00:00:00');
-      const endDate   = new Date(contract.end_date + 'T00:00:00');
-      const holidays  = holidaysForRange(startDate.getFullYear(), endDate.getFullYear());
+      // Mesma função usada na preview dos modais de contrato (NewContractModal
+      // / RenewContractModal) — garante que o que o usuário vê antes de
+      // confirmar é EXATAMENTE o que vira lançamento aqui.
+      const billing = computeContractBilling({
+        startDate: contract.start_date,
+        endDate: contract.end_date ?? contract.start_date,
+        paymentDay,
+        value: monthlyValue,
+        singlePayment: !!contract.single_payment,
+      });
 
-      // Pagamento único: uma cobrança só, valor cheio, na data escolhida —
-      // com o mesmo antecipo de dia útil que o Asaas aplica (asaas-new-client),
-      // pra não gravar um vencimento local diferente do que existe lá.
-      if (contract.single_payment) {
-        const dueDateISO = effectiveDueDate(startDate, holidays).toISOString().slice(0, 10);
-        const key = `${dueDateISO}_${monthlyValue}`;
+      for (const item of billing) {
+        const key = `${item.dueDate}_${monthlyValue}`;
         (desiredByKey[key] ||= []).push({
           client_id: clientId,
           user_id:   userId,
           name:      client.company,
           amount:    monthlyValue,
-          due_date:  dueDateISO,
-          reference: 'Pagamento único',
+          due_date:  item.dueDate,
+          reference: item.reference,
           status:    'pending',
         });
-        continue;
-      }
-
-      // Meia-noite do end_date, não 23:59:59: o próprio dia do fim do
-      // contrato já pertence ao próximo período de serviço (ou, numa
-      // renovação sem intervalo, é literalmente o dia de início do
-      // contrato seguinte) — não deve gerar uma cobrança aqui. Com
-      // 23:59:59 + comparação ">" o loop tratava o end_date como ainda
-      // dentro do período faturável e criava uma parcela extra nesse dia,
-      // que duplicava com a 1ª parcela de um contrato renovado que começa
-      // no mesmo dia (bug real: Campel teve 2 cobranças de R$640 em
-      // 23/07/2026, uma sobrando do contrato vencido e uma do renovado).
-
-      // 1º vencimento com o MESMO ajuste de dia útil do asaas-new-client
-      // (antecipa se cair em fim de semana/feriado). O Asaas, ao gerar o
-      // parcelamento a partir desse 1º vencimento, cascateia o MESMO dia
-      // do mês (clampado) pras parcelas seguintes — sem reconferir dia
-      // útil em cada uma. Por isso ancoramos no dia efetivo, não no
-      // payment_day cru: senão nosso vencimento local diverge do Asaas
-      // todo mês em que o payment_day cair em fim de semana/feriado (foi
-      // o que aconteceu com o Mayke Arruda: Asaas mostrava 31/07, 31/08,
-      // 30/09... e o nosso banco tinha 01/08, 01/09, 01/10...).
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const base = startDate > today ? startDate : today;
-      const firstDue = calcFirstDueDate(base, paymentDay);
-      const effDue = effectiveDueDate(firstDue, holidays);
-      const anchorDay = effDue.getDate();
-
-      let currentDate = new Date(effDue);
-
-      while (true) {
-        const paymentDate = new Date(currentDate);
-        paymentDate.setHours(0, 0, 0, 0);
-        if (paymentDate >= endDate) break;
-
-        const year     = paymentDate.getFullYear();
-        const monthStr = String(paymentDate.getMonth() + 1).padStart(2, '0');
-        const dayStr   = String(paymentDate.getDate()).padStart(2, '0');
-        const entryDate = `${year}-${monthStr}-${dayStr}`;
-        const key = `${entryDate}_${monthlyValue}`;
-
-        (desiredByKey[key] ||= []).push({
-          client_id: clientId,
-          user_id:   userId,
-          name:      client.company,
-          amount:    monthlyValue,
-          due_date:  entryDate,
-          reference: `${monthNames[paymentDate.getMonth()]} de ${year}`,
-          status:    'pending',
-        });
-
-        // IMPORTANTE: nextMonth precisa nascer com dia=1, não copiar o dia
-        // 31 de currentDate e só depois somar o mês — `setMonth` num Date
-        // com dia 31 pulando pra um mês de 30 dias transborda pro mês
-        // SEGUINTE (ex.: 31/ago + 1 mês vira 01/out, pulando setembro
-        // inteiro). anchorDay agora pode ser 29/30/31 (antes o payment_day
-        // cru era sempre ≤28, então esse transbordo nunca acontecia).
-        const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-        currentDate = setPaymentDay(nextMonth, anchorDay);
       }
     }
 

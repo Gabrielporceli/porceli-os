@@ -17,6 +17,7 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
 import { X, FileText, DollarSign, Landmark, QrCode, CreditCard } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
+import { ContractBillingPreview } from "./ContractBillingPreview";
 
 interface NewContractModalProps {
   isOpen: boolean;
@@ -53,6 +54,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
   });
 
   const [selectedClientName, setSelectedClientName] = useState('Selecionar Cliente');
+
+  const monthlyValueNumber = parseFloat(formData.monthly_value.replace('.', '').replace(',', '.')) || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,6 +313,14 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     </div>
                   )}
                 </div>
+
+                <ContractBillingPreview
+                  startDate={formData.start_date}
+                  endDate={singlePayment ? formData.start_date : formData.end_date}
+                  paymentDay={parseInt(formData.payment_day) || 1}
+                  value={monthlyValueNumber}
+                  singlePayment={singlePayment}
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="status" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Status</Label>
