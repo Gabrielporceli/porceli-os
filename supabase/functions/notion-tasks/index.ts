@@ -306,7 +306,32 @@ serve(async (req) => {
                 updates[datePropName] = { date: body.dueDate ? { start: body.dueDate } : null }
              }
           }
-          
+
+          // Atualiza Cliente
+          if (body.client !== undefined) {
+             const clientKey = Object.keys(page.properties).find(k =>
+               ['Clientes', 'Cliente', 'Clients', 'Client', 'Projeto', 'Project', 'Empresa', 'Company', 'Marca', 'Tags'].includes(k)
+             )
+             if (clientKey) {
+                const type = page.properties[clientKey].type
+                if (type === 'multi_select') updates[clientKey] = { multi_select: body.client ? [{ name: body.client }] : [] }
+                else if (type === 'select') updates[clientKey] = { select: body.client ? { name: body.client } : null }
+                else if (type === 'rich_text') updates[clientKey] = { rich_text: body.client ? [{ text: { content: body.client } }] : [] }
+             }
+          }
+
+          // Atualiza Recorrência
+          if (body.recurrence !== undefined) {
+             const recKey = Object.keys(page.properties).find(k =>
+               ['Recorrência', 'Recorrencia', 'Recurrence', 'Repetição'].includes(k)
+             )
+             if (recKey) {
+                const type = page.properties[recKey].type
+                if (type === 'select') updates[recKey] = { select: body.recurrence ? { name: body.recurrence } : null }
+                else if (type === 'rich_text') updates[recKey] = { rich_text: body.recurrence ? [{ text: { content: body.recurrence } }] : [] }
+             }
+          }
+
           Object.keys(updates).length > 0 && console.log("Atualizando Notion:", body.task_id, updates);
           
           if (Object.keys(updates).length > 0) {

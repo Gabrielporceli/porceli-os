@@ -103,6 +103,13 @@ const TASK_COLORS: Record<string, string> = {
   pink:   "bg-pink-500/20 text-pink-300 border-pink-500/30",
 };
 
+const RECURRENCE_LABELS: Record<"daily" | "weekly" | "biweekly" | "monthly", string> = {
+  daily: 'Diária', weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal',
+};
+const RECURRENCE_LABELS_REVERSE: Record<string, "daily" | "weekly" | "biweekly" | "monthly"> = {
+  'Diária': 'daily', 'Semanal': 'weekly', 'Quinzenal': 'biweekly', 'Mensal': 'monthly',
+};
+
 function nextOccurrence(date: string, type: "daily" | "weekly" | "biweekly" | "monthly"): string {
   const d = new Date(date + "T12:00:00");
   if (type === "daily") d.setDate(d.getDate() + 1);
@@ -236,7 +243,7 @@ export default function Calendar() {
 
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion' | 'crm'; title: string; time?: string; status?: string; recurrence_type?: string; client?: string; color?: string; description?: string; due_date?: string; due_time?: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion' | 'crm'; title: string; time?: string; status?: string; recurrence_type?: string; recurrence?: string; client?: string; clients?: string[]; color?: string; description?: string; due_date?: string; due_time?: string } | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [dbStatus, setDbStatus] = useState<"checking" | "ok" | "error">("checking");
   const [dbError, setDbError] = useState("");
@@ -279,6 +286,8 @@ export default function Calendar() {
   };
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [editTime, setEditTime] = useState("");
+  const [editClient, setEditClient] = useState("");
+  const [editRecurrence, setEditRecurrence] = useState<"" | "daily" | "weekly" | "biweekly" | "monthly">("");
   const [lockedDays, setLockedDays] = useState<string[]>(() => {
     const saved = localStorage.getItem('locked_days');
     return saved ? JSON.parse(saved) : [];
@@ -318,6 +327,8 @@ export default function Calendar() {
         setEditDate(undefined);
         setEditTime("");
       }
+      setEditClient(editingItem.clients?.[0] ?? editingItem.client ?? "");
+      setEditRecurrence(editingItem.recurrence ? (RECURRENCE_LABELS_REVERSE[editingItem.recurrence] ?? "") : "");
     }
   }, [editingItem]);
 
@@ -407,6 +418,8 @@ export default function Calendar() {
       await handleUpdateNotionTask(editingItem.id, {
         title: editTitle,
         dueDate: editTime ? `${format(newStart, "yyyy-MM-dd")}T${editTime}:00-03:00` : format(newStart, "yyyy-MM-dd"),
+        client: editClient,
+        recurrence: editRecurrence ? RECURRENCE_LABELS[editRecurrence] : '',
       });
     }
 
@@ -581,8 +594,7 @@ export default function Calendar() {
         toast({ title: "Evento criado no Google Calendar!" });
         fetchGoogleEvents();
       } else {
-        const labels: Record<string, string> = { daily: 'Diária', weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
-        const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
+        const recLabel = recurrenceType && recurrenceType !== 'none' ? RECURRENCE_LABELS[recurrenceType as keyof typeof RECURRENCE_LABELS] : undefined;
         const combinedDueDate = dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : "");
 
         // Criação rápida - UI Otmista
@@ -682,15 +694,16 @@ export default function Calendar() {
     }
   };
 
-  const handleUpdateNotionTask = async (taskId: string, updates: { title?: string; status?: string; dueDate?: string }) => {
+  const handleUpdateNotionTask = async (taskId: string, updates: { title?: string; status?: string; dueDate?: string; client?: string; recurrence?: string }) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
       // Optimistic Update so it turns green/updates immediately!
+      const { client, ...restUpdates } = updates;
       setNotionTasks(prev => prev.map(t => {
         if (t.id === taskId) {
-          return { ...t, ...updates };
+          return { ...t, ...restUpdates, ...(client !== undefined ? { clients: [client] } : {}) };
         }
         return t;
       }));
@@ -712,7 +725,7 @@ export default function Calendar() {
       if (updates.status === 'Realizado' || updates.status === 'done') {
         const task = notionTasks.find(t => t.id === taskId);
         if (task && task.recurrence && task.dueDate) {
-          const recType = task.recurrence === 'Diária' ? 'daily' : task.recurrence === 'Semanal' ? 'weekly' : task.recurrence === 'Quinzenal' ? 'biweekly' : task.recurrence === 'Mensal' ? 'monthly' : null;
+          const recType = RECURRENCE_LABELS_REVERSE[task.recurrence] ?? null;
           
           if (recType) {
             const nextDate = nextOccurrence(task.dueDate.split('T')[0], recType);
@@ -1239,7 +1252,8 @@ export default function Calendar() {
                     meetLink: undefined,
                     status: t.status,
                     clients: t.clients,
-                    client: (t as any).client
+                    client: t.clients?.[0],
+                    recurrence: t.recurrence
                    };
                 })
               ];
@@ -1676,12 +1690,42 @@ export default function Calendar() {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Horário</label>
-                <TimePicker 
+                <TimePicker
                   value={editTime}
-                  onChange={setEditTime} 
+                  onChange={setEditTime}
                 />
               </div>
             </div>
+
+            {editingItem?.type === 'notion' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Cliente</label>
+                  <input
+                    type="text"
+                    value={editClient}
+                    onChange={(e) => setEditClient(e.target.value)}
+                    placeholder="Nome do cliente"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrência</label>
+                  <Select value={editRecurrence || "none"} onValueChange={(val) => setEditRecurrence(val === "none" ? "" : val as any)}>
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-10 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                      <SelectItem value="none">Nunca</SelectItem>
+                      <SelectItem value="daily">Diária</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="biweekly">Quinzenal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
             {(editingItem?.type === 'notion' || editingItem?.type === 'crm') && (
                <div className="space-y-2 pt-1">
