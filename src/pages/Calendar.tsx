@@ -103,9 +103,10 @@ const TASK_COLORS: Record<string, string> = {
   pink:   "bg-pink-500/20 text-pink-300 border-pink-500/30",
 };
 
-function nextOccurrence(date: string, type: "weekly" | "biweekly" | "monthly"): string {
+function nextOccurrence(date: string, type: "daily" | "weekly" | "biweekly" | "monthly"): string {
   const d = new Date(date + "T12:00:00");
-  if (type === "weekly") d.setDate(d.getDate() + 7);
+  if (type === "daily") d.setDate(d.getDate() + 1);
+  else if (type === "weekly") d.setDate(d.getDate() + 7);
   else if (type === "biweekly") d.setDate(d.getDate() + 14);
   else d.setMonth(d.getMonth() + 1);
   return d.toISOString().split("T")[0];
@@ -227,7 +228,7 @@ export default function Calendar() {
   const [createMeetLink, setCreateMeetLink] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [newEventClient, setNewEventClient] = useState("");
-  const [recurrenceType, setRecurrenceType] = useState<"" | "single" | "weekly" | "biweekly" | "monthly">("");
+  const [recurrenceType, setRecurrenceType] = useState<"" | "single" | "daily" | "weekly" | "biweekly" | "monthly">("");
   const [taskColor, setTaskColor] = useState("purple");
   const [createAsCRMTask, setCreateAsCRMTask] = useState(false);
 
@@ -580,7 +581,7 @@ export default function Calendar() {
         toast({ title: "Evento criado no Google Calendar!" });
         fetchGoogleEvents();
       } else {
-        const labels: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
+        const labels: Record<string, string> = { daily: 'Diária', weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
         const recLabel = recurrenceType !== 'none' ? labels[recurrenceType] : undefined;
         const combinedDueDate = dateStr + (newEventTime ? `T${newEventTime}:00-03:00` : "");
 
@@ -711,7 +712,7 @@ export default function Calendar() {
       if (updates.status === 'Realizado' || updates.status === 'done') {
         const task = notionTasks.find(t => t.id === taskId);
         if (task && task.recurrence && task.dueDate) {
-          const recType = task.recurrence === 'Semanal' ? 'weekly' : task.recurrence === 'Quinzenal' ? 'biweekly' : task.recurrence === 'Mensal' ? 'monthly' : null;
+          const recType = task.recurrence === 'Diária' ? 'daily' : task.recurrence === 'Semanal' ? 'weekly' : task.recurrence === 'Quinzenal' ? 'biweekly' : task.recurrence === 'Mensal' ? 'monthly' : null;
           
           if (recType) {
             const nextDate = nextOccurrence(task.dueDate.split('T')[0], recType);
@@ -1479,6 +1480,7 @@ export default function Calendar() {
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
                       <SelectItem value="none">Nunca</SelectItem>
+                      <SelectItem value="daily">Diária</SelectItem>
                       <SelectItem value="weekly">Semanal</SelectItem>
                       <SelectItem value="biweekly">Quinzenal</SelectItem>
                       <SelectItem value="monthly">Mensal</SelectItem>
@@ -1578,6 +1580,7 @@ export default function Calendar() {
                  </SelectTrigger>
                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
                    <SelectItem value="none">Nunca</SelectItem>
+                   <SelectItem value="daily">Diária</SelectItem>
                    <SelectItem value="weekly">Semanal</SelectItem>
                    <SelectItem value="biweekly">Quinzenal</SelectItem>
                    <SelectItem value="monthly">Mensal</SelectItem>
