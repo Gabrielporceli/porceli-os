@@ -206,13 +206,6 @@ serve(async (req) => {
     const customerMap = new Map<string, { name: string; phone: string }>();
     for (const c of asaasCustomers) customerMap.set(c.id, { name: c.name, phone: c.mobilePhone ?? "" });
 
-    // Mapa group_id Supabase: company_lower → group_id
-    const { data: sbClients } = await supabase.from("clients").select("company, group_id");
-    const groupMap = new Map<string, string>();
-    for (const c of sbClients ?? []) {
-      if (c.group_id) groupMap.set((c.company ?? "").toLowerCase(), c.group_id);
-    }
-
     // ── PENDENTES: D-5, D-2, D-0 ──────────────────────────────────────────────
     const pending = (await asaasGetAll("/payments?status=PENDING")) as Array<{
       id: string; customer: string; description?: string;
@@ -243,20 +236,15 @@ serve(async (req) => {
         const effISO   = effDue.toISOString().slice(0, 10);
         const msg      = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
 
-        // Status do log reflete a entrega REAL ao telefone do cliente — o
-        // grupo interno é só uma cópia e não bloqueia o status, mas o erro
-        // dele também fica registrado no metadata.
         let clientSend: { ok: boolean; error?: string } = { ok: true };
         if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
-        const gid = groupMap.get(cust.name.toLowerCase());
-        const groupSend = gid ? await sendWhatsApp(gid, msg) : { ok: true };
 
         await logNotif(supabase, {
           asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
           asaas_payment_id: p.id,
           status: clientSend.ok ? "sent" : "failed",
           error_message: clientSend.ok ? undefined : clientSend.error,
-          metadata: { daysLeft, effISO, groupSendOk: groupSend.ok, groupSendError: groupSend.error },
+          metadata: { daysLeft, effISO },
         });
         results.pending++;
       } catch (e) { console.error("pending:", (e as Error).message); results.errors++; }
@@ -281,15 +269,13 @@ serve(async (req) => {
 
         let clientSend: { ok: boolean; error?: string } = { ok: true };
         if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
-        const gid = groupMap.get(cust.name.toLowerCase());
-        const groupSend = gid ? await sendWhatsApp(gid, msg) : { ok: true };
 
         await logNotif(supabase, {
           asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
           asaas_payment_id: p.id, days_overdue: daysLate,
           status: clientSend.ok ? "sent" : "failed",
           error_message: clientSend.ok ? undefined : clientSend.error,
-          metadata: { urgency, groupSendOk: groupSend.ok, groupSendError: groupSend.error },
+          metadata: { urgency },
         });
         results.overdue++;
       } catch (e) { console.error("overdue:", (e as Error).message); results.errors++; }
