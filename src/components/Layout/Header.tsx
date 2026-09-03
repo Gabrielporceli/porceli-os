@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
 import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock, Workflow } from 'lucide-react';
@@ -24,6 +24,34 @@ export const Header = () => {
   const [hidden, setHidden] = useState(false);
   const [isMouseAtTop, setIsMouseAtTop] = useState(false);
 
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [pill, setPill] = useState<{ x: number; width: number } | null>(null);
+
+  const updatePill = useCallback((pathname: string) => {
+    const nav = navRef.current;
+    const el = itemRefs.current.get(pathname);
+    if (!nav || !el) {
+      setPill(null);
+      return;
+    }
+    const navRect = nav.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const x = elRect.left - navRect.left + nav.scrollLeft;
+    const width = elRect.width;
+    // Só atualiza o state se o valor REALMENTE mudou (>0.5px de diferença).
+    // Sem isso, qualquer reflow espúrio durante o carregamento da página
+    // (fonte custom terminando de carregar, scrollbar aparecendo/sumindo)
+    // reagenda a transição do zero a cada disparo do ResizeObserver — com
+    // vários dispositivos, isso interrompe a mola repetidas vezes antes
+    // dela chegar visualmente ao destino, dando a impressão de "travada".
+    setPill((prev) => {
+      if (prev && Math.abs(prev.x - x) < 0.5 && Math.abs(prev.width - width) < 0.5) {
+        return prev;
+      }
+      return { x, width };
+    });
+  }, []);
 
   // Lógica para esconder o header ao rolar para baixo e mostrar ao rolar para cima
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -49,6 +77,20 @@ export const Header = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // Recalcula a pílula na troca de rota, e observa resize do item ativo e
+  // da barra de nav (labels somem/aparecem em breakpoints, fonte custom
+  // ainda carregando, etc.) — o guard em updatePill acima evita que isso
+  // reagende a animação à toa quando o valor não mudou de verdade.
+  useLayoutEffect(() => {
+    updatePill(location.pathname);
+    const nav = navRef.current;
+    const el = itemRefs.current.get(location.pathname);
+    if (!nav || !el) return;
+    const ro = new ResizeObserver(() => updatePill(location.pathname));
+    ro.observe(nav);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [location.pathname, updatePill]);
 
   const showHeader = !hidden || isMouseAtTop;
 
@@ -71,7 +113,29 @@ export const Header = () => {
           </div>
 
           {/* Navigation Items - Center Styled */}
-          <nav className="flex items-center justify-center gap-1 flex-1 h-full overflow-x-auto scrollbar-hide">
+          <nav
+            ref={navRef}
+            className="relative flex items-center justify-center gap-1 flex-1 h-full overflow-x-auto scrollbar-hide"
+          >
+            {/* Transição CSS pura (não motion.span/Framer Motion): numa
+                depuração com animate={{x, width}} do Framer Motion, o
+                React state ficava correto (confirmado direto no DOM) mas
+                o transform aplicado na tela às vezes não acompanhava — sem
+                conseguir isolar 100% se era um bug real do Framer Motion
+                ou uma instabilidade da própria ferramenta usada pra testar.
+                Trocado por transition CSS nativa por ser mais simples e
+                não depender do controlador de animação do Framer pra essa
+                peça específica — remove a dúvida por completo. */}
+            {pill && (
+              <span
+                className="lqg-lens lqg-lens--nav absolute top-0 h-10 rounded-full pointer-events-none z-0"
+                style={{
+                  transform: `translateX(${pill.x}px)`,
+                  width: pill.width,
+                  transition: "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), width 250ms cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+              />
+            )}
             {menuItems.map((item) => {
               const isActive = location.pathname === item.url;
               const Icon = item.icon;
@@ -82,36 +146,17 @@ export const Header = () => {
                   to={item.url}
                   className="h-10 flex items-center shrink-0"
                 >
-                  {/*
-                    IMPORTANTE: o hover NUNCA deve mudar background-color aqui.
-                    background-color é uma propriedade de "paint" — muda-la força
-                    o Chrome a re-rasterizar a camada, o que recompõe o
-                    backdrop-filter do header e acende uma tarja sobre os cards
-                    abaixo. opacity/transform são compositor-only (não repintam),
-                    por isso o highlight de hover é uma camada separada que
-                    anima só opacidade — visualmente idêntico, sem o bug.
-
-                    O destaque do item ATIVO (abaixo) segue o mesmo princípio,
-                    de propósito SEM animação deslizando entre itens: uma
-                    versão anterior usava layoutId do Framer Motion pra
-                    deslizar uma pílula compartilhada de um item pro outro, e
-                    depois uma versão com medição via DOM (getBoundingClientRect)
-                    — as duas ficaram com bugs de posição em produção (a
-                    pílula "nascendo" no lugar errado, às vezes travada lá)
-                    que eu não consegui reproduzir isolado pra depurar direito.
-                    Aqui cada item desenha o PRÓPRIO destaque, condicionado só
-                    ao seu próprio isActive — sem depender da posição de
-                    nenhum outro elemento, então não tem como "errar o alvo".
-                    Perde a animação de deslizar entre abas; ganha certeza.
-                  */}
-                  <div className={cn(
-                    "group relative isolate z-10 px-4 h-full flex items-center gap-2 text-sm font-medium rounded-full transform-gpu will-change-transform"
-                  )}>
+                  <div
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(item.url, el);
+                      else itemRefs.current.delete(item.url);
+                    }}
+                    className={cn(
+                      "group relative isolate z-10 px-4 h-full flex items-center gap-2 text-sm font-medium rounded-full transform-gpu will-change-transform"
+                    )}
+                  >
                     {!isActive && (
                       <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    )}
-                    {isActive && (
-                      <span className="lqg-lens lqg-lens--nav absolute inset-0 -z-10 rounded-full pointer-events-none" />
                     )}
                     <span className={cn(
                       "relative z-10 hidden lg:inline",
