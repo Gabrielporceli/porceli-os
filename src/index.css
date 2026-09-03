@@ -216,6 +216,7 @@ button:focus-visible,
 
   /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
   .liquid-glass-ghost {
+    position: relative;
     background: transparent !important;
     backdrop-filter: blur(10px) brightness(1.1) !important;
     -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
@@ -226,8 +227,22 @@ button:focus-visible,
       0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 
-  .liquid-glass-ghost:hover {
+  /* Igual .btn-glass etc: hover troca só opacity de um ::after, nunca o
+     background do próprio elemento de vidro. */
+  .liquid-glass-ghost::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background: rgba(255, 255, 255, 0.04) !important;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    pointer-events: none;
+  }
+
+  .liquid-glass-ghost:hover::after {
+    opacity: 1;
   }
 
   .gradient-text {
@@ -273,22 +288,47 @@ button:focus-visible,
     transition: background 180ms ease !important;
   }
 
-  /* ── Tints ── */
+  /* ── Tints ──
+     Mesmo bug da tarja: trocar background direto no :hover força repaint que
+     vaza pros cards de vidro vizinhos. A cor "hover" vira um ::after
+     separado (por baixo do conteúdo, z-index: -1) que só anima opacity. */
+  .btn-glass::after,
+  .btn-glass-primary::after,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)::after,
+  .btn-primary-glass::after,
+  .btn-success-glass::after,
+  .btn-danger-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    pointer-events: none;
+  }
+
   .btn-glass        { background: rgba(18, 18, 18, 0.50) !important; }
-  .btn-glass:hover  { background: rgba(28, 28, 30, 0.55) !important; }
+  .btn-glass::after { background: rgba(28, 28, 30, 0.55) !important; }
+  .btn-glass:hover::after { opacity: 1; }
 
   .btn-glass-primary,
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
   .btn-primary-glass        { background: rgba(104, 41, 192, 0.55) !important; }
-  .btn-glass-primary:hover,
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover,
-  .btn-primary-glass:hover  { background: rgba(104, 41, 192, 0.70) !important; }
+  .btn-glass-primary::after,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)::after,
+  .btn-primary-glass::after { background: rgba(104, 41, 192, 0.70) !important; }
+  .btn-glass-primary:hover::after,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover::after,
+  .btn-primary-glass:hover::after { opacity: 1; }
 
   .btn-success-glass        { background: rgba(22, 163, 74, 0.55) !important; }
-  .btn-success-glass:hover  { background: rgba(22, 163, 74, 0.70) !important; }
+  .btn-success-glass::after { background: rgba(22, 163, 74, 0.70) !important; }
+  .btn-success-glass:hover::after { opacity: 1; }
 
   .btn-danger-glass         { background: rgba(220, 38, 38, 0.55) !important; }
-  .btn-danger-glass:hover   { background: rgba(220, 38, 38, 0.70) !important; }
+  .btn-danger-glass::after  { background: rgba(220, 38, 38, 0.70) !important; }
+  .btn-danger-glass:hover::after { opacity: 1; }
 
   /* ── Disabled ── */
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):disabled,
