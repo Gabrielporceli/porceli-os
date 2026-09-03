@@ -310,6 +310,16 @@ button:focus-visible,
     -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
     border: none !important;
     border-radius: 1.5rem;
+    /* Promove CADA bloco de vidro pra sua PRÓPRIA camada de composição
+       (igual ao Header, que já faz isso pra si mesmo). Sem isso, blocos de
+       vidro vizinhos compartilham a mesma camada de pintura do Chrome — daí
+       quando QUALQUER um deles repinta (ex.: hover num item do header, ou
+       num botão dentro de outro card de vidro), o Chrome precisa recompor
+       TODOS que dependem daquele backdrop junto, e o resultado visual é uma
+       "tarja" clara piscando nos blocos vizinhos que nem foram tocados.
+       Isolando a camada, o repaint de um não obriga recompor os outros. */
+    will-change: backdrop-filter, transform;
+    transform: translateZ(0);
     /* Mesmo material do botão Apple Tahoe: rim de luz no topo + brilho especular.
        Insets com um leve blur (2px) p/ contornarem a quina sem formar "bico".
        A borda (1ª linha) virou inset em vez de `border:` — em elementos
@@ -411,6 +421,11 @@ button:focus-visible,
     background: rgba(28, 28, 34, 0.28);
     backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
     -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    /* Mesma isolação de camada do .liquid-glass — ver comentário lá.
+       Sem isso, os cards do topo do Dashboard "piscam" uma tarja clara
+       quando o mouse passa pelo header logo acima. */
+    will-change: backdrop-filter, transform;
+    transform: translateZ(0);
     /* SEM box-shadow aqui: box-shadow calcula pela caixa retangular e não
        enxerga o clip-path — o bevel (rim de luz/sombras internas) é feito
        geometricamente no SVG do DeconstructedCard, seguindo o contorno real.

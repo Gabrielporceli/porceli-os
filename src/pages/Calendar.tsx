@@ -1095,26 +1095,36 @@ export default function Calendar() {
               {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </p>
           </div>
+          {/*
+            IMPORTANTE: hover aqui NUNCA muda background-color direto no
+            botão — isso força o Chrome a repintar a camada e acende uma
+            tarja clara no vidro do card (mesmo bug documentado no Header).
+            Em vez disso, um span absoluto separado anima só opacity
+            (compositor-only), visualmente idêntico, sem repaint.
+          */}
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => shiftPanelDay(-1)}
               title="Dia anterior"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              className="group relative isolate w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors"
             >
+              <span className="absolute inset-0 -z-10 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPanelDate(new Date())}
               title="Hoje"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-primary hover:bg-white/5 transition-colors"
+              className="group relative isolate w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-primary transition-colors"
             >
+              <span className="absolute inset-0 -z-10 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <CalendarIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => shiftPanelDay(1)}
               title="Próximo dia"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              className="group relative isolate w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors"
             >
+              <span className="absolute inset-0 -z-10 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
