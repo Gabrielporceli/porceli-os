@@ -405,6 +405,22 @@ button:focus-visible,
       0 14px 36px rgba(0, 0, 0, 0.26) !important;
   }
 
+  /* Exceção deliberada: o Header vive dentro de um wrapper com animação
+     ATIVA de transform (esconde/mostra ao rolar — motion.div com y
+     animado). Qualquer transform num ANCESTRAL quebra o
+     background-attachment:fixed do vidro estático (mesmo efeito que no
+     próprio elemento — ver comentário em .liquid-glass), e aqui não dá
+     pra trocar por `top` porque é a lib de animação controlando, não um
+     :hover nosso. Como é UM elemento só (não 15-25 simultâneos), o custo
+     do blur ao vivo aqui é desprezível — mantém a receita original.
+     Sempre junto de .liquid-glass na className (herda border-radius e
+     box-shadow de lá, só troca o background/backdrop-filter). */
+  .liquid-glass-live {
+    background: rgba(28, 28, 34, 0.28) !important;
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+  }
+
   /* Elementos liquid-glass aninhados: mesmo material, bevel mais suave */
   .liquid-glass .liquid-glass {
     /* Mesma técnica estática do .liquid-glass base — ver comentário lá.
@@ -427,6 +443,23 @@ button:focus-visible,
       inset 0px 2px 4px -2px color-mix(in srgb, black 14%, transparent),
       0 2px 6px rgba(0, 0, 0, 0.16),
       0 10px 28px rgba(0, 0, 0, 0.22) !important;
+  }
+
+  /* Exceção deliberada (mesmo motivo do .liquid-glass-live no Header): o
+     conteúdo de alguns modais (ex.: RenegotiationModal) fica dentro de um
+     motion.div com `animate={{ scale, opacity, y }}` — o Framer Motion
+     mantém um transform residual aplicado via inline style mesmo depois
+     da animação terminar (não volta a `none`), o que quebraria QUALQUER
+     vidro estático descendente, direto ou aninhado. Em vez de caçar cada
+     .liquid-glass um por um dentro desses modais, uma classe no wrapper
+     animado (`modal-glass-live`) reverte TODOS os descendentes .liquid-glass
+     pro blur ao vivo de uma vez — precisa vir DEPOIS de ".liquid-glass
+     .liquid-glass" no arquivo (mesma especificidade 0,2,0 + !important,
+     quem vem depois vence) pra também cobrir os aninhados. */
+  .modal-glass-live .liquid-glass {
+    background: rgba(28, 28, 34, 0.28) !important;
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
   }
 
   /* Vidro SEM sombras externas de elevação (mantém bevel + hairline).
