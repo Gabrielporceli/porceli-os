@@ -91,6 +91,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
       <div className="fixed inset-y-0 right-0 z-[1000000] w-full max-w-md p-4 flex animate-slide-in-right">
         <LiquidGlass
           className="h-full w-full shadow-2xl border-l border-white/[0.05] flex flex-col overflow-hidden !rounded-3xl"
+          backgroundColor="rgba(28, 28, 34, 0.28)"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

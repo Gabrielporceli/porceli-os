@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Phone, Mail, Calendar, Hash, ChevronDown, ChevronRight } from "lucide-react";
 import { usePlansContext } from "@/contexts/PlansContext";
@@ -130,28 +130,27 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
         <div className="flex gap-2 ml-6">
           <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-            <Button
-              size="sm"
-              className="liquid-glass text-white hover:bg-white/10 border border-white/5 rounded-xl h-9 px-4 font-bold transition-colors"
+            <LiquidGlassButton
+              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
               }}
             >
               Editar
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-            <Button
-              size="sm"
-              className="btn-danger-glass rounded-xl h-9 px-4 font-bold transition-colors"
+            <LiquidGlassButton
+              tint="danger"
+              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
             >
               Excluir
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
         </div>
       </div>

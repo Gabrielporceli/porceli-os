@@ -3,8 +3,9 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
+import { StatsCard } from "@/components/Dashboard/StatsCard";
 import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
@@ -327,42 +328,11 @@ export default function Contracts() {
       <ContractsHeader onNewContract={() => setIsNewContractModalOpen(true)} />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-white/5 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <FileText className="w-16 h-16 text-white" />
-          </div>
-          <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Total de Contratos</p>
-          <p className="text-3xl font-bold text-white tracking-tight">{contracts.length}</p>
-        </motion.div>
-
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-green-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
-            <FileText className="w-16 h-16" style={{ stroke: "#22c55e" }} />
-          </div>
-          <p className="text-green-400/50 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Contratos Ativos</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-white tracking-tight">{activeContracts.length}</p>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-yellow-500/30 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-[0.15] group-hover:opacity-[0.25] transition-opacity">
-            <AlertTriangle className="w-16 h-16" style={{ stroke: "#eab308" }} />
-          </div>
-          <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">A Vencer</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-white tracking-tight">{expiringContracts.length}</p>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ translateY: -4 }} className="liquid-glass !rounded-xl border-red-500/10 p-5 flex flex-col justify-center h-28 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-[0.1] group-hover:opacity-[0.2] transition-opacity">
-            <FileText className="w-16 h-16" style={{ stroke: "#ef4444" }} />
-          </div>
-          <p className="text-red-500/60 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">Inativos</p>
-          <p className="text-3xl font-bold text-white tracking-tight">{inactiveContracts.length}</p>
-        </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatsCard title="Total de Contratos" value={contracts.length} icon={FileText} className="[animation-delay:100ms]" />
+        <StatsCard title="Contratos Ativos" value={activeContracts.length} icon={FileText} className="[animation-delay:200ms]" />
+        <StatsCard title="A Vencer" value={expiringContracts.length} icon={AlertTriangle} className="[animation-delay:300ms]" />
+        <StatsCard title="Inativos" value={inactiveContracts.length} icon={FileText} className="[animation-delay:400ms]" />
       </div>
 
       {/* Expiring Contracts Alert */}
@@ -395,12 +365,13 @@ export default function Contracts() {
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
                   <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                    <Button
+                    <LiquidGlassButton
+                      tint="danger"
                       onClick={() => handleRenewClick(contract)}
-                      className="btn-danger-glass h-9 px-6 rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
+                      className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
                     >
                       Renovar Agora
-                    </Button>
+                    </LiquidGlassButton>
                   </motion.div>
                 </div>
               </motion.div>
@@ -524,42 +495,37 @@ export default function Contracts() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <LiquidGlassButton
                     onClick={() => setEditingContract(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
+                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     Editar
-                  </Button>
+                  </LiquidGlassButton>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <LiquidGlassButton
                     onClick={() => handleRenewClick(contract)}
-                    className="liquid-glass text-white/70 hover:bg-white/10 hover:text-white border border-white/5 rounded-xl px-6 h-9 font-bold transition-all"
+                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     {contract.status === 'active' ? 'Estender' : 'Renovar'}
-                  </Button>
+                  </LiquidGlassButton>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <LiquidGlassButton
+                    tint="danger"
                     onClick={() => setDeletingContract(contract)}
-                    className="btn-danger-glass rounded-xl px-6 h-9 font-bold transition-all"
+                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     Cancelar
-                  </Button>
+                  </LiquidGlassButton>
                 </motion.div>
               </div>
             </div>

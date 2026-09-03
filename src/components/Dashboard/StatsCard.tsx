@@ -14,6 +14,8 @@ interface StatsCardProps {
   };
   description?: string;
   className?: string;
+  /** Sobrescreve a cor padrão (text-white) do valor — ex.: verde/vermelho para lucro. */
+  valueClassName?: string;
 }
 
 /**
@@ -21,7 +23,7 @@ interface StatsCardProps {
  * conectado ao corpo por uma curva côncava — ver DeconstructedCard (uma
  * única caixa recortada via clip-path, sem costura entre chip e corpo).
  */
-export function StatsCard({ title, value, trend, description, className }: StatsCardProps) {
+export function StatsCard({ title, value, trend, description, className, valueClassName }: StatsCardProps) {
   return (
     <DeconstructedCard
       className={cn("animate-premium-in", className)}
@@ -31,7 +33,7 @@ export function StatsCard({ title, value, trend, description, className }: Stats
         </span>
       }
     >
-      <p className="text-3xl font-black text-white tabular-nums tracking-tighter">
+      <p className={cn("text-3xl font-black tabular-nums tracking-tighter", valueClassName ?? "text-white")}>
         <AnimatedValue value={String(value)} />
       </p>
       {description && (

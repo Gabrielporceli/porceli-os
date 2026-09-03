@@ -59,7 +59,7 @@ export function DeleteClientDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 !flex flex-col overflow-hidden !rounded-3xl">
-        <LiquidGlass className="h-full w-full flex flex-col !p-0">
+        <LiquidGlass className="h-full w-full flex flex-col !p-0" backgroundColor="rgba(28, 28, 34, 0.28)">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
             <div className="flex items-center gap-3">

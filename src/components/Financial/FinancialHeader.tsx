@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
+import { RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface FinancialHeaderProps {
@@ -20,15 +20,14 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <Button
-              variant="ghost"
-              className="btn-glass flex items-center justify-center gap-2 text-white px-4 h-11 !rounded-xl transition-all duration-300 text-xs font-bold uppercase tracking-widest"
+            <LiquidGlassButton
               onClick={onSync}
               disabled={isSyncing}
               title="Gerar e Atualizar Lançamentos Faltantes"
+              className="w-11 h-11"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
-            </Button>
+            </LiquidGlassButton>
           </motion.div>
         )}
         <motion.div
@@ -36,12 +35,13 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <Button
-            className="btn-primary-glass text-white h-11 px-6 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
+          <LiquidGlassButton
+            tint="primary"
             onClick={onNewTransaction}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
           >
             Nova Transação
-          </Button>
+          </LiquidGlassButton>
         </motion.div>
       </div>
     </div>

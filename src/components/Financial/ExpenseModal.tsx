@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,10 +101,10 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
     <Dialog open={open} onOpenChange={setOpen}>
       {externalOpen === undefined && (
         <DialogTrigger asChild>
-          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
-            <Plus className="w-4 h-4 mr-2" />
+          <LiquidGlassButton tint="danger" className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
+            <Plus className="w-4 h-4" />
             Nova Despesa
-          </Button>
+          </LiquidGlassButton>
         </DialogTrigger>
       )}
       <DialogContent className="border-white/5 text-white max-w-md shadow-2xl outline-none">

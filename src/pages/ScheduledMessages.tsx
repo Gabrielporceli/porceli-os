@@ -334,15 +334,16 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
       </div>
 
       {/* Excluir */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onDelete(msg.id)}
-        disabled={isDeleting}
-        className="btn-danger-glass h-9 px-4 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 text-sm font-medium"
-      >
-        Excluir
-      </motion.button>
+      <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-shrink-0">
+        <LiquidGlassButton
+          tint="danger"
+          onClick={() => onDelete(msg.id)}
+          disabled={isDeleting}
+          className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+        >
+          Excluir
+        </LiquidGlassButton>
+      </motion.div>
     </motion.div>
   );
 }
@@ -407,14 +408,15 @@ export default function ScheduledMessages() {
             </button>
           ))}
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsModalOpen(true)}
-          className="h-11 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(104,41,192,0.3)] transition-colors"
-        >
-          Agendar Mensagem
-        </motion.button>
+        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <LiquidGlassButton
+            tint="primary"
+            onClick={() => setIsModalOpen(true)}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+          >
+            Agendar Mensagem
+          </LiquidGlassButton>
+        </motion.div>
       </div>
 
       {/* Lista */}

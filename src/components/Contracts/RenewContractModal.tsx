@@ -16,8 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
-import { cn } from "@/lib/utils";
 import { ContractBillingPreview } from "./ContractBillingPreview";
 
 interface Contract {
@@ -133,7 +131,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
-                <LiquidGlass className="w-full flex flex-col !p-0">
+                <div className="w-full flex flex-col">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
                         <div>
@@ -325,7 +323,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             </div>
                         </form>
                     </div>
-                </LiquidGlass>
+                </div>
             </DialogContent>
         </Dialog>
     );

@@ -106,7 +106,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md"
       >
-        <LiquidGlass className="border-white/10 rounded-2xl">
+        <LiquidGlass className="border-white/10 rounded-2xl" backgroundColor="rgba(28, 28, 34, 0.28)">
           <div className="p-6 space-y-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">

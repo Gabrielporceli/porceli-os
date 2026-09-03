@@ -191,6 +191,35 @@ export default function LeadsKanban() {
   // ===== DnD state =====
   const [isDraggingCard, setIsDraggingCard] = useState(false);
 
+  // ===== Drag livre em diagonal =====
+  // O @hello-pangea/dnd (fork mantido do react-beautiful-dnd) trava de
+  // propósito o card no eixo da lista durante o arraste — dentro de uma
+  // coluna (vertical) ele só translada em Y, ignorando qualquer X do mouse,
+  // mesmo arrastando na diagonal. É comportamento documentado da lib, não
+  // bug: pensado pra reordenação previsível, não pra seguir o cursor.
+  // Sobrescrevemos só o `transform` visual do card ativo com a posição real
+  // do ponteiro (via DOM direto, sem re-render — atualizar isso via state
+  // re-renderizaria a coluna inteira a cada pointermove). A detecção de
+  // coluna/índice de destino da lib não é afetada: ela decide com base na
+  // posição real do ponteiro (capturada pelo próprio sensor dela), igual ao
+  // que usamos aqui — não em transforms CSS.
+  const currentPointerRef = useRef({ x: 0, y: 0 });
+  const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const freeDragElRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      currentPointerRef.current = { x: e.clientX, y: e.clientY };
+      const start = dragStartPointerRef.current;
+      const el = freeDragElRef.current;
+      if (start && el) {
+        el.style.transform = `translate(${e.clientX - start.x}px, ${e.clientY - start.y}px)`;
+      }
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
   // ===== Drag-to-scroll (mouse/pen) =====
   const kanbanRef = useRef<HTMLDivElement | null>(null);
 
@@ -482,10 +511,14 @@ export default function LeadsKanban() {
   const onDragStart = (_: DragStart) => {
     cancelPan();
     setIsDraggingCard(true);
+    dragStartPointerRef.current = { ...currentPointerRef.current };
   };
 
   const onDragEnd = async (result: DropResult) => {
     setIsDraggingCard(false);
+    dragStartPointerRef.current = null;
+    if (freeDragElRef.current) freeDragElRef.current.style.transform = "";
+    freeDragElRef.current = null;
 
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -670,7 +703,10 @@ export default function LeadsKanban() {
                           <Draggable key={lead.id} draggableId={lead.id} index={index}>
                             {(provided, snapshot) => (
                               <div
-                                ref={provided.innerRef}
+                                ref={(el) => {
+                                  provided.innerRef(el);
+                                  if (snapshot.isDragging) freeDragElRef.current = el;
+                                }}
                                 {...provided.draggableProps}
                                 className={snapshot.isDragging ? "" : ""}
                                 style={provided.draggableProps.style}

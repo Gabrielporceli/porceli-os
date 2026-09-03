@@ -114,6 +114,13 @@ const GrowFromClickOrigin = React.forwardRef<
       {...rest}
       ref={ref}
       style={style}
+      // Mesma receita da classe CSS .liquid-glass (usada, por ex., no modal
+      // Editar Cliente) — o default deste componente (rgba(18,18,18,0.4),
+      // mais opaco e sem boost de brilho) deixava TODO modal que passa por
+      // aqui visivelmente mais escuro/chapado que os que aplicam a classe
+      // direto. Escopado só ao Dialog: não muda o default do componente
+      // <LiquidGlass> usado em cards/sidebars/kanban.
+      backgroundColor="rgba(28, 28, 34, 0.28)"
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-6 shadow-lg sm:rounded-3xl",
         className
