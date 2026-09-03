@@ -348,9 +348,8 @@ export default function Contracts() {
                 key={contract.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative isolate group flex items-center justify-between gap-8 px-6 py-4 transition-all duration-300"
+                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300"
               >
-                <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 <div className="flex items-center gap-4 flex-1">
                   <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shrink-0">
                     <Calendar className="w-5 h-5 text-yellow-500" />
@@ -410,8 +409,7 @@ export default function Contracts() {
                 const isExpanded = expandedClients.includes(clientName);
 
                 return (
-                  <div key={clientName} className="relative isolate group">
-                    <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
                     {/* Header do grupo */}
                     <div
                       className="flex items-center justify-between p-6 cursor-pointer transition-all duration-300"
@@ -438,9 +436,8 @@ export default function Contracts() {
                           {clientContracts.map((contract) => (
               <div
                 key={contract.id}
-                className="relative isolate group flex items-center justify-between px-6 py-4 transition-all duration-300"
+                className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
               >
-              <span className="absolute inset-0 -z-10 bg-white/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div className="flex items-center gap-6 flex-1">
                 <div className="grid grid-cols-4 gap-8 flex-1 items-center">
                   <div>

@@ -292,9 +292,8 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
-      className="relative isolate group flex items-center gap-4 px-6 py-4 transition-all duration-300"
+      className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
     >
-      <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       {/* Ícone de status */}
       <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border", cfg.className)}>
         <StatusIcon className="w-4 h-4" />

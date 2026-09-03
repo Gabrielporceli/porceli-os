@@ -59,7 +59,7 @@ export const Header = () => {
         className="w-full px-6 py-4 flex justify-center fixed top-0 left-0 right-0 z-[60] pointer-events-none will-change-transform"
       >
         <header
-          className="liquid-glass liquid-glass-live h-16 w-full max-w-7xl flex items-center px-6 gap-4 pointer-events-auto"
+          className="liquid-glass h-16 w-full max-w-7xl flex items-center px-6 gap-4 pointer-events-auto"
           style={{ willChange: "backdrop-filter, transform", transform: "translateZ(0)" }}
         >
 

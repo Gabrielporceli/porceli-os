@@ -87,12 +87,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
   };
 
   return (
-    // hover NUNCA muda background-color direto aqui — isso força o Chrome a
-    // repintar a linha inteira e acende uma tarja no vidro do Mapa de
-    // Clientes logo acima (mesmo bug do Header/Calendário). Overlay
-    // absoluto que anima só opacity é compositor-only, sem esse efeito.
-    <div className="relative isolate group">
-      <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+    <div className="hover:bg-white/[0.04] transition-all duration-300 group">
       <div
         className="p-6 cursor-pointer flex items-center justify-between"
         onClick={onToggleExpanded}

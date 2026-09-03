@@ -50,9 +50,8 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
             {alertsToShow.map((alert) => (
               <div
                 key={alert.id}
-                className="relative isolate group flex items-center justify-between gap-8 px-6 py-4 transition-all duration-300"
+                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
               >
-                <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-semibold text-sm">{alert.title}</h4>
                   <p className="text-white/40 text-xs mt-0.5 truncate">{alert.description}</p>

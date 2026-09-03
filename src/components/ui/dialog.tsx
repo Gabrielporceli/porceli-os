@@ -122,14 +122,7 @@ const GrowFromClickOrigin = React.forwardRef<
       // <LiquidGlass> usado em cards/sidebars/kanban.
       backgroundColor="rgba(28, 28, 34, 0.28)"
       className={cn(
-        // modal-glass-live: este wrapper anima x/y/scale via Framer Motion,
-        // que mantem um transform residual aplicado mesmo depois da
-        // animacao terminar (nao volta a `none`). Qualquer .liquid-glass
-        // (a classe CSS) descendente daqui - direto ou aninhado, incluindo
-        // {children} de qualquer consumidor do <Dialog> - quebraria o
-        // alinhamento do vidro estatico. Essa classe reverte todos eles
-        // pro blur ao vivo de uma so vez (ver .modal-glass-live no index.css).
-        "modal-glass-live fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-6 shadow-lg sm:rounded-3xl",
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-6 shadow-lg sm:rounded-3xl",
         className
       )}
       initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}

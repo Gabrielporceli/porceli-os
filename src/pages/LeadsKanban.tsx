@@ -720,7 +720,7 @@ export default function LeadsKanban() {
                                         // dentro do backdrop root da faixa. no-elevation = sem as
                                         // sombras externas pesadas, só bisel + hairline.
                                         'liquid-glass no-elevation rounded-2xl p-2.5 sm:p-3 relative group cursor-pointer',
-                                        'kanban-card-lift transition-all duration-300',
+                                        'transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110',
                                         snapshot.isDragging && 'ring-2 ring-primary/50 scale-[1.02]'
                                       )}
                                     >

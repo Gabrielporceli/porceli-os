@@ -106,18 +106,17 @@ export function DeconstructedCard({
   }, [radius, fillet]);
 
   return (
-    <div className={cn("dc-outer", className)}>
-      <div
-        ref={containerRef}
-        className="dc-single"
-        style={{ clipPath: shape ? `path('${shape.d}')` : undefined }}
-      >
-        <div ref={chipRef} className="dc-chip-row">
-          {chip}
-        </div>
-        <div className="dc-body-content">{children}</div>
+    <div
+      ref={containerRef}
+      className={cn("dc-single", className)}
+      style={{ clipPath: shape ? `path('${shape.d}')` : undefined }}
+    >
+      <div ref={chipRef} className="dc-chip-row">
+        {chip}
+      </div>
+      <div className="dc-body-content">{children}</div>
 
-        {shape && (
+      {shape && (
         <svg
           className="absolute inset-0 pointer-events-none"
           width={shape.w}
@@ -200,8 +199,7 @@ export function DeconstructedCard({
             strokeWidth={2}
           />
         </svg>
-        )}
-      </div>
+      )}
     </div>
   );
 }

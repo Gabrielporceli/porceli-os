@@ -348,7 +348,7 @@ export function RenegotiationModal({
         exit={{ scale: 0.94, opacity: 0, y: 20 }}
         transition={{ type: "spring", stiffness: 400, damping: 28 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl modal-glass-live"
+        className="w-full max-w-xl"
       >
         <div className="liquid-glass border border-white/10 rounded-2xl overflow-hidden">
 
