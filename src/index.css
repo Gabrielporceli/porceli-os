@@ -591,13 +591,15 @@ button:focus-visible,
       0px 1px 3px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 5%), transparent) !important;
   }
 
-  /* Tons coloridos do vidro (mesmo material, cor translúcida na lente) */
+  /* Tons coloridos do vidro (mesmo material, cor translúcida na lente).
+     A cor mais intensa do hover NÃO troca aqui — fica no ::after acima
+     (linhas ~555-570), que só anima opacity. */
   .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.9); }
-  .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.98); }
+  .lqg-lens--primary::after { background-color: rgba(104, 41, 192, 0.98); }
   .lqg-lens--success { background-color: rgba(22, 163, 74, 0.55); }
-  .lqg-btn:hover .lqg-lens--success { background-color: rgba(22, 163, 74, 0.72); }
+  .lqg-lens--success::after { background-color: rgba(22, 163, 74, 0.72); }
   .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.55); }
-  .lqg-btn:hover .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.72); }
+  .lqg-lens--danger::after { background-color: rgba(220, 38, 38, 0.72); }
 
   /* ===== Cards de atividade (dia selecionado / painel "hoje") =====
      Tentamos cor chapada (verde/azul) preenchendo o card inteiro e ficou
@@ -768,11 +770,43 @@ button:focus-visible,
     @apply bg-porceli-gray-800 border border-porceli-gray-700 rounded-lg p-4;
   }
 
-  /* Purple badge hover fix for "Pendente" - only for badges, not messages */
-  .badge.bg-porceli-purple:hover,
-  .bg-porceli-purple:hover:not(.message-bubble) {
+  /* Purple/yellow badge hover: trocavam background-color direto no :hover
+     perto de listas dentro de card de vidro — mesmo bug da tarja. Vira um
+     ::after atrás do texto que só anima opacity. (Bolhas de mensagem foram
+     deixadas de fora de propósito: o hover delas já força a MESMA cor de
+     repouso, ou seja, não muda nada — não é fonte do bug.) */
+  .badge.bg-porceli-purple:not(.message-bubble),
+  .bg-porceli-purple:not(.message-bubble),
+  .bg-yellow-600 {
+    position: relative;
+  }
+
+  .badge.bg-porceli-purple:not(.message-bubble)::after,
+  .bg-porceli-purple:not(.message-bubble)::after,
+  .bg-yellow-600::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    pointer-events: none;
+  }
+
+  .badge.bg-porceli-purple:not(.message-bubble)::after,
+  .bg-porceli-purple:not(.message-bubble)::after {
     background-color: #4c1d95 !important;
-    /* Darker purple for hover */
+  }
+
+  .bg-yellow-600::after {
+    background-color: #b45309 !important;
+  }
+
+  .badge.bg-porceli-purple:not(.message-bubble):hover::after,
+  .bg-porceli-purple:not(.message-bubble):hover::after,
+  .bg-yellow-600:hover::after {
+    opacity: 1;
   }
 
   /* Disable hover effects for all message bubbles - keep original colors */
@@ -786,12 +820,6 @@ button:focus-visible,
   div.message-bubble.bg-porceli-gray-700:hover {
     background-color: #404040 !important;
     /* Original gray-700 color */
-  }
-
-  /* Yellow badge hover fix for "Pendente" status */
-  .bg-yellow-600:hover {
-    background-color: #b45309 !important;
-    /* Darker yellow for hover */
   }
 
   /* ===============================================
@@ -874,14 +902,38 @@ button:focus-visible,
      =============================================== */
 
   /* Botões Outline Globais (Corrige amarelo) */
+  .btn-outline,
+  .btn-outline-danger {
+    position: relative;
+  }
+
+  .btn-outline::after,
+  .btn-outline-danger::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none;
+  }
+
   .btn-outline {
     @apply border-porceli-gray-600 text-white transition-all duration-150;
     color: white !important;
   }
 
+  .btn-outline::after {
+    @apply bg-porceli-gray-700;
+  }
+
   .btn-outline:hover {
-    @apply bg-porceli-gray-700 text-white;
     color: white !important;
+  }
+
+  .btn-outline:hover::after {
+    opacity: 1;
   }
 
   .btn-outline-danger {
@@ -890,9 +942,16 @@ button:focus-visible,
     /* Vermelho */
   }
 
+  .btn-outline-danger::after {
+    @apply bg-red-900/20;
+  }
+
   .btn-outline-danger:hover {
-    @apply bg-red-900/20 text-red-400;
     color: #f87171 !important;
+  }
+
+  .btn-outline-danger:hover::after {
+    opacity: 1;
   }
 
   /* ===============================================
@@ -907,14 +966,27 @@ button:focus-visible,
   }
 
   .dropdown-item {
+    position: relative;
     color: white !important;
     background-color: transparent !important;
     border-radius: 0.75rem !important;
     transition: all 0.2s ease !important;
   }
 
-  .dropdown-item:hover {
+  .dropdown-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background-color: rgba(255, 255, 255, 0.08) !important;
+    opacity: 0;
+    transition: opacity 0.2s ease !important;
+    pointer-events: none;
+  }
+
+  .dropdown-item:hover::after {
+    opacity: 1;
   }
 
 
@@ -955,6 +1027,7 @@ button:focus-visible,
 .SelectItem,
 [role="option"],
 [data-radix-dropdown-menu-item],
+[data-radix-select-item],
 .dropdown-menu-item,
 .select-item {
   color: white !important;
@@ -965,25 +1038,46 @@ button:focus-visible,
   position: relative;
   /* Transição mais orgânica e rápida - estilo mola */
   transition:
-    background 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
     transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1.1),
     border 0.2s ease !important;
   cursor: pointer;
   transform: scale(0.98);
 }
 
+/* A cor/blur de hover viviam direto no :hover (trocavam background e
+   ligavam um backdrop-filter que nem existia em repouso) — cada hover
+   num item de dropdown/select forçava recompor os vidros vizinhos.
+   Viram um ::after atrás do conteúdo que só anima opacity; o blur já
+   fica declarado sempre, só invisível até o hover (compositor troca
+   opacity, não recalcula o blur do zero). */
+.SelectItem::after,
+[role="option"]::after,
+[data-radix-dropdown-menu-item]::after,
+[data-radix-select-item]::after,
+.dropdown-menu-item::after,
+.select-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  opacity: 0;
+  transition: opacity 0.2s ease !important;
+  pointer-events: none;
+}
+
 .SelectItem:hover,
 .SelectItem:focus,
-.SelectItem[data-state="checked"],
 [role="option"]:hover,
 [role="option"]:focus,
 [data-radix-dropdown-menu-item]:hover,
 [data-radix-dropdown-menu-item]:focus,
+[data-radix-select-item]:hover,
 .dropdown-menu-item:hover,
 .select-item:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow:
@@ -995,28 +1089,21 @@ button:focus-visible,
   z-index: 10;
 }
 
+.SelectItem:hover::after,
+.SelectItem:focus::after,
+[role="option"]:hover::after,
+[role="option"]:focus::after,
+[data-radix-dropdown-menu-item]:hover::after,
+[data-radix-dropdown-menu-item]:focus::after,
+[data-radix-select-item]:hover::after,
+.dropdown-menu-item:hover::after,
+.select-item:hover::after {
+  opacity: 1;
+}
+
 .SelectItem[data-state="checked"] {
   background: rgba(104, 41, 192, 0.15) !important;
   border: 1px solid rgba(104, 41, 192, 0.3) !important;
-}
-
-/* Para itens de dropdown/select */
-[data-radix-dropdown-menu-item],
-[data-radix-select-item],
-.dropdown-menu-item,
-.select-item {
-  color: white !important;
-  background-color: transparent !important;
-  transition: background-color 0.15s ease-in-out !important;
-}
-
-/* Hover state para itens */
-[data-radix-dropdown-menu-item]:hover,
-[data-radix-select-item]:hover,
-.dropdown-menu-item:hover,
-.select-item:hover {
-  background-color: #525252 !important;
-  color: white !important;
 }
 
 /* Focus state removido para evitar borda roxa indesejada */
@@ -1124,10 +1211,29 @@ button:focus-visible,
   box-shadow: 0 0 15px rgba(104, 41, 192, 0.4) !important;
 }
 
-.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
-  background-color: rgba(104, 41, 192, 0.2) !important;
-  color: white !important;
+.rdp-button:not([disabled]):not(.rdp-day_selected) {
+  position: relative;
   border-radius: 10px !important;
+}
+
+.rdp-button:not([disabled]):not(.rdp-day_selected)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: rgba(104, 41, 192, 0.2) !important;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  color: white !important;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected)::after {
+  opacity: 1;
 }
 
 /* Force text white for all days */
