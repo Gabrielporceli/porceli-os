@@ -6,6 +6,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const JOBNAME = 'sync-whatsapp-lote'
+const CHAT_BATCH = 20
+const CONTACT_BATCH = 20
+
+type SyncState = {
+  phase: 'groups' | 'chats' | 'contacts'
+  chatOffset: number
+  contactOffset: number
+}
+
+const DEFAULT_STATE: SyncState = { phase: 'groups', chatOffset: 0, contactOffset: 0 }
+
+// Sincroniza WhatsApp em lotes pequenos, uma fase (grupos -> chats -> contatos)
+// por execução, salvando o progresso em automations.config. Antes processava
+// TUDO numa chamada só (até 100 chats + até 200 contatos, cada um com 1-2
+// idas ao banco) e estourava o limite de recursos do compute Nano
+// (WORKER_RESOURCE_LIMIT). Rodando a cada poucos minutos via cron, o ciclo
+// completo demora mais (prolongado) mas cada chamada fica dentro do limite
+// (limitado) — e ao terminar um ciclo, recomeça do zero pra pegar novidades.
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -22,142 +41,163 @@ serve(async (req) => {
     const evolutionInstance = "agencia03"
     const defaultUserId = Deno.env.get('DEFAULT_USER_ID') || 'bad3abae-951e-49a4-8738-9037661fd5a1'
 
-    console.log(`🔄 Iniciando sincronização WhatsApp para instância: ${evolutionInstance}`)
+    const { data: automation } = await supabaseClient
+      .from('automations')
+      .select('config')
+      .eq('jobname', JOBNAME)
+      .maybeSingle()
 
-    // 1. Buscar Grupos Ativos Primeiro (para servir de filtro)
-    const groupsResponse = await fetch(`${evolutionUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`, {
-      method: 'GET',
-      headers: { 'apikey': evolutionApiKey }
-    })
-    
-    const activeGroupIds = new Set<string>()
-    let groupsSyncedCount = 0
-    let groupsData: any[] = []
+    const state: SyncState = { ...DEFAULT_STATE, ...((automation?.config as Partial<SyncState>) ?? {}) }
 
-    if (groupsResponse.ok) {
-       groupsData = await groupsResponse.json()
-       groupsSyncedCount = groupsData.length
-       groupsData.forEach((g: any) => {
-         const id = g.id || g.remoteJid || g.jid
-         if (id) activeGroupIds.add(id)
-       })
-    }
+    let result: Record<string, unknown> = {}
 
-    console.log(`👥 Encontrados ${groupsSyncedCount} grupos ativos na Evolution.`)
-
-    // 2. Buscar Chats (Conversas na história)
-    const chatsResponse = await fetch(`${evolutionUrl}/chat/findChats/${evolutionInstance}`, {
-      method: 'POST',
-      headers: { 
-        'apikey': evolutionApiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        limit: 100,
-        where: {}
+    if (state.phase === 'groups') {
+      // Grupos costumam ser poucos — sincroniza todos de uma vez nesta fase.
+      const groupsResponse = await fetch(`${evolutionUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`, {
+        method: 'GET',
+        headers: { 'apikey': evolutionApiKey }
       })
-    })
-    
-    if (!chatsResponse.ok) {
-      const errorText = await chatsResponse.text()
-      throw new Error(`Erro ao buscar chats: ${chatsResponse.status} - ${errorText}`)
-    }
-    
-    const chatsData = await chatsResponse.json()
-    const chats = chatsData.chats || chatsData || []
-    console.log(`📦 Verificando ${chats.length} chats para limpeza...`)
+      const groupsData: any[] = groupsResponse.ok ? await groupsResponse.json() : []
 
-    for (const chat of chats) {
-      const remoteJid = chat.id || chat.remoteJid || chat.jid
-      if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) continue
-
-      const isGroup = chat.isGroup || remoteJid.endsWith('@g.us')
-      
-      // FILTRO DE LIMPEZA: Se for grupo mas não estiver na lista de ativos, remover do dashboard
-      if (isGroup && !activeGroupIds.has(remoteJid)) {
-        console.log(`🗑️ Removendo grupo 'fantasma' (saído): ${remoteJid}`)
-        await supabaseClient.from('conversations').delete().eq('remote_jid', remoteJid).eq('user_id', defaultUserId)
-        continue
+      for (const group of groupsData) {
+        const groupId = group.id || group.remoteJid || group.jid
+        if (!groupId) continue
+        await supabaseClient.rpc('process_webhook_message', {
+          p_user_id: defaultUserId,
+          p_numero: groupId,
+          p_mensagem: 'Grupo sincronizado',
+          p_direcao: false,
+          p_data_hora: new Date().toISOString(),
+          p_nome_contato: group.subject || group.name || 'Grupo sem nome',
+          p_is_group: true,
+          p_contact_photo: group.profilePicUrl || null
+        })
       }
 
-      const name = chat.name || chat.pushName || (isGroup ? 'Grupo sem nome' : 'Contato sem nome')
-      
-      await supabaseClient.rpc('process_webhook_message', {
-        p_user_id: defaultUserId,
-        p_numero: remoteJid,
-        p_mensagem: chat.lastMessage?.message?.conversation || chat.lastMessage?.message?.extendedTextMessage?.text || 'Sincronizado',
-        p_direcao: chat.lastMessage?.key?.fromMe || false,
-        p_data_hora: new Date().toISOString(),
-        p_nome_contato: name,
-        p_is_group: isGroup,
-        p_contact_photo: chat.profilePicUrl || null
+      result = { phase: 'groups', groupsSynced: groupsData.length }
+      state.phase = 'chats'
+      state.chatOffset = 0
+
+    } else if (state.phase === 'chats') {
+      const groupsResponse = await fetch(`${evolutionUrl}/group/fetchAllGroups/${evolutionInstance}?getParticipants=false`, {
+        method: 'GET',
+        headers: { 'apikey': evolutionApiKey }
       })
+      const activeGroupIds = new Set<string>()
+      if (groupsResponse.ok) {
+        const groupsData: any[] = await groupsResponse.json()
+        groupsData.forEach((g: any) => {
+          const id = g.id || g.remoteJid || g.jid
+          if (id) activeGroupIds.add(id)
+        })
+      }
+
+      const chatsResponse = await fetch(`${evolutionUrl}/chat/findChats/${evolutionInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 100, where: {} })
+      })
+      if (!chatsResponse.ok) {
+        const errorText = await chatsResponse.text()
+        throw new Error(`Erro ao buscar chats: ${chatsResponse.status} - ${errorText}`)
+      }
+      const chatsData = await chatsResponse.json()
+      const chats: any[] = chatsData.chats || chatsData || []
+
+      const slice = chats.slice(state.chatOffset, state.chatOffset + CHAT_BATCH)
+      for (const chat of slice) {
+        const remoteJid = chat.id || chat.remoteJid || chat.jid
+        if (!remoteJid || (!remoteJid.includes('@') && !/^\d+$/.test(remoteJid))) continue
+
+        const isGroup = chat.isGroup || remoteJid.endsWith('@g.us')
+
+        // FILTRO DE LIMPEZA: grupo que saiu da lista de ativos some do dashboard
+        if (isGroup && !activeGroupIds.has(remoteJid)) {
+          await supabaseClient.from('conversations').delete().eq('remote_jid', remoteJid).eq('user_id', defaultUserId)
+          continue
+        }
+
+        const name = chat.name || chat.pushName || (isGroup ? 'Grupo sem nome' : 'Contato sem nome')
+        await supabaseClient.rpc('process_webhook_message', {
+          p_user_id: defaultUserId,
+          p_numero: remoteJid,
+          p_mensagem: chat.lastMessage?.message?.conversation || chat.lastMessage?.message?.extendedTextMessage?.text || 'Sincronizado',
+          p_direcao: chat.lastMessage?.key?.fromMe || false,
+          p_data_hora: new Date().toISOString(),
+          p_nome_contato: name,
+          p_is_group: isGroup,
+          p_contact_photo: chat.profilePicUrl || null
+        })
+      }
+
+      const nextOffset = state.chatOffset + slice.length
+      result = { phase: 'chats', chatsTotal: chats.length, chatsProcessedThisRun: slice.length, chatOffset: nextOffset }
+
+      if (nextOffset >= chats.length) {
+        state.phase = 'contacts'
+        state.contactOffset = 0
+      } else {
+        state.chatOffset = nextOffset
+      }
+
+    } else {
+      const contactsResponse = await fetch(`${evolutionUrl}/chat/findContacts/${evolutionInstance}`, {
+        method: 'POST',
+        headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 200 })
+      })
+
+      let contacts: any[] = []
+      if (contactsResponse.ok) {
+        const contactsDataRaw = await contactsResponse.json()
+        contacts = contactsDataRaw.contacts || contactsDataRaw || []
+      }
+
+      const slice = contacts.slice(state.contactOffset, state.contactOffset + CONTACT_BATCH)
+      for (const contact of slice) {
+        const contactId = contact.id || contact.remoteJid || contact.jid
+        if (!contactId || contactId.endsWith('@g.us')) continue
+        const phone_clean = contactId.split('@')[0].replace(/[^0-9]/g, '')
+
+        await supabaseClient.from('contatos').upsert({
+          user_id: defaultUserId,
+          numero: phone_clean,
+          nome: contact.name || contact.pushName || contact.verifiedName,
+          photo_url: contact.profilePicUrl || null,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,numero' })
+
+        await supabaseClient.from('leads').update({
+          photo_url: contact.profilePicUrl || null,
+          name: contact.name || contact.pushName || contact.verifiedName
+        }).eq('phone', phone_clean).eq('user_id', defaultUserId)
+      }
+
+      const nextOffset = state.contactOffset + slice.length
+      result = { phase: 'contacts', contactsTotal: contacts.length, contactsProcessedThisRun: slice.length, contactOffset: nextOffset }
+
+      if (nextOffset >= contacts.length) {
+        // ciclo completo — recomeça do zero pra pegar chats/contatos novos
+        state.phase = 'groups'
+        state.chatOffset = 0
+        state.contactOffset = 0
+      } else {
+        state.contactOffset = nextOffset
+      }
     }
 
-    // 3. Sincronizar Grupos Ativos
-    console.log(`👤 Atualizando grupos ativos...`)
-    for (const group of groupsData) {
-      const groupId = group.id || group.remoteJid || group.jid
-      if (!groupId) continue
-      
-      await supabaseClient.rpc('process_webhook_message', {
-        p_user_id: defaultUserId,
-        p_numero: groupId,
-        p_mensagem: 'Grupo sincronizado',
-        p_direcao: false,
-        p_data_hora: new Date().toISOString(),
-        p_nome_contato: group.subject || group.name || 'Grupo sem nome',
-        p_is_group: true,
-        p_contact_photo: group.profilePicUrl || null
-      })
-    }
+    await supabaseClient
+      .from('automations')
+      .update({ config: state, last_triggered_at: new Date().toISOString() })
+      .eq('jobname', JOBNAME)
 
-    // 4. Buscar Contatos (Para fotos de perfil)
-    const contactsResponse = await fetch(`${evolutionUrl}/chat/findContacts/${evolutionInstance}`, {
-      method: 'POST',
-      headers: { 
-        'apikey': evolutionApiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        limit: 200
-      })
-    })
-    
-    if (contactsResponse.ok) {
-       const contactsDataRaw = await contactsResponse.json()
-       const contacts = contactsDataRaw.contacts || contactsDataRaw || []
-       for (const contact of contacts) {
-         const contactId = contact.id || contact.remoteJid || contact.jid
-         if (!contactId || contactId.endsWith('@g.us')) continue
-         const phone_clean = contactId.split('@')[0].replace(/[^0-9]/g, '')
-         
-         await supabaseClient.from('contatos').upsert({
-           user_id: defaultUserId,
-           numero: phone_clean,
-           nome: contact.name || contact.pushName || contact.verifiedName,
-           photo_url: contact.profilePicUrl || null,
-           updated_at: new Date().toISOString()
-         }, { onConflict: 'user_id,numero' })
-
-         await supabaseClient.from('leads').update({
-           photo_url: contact.profilePicUrl || null,
-           name: contact.name || contact.pushName || contact.verifiedName
-         }).eq('phone', phone_clean).eq('user_id', defaultUserId)
-       }
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true, 
-      chats_checked: chats.length,
-      groups_active: groupsSyncedCount 
-    }), {
+    return new Response(JSON.stringify({ success: true, ...result, nextPhase: state.phase }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
     })
 
   } catch (error) {
-    console.error('Erro na sincronização:', error)
+    console.error('Erro na sincronizacao:', error)
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400
