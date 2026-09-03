@@ -212,10 +212,11 @@ function AutomationRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       className={cn(
-        "flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group",
+        "relative isolate group flex items-center justify-between px-6 py-4 transition-all duration-300",
         !automation.enabled && "opacity-55"
       )}
     >
+      <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       {/* Info */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div className="min-w-0 overflow-hidden max-w-xl">

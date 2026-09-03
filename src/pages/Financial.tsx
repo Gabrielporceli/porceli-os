@@ -346,7 +346,8 @@ export default function Financial() {
                 const totalAmount = entries.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
                 const isExpanded = expandedOverdueClients.includes(clientName);
                 return (
-                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
+                  <div key={clientName} className="relative isolate group">
+                    <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     {/* Linha do cliente — clicável */}
                     <div
                       className="p-6 cursor-pointer flex items-center justify-between"
@@ -389,8 +390,9 @@ export default function Financial() {
                           {entries.map((entry: any, i: number) => (
                             <div
                               key={entry.id}
-                              className={`flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 ${i > 0 ? 'border-t border-white/5' : ''}`}
+                              className={`relative isolate group flex items-center justify-between px-6 py-4 transition-all duration-300 ${i > 0 ? 'border-t border-white/5' : ''}`}
                             >
+                              <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                               <div className="flex items-center gap-12">
                                 <div>
                                   <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
@@ -475,7 +477,8 @@ export default function Financial() {
               {normalEntries.map((entry) => {
                 const statusTag = getStatusTag(entry);
                 return (
-                  <div key={entry.id} className="flex items-center justify-between gap-8 p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                  <div key={entry.id} className="relative isolate group flex items-center justify-between gap-8 p-6 transition-all duration-300">
+                    <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     <h4 className="text-white font-semibold text-lg w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
                     <div className="flex items-center gap-12 flex-1">
                       <div>
@@ -571,7 +574,8 @@ export default function Financial() {
             return (
               <div className="divide-y divide-white/5">
                 {filteredExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                  <div key={expense.id} className="relative isolate group flex items-center justify-between p-6 transition-all duration-300">
+                    <span className="absolute inset-0 -z-10 bg-white/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     <div className="w-1/3 min-w-0 pr-6">
                       <h4 className="text-white font-semibold text-lg truncate">{expense.description}</h4>
                       {expense.category && (
