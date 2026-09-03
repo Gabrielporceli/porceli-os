@@ -394,11 +394,18 @@ serve(async (req) => {
     }
 
     // Buscar páginas do banco Notion — busca todas as páginas com paginação
-    // Filtra por data: mês atual ± 2 meses para garantir que todas as tarefas visíveis apareçam
+    // Filtra por data: do dia 1º de janeiro do ano corrente até 2 meses à
+    // frente de hoje. O início em jan/1 (em vez de "mês atual -2") é pra
+    // alimentar o heatmap "Histórico de Produtividade" do Calendário, que
+    // mostra o ano inteiro — com a janela antiga (só ±2 meses) ele só
+    // conseguia mostrar dados de um trecho curto do ano, mesmo quando o
+    // usuário tinha atividades no ano inteiro. O fim continua "2 meses à
+    // frente de hoje" — mesmo comportamento de antes pro planejamento
+    // futuro (grade do calendário, painel de atividades).
     const now = new Date()
-    const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    const yearStart = new Date(now.getFullYear(), 0, 1)
     const twoMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 3, 0)
-    const dateFrom = twoMonthsAgo.toISOString().split('T')[0]
+    const dateFrom = yearStart.toISOString().split('T')[0]
     const dateTo = twoMonthsAhead.toISOString().split('T')[0]
 
     let allResults: any[] = []
