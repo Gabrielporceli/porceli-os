@@ -498,6 +498,37 @@ button:focus-visible,
       box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
   }
 
+  /* Mesmo bug do .dashboard-glow/linhas de lista, só que na LiquidGlassButton
+     — usada em praticamente todo botão de ação do app (Salvar, Cancelar,
+     Confirmar, Excluir, Novo X...). As variantes tingidas (--primary/
+     --success/--danger) trocavam background-color no :hover (repaint),
+     vazando tarja pra qualquer card de vidro vizinho ao passar o mouse em
+     QUALQUER botão desses — inclusive o "Renovar Agora" dentro de um card,
+     acendendo o card vizinho abaixo. Mesma correção: um ::after separado
+     que anima só opacity até a cor "hover", nunca troca o background-color
+     do elemento real. */
+  .lqg-lens--primary,
+  .lqg-lens--success,
+  .lqg-lens--danger {
+    position: relative;
+  }
+  .lqg-lens--primary::after,
+  .lqg-lens--success::after,
+  .lqg-lens--danger::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 220ms ease;
+    pointer-events: none;
+  }
+  .lqg-btn:hover .lqg-lens--primary::after,
+  .lqg-btn:hover .lqg-lens--success::after,
+  .lqg-btn:hover .lqg-lens--danger::after {
+    opacity: 1;
+  }
+
   /* Pílula do header: SEM backdrop-filter de propósito.
      Vidro aninhado (pílula com backdrop-filter dentro do header, que também
      tem backdrop-filter) fazia o Chrome recompor as camadas a cada repaint
