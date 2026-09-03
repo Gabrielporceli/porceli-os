@@ -734,11 +734,33 @@ button:focus-visible,
     isolation: isolate;
   }
 
+  /* O tint de hover (bg-white/[0.05]) era aplicado direto no elemento —
+     essa classe está em praticamente todo card do app, então QUALQUER
+     hover num card de vidro repintava a camada e vazava a tarja pros
+     cards de vidro vizinhos (mesma causa documentada no Header, só que
+     numa escala muito maior). Movido pra um ::before separado que anima
+     só opacity — visualmente idêntico, sem repaint. */
+  .dashboard-glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transition: opacity 500ms ease-in-out;
+    pointer-events: none;
+  }
+
   .dashboard-glow:hover {
     transform: translateY(-4px);
-    @apply shadow-[0_20px_40px_-15px_#000000b3] bg-white/[0.05];
+    @apply shadow-[0_20px_40px_-15px_#000000b3];
     /* border removido daqui — controlado por Tailwind por card para não sobrescrever bordas coloridas */
     z-index: 10;
+  }
+
+  .dashboard-glow:hover::before {
+    opacity: 1;
   }
 
   /* Enhanced animation for stats cards */
