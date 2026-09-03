@@ -629,11 +629,15 @@ button:focus-visible,
     transition: color 400ms cubic-bezier(1, 0, 0.4, 1);
   }
 
-  @media (hover: hover) {
-    .lqg-btn:not(:disabled):hover {
-      transform: scale(1.03);
-    }
-  }
+  /* O scale(1.03) no hover foi removido de propósito: a .lqg-lens usa um
+     filtro SVG de refração (feDisplacementMap) compartilhado por TODOS os
+     LiquidGlassButton da página (um único <filter> renderizado uma vez em
+     App.tsx). Escalar o elemento muda a objectBoundingBox do filtro e força
+     o Chrome a re-renderizar a refração — como o filtro é compartilhado,
+     esse recálculo vaza visualmente pros outros botões/vidros na tela (a
+     tarja diagonal "derretida", maior e mais colorida que o flash simples
+     de background). scale no :active foi mantido — é um toque só, não fica
+     recalculando durante o movimento do mouse. */
   .lqg-btn:not(:disabled):active {
     transform: scale(0.96);
   }
