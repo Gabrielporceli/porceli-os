@@ -217,8 +217,8 @@ button:focus-visible,
   /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
   .liquid-glass-ghost {
     background: transparent !important;
-    backdrop-filter: blur(10px) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
+    backdrop-filter: blur(10px) brightness(1.04) !important;
+    -webkit-backdrop-filter: blur(10px) brightness(1.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
     box-shadow:
@@ -306,8 +306,13 @@ button:focus-visible,
   .liquid-glass {
     position: relative;
     background: rgba(28, 28, 34, 0.28) !important;
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    /* saturate/brightness AMPLIFICAM o que está atrás. Com o wallpaper roxo,
+       180%/1.12 transformavam a variação claro-escuro dele numa faixa bem
+       visível atravessando os cards ("tarja"): num card grande, ou numa
+       grade de cards, um lado saía nitidamente mais claro que o outro.
+       130%/1.05 mantém o material de vidro sem exagerar o fundo. */
+    backdrop-filter: blur(20px) saturate(130%) brightness(1.05) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(1.05) !important;
     border: none !important;
     border-radius: 1.5rem;
     /* Promove CADA bloco de vidro pra sua PRÓPRIA camada de composição
@@ -344,8 +349,8 @@ button:focus-visible,
   /* Elementos liquid-glass aninhados: mesmo material, bevel mais suave */
   .liquid-glass .liquid-glass {
     background: rgba(28, 28, 34, 0.26) !important;
-    backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
+    backdrop-filter: blur(14px) saturate(125%) brightness(1.04) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(125%) brightness(1.04) !important;
     border: none !important;
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.06),
@@ -419,8 +424,8 @@ button:focus-visible,
   .dc-single {
     position: relative;
     background: rgba(28, 28, 34, 0.28);
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    backdrop-filter: blur(20px) saturate(130%) brightness(1.05);
+    -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(1.05);
     /* Mesma isolação de camada do .liquid-glass — ver comentário lá.
        Sem isso, os cards do topo do Dashboard "piscam" uma tarja clara
        quando o mouse passa pelo header logo acima. */
@@ -539,8 +544,8 @@ button:focus-visible,
   .status-card {
     position: relative;
     background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    backdrop-filter: blur(20px) saturate(130%) brightness(1.05);
+    -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(1.05);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.35),
