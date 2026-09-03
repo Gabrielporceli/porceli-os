@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
 import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock, Workflow } from 'lucide-react';
@@ -24,31 +24,6 @@ export const Header = () => {
   const [hidden, setHidden] = useState(false);
   const [isMouseAtTop, setIsMouseAtTop] = useState(false);
 
-  // Posição/largura reais da pílula ativa, medidas via DOM — não via
-  // layoutId. O layoutId do Framer Motion tira uma "foto" da posição
-  // antes/depois pra animar entre elas, e tenta compensar scroll da
-  // página nessa conta; como o header é `position: fixed` (não rola de
-  // verdade), essa compensação fica errada quando a página está rolada
-  // no momento da troca de rota — a pílula "nasce" deslocada pela
-  // distância do scroll (por isso parecia vir "de baixo"). Medindo a
-  // posição real do item ativo (getBoundingClientRect, imune a scroll
-  // já que o header não se move com a página) e animando um `x`/`width`
-  // explícitos, o resultado é sempre correto, independente de scroll.
-  const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [pill, setPill] = useState<{ x: number; width: number } | null>(null);
-
-  const updatePill = useCallback((pathname: string) => {
-    const nav = navRef.current;
-    const el = itemRefs.current.get(pathname);
-    if (!nav || !el) {
-      setPill(null);
-      return;
-    }
-    const navRect = nav.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setPill({ x: elRect.left - navRect.left + nav.scrollLeft, width: elRect.width });
-  }, []);
 
   // Lógica para esconder o header ao rolar para baixo e mostrar ao rolar para cima
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -74,18 +49,6 @@ export const Header = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Recalcula a pílula na troca de rota e em qualquer resize do item ativo
-  // ou da barra de nav (labels aparecem/somem em breakpoints diferentes).
-  useLayoutEffect(() => {
-    updatePill(location.pathname);
-    const nav = navRef.current;
-    const el = itemRefs.current.get(location.pathname);
-    if (!nav || !el) return;
-    const ro = new ResizeObserver(() => updatePill(location.pathname));
-    ro.observe(nav);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [location.pathname, updatePill]);
 
   const showHeader = !hidden || isMouseAtTop;
 
@@ -108,21 +71,7 @@ export const Header = () => {
           </div>
 
           {/* Navigation Items - Center Styled */}
-          <nav
-            ref={navRef}
-            className="relative flex items-center justify-center gap-1 flex-1 h-full overflow-x-auto scrollbar-hide"
-          >
-            {/* Pílula de vidro única, medida via DOM (ver comentário no
-                useLayoutEffect acima) — desliza até a posição real do item
-                ativo em vez de "pular" entre instâncias condicionais. */}
-            {pill && (
-              <motion.span
-                className="lqg-lens lqg-lens--nav absolute top-0 h-10 rounded-full pointer-events-none z-0"
-                initial={false}
-                animate={{ x: pill.x, width: pill.width }}
-                transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              />
-            )}
+          <nav className="flex items-center justify-center gap-1 flex-1 h-full overflow-x-auto scrollbar-hide">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.url;
               const Icon = item.icon;
@@ -141,18 +90,28 @@ export const Header = () => {
                     abaixo. opacity/transform são compositor-only (não repintam),
                     por isso o highlight de hover é uma camada separada que
                     anima só opacidade — visualmente idêntico, sem o bug.
+
+                    O destaque do item ATIVO (abaixo) segue o mesmo princípio,
+                    de propósito SEM animação deslizando entre itens: uma
+                    versão anterior usava layoutId do Framer Motion pra
+                    deslizar uma pílula compartilhada de um item pro outro, e
+                    depois uma versão com medição via DOM (getBoundingClientRect)
+                    — as duas ficaram com bugs de posição em produção (a
+                    pílula "nascendo" no lugar errado, às vezes travada lá)
+                    que eu não consegui reproduzir isolado pra depurar direito.
+                    Aqui cada item desenha o PRÓPRIO destaque, condicionado só
+                    ao seu próprio isActive — sem depender da posição de
+                    nenhum outro elemento, então não tem como "errar o alvo".
+                    Perde a animação de deslizar entre abas; ganha certeza.
                   */}
-                  <div
-                    ref={(el) => {
-                      if (el) itemRefs.current.set(item.url, el);
-                      else itemRefs.current.delete(item.url);
-                    }}
-                    className={cn(
-                      "group relative isolate z-10 px-4 h-full flex items-center gap-2 text-sm font-medium rounded-full transform-gpu will-change-transform"
-                    )}
-                  >
+                  <div className={cn(
+                    "group relative isolate z-10 px-4 h-full flex items-center gap-2 text-sm font-medium rounded-full transform-gpu will-change-transform"
+                  )}>
                     {!isActive && (
                       <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    )}
+                    {isActive && (
+                      <span className="lqg-lens lqg-lens--nav absolute inset-0 -z-10 rounded-full pointer-events-none" />
                     )}
                     <span className={cn(
                       "relative z-10 hidden lg:inline",
