@@ -136,9 +136,17 @@ export const Header = () => {
                 em JS (elRect.left - navRect.left + nav.scrollLeft). */}
             {pill && (
               <span
-                className="lqg-lens lqg-lens--nav absolute left-0 top-0 h-10 rounded-full pointer-events-none z-0"
+                // top-1/2 + translateY(-50%): os itens do menu (h-10) ficam
+                // centralizados verticalmente dentro do <nav>, que é mais
+                // alto (h-full, herda os 64px do header) via items-center —
+                // top-0 alinhava a pílula na BORDA do nav, não no centro
+                // onde os itens realmente estão (12px de diferença, testado
+                // e confirmado no navegador do usuário). Centralizar do
+                // mesmo jeito que o flexbox centraliza os itens elimina
+                // essa conta duplicada e qualquer chance de dessincronizar.
+                className="lqg-lens lqg-lens--nav absolute left-0 top-1/2 h-10 rounded-full pointer-events-none z-0"
                 style={{
-                  transform: `translateX(${pill.x}px)`,
+                  transform: `translate(${pill.x}px, -50%)`,
                   width: pill.width,
                   transition: "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), width 250ms cubic-bezier(0.22, 1, 0.36, 1)",
                 }}
