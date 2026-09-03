@@ -1106,7 +1106,7 @@ export default function Calendar() {
             <button
               onClick={() => setPanelDate(new Date())}
               title="Hoje"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-primary hover:bg-white/5 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
             >
               <CalendarIcon className="w-4 h-4" />
             </button>
@@ -1119,7 +1119,7 @@ export default function Calendar() {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-4 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide px-4 pt-4 pb-8 space-y-3 min-h-0">
           {todayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
               <CalendarIcon className="w-10 h-10" />
