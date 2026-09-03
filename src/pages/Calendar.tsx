@@ -1142,7 +1142,7 @@ export default function Calendar() {
                 <div
                   key={event.id}
                   onClick={() => handleEventClick(event)}
-                  className="status-card rounded-2xl p-4 cursor-pointer transition-all hover:brightness-110"
+                  className="status-card rounded-2xl p-4 cursor-pointer transition-all"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
@@ -1335,7 +1335,7 @@ export default function Calendar() {
                     setIsEditActivityModalOpen(true);
                   }}
                   className={cn(
-                    "status-card p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
+                    "status-card p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer",
                     snapshot.isDragging && "ring-2 ring-primary/40 shadow-xl"
                   )}
                 >

@@ -214,11 +214,16 @@ button:focus-visible,
     @apply font-bold;
   }
 
-  /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
+  /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente.
+     Vidro estático — mesma técnica do .liquid-glass, ver comentário lá.
+     Sem tint (era "background: transparent"): só a imagem pré-borrada. */
   .liquid-glass-ghost {
-    background: transparent !important;
-    backdrop-filter: blur(10px) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
+    position: relative;
+    background-image: url("/app-glass-ghost.webp") !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: max(100vw, 100vh * 1.79104) max(100vw / 1.79104, 100vh) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
     box-shadow:
@@ -226,8 +231,50 @@ button:focus-visible,
       0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 
-  .liquid-glass-ghost:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+  .liquid-glass-ghost::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.04);
+    opacity: 0;
+    transition: opacity 200ms ease;
+    pointer-events: none;
+  }
+
+  .liquid-glass-ghost:hover::before {
+    opacity: 1;
+  }
+
+  /* Substitui hover:-translate-y-0.5 + hover:brightness-110 do Tailwind
+     (removidos em LeadsKanban.tsx): os dois mudam transform/filter do
+     PRÓPRIO elemento, que agora é .liquid-glass estático — quebrariam o
+     alinhamento do fundo. `top` no lugar do transform, `::after` com
+     opacity no lugar do brightness. */
+  .kanban-card-lift {
+    position: relative;
+    top: 0;
+  }
+
+  .kanban-card-lift::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+
+  .kanban-card-lift:hover {
+    top: -2px;
+  }
+
+  .kanban-card-lift:hover::after {
+    opacity: 1;
   }
 
   .gradient-text {
@@ -305,21 +352,38 @@ button:focus-visible,
      levemente mais opaco para legibilidade, elevação contida. */
   .liquid-glass {
     position: relative;
-    background: rgba(28, 28, 34, 0.28) !important;
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12) !important;
+    /* Vidro ESTÁTICO em vez de backdrop-filter ao vivo. Motivo (confirmado
+       cross-browser pelo usuário): com 15-25 blocos de vidro simultâneos,
+       o Chrome corta caminho no compositor (a "tarja" — recompõe errado
+       sob carga) e o Firefox fica pesado (computa direito, mas devagar) —
+       os dois sintomas de UMA causa: recalcular o mesmo blur, do mesmo
+       wallpaper FIXO, 60x por segundo, pra um resultado que nunca muda.
+       Solução: pré-computa o blur(20px) saturate(180%) brightness(1.12)
+       do wallpaper UMA vez (build time) e usa como imagem de fundo comum,
+       ancorada na viewport via background-attachment:fixed (mesma técnica
+       que o KanbanGlassBackdrop já usa, por outro motivo). Zero trabalho
+       de compositor por frame. O tint (28% escuro) continua um gradient
+       CSS por cima, não a `background` original — assim o texto do card
+       não perde contraste.
+       IMPORTANTE: nunca aplicar `transform` neste elemento OU em qualquer
+       ancestral dele (nem no :hover) — isso re-ancora o
+       background-attachment:fixed no PRÓPRIO elemento em vez da viewport,
+       e a imagem desalinha do wallpaper ao redor. Use `top`/`margin` pra
+       qualquer efeito de "levantar" no hover. */
+    background-image:
+      linear-gradient(rgba(28, 28, 34, 0.28), rgba(28, 28, 34, 0.28)),
+      url("/app-glass.webp");
+    background-attachment: scroll, fixed;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    /* "cover" contra a VIEWPORT — o navegador calcula cover por elemento,
+       não por viewport, mesmo com attachment:fixed. Fórmula equivalente,
+       usando o aspect ratio real do asset (1920/1072 = 1.79104). */
+    background-size:
+      auto,
+      max(100vw, 100vh * 1.79104) max(100vw / 1.79104, 100vh);
     border: none !important;
     border-radius: 1.5rem;
-    /* NÃO adicionar will-change/translateZ(0) aqui. Já foi tentado como
-       "isolamento de camada" e o efeito é o contrário: o Header pode fazer
-       isso porque é UM elemento; aplicado em todo card, com 15-25 cards na
-       tela, estoura o orçamento de camadas do Chrome e ele responde com
-       layer squashing — junta as camadas num backing store compartilhado,
-       que é justamente a condição em que repintar um elemento respinga nos
-       outros. E translateZ(0) cria um backdrop root, fazendo o vidro
-       ANINHADO (.liquid-glass .liquid-glass — chips do Funil, tarefas do
-       Calendário) parar de enxergar o wallpaper e passar a enxergar só o
-       card pai. */
     /* Mesmo material do botão Apple Tahoe: rim de luz no topo + brilho especular.
        Insets com um leve blur (2px) p/ contornarem a quina sem formar "bico".
        A borda (1ª linha) virou inset em vez de `border:` — em elementos
@@ -343,9 +407,18 @@ button:focus-visible,
 
   /* Elementos liquid-glass aninhados: mesmo material, bevel mais suave */
   .liquid-glass .liquid-glass {
-    background: rgba(28, 28, 34, 0.26) !important;
-    backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(1.1) !important;
+    /* Mesma técnica estática do .liquid-glass base — ver comentário lá.
+       Imagem própria (blur mais leve, 14px) pra bater com o material do
+       vidro aninhado (chips do Funil, tarefas do Calendário). */
+    background-image:
+      linear-gradient(rgba(28, 28, 34, 0.26), rgba(28, 28, 34, 0.26)),
+      url("/app-glass-nested.webp");
+    background-attachment: scroll, fixed;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size:
+      auto,
+      max(100vw, 100vh * 1.79104) max(100vw / 1.79104, 100vh);
     border: none !important;
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.06),
@@ -416,20 +489,34 @@ button:focus-visible,
     arredondados do chip, a curva côncava de transição e os cantos
     arredondados do corpo.
   */
-  .dc-single {
-    position: relative;
-    background: rgba(28, 28, 34, 0.28);
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
-    /* NÃO adicionar will-change/translateZ(0) aqui — ver comentário no
-       .liquid-glass. */
-    /* SEM box-shadow aqui: box-shadow calcula pela caixa retangular e não
-       enxerga o clip-path — o bevel (rim de luz/sombras internas) é feito
-       geometricamente no SVG do DeconstructedCard, seguindo o contorno real.
-       Aqui fica só a elevação (drop-shadow acompanha a forma recortada). */
+  /* filter (drop-shadow) precisa ficar num elemento SEPARADO do que tem o
+     background-attachment:fixed — testado isoladamente: um `filter` no
+     MESMO elemento re-ancora o fixed nele próprio (mesmo efeito colateral
+     que `transform` tem), desalinhando a imagem do wallpaper ao redor. Por
+     isso o wrapper (ver DeconstructedCard.tsx): .dc-outer leva o
+     drop-shadow (a elevação, acompanha o clip-path via alpha), .dc-single
+     leva o vidro estático puro. */
+  .dc-outer {
     filter:
       drop-shadow(0 2px 8px rgba(0, 0, 0, 0.18))
       drop-shadow(0 14px 36px rgba(0, 0, 0, 0.26));
+  }
+
+  .dc-single {
+    position: relative;
+    /* Vidro estático — mesma técnica do .liquid-glass, ver comentário lá. */
+    background-image:
+      linear-gradient(rgba(28, 28, 34, 0.28), rgba(28, 28, 34, 0.28)),
+      url("/app-glass.webp");
+    background-attachment: scroll, fixed;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size:
+      auto,
+      max(100vw, 100vh * 1.79104) max(100vw / 1.79104, 100vh);
+    /* SEM box-shadow aqui: box-shadow calcula pela caixa retangular e não
+       enxerga o clip-path — o bevel (rim de luz/sombras internas) é feito
+       geometricamente no SVG do DeconstructedCard, seguindo o contorno real. */
   }
 
   .dc-chip-row {
@@ -535,9 +622,17 @@ button:focus-visible,
      sem tingir o fundo do card. */
   .status-card {
     position: relative;
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
-    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    /* Vidro estático — mesma técnica do .liquid-glass, ver comentário lá.
+       O tint aqui é branco (0.05), não o roxo-escuro dos outros cards. */
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)),
+      url("/app-glass.webp");
+    background-attachment: scroll, fixed;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size:
+      auto,
+      max(100vw, 100vh * 1.79104) max(100vw / 1.79104, 100vh);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.35),
@@ -546,6 +641,25 @@ button:focus-visible,
       inset 0px 3px 4px -2px rgba(0, 0, 0, 0.16),
       0px 1px 5px 0px rgba(0, 0, 0, 0.12),
       0px 6px 16px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Substitui o hover:brightness-110 do Tailwind removido em Calendar.tsx:
+     `filter` no MESMO elemento do vidro estático quebraria o alinhamento
+     do fundo (igual transform) — vira um ::before que só anima opacity. */
+  .status-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.06);
+    opacity: 0;
+    transition: opacity 200ms ease;
+    pointer-events: none;
+  }
+
+  .status-card:hover::before {
+    opacity: 1;
   }
 
   .lqg-text {
@@ -726,16 +840,41 @@ button:focus-visible,
   .dashboard-glow {
     @apply transition-all duration-500 ease-in-out;
     position: relative;
+    top: 0;
     /* overflow: hidden; -> Removido para evitar que o bloco suma ao subir no hover */
     margin-bottom: 2px;
     isolation: isolate;
   }
 
+  /* O tint de hover (bg-white/[0.05]) era aplicado direto no elemento —
+     essa classe está em praticamente todo card do app, então QUALQUER
+     hover repintava o elemento. Vira um ::before separado que só anima
+     opacity. */
+  .dashboard-glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transition: opacity 500ms ease-in-out;
+    pointer-events: none;
+  }
+
   .dashboard-glow:hover {
-    transform: translateY(-4px);
-    @apply shadow-[0_20px_40px_-15px_#000000b3] bg-white/[0.05];
+    /* `top`, não `transform`: os cards de vidro logo abaixo/dentro usam
+       background-attachment:fixed pra ficar estático (ver .liquid-glass) —
+       um transform no ANCESTRAL de um desses reancora o fixed nele e
+       desalinha a imagem do wallpaper ao redor. */
+    top: -4px;
+    @apply shadow-[0_20px_40px_-15px_#000000b3];
     /* border removido daqui — controlado por Tailwind por card para não sobrescrever bordas coloridas */
     z-index: 10;
+  }
+
+  .dashboard-glow:hover::before {
+    opacity: 1;
   }
 
   /* Enhanced animation for stats cards */
