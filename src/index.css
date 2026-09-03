@@ -216,7 +216,6 @@ button:focus-visible,
 
   /* Liquid glass sem fundo — mantém bordas e efeitos do glass mas totalmente transparente */
   .liquid-glass-ghost {
-    position: relative;
     background: transparent !important;
     backdrop-filter: blur(10px) brightness(1.1) !important;
     -webkit-backdrop-filter: blur(10px) brightness(1.1) !important;
@@ -227,22 +226,8 @@ button:focus-visible,
       0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 
-  /* Igual .btn-glass etc: hover troca só opacity de um ::after, nunca o
-     background do próprio elemento de vidro. */
-  .liquid-glass-ghost::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
+  .liquid-glass-ghost:hover {
     background: rgba(255, 255, 255, 0.04) !important;
-    opacity: 0;
-    transition: opacity 180ms ease;
-    pointer-events: none;
-  }
-
-  .liquid-glass-ghost:hover::after {
-    opacity: 1;
   }
 
   .gradient-text {
@@ -288,47 +273,22 @@ button:focus-visible,
     transition: background 180ms ease !important;
   }
 
-  /* ── Tints ──
-     Mesmo bug da tarja: trocar background direto no :hover força repaint que
-     vaza pros cards de vidro vizinhos. A cor "hover" vira um ::after
-     separado (por baixo do conteúdo, z-index: -1) que só anima opacity. */
-  .btn-glass::after,
-  .btn-glass-primary::after,
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)::after,
-  .btn-primary-glass::after,
-  .btn-success-glass::after,
-  .btn-danger-glass::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 180ms ease;
-    pointer-events: none;
-  }
-
+  /* ── Tints ── */
   .btn-glass        { background: rgba(18, 18, 18, 0.50) !important; }
-  .btn-glass::after { background: rgba(28, 28, 30, 0.55) !important; }
-  .btn-glass:hover::after { opacity: 1; }
+  .btn-glass:hover  { background: rgba(28, 28, 30, 0.55) !important; }
 
   .btn-glass-primary,
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost),
   .btn-primary-glass        { background: rgba(104, 41, 192, 0.55) !important; }
-  .btn-glass-primary::after,
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost)::after,
-  .btn-primary-glass::after { background: rgba(104, 41, 192, 0.70) !important; }
-  .btn-glass-primary:hover::after,
-  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover::after,
-  .btn-primary-glass:hover::after { opacity: 1; }
+  .btn-glass-primary:hover,
+  .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):hover,
+  .btn-primary-glass:hover  { background: rgba(104, 41, 192, 0.70) !important; }
 
   .btn-success-glass        { background: rgba(22, 163, 74, 0.55) !important; }
-  .btn-success-glass::after { background: rgba(22, 163, 74, 0.70) !important; }
-  .btn-success-glass:hover::after { opacity: 1; }
+  .btn-success-glass:hover  { background: rgba(22, 163, 74, 0.70) !important; }
 
   .btn-danger-glass         { background: rgba(220, 38, 38, 0.55) !important; }
-  .btn-danger-glass::after  { background: rgba(220, 38, 38, 0.70) !important; }
-  .btn-danger-glass:hover::after { opacity: 1; }
+  .btn-danger-glass:hover   { background: rgba(220, 38, 38, 0.70) !important; }
 
   /* ── Disabled ── */
   .bg-primary:not([role="switch"]):not([data-state]):not(.badge):not(.btn-danger-glass):not(.liquid-glass-ghost):disabled,
@@ -538,37 +498,6 @@ button:focus-visible,
       box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
   }
 
-  /* Mesmo bug do .dashboard-glow/linhas de lista, só que na LiquidGlassButton
-     — usada em praticamente todo botão de ação do app (Salvar, Cancelar,
-     Confirmar, Excluir, Novo X...). As variantes tingidas (--primary/
-     --success/--danger) trocavam background-color no :hover (repaint),
-     vazando tarja pra qualquer card de vidro vizinho ao passar o mouse em
-     QUALQUER botão desses — inclusive o "Renovar Agora" dentro de um card,
-     acendendo o card vizinho abaixo. Mesma correção: um ::after separado
-     que anima só opacity até a cor "hover", nunca troca o background-color
-     do elemento real. */
-  .lqg-lens--primary,
-  .lqg-lens--success,
-  .lqg-lens--danger {
-    position: relative;
-  }
-  .lqg-lens--primary::after,
-  .lqg-lens--success::after,
-  .lqg-lens--danger::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 220ms ease;
-    pointer-events: none;
-  }
-  .lqg-btn:hover .lqg-lens--primary::after,
-  .lqg-btn:hover .lqg-lens--success::after,
-  .lqg-btn:hover .lqg-lens--danger::after {
-    opacity: 1;
-  }
-
   /* Pílula do header: SEM backdrop-filter de propósito.
      Vidro aninhado (pílula com backdrop-filter dentro do header, que também
      tem backdrop-filter) fazia o Chrome recompor as camadas a cada repaint
@@ -591,15 +520,13 @@ button:focus-visible,
       0px 1px 3px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 5%), transparent) !important;
   }
 
-  /* Tons coloridos do vidro (mesmo material, cor translúcida na lente).
-     A cor mais intensa do hover NÃO troca aqui — fica no ::after acima
-     (linhas ~555-570), que só anima opacity. */
+  /* Tons coloridos do vidro (mesmo material, cor translúcida na lente) */
   .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.9); }
-  .lqg-lens--primary::after { background-color: rgba(104, 41, 192, 0.98); }
+  .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.98); }
   .lqg-lens--success { background-color: rgba(22, 163, 74, 0.55); }
-  .lqg-lens--success::after { background-color: rgba(22, 163, 74, 0.72); }
+  .lqg-btn:hover .lqg-lens--success { background-color: rgba(22, 163, 74, 0.72); }
   .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.55); }
-  .lqg-lens--danger::after { background-color: rgba(220, 38, 38, 0.72); }
+  .lqg-btn:hover .lqg-lens--danger { background-color: rgba(220, 38, 38, 0.72); }
 
   /* ===== Cards de atividade (dia selecionado / painel "hoje") =====
      Tentamos cor chapada (verde/azul) preenchendo o card inteiro e ficou
@@ -629,15 +556,11 @@ button:focus-visible,
     transition: color 400ms cubic-bezier(1, 0, 0.4, 1);
   }
 
-  /* O scale(1.03) no hover foi removido de propósito: a .lqg-lens usa um
-     filtro SVG de refração (feDisplacementMap) compartilhado por TODOS os
-     LiquidGlassButton da página (um único <filter> renderizado uma vez em
-     App.tsx). Escalar o elemento muda a objectBoundingBox do filtro e força
-     o Chrome a re-renderizar a refração — como o filtro é compartilhado,
-     esse recálculo vaza visualmente pros outros botões/vidros na tela (a
-     tarja diagonal "derretida", maior e mais colorida que o flash simples
-     de background). scale no :active foi mantido — é um toque só, não fica
-     recalculando durante o movimento do mouse. */
+  @media (hover: hover) {
+    .lqg-btn:not(:disabled):hover {
+      transform: scale(1.03);
+    }
+  }
   .lqg-btn:not(:disabled):active {
     transform: scale(0.96);
   }
@@ -774,43 +697,11 @@ button:focus-visible,
     @apply bg-porceli-gray-800 border border-porceli-gray-700 rounded-lg p-4;
   }
 
-  /* Purple/yellow badge hover: trocavam background-color direto no :hover
-     perto de listas dentro de card de vidro — mesmo bug da tarja. Vira um
-     ::after atrás do texto que só anima opacity. (Bolhas de mensagem foram
-     deixadas de fora de propósito: o hover delas já força a MESMA cor de
-     repouso, ou seja, não muda nada — não é fonte do bug.) */
-  .badge.bg-porceli-purple:not(.message-bubble),
-  .bg-porceli-purple:not(.message-bubble),
-  .bg-yellow-600 {
-    position: relative;
-  }
-
-  .badge.bg-porceli-purple:not(.message-bubble)::after,
-  .bg-porceli-purple:not(.message-bubble)::after,
-  .bg-yellow-600::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 180ms ease;
-    pointer-events: none;
-  }
-
-  .badge.bg-porceli-purple:not(.message-bubble)::after,
-  .bg-porceli-purple:not(.message-bubble)::after {
+  /* Purple badge hover fix for "Pendente" - only for badges, not messages */
+  .badge.bg-porceli-purple:hover,
+  .bg-porceli-purple:hover:not(.message-bubble) {
     background-color: #4c1d95 !important;
-  }
-
-  .bg-yellow-600::after {
-    background-color: #b45309 !important;
-  }
-
-  .badge.bg-porceli-purple:not(.message-bubble):hover::after,
-  .bg-porceli-purple:not(.message-bubble):hover::after,
-  .bg-yellow-600:hover::after {
-    opacity: 1;
+    /* Darker purple for hover */
   }
 
   /* Disable hover effects for all message bubbles - keep original colors */
@@ -826,6 +717,12 @@ button:focus-visible,
     /* Original gray-700 color */
   }
 
+  /* Yellow badge hover fix for "Pendente" status */
+  .bg-yellow-600:hover {
+    background-color: #b45309 !important;
+    /* Darker yellow for hover */
+  }
+
   /* ===============================================
      DASHBOARD CARD HOVER ANIMATION
      =============================================== */
@@ -837,33 +734,11 @@ button:focus-visible,
     isolation: isolate;
   }
 
-  /* O tint de hover (bg-white/[0.05]) era aplicado direto no elemento —
-     essa classe está em praticamente todo card do app, então QUALQUER
-     hover num card de vidro repintava a camada e vazava a tarja pros
-     cards de vidro vizinhos (mesma causa documentada no Header, só que
-     numa escala muito maior). Movido pra um ::before separado que anima
-     só opacity — visualmente idêntico, sem repaint. */
-  .dashboard-glow::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: rgba(255, 255, 255, 0.05);
-    opacity: 0;
-    transition: opacity 500ms ease-in-out;
-    pointer-events: none;
-  }
-
   .dashboard-glow:hover {
     transform: translateY(-4px);
-    @apply shadow-[0_20px_40px_-15px_#000000b3];
+    @apply shadow-[0_20px_40px_-15px_#000000b3] bg-white/[0.05];
     /* border removido daqui — controlado por Tailwind por card para não sobrescrever bordas coloridas */
     z-index: 10;
-  }
-
-  .dashboard-glow:hover::before {
-    opacity: 1;
   }
 
   /* Enhanced animation for stats cards */
@@ -906,38 +781,14 @@ button:focus-visible,
      =============================================== */
 
   /* Botões Outline Globais (Corrige amarelo) */
-  .btn-outline,
-  .btn-outline-danger {
-    position: relative;
-  }
-
-  .btn-outline::after,
-  .btn-outline-danger::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 150ms ease;
-    pointer-events: none;
-  }
-
   .btn-outline {
     @apply border-porceli-gray-600 text-white transition-all duration-150;
     color: white !important;
   }
 
-  .btn-outline::after {
-    @apply bg-porceli-gray-700;
-  }
-
   .btn-outline:hover {
+    @apply bg-porceli-gray-700 text-white;
     color: white !important;
-  }
-
-  .btn-outline:hover::after {
-    opacity: 1;
   }
 
   .btn-outline-danger {
@@ -946,16 +797,9 @@ button:focus-visible,
     /* Vermelho */
   }
 
-  .btn-outline-danger::after {
-    @apply bg-red-900/20;
-  }
-
   .btn-outline-danger:hover {
+    @apply bg-red-900/20 text-red-400;
     color: #f87171 !important;
-  }
-
-  .btn-outline-danger:hover::after {
-    opacity: 1;
   }
 
   /* ===============================================
@@ -970,27 +814,14 @@ button:focus-visible,
   }
 
   .dropdown-item {
-    position: relative;
     color: white !important;
     background-color: transparent !important;
     border-radius: 0.75rem !important;
     transition: all 0.2s ease !important;
   }
 
-  .dropdown-item::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
+  .dropdown-item:hover {
     background-color: rgba(255, 255, 255, 0.08) !important;
-    opacity: 0;
-    transition: opacity 0.2s ease !important;
-    pointer-events: none;
-  }
-
-  .dropdown-item:hover::after {
-    opacity: 1;
   }
 
 
@@ -1031,7 +862,6 @@ button:focus-visible,
 .SelectItem,
 [role="option"],
 [data-radix-dropdown-menu-item],
-[data-radix-select-item],
 .dropdown-menu-item,
 .select-item {
   color: white !important;
@@ -1042,46 +872,25 @@ button:focus-visible,
   position: relative;
   /* Transição mais orgânica e rápida - estilo mola */
   transition:
+    background 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
     transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1.1),
     border 0.2s ease !important;
   cursor: pointer;
   transform: scale(0.98);
 }
 
-/* A cor/blur de hover viviam direto no :hover (trocavam background e
-   ligavam um backdrop-filter que nem existia em repouso) — cada hover
-   num item de dropdown/select forçava recompor os vidros vizinhos.
-   Viram um ::after atrás do conteúdo que só anima opacity; o blur já
-   fica declarado sempre, só invisível até o hover (compositor troca
-   opacity, não recalcula o blur do zero). */
-.SelectItem::after,
-[role="option"]::after,
-[data-radix-dropdown-menu-item]::after,
-[data-radix-select-item]::after,
-.dropdown-menu-item::after,
-.select-item::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  opacity: 0;
-  transition: opacity 0.2s ease !important;
-  pointer-events: none;
-}
-
 .SelectItem:hover,
 .SelectItem:focus,
+.SelectItem[data-state="checked"],
 [role="option"]:hover,
 [role="option"]:focus,
 [data-radix-dropdown-menu-item]:hover,
 [data-radix-dropdown-menu-item]:focus,
-[data-radix-select-item]:hover,
 .dropdown-menu-item:hover,
 .select-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow:
@@ -1093,21 +902,28 @@ button:focus-visible,
   z-index: 10;
 }
 
-.SelectItem:hover::after,
-.SelectItem:focus::after,
-[role="option"]:hover::after,
-[role="option"]:focus::after,
-[data-radix-dropdown-menu-item]:hover::after,
-[data-radix-dropdown-menu-item]:focus::after,
-[data-radix-select-item]:hover::after,
-.dropdown-menu-item:hover::after,
-.select-item:hover::after {
-  opacity: 1;
-}
-
 .SelectItem[data-state="checked"] {
   background: rgba(104, 41, 192, 0.15) !important;
   border: 1px solid rgba(104, 41, 192, 0.3) !important;
+}
+
+/* Para itens de dropdown/select */
+[data-radix-dropdown-menu-item],
+[data-radix-select-item],
+.dropdown-menu-item,
+.select-item {
+  color: white !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+/* Hover state para itens */
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-select-item]:hover,
+.dropdown-menu-item:hover,
+.select-item:hover {
+  background-color: #525252 !important;
+  color: white !important;
 }
 
 /* Focus state removido para evitar borda roxa indesejada */
@@ -1215,29 +1031,10 @@ button:focus-visible,
   box-shadow: 0 0 15px rgba(104, 41, 192, 0.4) !important;
 }
 
-.rdp-button:not([disabled]):not(.rdp-day_selected) {
-  position: relative;
-  border-radius: 10px !important;
-}
-
-.rdp-button:not([disabled]):not(.rdp-day_selected)::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background-color: rgba(104, 41, 192, 0.2) !important;
-  opacity: 0;
-  transition: opacity 150ms ease;
-  pointer-events: none;
-}
-
 .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: rgba(104, 41, 192, 0.2) !important;
   color: white !important;
-}
-
-.rdp-button:hover:not([disabled]):not(.rdp-day_selected)::after {
-  opacity: 1;
+  border-radius: 10px !important;
 }
 
 /* Force text white for all days */

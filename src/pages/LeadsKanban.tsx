@@ -136,7 +136,7 @@ function KanbanGlassBackdrop() {
         minWidth: "100%",
         marginRight: "-100%",
         backgroundImage:
-          'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("/app-bg.webp")',
+          'linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)), url("/app-bg.webp")',
         backgroundRepeat: "no-repeat",
       }}
     />
