@@ -117,18 +117,26 @@ export const Header = () => {
             ref={navRef}
             className="relative flex items-center justify-center gap-1 flex-1 h-full overflow-x-auto scrollbar-hide"
           >
-            {/* Transição CSS pura (não motion.span/Framer Motion): numa
-                depuração com animate={{x, width}} do Framer Motion, o
-                React state ficava correto (confirmado direto no DOM) mas
-                o transform aplicado na tela às vezes não acompanhava — sem
-                conseguir isolar 100% se era um bug real do Framer Motion
-                ou uma instabilidade da própria ferramenta usada pra testar.
-                Trocado por transition CSS nativa por ser mais simples e
-                não depender do controlador de animação do Framer pra essa
-                peça específica — remove a dúvida por completo. */}
+            {/* Causa raiz real (achada com diagnostico no navegador do
+                usuario, não na minha ferramenta de teste): <nav> é um flex
+                container com justify-center. Um filho position:absolute
+                SEM `left` explícito não usa "0" como base — pela spec de
+                Flexbox, a posição estática de um item absoluto dentro de
+                um container com justify-content:center é calculada como
+                se ele estivesse CENTRALIZADO entre os itens, não colado
+                na borda esquerda. Meu cálculo de x sempre assumiu base
+                zero (nav.left), então o transform aplicado ficava certo
+                MATEMATICAMENTE mas renderizava deslocado pelo offset
+                dessa centralização "fantasma" — daí a pílula aparecer
+                sempre num item diferente do calculado, de forma
+                consistente nas 3 tentativas anteriores (layoutId,
+                motion.span, CSS transition), já que nenhuma delas fixava
+                essa base. `left: 0` remove a ambiguidade: a base passa a
+                ser sempre a borda esquerda do <nav>, batendo com a conta
+                em JS (elRect.left - navRect.left + nav.scrollLeft). */}
             {pill && (
               <span
-                className="lqg-lens lqg-lens--nav absolute top-0 h-10 rounded-full pointer-events-none z-0"
+                className="lqg-lens lqg-lens--nav absolute left-0 top-0 h-10 rounded-full pointer-events-none z-0"
                 style={{
                   transform: `translateX(${pill.x}px)`,
                   width: pill.width,
