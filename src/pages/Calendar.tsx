@@ -1039,8 +1039,24 @@ export default function Calendar() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in relative pb-10">
-      <GitHubCalendar data={contributionData} />
+      {/* O Histórico de Produtividade fica ABAIXO do calendário de propósito —
+          não é decisão de layout, é contorno de um bug de renderização.
 
+          O header é `position: fixed` e tem `backdrop-filter`. Sempre que algo
+          dentro dele repinta (hover num item do menu, por exemplo), o Chrome
+          recalcula o backdrop do header e arrasta junto o primeiro card de
+          vidro logo abaixo, "acendendo" uma tarja clara nele e nos elementos
+          ao redor. Isolado por eliminação no navegador: só some tirando o
+          `backdrop-filter` do header, ou tirando o card daquela posição.
+
+          Como o Histórico era o primeiro elemento da página, era ele que
+          levava a tarja. Descendo ele, a posição do topo fica com o cabeçalho
+          do calendário (que não é vidro) e o defeito não tem onde aparecer.
+
+          ATENÇÃO: isto esconde o sintoma, não corrige a causa. Se algum dia um
+          card com `.liquid-glass` voltar para o topo desta tela, a tarja
+          volta junto. A correção de verdade é o header sem `backdrop-filter`
+          (avaliado e recusado por custo visual). */}
       <div className="h-[calc(100vh-80px)] min-h-[650px] flex gap-4">
       {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
           calendário, criando "pontas" escuras nos cantos. */}
@@ -1166,8 +1182,7 @@ export default function Calendar() {
       </aside>
       </div>
 
-
-
+      <GitHubCalendar data={contributionData} />
 
 
       {/* Modal do Dia Selecionado */}
