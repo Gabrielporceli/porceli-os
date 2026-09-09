@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Header } from "./Header";
 import { supabase } from "@/integrations/supabase/client";
+import { appBackgroundStyle } from "@/lib/appBackground";
 
 interface CRMLayoutProps {
   children: React.ReactNode;
@@ -14,21 +15,13 @@ export function CRMLayout({ children }: CRMLayoutProps) {
   }, []);
   return (
     <div className="min-h-screen bg-porceli-dark">
-      {/* Background fixo — não estica com o conteúdo */}
+      {/* Background fixo — não estica com o conteúdo.
+          Wallpaper + escurecimento + grão numa camada só, com
+          background-blend-mode. O grão NÃO pode voltar a ser uma div com
+          mix-blend-mode por cima: ver appBackground.ts. */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url("/app-bg.webp")' }}
-      >
-        <div className="absolute inset-0 bg-black/25" />
-      </div>
-
-      {/* Noise texture overlay fixo */}
-      <div
-        className="fixed inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          backgroundSize: '200px 200px'
-        }}
+        className="fixed inset-0"
+        style={appBackgroundStyle}
       />
 
       <div className="flex flex-col min-h-screen w-full relative z-10">
