@@ -189,9 +189,12 @@ export default function Calendar() {
       bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
     });
   }, []);
+  // Só a base tem fade (dinâmico, liga quando ainda sobra conteúdo pra
+  // baixo) — o topo ficou sempre sólido por pedido do usuário: o fade de
+  // cima estava apagando o primeiro card sempre que a lista abria.
   const edgeFadeStyle = (fade: { top: boolean; bottom: boolean }) => ({
-    maskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
-    WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
+    maskImage: `linear-gradient(to bottom, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
+    WebkitMaskImage: `linear-gradient(to bottom, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
   });
   const [currentTime, setCurrentTime] = useState(new Date());
 
