@@ -189,12 +189,6 @@ export default function Calendar() {
       bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
     });
   }, []);
-  // Recalcula quando a lista muda de tamanho (troca de dia no painel,
-  // itens carregando) — mesmo motivo do modal: onScroll não dispara sozinho.
-  useEffect(() => {
-    const raf = requestAnimationFrame(updateTodayListFade);
-    return () => cancelAnimationFrame(raf);
-  }, [todayItems, updateTodayListFade]);
   const edgeFadeStyle = (fade: { top: boolean; bottom: boolean }) => ({
     maskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
     WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
@@ -1031,6 +1025,14 @@ export default function Calendar() {
       return 0;
     });
   }, [calendarData, panelDate]);
+
+  // Recalcula o fade do painel lateral quando a lista muda de tamanho
+  // (troca de dia, itens carregando) — mesmo motivo do modal: onScroll
+  // não dispara sozinho no primeiro render.
+  useEffect(() => {
+    const raf = requestAnimationFrame(updateTodayListFade);
+    return () => cancelAnimationFrame(raf);
+  }, [todayItems, updateTodayListFade]);
 
   // Rótulo relativo do painel (Hoje / Amanhã / Ontem / data)
   const panelLabel = (() => {
