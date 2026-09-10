@@ -7,7 +7,7 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, Trash2, CalendarOff, ExternalLink } from "lucide-react";
+import { Save, X, Trash2, CalendarOff, ArrowUpRight } from "lucide-react";
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -158,23 +158,52 @@ export function EditLeadModal({
             : `https://porceli.com/lead/${lead.id}`;
           return (
             <div className="absolute top-0 -right-[300px] hidden lg:block w-[280px]">
-              <div className="liquid-glass rounded-3xl p-6 flex flex-col items-center gap-4">
-                <div className="w-full text-center space-y-0.5">
+              <div className="liquid-glass rounded-3xl p-6 flex flex-col items-center gap-5">
+                <div className="w-full text-center space-y-1">
                   <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Conversa</p>
                   <h3 className="text-base font-semibold tracking-tight text-white line-clamp-1">{lead.name}</h3>
                 </div>
+
+                {/* QR direto sobre o vidro, sem tile de fundo — decisão de
+                    design, tomada ciente do risco.
+
+                    O padrão seguro é fundo SÓLIDO e uniforme atrás do código,
+                    porque o leitor precisa de contraste constante. Aqui o
+                    fundo é vidro translúcido sobre o wallpaper, e o wallpaper
+                    tem regiões claras: o contraste varia ao longo do código,
+                    então a leitura pode falhar em ângulo ruim ou pouca luz.
+
+                    SE PRECISAR REVERTER: basta envolver o QR num tile sólido
+                    escuro — `rounded-[26px] bg-[#141419] p-5` neste botão —
+                    mantendo os módulos claros. Volta a ter contraste uniforme
+                    sem trazer o bloco branco de volta. */}
                 <button
                   type="button"
                   onClick={() => window.open(conversationUrl, "_blank", "noopener,noreferrer")}
-                  title="Abrir conversa"
-                  className="rounded-2xl bg-white p-4 cursor-pointer transition-transform duration-300 hover:scale-[1.03] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  aria-label={`Abrir conversa com ${lead.name}`}
+                  className="group relative block rounded-[22px] p-1 text-white cursor-pointer
+                    transition-transform duration-300 ease-out
+                    active:scale-[0.97]
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
                 >
-                  <QRCode value={conversationUrl} size={188} fgColor="#18181d" />
+                  {/* radius 0: módulos retos. Com contraste já no limite, a
+                      quina cheia é o que dá mais área de módulo pro leitor. */}
+                  <QRCode value={conversationUrl} radius={0} className="w-[180px]" />
+
+                  {/* Camada de ação, revelada no hover.
+                      Feita com COR (background-color/color) e não com opacity:
+                      animar opacity promove o elemento a camada composta e,
+                      dentro de um painel com backdrop-filter, isso acende a
+                      "tarja" nos vidros ao redor. Ver src/lib/appBackground.ts. */}
+                  <span className="pointer-events-none absolute -inset-2 flex items-center justify-center rounded-[26px] bg-transparent transition-colors duration-300 group-hover:bg-[#0d0b12]/[0.82]">
+                    <span className="flex items-center gap-1.5 rounded-full bg-transparent px-3.5 py-2 text-[12px] font-semibold text-transparent transition-colors duration-300 group-hover:bg-white group-hover:text-[#18181d]">
+                      Abrir conversa
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </span>
+                  </span>
                 </button>
-                <p className="text-[11px] text-white/40 flex items-center gap-1.5">
-                  <ExternalLink className="w-3 h-3" />
-                  Clique para abrir a conversa
-                </p>
+
+                <p className="text-[11px] text-white/35">Escaneie ou clique para abrir</p>
               </div>
             </div>
           );
