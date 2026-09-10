@@ -141,8 +141,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
               width: 8px;
             }
             .custom-scrollbar::-webkit-scrollbar-track {
-              background: rgba(255, 255, 255, 0.02);
-              border-radius: 4px;
+              background: transparent;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb {
               background: #6829c0;

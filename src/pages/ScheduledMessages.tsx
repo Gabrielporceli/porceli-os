@@ -130,7 +130,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <DialogHeader>
@@ -138,7 +138,26 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
           </DialogHeader>
         </div>
 
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
+          <style>{`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 8px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #6829c0;
+              border-radius: 4px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #7C3AED;
+            }
+            .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: #6829c0 transparent;
+            }
+          `}</style>
           {/* Cliente (opcional) */}
           <div className="space-y-2">
             <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cliente <span className="text-white/40 lowercase">(opcional)</span></Label>
@@ -242,32 +261,32 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 />
               </div>
             </div>
+        </div>
 
-            {/* Ações */}
-            <div className="flex gap-4 pt-2 mt-2">
-              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <LiquidGlassButton
-                  tint="danger"
-                  type="button"
-                  onClick={onClose}
-                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-                >
-                  Cancelar
-                </LiquidGlassButton>
-              </motion.div>
-              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                <LiquidGlassButton
-                  tint="primary"
-                  onClick={handleSubmit}
-                  disabled={!canSubmit || isCreating}
-                  className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-                >
-                  {isCreating
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
-                </LiquidGlassButton>
-              </motion.div>
-            </div>
+        {/* Footer fixo */}
+        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <LiquidGlassButton
+              tint="danger"
+              type="button"
+              onClick={onClose}
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+            >
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+            <LiquidGlassButton
+              tint="primary"
+              onClick={handleSubmit}
+              disabled={!canSubmit || isCreating}
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+            >
+              {isCreating
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
+            </LiquidGlassButton>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

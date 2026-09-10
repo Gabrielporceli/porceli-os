@@ -89,8 +89,8 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-2xl !p-0 !gap-0 overflow-hidden">
-        <div className="p-6 border-b border-white/[0.05]">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-2xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
+        <div className="p-6 border-b border-white/[0.05] shrink-0">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold tracking-tight text-white">Gerenciar Tags</DialogTitle>
             <DialogDescription className="text-white/40">
@@ -98,15 +98,14 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
             </DialogDescription>
           </DialogHeader>
         </div>
-        
-        <div className="overflow-y-auto max-h-[calc(90vh-100px)] custom-scrollbar p-6 pt-4">
+
+        <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
             }
             .custom-scrollbar::-webkit-scrollbar-track {
-              background: rgba(255, 255, 255, 0.02);
-              border-radius: 4px;
+              background: transparent;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb {
               background: #6829c0;
@@ -120,7 +119,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
               scrollbar-color: #6829c0 transparent;
             }
           `}</style>
-          
+
           <div className="space-y-6 pt-2">
             {/* Create New Tag */}
           <div className="liquid-glass border-white/[0.05] rounded-2xl p-5 space-y-4">

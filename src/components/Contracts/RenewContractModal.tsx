@@ -152,7 +152,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(234, 179, 8, 0.2); border-radius: 10px; }
                         `}</style>
 
-                        <form onSubmit={handleSubmit} className="space-y-8">
+                        <form id="renew-contract-form" onSubmit={handleSubmit} className="space-y-8">
                             {/* Current Contract Info */}
                             <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 space-y-4">
                                 <div className="flex items-center justify-between">
@@ -296,32 +296,33 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                     Esta ação criará um <span className="text-white/70">novo contrato ativo</span>. O contrato anterior <span className="text-white/70">permanecerá ativo</span> até seu término. Novas faturas financeiras serão geradas automaticamente.
                                 </p>
                             </div>
-
-                            {/* Footer Buttons */}
-                            <div className="flex gap-4 pt-6 border-t border-white/[0.05]">
-                                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <LiquidGlassButton
-                                        tint="danger"
-                                        type="button"
-                                        onClick={onClose}
-                                        disabled={isPending}
-                                        className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-                                    >
-                                        Cancelar
-                                    </LiquidGlassButton>
-                                </motion.div>
-                                <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <LiquidGlassButton
-                                        tint="primary"
-                                        type="submit"
-                                        disabled={isPending}
-                                        className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-                                    >
-                                        {isPending ? 'Processando...' : 'Confirmar Renovação'}
-                                    </LiquidGlassButton>
-                                </motion.div>
-                            </div>
                         </form>
+                    </div>
+
+                    {/* Footer fixo */}
+                    <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <LiquidGlassButton
+                                tint="danger"
+                                type="button"
+                                onClick={onClose}
+                                disabled={isPending}
+                                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                            >
+                                Cancelar
+                            </LiquidGlassButton>
+                        </motion.div>
+                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <LiquidGlassButton
+                                tint="primary"
+                                type="submit"
+                                form="renew-contract-form"
+                                disabled={isPending}
+                                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                            >
+                                {isPending ? 'Processando...' : 'Confirmar Renovação'}
+                            </LiquidGlassButton>
+                        </motion.div>
                     </div>
                 </div>
             </DialogContent>

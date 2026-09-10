@@ -139,8 +139,8 @@ export function NewLeadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0">
-        <div className="p-6 border-b border-white/[0.05]">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
+        <div className="p-6 border-b border-white/[0.05] shrink-0">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold tracking-tight">Novo Lead</DialogTitle>
             <DialogDescription className="text-white/40">
@@ -149,14 +149,13 @@ export function NewLeadModal({
           </DialogHeader>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(85vh-100px)] custom-scrollbar p-6 pt-4">
+        <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
             }
             .custom-scrollbar::-webkit-scrollbar-track {
-              background: rgba(255, 255, 255, 0.02);
-              border-radius: 4px;
+              background: transparent;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb {
               background: #6829c0;
@@ -170,7 +169,7 @@ export function NewLeadModal({
               scrollbar-color: #6829c0 transparent;
             }
           `}</style>
-          
+
           <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-white/70 text-sm font-medium">Nome *</Label>
@@ -328,34 +327,35 @@ export function NewLeadModal({
           </div>
 
           </div>
+        </div>
 
-          <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        {/* Footer fixo */}
+        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton
+              tint="danger"
+              onClick={() => onOpenChange(false)}
+              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
             >
-              <LiquidGlassButton
-                tint="danger"
-                onClick={() => onOpenChange(false)}
-                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
-            </motion.div>
-            <motion.div
-              className="flex-1"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <LiquidGlassButton tint="primary" onClick={handleSubmit} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
-                <Plus className="w-5 h-5 mr-2" />
-                Criar Lead
-              </LiquidGlassButton>
-            </motion.div>
-          </div>
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton tint="primary" onClick={handleSubmit} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+              <Plus className="w-5 h-5 mr-2" />
+              Criar Lead
+            </LiquidGlassButton>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>
