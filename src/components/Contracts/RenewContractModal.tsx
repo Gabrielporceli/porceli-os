@@ -130,8 +130,8 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
-                <div className="w-full flex flex-col">
+            <DialogContent className="!flex !flex-col border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
+                <div className="w-full h-full min-h-0 flex flex-col">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
                         <div>
@@ -145,7 +145,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                     </div>
 
                     {/* Content */}
-                    <div className="overflow-y-auto custom-scrollbar p-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
                         <style>{`
                             .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

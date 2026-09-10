@@ -105,30 +105,14 @@ export default function Contracts() {
   };
 
   const handleRenewClick = (contract: Contract) => {
-    // Se não tiver ID de cliente, usa o contrato atual por segurança
-    if (!contract.client_id) {
-      setRenewingContract(contract);
-      return;
-    }
-
-    // Buscar todos os contratos deste cliente
-    const clientContracts = contracts.filter(c => c.client_id === contract.client_id);
-    
-    // Tentar encontrar o contrato ativo ou a vencer (dando preferência ao que vence mais tarde)
-    // Isso garante que estamos renovando a partir do contrato mais atual
-    const activeContracts = clientContracts
-      .filter(c => c.status === 'active' || c.status === 'expiring')
-      .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
-    
-    if (activeContracts.length > 0) {
-      setRenewingContract(activeContracts[0]);
-    } else {
-      // Se não houver ativos, pega o contrato mais recente desse cliente
-      const lastContract = [...clientContracts].sort((a, b) => 
-        new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
-      )[0];
-      setRenewingContract(lastContract || contract);
-    }
+    // Renova exatamente o contrato clicado — nunca reescolher outro do
+    // mesmo cliente. A versão anterior buscava, entre os contratos ativos/a
+    // vencer desse cliente, o que tivesse a data de término MAIS DISTANTE
+    // ("o mais atual"), ignorando qual botão o usuário realmente clicou.
+    // Isso quebrava exatamente o caso de uso principal: um cliente com dois
+    // contratos (um a vencer, outro ativo com prazo mais longo) — clicar em
+    // "Renovar" no que está a vencer acabava trazendo os dados do outro.
+    setRenewingContract(contract);
   };
 
   const handleEditContract = async (contractData: Omit<Contract, 'id'>) => {
