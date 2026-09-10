@@ -523,16 +523,9 @@ button:focus-visible,
      sem tingir o fundo do card. */
   .status-card {
     position: relative;
-    /* Fundo mais opaco (era 0.05) + saturate/brightness bem mais baixos
-       (eram 180%/1.12): dentro de modais o backdrop-filter deste card
-       reamostra um backdrop que já passou por outros vidros empilhados
-       (overlay do Dialog + LiquidGlass do DialogContent), e cada camada
-       de saturate/brightness amplifica a próxima. O resultado era um
-       roxo estourado que engolia o contraste do texto. Valores mais
-       contidos + base mais opaca cortam essa amplificação em cascata. */
-    background-color: rgba(10, 8, 16, 0.55);
-    backdrop-filter: blur(20px) saturate(110%) brightness(0.95);
-    -webkit-backdrop-filter: blur(20px) saturate(110%) brightness(0.95);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.35),
@@ -541,6 +534,24 @@ button:focus-visible,
       inset 0px 3px 4px -2px rgba(0, 0, 0, 0.16),
       0px 1px 5px 0px rgba(0, 0, 0, 0.12),
       0px 6px 16px 0px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Variante usada só dentro do modal "Dia selecionado" (Calendar.tsx).
+     Ali o .status-card fica DENTRO do vidro do DialogContent, que já
+     aplicou seu próprio saturate(180%)/brightness(1.12) sobre o
+     wallpaper. backdrop-filter opera sobre os PIXELS JÁ RENDERIZADOS por
+     trás — então o saturate/brightness do .status-card não parte do
+     wallpaper cru, parte de um roxo que o vidro de baixo já deixou mais
+     saturado/claro, e o segundo round de saturate/brightness multiplica
+     em cima disso. Só trocar o fundo por um mais opaco não resolve: o
+     backdrop-filter ainda re-satura o que passa pelos 72% restantes.
+     A correção é não empilhar um SEGUNDO saturate/brightness — aqui só
+     blur (o vidro de baixo já dá o "material"), com um fundo bem mais
+     opaco pra cortar de vez o que sobra do roxo por trás. */
+  .status-card--nested-glass {
+    background-color: rgba(20, 16, 28, 0.38);
+    backdrop-filter: blur(20px) saturate(115%) brightness(1.05);
+    -webkit-backdrop-filter: blur(20px) saturate(115%) brightness(1.05);
   }
 
   .lqg-text {

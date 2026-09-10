@@ -1215,8 +1215,19 @@ export default function Calendar() {
               }
             `}</style>
 
-            {/* Esquerda: lista de atividades */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]">
+            {/* Esquerda: lista de atividades.
+                mask-image: fade suave no topo/base da área de scroll — sem
+                isso, ao rolar, o card mais próximo da borda fica "colado"
+                nela (corta em linha reta contra o header/canto arredondado
+                do modal). O fade dá a sensação de que o conteúdo desliza
+                PARA DENTRO de um viewport contido, em vez de ser cortado. */}
+            <div
+              className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]"
+              style={{
+                maskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
+              }}
+            >
               <div>
             {selectedDay && (() => {
               const dayEvents = getEventsForDay(selectedDay);
@@ -1340,7 +1351,7 @@ export default function Calendar() {
                     setIsEditActivityModalOpen(true);
                   }}
                   className={cn(
-                    "status-card p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
+                    "status-card status-card--nested-glass p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
                     snapshot.isDragging && "ring-2 ring-primary/40 shadow-xl"
                   )}
                 >
