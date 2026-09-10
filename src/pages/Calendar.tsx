@@ -40,7 +40,7 @@ import {
   Tag,
   GripVertical
 } from "lucide-react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { createPortal } from "react-dom";
@@ -156,6 +156,49 @@ export default function Calendar() {
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [panelDate, setPanelDate] = useState(new Date()); // dia exibido no painel lateral
+
+  // Fade do topo/base de listas de atividade roláveis (modal do dia +
+  // painel lateral "Atividades de Hoje"): só mostra o fade de um lado se
+  // ainda tem conteúdo escondido pra esse lado — senão ele apaga o
+  // primeiro/último card à toa, sem ter nada ali pra esconder.
+  const dayModalListRef = useRef<HTMLDivElement>(null);
+  const [dayModalFade, setDayModalFade] = useState({ top: false, bottom: false });
+  const updateDayModalFade = useCallback(() => {
+    const el = dayModalListRef.current;
+    if (!el) return;
+    setDayModalFade({
+      top: el.scrollTop > 4,
+      bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
+    });
+  }, []);
+  // Recalcula ao abrir o modal — o onScroll não dispara sozinho no
+  // primeiro render, e é só aí que sabemos a altura real do conteúdo.
+  useEffect(() => {
+    if (selectedDay === null) return;
+    const raf = requestAnimationFrame(updateDayModalFade);
+    return () => cancelAnimationFrame(raf);
+  }, [selectedDay, updateDayModalFade]);
+
+  const todayListRef = useRef<HTMLDivElement>(null);
+  const [todayListFade, setTodayListFade] = useState({ top: false, bottom: false });
+  const updateTodayListFade = useCallback(() => {
+    const el = todayListRef.current;
+    if (!el) return;
+    setTodayListFade({
+      top: el.scrollTop > 4,
+      bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
+    });
+  }, []);
+  // Recalcula quando a lista muda de tamanho (troca de dia no painel,
+  // itens carregando) — mesmo motivo do modal: onScroll não dispara sozinho.
+  useEffect(() => {
+    const raf = requestAnimationFrame(updateTodayListFade);
+    return () => cancelAnimationFrame(raf);
+  }, [todayItems, updateTodayListFade]);
+  const edgeFadeStyle = (fade: { top: boolean; bottom: boolean }) => ({
+    maskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
+    WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${fade.top ? '20px' : '0px'}, black calc(100% - ${fade.bottom ? '20px' : '0px'}), transparent 100%)`,
+  });
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // ── Ordem customizada das atividades por dia (persistida em localStorage) ──
@@ -1135,7 +1178,12 @@ export default function Calendar() {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide px-4 pt-4 pb-8 space-y-3 min-h-0">
+        <div
+          ref={todayListRef}
+          onScroll={updateTodayListFade}
+          className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide px-4 pt-4 pb-8 space-y-3 min-h-0"
+          style={edgeFadeStyle(todayListFade)}
+        >
           {todayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
               <CalendarIcon className="w-10 h-10" />
@@ -1220,13 +1268,17 @@ export default function Calendar() {
                 isso, ao rolar, o card mais próximo da borda fica "colado"
                 nela (corta em linha reta contra o header/canto arredondado
                 do modal). O fade dá a sensação de que o conteúdo desliza
-                PARA DENTRO de um viewport contido, em vez de ser cortado. */}
+                PARA DENTRO de um viewport contido, em vez de ser cortado.
+
+                Só liga o fade de cada lado quando `dayModalFade` diz que
+                ainda tem conteúdo escondido pra esse lado (ver
+                updateDayModalFade) — fixo nos dois lados sempre, o primeiro
+                card (sem nada acima pra esconder) ficava apagado à toa. */}
             <div
+              ref={dayModalListRef}
+              onScroll={updateDayModalFade}
               className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]"
-              style={{
-                maskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
-              }}
+              style={edgeFadeStyle(dayModalFade)}
             >
               <div>
             {selectedDay && (() => {
