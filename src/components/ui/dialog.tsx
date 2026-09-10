@@ -56,7 +56,12 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay ref={ref} asChild {...props}>
     <motion.div
-      className={cn("fixed inset-0 z-50 bg-black/50 backdrop-blur-[4px]", className)}
+      // 35% e não 50%: o vidro do modal amostra ESTE overlay, então cada
+      // ponto de escurecimento aqui sai direto do brilho do modal. A 50% a
+      // tela ficava dramática e o modal, apagado. A 35% a separação de fundo
+      // continua clara e o modal respira. É o número a mexer se quiser o
+      // modal mais claro ou mais escuro.
+      className={cn("fixed inset-0 z-50 bg-black/35 backdrop-blur-[4px]", className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -114,13 +119,21 @@ const GrowFromClickOrigin = React.forwardRef<
       {...rest}
       ref={ref}
       style={style}
-      // Mesma receita da classe CSS .liquid-glass (usada, por ex., no modal
-      // Editar Cliente) — o default deste componente (rgba(18,18,18,0.4),
-      // mais opaco e sem boost de brilho) deixava TODO modal que passa por
-      // aqui visivelmente mais escuro/chapado que os que aplicam a classe
-      // direto. Escopado só ao Dialog: não muda o default do componente
-      // <LiquidGlass> usado em cards/sidebars/kanban.
-      backgroundColor="rgba(28, 28, 34, 0.28)"
+      // A classe CSS .liquid-glass em pessoa — a MESMA regra que o modal
+      // Editar Cliente usa, não uma cópia dos valores dela.
+      //
+      // Só igualar a cor de fundo (o que se tentou antes) não bastava: a
+      // receita com refração encadeia blur(10) → deslocamento SVG → blur(20)
+      // e desenha um bisel bem mais apagado (brancos a 10%/5% contra 80%/65%
+      // da classe). Sobre o overlay preto do modal, isso lia como um vidro
+      // visivelmente mais escuro e chapado. Com refraction={false} os dois
+      // caminhos passam a pintar exatamente o mesmo material, e continuam
+      // iguais se a classe mudar amanhã.
+      //
+      // Bônus: some um backdrop-filter com feDisplacementMap por modal
+      // aberto, que é dos efeitos mais caros da tela.
+      refraction={false}
+      radius={24}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-6 shadow-lg sm:rounded-3xl",
         className

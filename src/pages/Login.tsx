@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { loginWallpaperStyle, loginOverlayStyle } from '@/lib/appBackground';
 
 const Login = () => {
   const { login } = useAuth();
@@ -60,22 +61,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen w-screen bg-porceli-dark relative overflow-hidden flex items-center justify-center">
-      {/* Custom Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url("/background.png")' }}
-      >
-        {/* Dark blur overlay for better text contrast/glass effect */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      </div>
-
-      {/* Subtle noise texture overlay */}
-      <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none" 
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          backgroundSize: '200px 200px'
-        }}
-      />
+      {/* Wallpaper desfocado + escurecimento com grão.
+          O grão NÃO pode voltar a ser uma camada com mix-blend-mode por cima:
+          ver appBackground.ts. */}
+      <div className="absolute inset-0" style={loginWallpaperStyle} />
+      <div className="absolute inset-0 pointer-events-none" style={loginOverlayStyle} />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

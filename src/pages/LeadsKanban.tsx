@@ -43,6 +43,7 @@ import { useLeads, type Lead } from "@/hooks/useLeads";
 import { useTags, type Tag } from "@/hooks/useTags";
 import { useStages, type Stage } from "@/hooks/useStages";
 import { useToast } from "@/hooks/use-toast";
+import { NOISE_LAYER_URL } from "@/lib/appBackground";
 
 import {
   DragDropContext,
@@ -102,8 +103,9 @@ function KanbanGlassBackdrop() {
       const h = natH * scale;
       const x = (vw - w) / 2 - rect.left;
       const y = (vh - h) / 2 - rect.top;
-      node.style.backgroundSize = `100% 100%, ${w}px ${h}px`;
-      node.style.backgroundPosition = `0 0, ${x}px ${y}px`;
+      // 3 camadas agora (grao, escurecimento, imagem) — ver appBackground.ts
+      node.style.backgroundSize = `200px 200px, 100% 100%, ${w}px ${h}px`;
+      node.style.backgroundPosition = `0 0, 0 0, ${x}px ${y}px`;
     };
 
     const schedule = () => {
@@ -136,8 +138,9 @@ function KanbanGlassBackdrop() {
         minWidth: "100%",
         marginRight: "-100%",
         backgroundImage:
-          'linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)), url("/app-bg.webp")',
-        backgroundRepeat: "no-repeat",
+          `url("${NOISE_LAYER_URL}"), linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)), url("/app-bg.webp")`,
+        backgroundRepeat: "repeat, no-repeat, no-repeat",
+        backgroundBlendMode: "overlay, normal, normal",
       }}
     />
   );
