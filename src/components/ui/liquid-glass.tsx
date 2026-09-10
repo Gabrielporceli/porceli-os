@@ -9,6 +9,23 @@ interface LiquidGlassProps extends React.HTMLAttributes<HTMLDivElement> {
     chromaticAberration?: number;
     backgroundColor?: string;
     borderColor?: string;
+    /**
+     * Refração por filtro SVG (feDisplacementMap).
+     *
+     * `false` troca a receita inteira pela classe CSS `.liquid-glass` — o
+     * mesmo material dos cards e do modal Editar Cliente. Use quando o
+     * componente precisar ficar idêntico ao resto do sistema.
+     *
+     * Por que existe: a receita com refração encadeia blur(10) → deslocamento
+     * → blur(20) e usa um bisel bem mais apagado (brancos a 10%/5% contra
+     * 80%/65% da classe). Sobre o overlay preto do modal isso fica
+     * visivelmente mais escuro e chapado que a classe.
+     *
+     * Nesse modo, `backgroundColor` e `borderColor` são ignorados: a classe
+     * define os dois com `!important`, de propósito — é o que garante que
+     * "igual ao Editar Cliente" continue verdade se a classe mudar.
+     */
+    refraction?: boolean;
 }
 
 export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
@@ -23,6 +40,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
             chromaticAberration = 0,
             backgroundColor = "rgba(18, 18, 18, 0.4)",
             borderColor = "rgba(255, 255, 255, 0.08)",
+            refraction = true,
             ...props
         },
         ref
@@ -117,7 +135,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
                 {...props}
             >
                 {/* Only render SVG filter if we have dimensions */}
-                {hasDimensions && (
+                {refraction && hasDimensions && (
                     <svg style={{ position: "absolute", width: 0, height: 0, pointerEvents: "none" }}>
                         <filter id={filterId} colorInterpolationFilters="sRGB">
                             <feImage x="0" y="0" height={size.height} width={size.width} href={dMapUrl} result="displacementMap" />
@@ -134,23 +152,32 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
                 )}
 
                 {/* The Glass Background Layer with the active SVG Filter */}
-                <div
-                    className="absolute inset-0 z-0 pointer-events-none"
-                    style={{
-                        borderRadius: radius,
-                        backgroundColor: backgroundColor,
-                        border: `1px solid ${borderColor}`,
-                        borderTop: `1px solid rgba(255, 255, 255, 0.15)`,
-                        boxShadow: 'inset 1px 1px 1px 0px rgba(255, 255, 255, 0.1), inset -1px -1px 1px 0px rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.2)',
-                        // Fallback for browsers without SVG filter support in backdrop-filter
-                        backdropFilter: hasDimensions
-                            ? `blur(${blur / 2}px) url(#${filterId}) blur(${blur}px) brightness(1.1) saturate(1.5)`
-                            : `blur(${blur}px)`,
-                        WebkitBackdropFilter: hasDimensions
-                            ? `blur(${blur / 2}px) url(#${filterId}) blur(${blur}px) brightness(1.1) saturate(1.5)`
-                            : `blur(${blur}px)`,
-                    }}
-                />
+                {refraction ? (
+                    <div
+                        className="absolute inset-0 z-0 pointer-events-none"
+                        style={{
+                            borderRadius: radius,
+                            backgroundColor: backgroundColor,
+                            border: `1px solid ${borderColor}`,
+                            borderTop: `1px solid rgba(255, 255, 255, 0.15)`,
+                            boxShadow: 'inset 1px 1px 1px 0px rgba(255, 255, 255, 0.1), inset -1px -1px 1px 0px rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.2)',
+                            // Fallback for browsers without SVG filter support in backdrop-filter
+                            backdropFilter: hasDimensions
+                                ? `blur(${blur / 2}px) url(#${filterId}) blur(${blur}px) brightness(1.1) saturate(1.5)`
+                                : `blur(${blur}px)`,
+                            WebkitBackdropFilter: hasDimensions
+                                ? `blur(${blur / 2}px) url(#${filterId}) blur(${blur}px) brightness(1.1) saturate(1.5)`
+                                : `blur(${blur}px)`,
+                        }}
+                    />
+                ) : (
+                    // Mesmo material do resto do sistema, vindo da MESMA regra
+                    // CSS — não de uma cópia dos valores. Ver `refraction`.
+                    <div
+                        className="liquid-glass absolute inset-0 z-0 pointer-events-none"
+                        style={{ borderRadius: radius }}
+                    />
+                )}
 
                 {/* Content */}
                 <div className="relative z-10 w-full h-full flex flex-col">
