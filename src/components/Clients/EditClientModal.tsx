@@ -6,15 +6,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { X, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import { motion } from "framer-motion";
-import ReactDOM from "react-dom";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface Client {
@@ -111,52 +109,10 @@ export function EditClientModal({
 
   if (!isOpen || !client) return null;
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return ReactDOM.createPortal(
-    <>
-      {/* Custom Overlay with blur */}
-      <div
-        style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 999999, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        className="animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Modal Container */}
-      <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 pointer-events-none">
-        <div
-          className="relative liquid-glass rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] border border-white/[0.05] animate-scale-in pointer-events-auto flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
         <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes scale-in {
-            from { 
-              transform: scale(0.95);
-              opacity: 0;
-            }
-            to { 
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-          
-          .animate-fade-in {
-            animation: fade-in 0.2s ease-out;
-          }
-          
-          .animate-scale-in {
-            animation: scale-in 0.2s ease-out;
-          }
-          
           .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
           }
@@ -173,34 +129,23 @@ export function EditClientModal({
           }
           .custom-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: #6829c0 #404040;
+            scrollbar-color: #6829c0 transparent;
           }
-          
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 #404040;
-            }
-          `}</style>
+        `}</style>
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05]">
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
               <Edit className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Editar Cliente</h2>
-              <p className="text-white/40 text-sm">Atualize os dados do cliente</p>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Editar Cliente</DialogTitle>
+                <p className="text-white/40 text-sm">Atualize os dados do cliente</p>
+              </DialogHeader>
             </div>
           </div>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </Button>
         </div>
 
         {/* Content with Custom Scrollbar */}
@@ -323,9 +268,7 @@ export function EditClientModal({
               </LiquidGlassButton>
             </motion.div>
           </div>
-        </div>
-      </div>
-    </>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }
