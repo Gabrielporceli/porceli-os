@@ -179,8 +179,12 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
                     />
                 )}
 
-                {/* Content */}
-                <div className="relative z-10 w-full h-full flex flex-col">
+                {/* Content. min-h-0: sem isso, um filho flex nunca encolhe
+                    abaixo da altura do próprio conteúdo por padrão — quebra
+                    o scroll de qualquer modal (via <Dialog>) cujo conteúdo
+                    interno dependa de flex-1 + overflow-y-auto pra rolar
+                    dentro de um max-height (ex.: RenewContractModal). */}
+                <div className="relative z-10 w-full h-full min-h-0 flex flex-col">
                     {children}
                 </div>
             </div>
