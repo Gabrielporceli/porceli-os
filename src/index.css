@@ -916,8 +916,12 @@ button:focus-visible,
 /* Barra de rolagem para Chrome, Edge e Safari */
 ::-webkit-scrollbar {
   width: 8px;
-  background: #171717;
+  background: transparent;
   /* Fundo do track */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -935,7 +939,7 @@ button:focus-visible,
 * {
   scrollbar-width: thin;
   /* "auto" ou "thin" */
-  scrollbar-color: #6829c0 #171717;
+  scrollbar-color: #6829c0 transparent;
   /* thumb, track */
 }
 
