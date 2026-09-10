@@ -1,10 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, CreditCard, Landmark, QrCode, CheckSquare, Square, ToggleLeft, ToggleRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, CreditCard, Landmark, QrCode, CheckSquare, Square } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Label } from "@/components/ui/label";
-import { createPortal } from "react-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -333,40 +338,27 @@ export function RenegotiationModal({
     }
   }
 
-  const modal = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.94, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.94, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl"
-      >
-        <div className="liquid-glass border border-white/10 rounded-2xl overflow-hidden">
-
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/5">
-            <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Renegociar Pagamentos</h2>
-              <p className="text-white/40 text-sm mt-0.5">{clientName}</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/40 hover:text-white/70 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
+          <div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white tracking-tight">Renegociar Pagamentos</DialogTitle>
+              <p className="text-white/40 text-sm">{clientName}</p>
+            </DialogHeader>
           </div>
+        </div>
 
-          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="overflow-y-auto custom-scrollbar p-6 space-y-6" style={{ maxHeight: '55vh' }}>
+          <style>{`
+            .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #6829c0; border-radius: 4px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
+            .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #6829c0 transparent; }
+          `}</style>
 
             {/* Seleção de cobranças */}
             <div className="space-y-3">
@@ -739,38 +731,35 @@ export function RenegotiationModal({
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex gap-3 p-6 border-t border-white/5">
-            <motion.div className="flex-1" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <LiquidGlassButton
-                tint="danger"
-                onClick={onClose}
-                disabled={isLoading}
-                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
-            </motion.div>
-            <motion.div className="flex-[2]" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <LiquidGlassButton
-                tint="primary"
-                onClick={handleConfirm}
-                disabled={isLoading || selectedIds.size === 0 || (mode === "parcelamento" ? parsedAmount <= 0 : customPayments.length === 0)}
-                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              >
-                {isLoading
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
-                  : "Confirmar Renegociação"
-                }
-              </LiquidGlassButton>
-            </motion.div>
-          </div>
         </div>
-      </motion.div>
-    </motion.div>
-  );
 
-  return createPortal(modal, document.body);
+        {/* Footer fixo */}
+        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div className="flex-1" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <LiquidGlassButton
+              tint="danger"
+              onClick={onClose}
+              disabled={isLoading}
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+            >
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div className="flex-[2]" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <LiquidGlassButton
+              tint="primary"
+              onClick={handleConfirm}
+              disabled={isLoading || selectedIds.size === 0 || (mode === "parcelamento" ? parsedAmount <= 0 : customPayments.length === 0)}
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+            >
+              {isLoading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
+                : "Confirmar Renegociação"
+              }
+            </LiquidGlassButton>
+          </motion.div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

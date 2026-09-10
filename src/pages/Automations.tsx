@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays, Bell, DollarSign, Trash2, Play, Clock, Edit2, Zap,
-  X, Save, CheckCircle2, AlertCircle, Loader2, Webhook,
+  Save, CheckCircle2, AlertCircle, Loader2, Webhook,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
   useAutomations,
@@ -89,104 +93,87 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
   const Icon = ICONS[automation.icon] ?? Zap;
   const colors = CATEGORY_COLORS[automation.category] ?? CATEGORY_COLORS.sistema;
 
-  const modal = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.94, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.94, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md"
-      >
-        <LiquidGlass className="border-white/10 rounded-2xl" backgroundColor="rgba(28, 28, 34, 0.28)">
-          <div className="p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}
-                  style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-sm">{automation.display_name}</h3>
-                  <span className={cn('text-[10px] px-2 py-0.5 rounded-full border', colors.badge)}>
-                    {CATEGORY_LABELS[automation.category] ?? automation.category}
-                  </span>
-                </div>
-              </div>
-              <button onClick={onClose} className="text-white/40 hover:text-white/70 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-md !p-0 !gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 border-b border-white/[0.05] shrink-0">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}
+              style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
+            >
+              <Icon className="w-5 h-5" />
             </div>
-
-            <p className="text-white/50 text-sm leading-relaxed">{automation.description}</p>
-
-            <div className="space-y-2">
-              <label className="text-white/70 text-xs font-medium flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Horário de execução (Horário de Brasília)
-              </label>
-              {isWebhook ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                  <Webhook className="w-4 h-4 text-white/40" />
-                  <span className="text-white/70 text-sm">Disparada automaticamente ao cadastrar um novo cliente</span>
-                </div>
-              ) : isEveryMinute ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-white/70 text-sm">Executa automaticamente a cada minuto</span>
-                </div>
-              ) : (
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
-                  style={{ colorScheme: 'dark' }}
-                />
-              )}
-              {!isEveryMinute && !isWebhook && (
-                <p className="text-white/40 text-xs">
-                  Armazenado como <code className="text-white/40">{brtTimeToCron(time)}</code> (UTC)
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <LiquidGlassButton
-                tint="danger"
-                className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
-                onClick={onClose}
-              >
-                Cancelar
-              </LiquidGlassButton>
-              <LiquidGlassButton
-                tint="primary"
-                className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
-                onClick={handleSave}
-                disabled={updateSchedule.isPending || isEveryMinute || isWebhook}
-              >
-                {updateSchedule.isPending
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <><Save className="w-4 h-4 mr-1.5" /> Salvar</>
-                }
-              </LiquidGlassButton>
+            <div>
+              <DialogHeader>
+                <DialogTitle className="text-white font-semibold text-sm">{automation.display_name}</DialogTitle>
+              </DialogHeader>
+              <span className={cn('text-[10px] px-2 py-0.5 rounded-full border', colors.badge)}>
+                {CATEGORY_LABELS[automation.category] ?? automation.category}
+              </span>
             </div>
           </div>
-        </LiquidGlass>
-      </motion.div>
-    </motion.div>
-  );
+        </div>
 
-  return createPortal(modal, document.body);
+        <div className="p-6 space-y-5">
+          <p className="text-white/50 text-sm leading-relaxed">{automation.description}</p>
+
+          <div className="space-y-2">
+            <label className="text-white/70 text-xs font-medium flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Horário de execução (Horário de Brasília)
+            </label>
+            {isWebhook ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <Webhook className="w-4 h-4 text-white/40" />
+                <span className="text-white/70 text-sm">Disparada automaticamente ao cadastrar um novo cliente</span>
+              </div>
+            ) : isEveryMinute ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-white/70 text-sm">Executa automaticamente a cada minuto</span>
+              </div>
+            ) : (
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                style={{ colorScheme: 'dark' }}
+              />
+            )}
+            {!isEveryMinute && !isWebhook && (
+              <p className="text-white/40 text-xs">
+                Armazenado como <code className="text-white/40">{brtTimeToCron(time)}</code> (UTC)
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer fixo */}
+        <div className="flex gap-2 p-6 border-t border-white/[0.05] shrink-0">
+          <LiquidGlassButton
+            tint="danger"
+            className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
+            onClick={onClose}
+          >
+            Cancelar
+          </LiquidGlassButton>
+          <LiquidGlassButton
+            tint="primary"
+            className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
+            onClick={handleSave}
+            disabled={updateSchedule.isPending || isEveryMinute || isWebhook}
+          >
+            {updateSchedule.isPending
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <><Save className="w-4 h-4 mr-1.5" /> Salvar</>
+            }
+          </LiquidGlassButton>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 // ─── Linha de automação ──────────────────────────────────────────────────────
