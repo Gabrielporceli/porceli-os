@@ -99,7 +99,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
           </DialogHeader>
         </div>
 
-        <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;

@@ -59,7 +59,7 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
       >
         <div className="flex h-72 divide-x divide-white/[0.05]">
           <div 
-            className="flex-1 overflow-y-auto custom-time-scrollbar"
+            className="flex-1 overflow-y-auto scrollbar-hide"
             onWheel={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col p-3 gap-1">
@@ -80,7 +80,7 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
             </div>
           </div>
           <div 
-            className="flex-1 overflow-y-auto custom-time-scrollbar"
+            className="flex-1 overflow-y-auto scrollbar-hide"
             onWheel={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col p-3 gap-1">
@@ -101,25 +101,6 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
             </div>
           </div>
         </div>
-        <style>{`
-          .custom-time-scrollbar::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-time-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-time-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(104, 41, 192, 0.3);
-            border-radius: 10px;
-          }
-          .custom-time-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(104, 41, 192, 0.5);
-          }
-          .custom-time-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(104, 41, 192, 0.3) transparent;
-          }
-        `}</style>
       </PopoverContent>
     </Popover>
   );

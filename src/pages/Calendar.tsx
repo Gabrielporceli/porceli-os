@@ -1526,13 +1526,18 @@ export default function Calendar() {
             {/* Direita: formulário + trancar dia */}
             <div className="w-[300px] shrink-0 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-4">
 
-              {/* Trancar dia */}
-              <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>
+              {/* Trancar dia.
+                  Fundo opaco (rgba(20,16,28,.5), o mesmo tom usado nos
+                  cards de atividade do modal) em vez de bg-white/[0.03]:
+                  quase transparente, deixava o roxo vivo do modal passar
+                  direto e os textos claros (/40, /20) ficavam sem
+                  contraste nenhum. */}
+              <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-[rgba(20,16,28,0.5)] border-white/[0.08]'}`}>
                 <div className="flex items-center gap-2">
                   {selectedDay && isDayLocked(selectedDay)
                     ? <LockIcon className="w-4 h-4 text-red-400" />
-                    : <LockOpenIcon className="w-4 h-4 text-white/40" />}
-                  <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/40'}`}>
+                    : <LockOpenIcon className="w-4 h-4 text-white/60" />}
+                  <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/70'}`}>
                     {selectedDay && isDayLocked(selectedDay) ? 'Dia Trancado' : 'Trancar Dia'}
                   </span>
                 </div>
@@ -1545,14 +1550,14 @@ export default function Calendar() {
 
               {/* Formulário */}
               <div className={`space-y-3 ${selectedDay && isDayLocked(selectedDay) ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]">
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.15em]">
                   {createMeetLink ? "Novo evento no Google" : "Nova tarefa no Notion"}
                 </p>
 
                 <input
                   type="text"
                   placeholder="Título da atividade"
-                  className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  className="w-full bg-[rgba(20,16,28,0.5)] border border-white/[0.1] focus:border-primary/50 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
@@ -1563,16 +1568,16 @@ export default function Calendar() {
                 <input
                   type="text"
                   placeholder="Cliente (opcional)"
-                  className="w-full bg-white/[0.03] border border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  className="w-full bg-[rgba(20,16,28,0.5)] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
                   value={newEventClient}
                   onChange={(e) => setNewEventClient(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
                 />
 
-                <div className="space-y-1.5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Recorrência</label>
+                <div className="space-y-1.5 p-3 bg-[rgba(20,16,28,0.5)] border border-white/[0.08] rounded-xl">
+                  <label className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">Recorrência</label>
                   <Select value={recurrenceType || "none"} onValueChange={(val) => setRecurrenceType(val === "none" ? "" as any : val as any)}>
-                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9 text-sm">
+                    <SelectTrigger className="w-full bg-[rgba(20,16,28,0.5)] border-white/[0.1] text-white/80 h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
@@ -1585,10 +1590,10 @@ export default function Calendar() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-[rgba(20,16,28,0.5)] border border-white/[0.08] rounded-xl">
                   <div>
-                    <Label className="text-xs font-bold text-white/40 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
-                    <p className="text-white/40 text-[11px] mt-0.5">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
+                    <Label className="text-xs font-bold text-white/70 uppercase tracking-wider cursor-pointer" onClick={() => setCreateMeetLink(!createMeetLink)}>Google Meet</Label>
+                    <p className="text-white/50 text-[11px] mt-0.5">{createMeetLink ? "Evento com link Meet" : "Salvar no Notion"}</p>
                   </div>
                   <Switch checked={createMeetLink} onCheckedChange={setCreateMeetLink} />
                 </div>
