@@ -150,10 +150,6 @@ export default function Financial() {
     };
   });
 
-  const faturamentoGeral = contractProjections.reduce(
-    (total, c) => total + c.monthlyValue * c.durationInMonths, 0
-  );
-
   // Número correto de contratos ativos (status active ou expiring e com data de fim ainda vigente)
   const todayForContracts = new Date();
   todayForContracts.setHours(0, 0, 0, 0);
@@ -281,6 +277,16 @@ export default function Financial() {
   });
 
   // Cálculo dos KPIs
+
+  // Previsão do Mês: TODOS os boletos (pagos + pendentes) com vencimento no
+  // mês atual — quanto o mês inteiro vale, não só o que já entrou.
+  const previsaoMes = financialEntries
+    .filter(entry => {
+      const d = parseLocalDate(entry.due_date);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    })
+    .reduce((sum, entry) => sum + Number(entry.amount), 0);
+
   const receitasMes = financialEntries
     .filter(entry => {
       const d = parseLocalDate(entry.due_date);
@@ -314,7 +320,7 @@ export default function Financial() {
       />
 
       <FinancialKPIs
-        totalReceitas={faturamentoGeral}
+        previsaoMes={previsaoMes}
         receitasMes={receitasMes}
         despesasMes={despesasMes}
         lucroMes={lucroMes}

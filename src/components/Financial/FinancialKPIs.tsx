@@ -2,18 +2,18 @@ import { StatsCard } from "@/components/Dashboard/StatsCard";
 import { DollarSign } from "lucide-react";
 
 interface FinancialKPIsProps {
-  totalReceitas: number;
+  previsaoMes: number;
   receitasMes: number;
   despesasMes: number;
   lucroMes: number;
 }
 
-export function FinancialKPIs({ totalReceitas, receitasMes, despesasMes, lucroMes }: FinancialKPIsProps) {
+export function FinancialKPIs({ previsaoMes, receitasMes, despesasMes, lucroMes }: FinancialKPIsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <StatsCard
-        title="Faturamento Geral"
-        value={`R$ ${totalReceitas.toLocaleString('pt-BR')}`}
+        title="Previsão do Mês"
+        value={`R$ ${previsaoMes.toLocaleString('pt-BR')}`}
         icon={DollarSign}
         className="[animation-delay:100ms]"
       />
