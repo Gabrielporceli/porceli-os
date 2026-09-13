@@ -74,12 +74,27 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
       if (!monthlyValue || !contract.start_date) continue;
       if (!contract.single_payment && !contract.end_date) continue;
 
+      // Trava contra o bug da renovação (caso real: CP Cann Consultoria,
+      // 10/09/2026): um contrato antigo do mesmo `type` que ainda esteja
+      // 'active'/'expiring' no banco (a inativação não é imediata na
+      // renovação — decisão deliberada, ver useContracts.ts) não pode gerar
+      // parcela pra uma data que o contrato RENOVADO (mesmo tipo, começa
+      // depois) já cobre — senão os dois cobram o mesmo mês. Corta o fim
+      // efetivo do contrato mais antigo no início do sucessor mais próximo.
+      const successorStart = activeContracts
+        .filter(c => c.id !== contract.id && c.type === contract.type && c.start_date > contract.start_date)
+        .map(c => c.start_date)
+        .sort()[0];
+      const effectiveEndDate = successorStart && successorStart < (contract.end_date ?? contract.start_date)
+        ? successorStart
+        : (contract.end_date ?? contract.start_date);
+
       // Mesma função usada na preview dos modais de contrato (NewContractModal
       // / RenewContractModal) — garante que o que o usuário vê antes de
       // confirmar é EXATAMENTE o que vira lançamento aqui.
       const billing = computeContractBilling({
         startDate: contract.start_date,
-        endDate: contract.end_date ?? contract.start_date,
+        endDate: effectiveEndDate,
         paymentDay,
         value: monthlyValue,
         singlePayment: !!contract.single_payment,
