@@ -32,7 +32,7 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
     // 2. Buscar contratos ativos do cliente
     const { data: activeContracts } = await supabase
       .from('contracts')
-      .select('id, monthly_value, start_date, end_date, type, single_payment')
+      .select('id, monthly_value, start_date, end_date, type, single_payment, status')
       .eq('client_id', clientId)
       .eq('user_id', userId)
       .in('status', ['active', 'expiring']);
@@ -76,12 +76,21 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
 
       // Trava contra o bug da renovação (caso real: CP Cann Consultoria,
       // 10/09/2026): um contrato antigo do mesmo `type` que ainda esteja
-      // 'active'/'expiring' no banco (a inativação não é imediata na
-      // renovação — decisão deliberada, ver useContracts.ts) não pode gerar
-      // parcela pra uma data que o contrato RENOVADO (mesmo tipo, começa
-      // depois) já cobre — senão os dois cobram o mesmo mês. Corta o fim
-      // efetivo do contrato mais antigo no início do sucessor mais próximo.
-      const successorStart = activeContracts
+      // 'expiring' no banco (a inativação não é imediata na renovação —
+      // decisão deliberada, ver useContracts.ts) não pode gerar parcela pra
+      // uma data que o contrato RENOVADO (mesmo tipo, começa depois) já
+      // cobre — senão os dois cobram o mesmo mês. Corta o fim efetivo do
+      // contrato mais antigo no início do sucessor mais próximo.
+      //
+      // Só aplica a contrato 'expiring' — NUNCA a 'active'. Sem esse filtro
+      // de status, dois contratos genuinamente paralelos do mesmo type
+      // (ex.: duas campanhas Google simultâneas, ambas 'active') cortariam
+      // a cobrança um do outro por engano — não há vínculo explícito no
+      // banco entre "contrato renovado" e "contrato original" pra
+      // diferenciar os dois casos por outro campo. 'expiring' é sinal
+      // suficiente porque só entra nesse status quando o usuário está
+      // encerrando/substituindo o contrato, nunca por coincidência.
+      const successorStart = contract.status !== 'expiring' ? undefined : activeContracts
         .filter(c => c.id !== contract.id && c.type === contract.type && c.start_date > contract.start_date)
         .map(c => c.start_date)
         .sort()[0];
