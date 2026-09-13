@@ -14,14 +14,7 @@ import {
   GripVertical,
   Plus,
   Trash2,
-  User,
 } from "lucide-react";
-
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "@/components/ui/avatar";
 
 import {
   ContextMenu,
@@ -746,22 +739,6 @@ export default function LeadsKanban() {
                                           </div>
 
                                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <div
-                                              className="relative flex-shrink-0 z-[10] cursor-pointer"
-                                              data-no-pan
-                                              onPointerDown={(e) => {
-                                                e.stopPropagation();
-                                                handleEditLead(lead);
-                                              }}
-                                            >
-                                              <Avatar className="w-10 h-10 ring-1 ring-white/10 transition-all">
-                                                <AvatarImage src={lead.photo_url || undefined} alt={lead.name} />
-                                                <AvatarFallback className="bg-primary/10 text-primary">
-                                                  <User className="w-5 h-5" />
-                                                </AvatarFallback>
-                                              </Avatar>
-                                            </div>
-
                                             <div className="flex-1 min-w-0 py-1.5">
                                               <h4 className="font-bold text-white text-sm tracking-tight truncate leading-snug mb-1">
                                                 {lead.name}
