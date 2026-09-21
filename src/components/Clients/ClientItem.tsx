@@ -89,11 +89,11 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
   return (
     <div className="hover:bg-white/[0.04] transition-all duration-300 group">
       <div
-        className="p-6 cursor-pointer flex items-center justify-between"
+        className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         onClick={onToggleExpanded}
       >
-        <div className="flex items-center gap-4 flex-1">
-          <div className="flex-shrink-0">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          <div className="flex-shrink-0 mt-1 sm:mt-0">
             {isExpanded ? (
               <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
             ) : (
@@ -101,37 +101,39 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
             )}
           </div>
 
-          <div className="flex items-center gap-3 flex-1 flex-wrap">
-            <h4 className="text-lg font-semibold text-white">{client.company}</h4>
-            {/* Status badge baseado nas tags do cliente */}
-            {client.tags && client.tags.length > 0 && (() => {
-              const statusTag = client.tags.find(t =>
-                ['ativo', 'a vencer', 'vencido', 'inativo'].includes(t.toLowerCase())
-              );
-              if (!statusTag) return null;
-              return (
-                <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getTagColor(statusTag)}`}>
-                  {statusTag}
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h4 className="text-lg font-semibold text-white truncate">{client.company}</h4>
+              {/* Status badge baseado nas tags do cliente */}
+              {client.tags && client.tags.length > 0 && (() => {
+                const statusTag = client.tags.find(t =>
+                  ['ativo', 'a vencer', 'vencido', 'inativo'].includes(t.toLowerCase())
+                );
+                if (!statusTag) return null;
+                return (
+                  <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getTagColor(statusTag)}`}>
+                    {statusTag}
+                  </Badge>
+                );
+              })()}
+              {client.plan && (
+                <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getPlanColor(client.plan)}`}>
+                  {client.plan}
                 </Badge>
-              );
-            })()}
-            {client.plan && (
-              <Badge className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 ${getPlanColor(client.plan)}`}>
-                {client.plan}
-              </Badge>
-            )}
-          </div>
+              )}
+            </div>
 
-          <div className="flex items-center gap-2 text-white/50">
-            <Calendar className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Pagamento: dia {client.paymentDay}</span>
+            <div className="flex items-center gap-2 text-white/50">
+              <Calendar className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-sm font-medium">Pagamento: dia {client.paymentDay}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-2 ml-6">
-          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+        <div className="flex gap-2 sm:ml-6 pl-8 sm:pl-0">
+          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
             <LiquidGlassButton
-              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+              className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -140,10 +142,10 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
               Editar
             </LiquidGlassButton>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
             <LiquidGlassButton
               tint="danger"
-              className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+              className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
@@ -156,8 +158,8 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
       </div>
 
       {isExpanded && (
-        <div className="px-6 pb-6 pt-0">
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 mt-2">
+        <div className="px-4 sm:px-6 pb-6 pt-0">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 sm:p-6 mt-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-4">

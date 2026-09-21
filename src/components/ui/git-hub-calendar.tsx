@@ -88,22 +88,6 @@ const GitHubCalendar = ({
     return weeksArray;
   };
 
-  const renderMonthLabels = () => {
-    const months = [];
-    const year = startDate.getFullYear();
-    for (let i = 0; i < 12; i++) {
-      // Usa o 1º dia de cada mês real (jan..dez) em vez de somar 30 dias,
-      // que causava meses duplicados (jan, jan / mai, mai) e dez faltando.
-      const monthDate = new Date(year, i, 1);
-      months.push(
-        <span key={i} className="text-[10px] font-black text-white/50 uppercase tracking-tighter">
-          {format(monthDate, "MMM", { locale: ptBR })}
-        </span>
-      );
-    }
-    return months;
-  };
-
   const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
 
   return (
@@ -123,7 +107,6 @@ const GitHubCalendar = ({
 
         <div className="flex overflow-x-auto pb-2 custom-scrollbar scrollbar-hide w-full">
           <div className="flex flex-col gap-2 w-full">
-            <div className="flex w-full justify-between pl-6 pr-4">{renderMonthLabels()}</div>
             <div className="flex w-full">
               <div className="flex flex-col gap-[3px] mr-3 shrink-0 pt-[1px]">
                 {dayLabels.map((day, index) => (

@@ -332,18 +332,18 @@ export default function Contracts() {
                 key={contract.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between gap-8 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-8 px-4 sm:px-6 py-4 hover:bg-white/[0.04] transition-all duration-300"
               >
-                <div className="flex items-center gap-4 flex-1">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/10 shrink-0">
                     <Calendar className="w-5 h-5 text-yellow-500" />
                   </div>
-                  <div>
-                    <h4 className="text-white font-semibold">{contract.client}</h4>
+                  <div className="min-w-0">
+                    <h4 className="text-white font-semibold truncate">{contract.client}</h4>
                     <p className="text-white/40 text-xs">{contract.type} • Vence em {formatDate(contract.endDate)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6 shrink-0">
+                <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
                   <div className="text-right">
                     <p className="text-[10px] text-yellow-500/60 font-black uppercase tracking-widest">Restam</p>
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
@@ -396,18 +396,18 @@ export default function Contracts() {
                   <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
                     {/* Header do grupo */}
                     <div
-                      className="flex items-center justify-between p-6 cursor-pointer transition-all duration-300"
+                      className="flex items-center justify-between gap-3 p-4 sm:p-6 cursor-pointer transition-all duration-300"
                       onClick={() => toggleClient(clientName)}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="flex-shrink-0">
                           {isExpanded
                             ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                             : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                           }
                         </div>
-                        <h4 className="text-white font-semibold text-lg">{clientName}</h4>
-                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                        <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
+                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full shrink-0">
                           {clientContracts.length} {clientContracts.length === 1 ? 'contrato' : 'contratos'}
                         </span>
                       </div>
@@ -415,15 +415,15 @@ export default function Contracts() {
 
                     {/* Contratos do grupo */}
                     {isExpanded && (
-                      <div className="px-6 pb-4">
+                      <div className="px-2 sm:px-6 pb-4">
                         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
                           {clientContracts.map((contract) => (
               <div
                 key={contract.id}
-                className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
+                className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-4 sm:px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
               >
-              <div className="flex items-center gap-6 flex-1">
-                <div className="grid grid-cols-4 gap-8 flex-1 items-center">
+              <div className="flex items-center gap-6 flex-1 min-w-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8 flex-1 items-start lg:items-center">
                   <div>
                     <div className="flex items-center gap-2 mb-1 min-w-0">
                       <h4 className="text-white font-bold text-lg tracking-tight truncate m-0" title={contract.client}>{contract.client}</h4>
@@ -459,29 +459,30 @@ export default function Contracts() {
                   </div>
                   <div>
                     <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
-                    <div className="flex items-center gap-2 text-white/70 font-medium">
-                      <Calendar className="w-3.5 h-3.5 opacity-30" />
+                    <div className="flex items-center gap-2 text-white/70 font-medium flex-wrap">
+                      <Calendar className="w-3.5 h-3.5 opacity-30 shrink-0" />
                       <span>{formatDate(contract.startDate)}</span>
                       <span className="opacity-20">→</span>
                       <span>{formatDate(contract.endDate)}</span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="lg:text-right">
                     <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
                     <p className="text-white/70 font-medium truncate">{contract.type}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 ml-12 pr-2">
+              <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap lg:ml-12 pr-2">
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="flex-1 lg:flex-none min-w-[calc(50%-6px)] lg:min-w-0"
                 >
                   <LiquidGlassButton
                     onClick={() => setEditingContract(contract)}
-                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
+                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     Editar
                   </LiquidGlassButton>
@@ -490,10 +491,11 @@ export default function Contracts() {
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="flex-1 lg:flex-none min-w-[calc(50%-6px)] lg:min-w-0"
                 >
                   <LiquidGlassButton
                     onClick={() => handleRenewClick(contract)}
-                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
+                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     {contract.status === 'active' ? 'Estender' : 'Renovar'}
                   </LiquidGlassButton>
@@ -502,11 +504,12 @@ export default function Contracts() {
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="w-full lg:w-auto"
                 >
                   <LiquidGlassButton
                     tint="danger"
                     onClick={() => setDeletingContract(contract)}
-                    className="h-9 px-6 text-xs font-bold uppercase tracking-widest"
+                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
                   >
                     Cancelar
                   </LiquidGlassButton>

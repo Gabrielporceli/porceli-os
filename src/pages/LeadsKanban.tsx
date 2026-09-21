@@ -576,7 +576,7 @@ export default function LeadsKanban() {
             {optimisticLeads.length} {optimisticLeads.length === 1 ? "lead no funil" : "leads no funil"}
           </p>
         </div>
-        <div className="flex flex-row items-center gap-3">
+        <div className="flex flex-row flex-wrap items-center gap-3">
         <motion.div
           whileHover={{ scale: 1.05, translateY: -2 }}
           whileTap={{ scale: 0.95 }}

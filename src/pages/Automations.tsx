@@ -199,7 +199,7 @@ function AutomationRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       className={cn(
-        "flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group",
+        "flex items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group",
         !automation.enabled && "opacity-55"
       )}
     >

@@ -135,7 +135,13 @@ const GrowFromClickOrigin = React.forwardRef<
       refraction={false}
       radius={24}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 p-6 shadow-lg sm:rounded-3xl",
+        // w-[calc(100%-2rem)] em vez de w-full: dá 1rem de respiro nas
+        // bordas em telas pequenas (fixed + translate(-50%,-50%) centraliza
+        // relativo à viewport, então essa largura já considera as duas
+        // margens). max-h/overflow evita que o modal estoure a altura da
+        // tela num celular — quem já define sua própria altura (max-h-[85vh]
+        // etc.) sobrescreve isso via cn().
+        "fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto gap-4 p-6 shadow-lg sm:rounded-3xl",
         className
       )}
       initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}

@@ -142,7 +142,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
           </h2>
         </div>
 
-        <div className="flex items-center gap-3">          {rightActions}
+        <div className="flex items-center gap-3 flex-wrap">          {rightActions}
           <LiquidGlassButton
             tint="primary"
             onClick={() => onAddEvent?.(selectedDay)}

@@ -311,58 +311,62 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
-      className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
+      className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 group"
     >
-      {/* Ícone de status */}
-      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border", cfg.className)}>
-        <StatusIcon className="w-4 h-4" />
-      </div>
-
-      {/* Info principal */}
-      <div className="flex-1 min-w-0 space-y-0.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-white font-semibold text-sm">
-            {msg.client_name ?? "Sem cliente"}
-          </span>
-          <span className="text-white/40 text-xs">•</span>
-          <span className="text-white/50 text-xs">{RECIPIENT_LABELS[msg.recipient_type]}: {msg.phone}</span>
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+        {/* Ícone de status */}
+        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border", cfg.className)}>
+          <StatusIcon className="w-4 h-4" />
         </div>
-        <p className="text-white/40 text-xs line-clamp-1 leading-relaxed">{msg.message}</p>
-        {msg.error_message && (
-          <p className="text-red-400/70 text-xs">Erro: {msg.error_message}</p>
-        )}
+
+        {/* Info principal */}
+        <div className="flex-1 min-w-0 space-y-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-white font-semibold text-sm">
+              {msg.client_name ?? "Sem cliente"}
+            </span>
+            <span className="text-white/40 text-xs hidden sm:inline">•</span>
+            <span className="text-white/50 text-xs">{RECIPIENT_LABELS[msg.recipient_type]}: {msg.phone}</span>
+          </div>
+          <p className="text-white/40 text-xs line-clamp-1 leading-relaxed">{msg.message}</p>
+          {msg.error_message && (
+            <p className="text-red-400/70 text-xs">Erro: {msg.error_message}</p>
+          )}
+        </div>
       </div>
 
-      {/* Data e status */}
-      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", cfg.className)}>
-          {cfg.label}
-        </span>
-        <span className="text-white/40 text-xs whitespace-nowrap">
-          {formatDateTimeBRT(msg.status === "sent" && msg.sent_at ? msg.sent_at : msg.scheduled_at)}
-        </span>
-        {msg.status === "pending" && (
-          <button
-            onClick={() => onCancel(msg.id)}
-            disabled={isCancelling}
-            className="text-white/20 hover:text-amber-400 text-xs transition-colors"
+      <div className="flex items-center justify-between sm:contents pl-12 sm:pl-0">
+        {/* Data e status */}
+        <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-1.5 flex-shrink-0">
+          <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium whitespace-nowrap", cfg.className)}>
+            {cfg.label}
+          </span>
+          <span className="text-white/40 text-xs whitespace-nowrap">
+            {formatDateTimeBRT(msg.status === "sent" && msg.sent_at ? msg.sent_at : msg.scheduled_at)}
+          </span>
+          {msg.status === "pending" && (
+            <button
+              onClick={() => onCancel(msg.id)}
+              disabled={isCancelling}
+              className="text-white/20 hover:text-amber-400 text-xs transition-colors"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+
+        {/* Excluir */}
+        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-shrink-0">
+          <LiquidGlassButton
+            tint="danger"
+            onClick={() => onDelete(msg.id)}
+            disabled={isDeleting}
+            className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
           >
-            Cancelar
-          </button>
-        )}
+            Excluir
+          </LiquidGlassButton>
+        </motion.div>
       </div>
-
-      {/* Excluir */}
-      <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-shrink-0">
-        <LiquidGlassButton
-          tint="danger"
-          onClick={() => onDelete(msg.id)}
-          disabled={isDeleting}
-          className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
-        >
-          Excluir
-        </LiquidGlassButton>
-      </motion.div>
     </motion.div>
   );
 }

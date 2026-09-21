@@ -1105,7 +1105,7 @@ export default function Calendar() {
           card com `.liquid-glass` voltar para o topo desta tela, a tarja
           volta junto. A correção de verdade é o header sem `backdrop-filter`
           (avaliado e recusado por custo visual). */}
-      <div className="h-[calc(100vh-80px)] min-h-[650px] flex gap-4">
+      <div className="h-[70vh] min-h-[420px] md:h-[calc(100vh-80px)] md:min-h-[650px] flex gap-4">
       {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
           calendário, criando "pontas" escuras nos cantos. */}
       <div className="flex-1 min-w-0 flex">
@@ -1115,7 +1115,7 @@ export default function Calendar() {
           onToggleLock={(date: Date) => toggleLockDay(date.getDate())}
           isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Botão Google Calendar — Apple Tahoe Liquid Glass */}
               <LiquidGlassButton
                 onClick={googleConnected ? fetchGoogleEvents : handleConnectGoogle}
@@ -1250,8 +1250,8 @@ export default function Calendar() {
             </DialogHeader>
           </div>
 
-          {/* Body — 2 colunas */}
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Body — 2 colunas (empilha em telas pequenas) */}
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
@@ -1282,7 +1282,7 @@ export default function Calendar() {
             <div
               ref={dayModalListRef}
               onScroll={updateDayModalFade}
-              className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-r border-white/[0.05]"
+              className="flex-1 min-h-0 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-b md:border-b-0 md:border-r border-white/[0.05]"
               style={edgeFadeStyle(dayModalFade)}
             >
               <div>
@@ -1524,7 +1524,7 @@ export default function Calendar() {
             </div>
 
             {/* Direita: formulário + trancar dia */}
-            <div className="w-[300px] shrink-0 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-4">
+            <div className="w-full md:w-[300px] flex-1 md:flex-none min-h-0 md:min-h-0 shrink-0 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-4">
 
               {/* Trancar dia */}
               <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>

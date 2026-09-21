@@ -329,7 +329,7 @@ export default function Financial() {
       {/* Pagamentos em Atraso */}
       {overdueEntries.length > 0 && (
         <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <div className="p-4 sm:p-6 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
               <p className="text-white/40 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
@@ -355,22 +355,22 @@ export default function Financial() {
                   <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
                     {/* Linha do cliente — clicável */}
                     <div
-                      className="p-6 cursor-pointer flex items-center justify-between"
+                      className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       onClick={() => toggleOverdueClient(clientName)}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="flex-shrink-0">
                           {isExpanded
                             ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                             : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                           }
                         </div>
-                        <h4 className="text-white font-semibold text-lg">{clientName}</h4>
-                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                        <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
+                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full shrink-0">
                           {entries.length} {entries.length === 1 ? 'fatura' : 'faturas'}
                         </span>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-1 pl-8 sm:pl-0">
                         <motion.div whileHover={{ scale: 1.05, translateY: -1 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                           <LiquidGlassButton
                             tint="danger"
@@ -390,14 +390,14 @@ export default function Financial() {
 
                     {/* Faturas individuais — visíveis só quando expandido */}
                     {isExpanded && (
-                      <div className="px-6 pb-6 pt-0">
+                      <div className="px-2 sm:px-6 pb-6 pt-0">
                         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
                           {entries.map((entry: any, i: number) => (
                             <div
                               key={entry.id}
-                              className={`flex items-center justify-between px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 ${i > 0 ? 'border-t border-white/5' : ''}`}
+                              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-white/[0.04] transition-all duration-300 ${i > 0 ? 'border-t border-white/5' : ''}`}
                             >
-                              <div className="flex items-center gap-12">
+                              <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
                                 <div>
                                   <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
                                   <p className="text-white/70 font-medium">{entry.reference}</p>
@@ -416,7 +416,7 @@ export default function Financial() {
                                   tint="success"
                                   onClick={() => handleMarkAsPaid(entry.id)}
                                   disabled={isMarkingAsPaid}
-                                  className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+                                  className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
                                 >
                                   Confirmar
                                 </LiquidGlassButton>
@@ -481,9 +481,9 @@ export default function Financial() {
               {normalEntries.map((entry) => {
                 const statusTag = getStatusTag(entry);
                 return (
-                  <div key={entry.id} className="flex items-center justify-between gap-8 p-6 hover:bg-white/[0.04] transition-all duration-300 group">
-                    <h4 className="text-white font-semibold text-lg w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
-                    <div className="flex items-center gap-12 flex-1">
+                  <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-8 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                    <h4 className="text-white font-semibold text-lg w-full sm:w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
+                    <div className="flex flex-wrap items-center gap-x-8 gap-y-3 flex-1">
                       <div>
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
                         <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
@@ -499,12 +499,12 @@ export default function Financial() {
                     </div>
                     <div className="flex gap-2">
                       {entry.status === 'pending' ? (
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="w-full sm:w-auto">
                           <LiquidGlassButton
                             tint="success"
                             onClick={() => handleMarkAsPaid(entry.id)}
                             disabled={isMarkingAsPaid}
-                            className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+                            className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
                           >
                             Confirmar
                           </LiquidGlassButton>
@@ -577,14 +577,14 @@ export default function Financial() {
             return (
               <div className="divide-y divide-white/5">
                 {filteredExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-6 hover:bg-white/[0.04] transition-all duration-300 group">
-                    <div className="w-1/3 min-w-0 pr-6">
+                  <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
+                    <div className="w-full sm:w-1/3 min-w-0 sm:pr-6">
                       <h4 className="text-white font-semibold text-lg truncate">{expense.description}</h4>
                       {expense.category && (
                         <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-0.5">{expense.category}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-12 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-8 gap-y-3 flex-1">
                       <div>
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
                         <p className="text-white/70 font-medium">{formatDateBR(expense.date)}</p>
@@ -608,12 +608,12 @@ export default function Financial() {
                     </div>
                     <div className="flex gap-2">
                       {expense.status === 'pending' ? (
-                        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
                           <LiquidGlassButton
                             tint="success"
                             onClick={() => handlePayExpense(expense.id)}
                             disabled={isPaying}
-                            className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+                            className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
                           >
                             Pagar
                           </LiquidGlassButton>
@@ -621,12 +621,12 @@ export default function Financial() {
                       ) : (
                         <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
                       )}
-                      <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
                         <LiquidGlassButton
                           tint="danger"
                           onClick={() => handleDeleteExpense(expense.id, expense.description)}
                           disabled={isDeleting}
-                          className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
+                          className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
                         >
                           Excluir
                         </LiquidGlassButton>
@@ -634,9 +634,9 @@ export default function Financial() {
                     </div>
                   </div>
                 ))}
-                <div className="flex justify-between items-center p-6">
+                <div className="flex justify-between items-center p-4 sm:p-6 gap-3">
                   <span className="text-white/40 font-bold uppercase tracking-widest text-xs">Total de Despesas Pendentes</span>
-                  <span className="text-white font-black text-2xl tracking-tighter">{formatCurrency(filteredExpenses.filter(e => e.status === 'pending').reduce((acc, e) => acc + Number(e.amount), 0))}</span>
+                  <span className="text-white font-black text-xl sm:text-2xl tracking-tighter shrink-0">{formatCurrency(filteredExpenses.filter(e => e.status === 'pending').reduce((acc, e) => acc + Number(e.amount), 0))}</span>
                 </div>
               </div>
             );
