@@ -91,6 +91,13 @@ export const Header = () => {
   const [mobilePill, setMobilePill] = useState<{ url: string; geom: PillGeom } | null>(null);
   const anchorUrlRef = useRef<string | null>(null);
   const candidateUrlRef = useRef<string | null>(null);
+  // Toque num ícone (ou num card que muda de rota): a transferência é
+  // animada no TEMPO, não pelo dedo. Mais lenta que a do desktop (620ms)
+  // porque na tela do celular a pílula é menor e o percurso é curto — a
+  // 620ms não dava pra ver.
+  const MOBILE_TAP_MS = 900;
+  const tapRafRef = useRef<number | null>(null);
+  const tapAnimRef = useRef(false);
   // Marcos do progresso e parâmetros do gooey vivem em
   // mobilePillGeometry.ts — calibráveis ao vivo em /dev/pill.
   const { SWITCH_AT } = PILL_DEFAULTS;
@@ -148,27 +155,20 @@ export const Header = () => {
     const nx = nRect.left - navRect.left;
     const slot = nRect.width;
 
-    // Fling rápido: o candidato anterior pode ter sido pulado antes de
-    // chegar a SWITCH_AT. Se o candidato mudou e o anterior não era a
-    // âncora, a âncora passa a ser ele — a pílula não pode ficar presa
-    // dois ícones atrás.
-    const prevCandidate = candidateUrlRef.current;
-    if (prevCandidate && prevCandidate !== nearest.url && prevCandidate !== anchorUrlRef.current) {
-      anchorUrlRef.current = prevCandidate;
-    }
-    candidateUrlRef.current = nearest.url;
+    const navCenter = navRect.width / 2;
 
-    let anchorUrl = anchorUrlRef.current;
+    const anchorUrl = anchorUrlRef.current;
     let anchorEl: HTMLElement | null = null;
     if (anchorUrl) {
-      // A âncora existe em 3 cópias (loop infinito) — usa a cópia mais
-      // próxima do candidato, senão a pílula esticaria pro outro bloco.
+      // A âncora existe em 3 cópias (loop infinito) — usa a mais próxima do
+      // CENTRO, que é onde a pílula parada mora.
       const copies = scroller.querySelectorAll<HTMLElement>(
         `[data-nav-url="${CSS.escape(anchorUrl)}"]`
       );
       let bestD = Infinity;
       copies.forEach((el) => {
-        const d = Math.abs(el.getBoundingClientRect().left - nRect.left);
+        const r = el.getBoundingClientRect();
+        const d = Math.abs(r.left + r.width / 2 - (navRect.left + navCenter));
         if (d < bestD) {
           bestD = d;
           anchorEl = el;
@@ -177,38 +177,122 @@ export const Header = () => {
     }
     if (!anchorEl) {
       anchorUrlRef.current = nearest.url;
-      anchorUrl = nearest.url;
+      candidateUrlRef.current = nearest.url;
       setMobilePill({ url: nearest.url, geom: idlePillGeom(nx, slot) });
       return;
     }
 
-    const ax = (anchorEl as HTMLElement).getBoundingClientRect().left - navRect.left;
+    const aRect = (anchorEl as HTMLElement).getBoundingClientRect();
+    const ax = aRect.left - navRect.left;
+    // Quanto a âncora já saiu do centro. É ISSO que mede o progresso —
+    // não a distância do candidato.
+    //
+    // Antes: p = 1 - dist(candidato)/meio-passo. Como um ícone só vira "o
+    // mais próximo do centro" DEPOIS do ponto médio, a primeira metade do
+    // arraste não mostrava nada e a segunda despachava a transferência
+    // inteira em 22px — "demora pra começar e termina do nada".
+    // Agora a transferência ocupa o PASSO INTEIRO (44px): começa no
+    // instante em que o dedo tira a âncora do centro.
+    const anchorOff = ax + slot / 2 - navCenter;
 
-    if (nearest.url === anchorUrl) {
-      // Candidato é a própria âncora: bolha única parada nela (segue o
-      // scroll porque ax é remedido a cada frame).
+    // Alvo = o vizinho do lado pra onde a faixa está indo. Depois do ponto
+    // médio ele coincide com o "mais próximo do centro"; antes disso é ele
+    // quem está chegando — e é justamente essa metade que não animava.
+    const dir = anchorOff < 0 ? 1 : -1;
+    let target: { url: string; cx: number } | null = null;
+    if (Math.abs(anchorOff) > 0.5) {
+      const anchorCx = ax + slot / 2;
+      scroller.querySelectorAll<HTMLElement>("[data-nav-url]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2 - navRect.left;
+        if (Math.sign(cx - anchorCx) !== dir) return;
+        if (!target || Math.abs(cx - navCenter) < Math.abs(target.cx - navCenter)) {
+          target = { url: el.dataset.navUrl as string, cx };
+        }
+      });
+    }
+
+    if (!target) {
+      // Âncora centrada (ou sem vizinho daquele lado): bolha única parada
+      // nela — segue o scroll porque ax é remedido a cada frame.
       const g = idlePillGeom(ax, slot);
       setMobilePill((prev) =>
-        prev && prev.url === anchorUrl && sameGeom(prev.geom, g) ? prev : { url: anchorUrl as string, geom: g }
+        prev && prev.url === anchorUrl && sameGeom(prev.geom, g)
+          ? prev
+          : { url: anchorUrl as string, geom: g }
       );
       return;
     }
 
-    const dx = nx - ax;
-    const half = Math.abs(dx) / 2;
-    const p = half > 0 ? Math.min(1, Math.max(0, 1 - nearest.dist / half)) : 1;
+    const t = target as { url: string; cx: number };
+    candidateUrlRef.current = t.url;
+    const tx = t.cx - slot / 2;
+    const pitch = Math.abs(t.cx - (ax + slot / 2));
+    const p = pitch > 0 ? Math.min(1, Math.abs(anchorOff) / pitch) : 1;
 
     if (p >= SWITCH_AT) {
-      // Transferência completa: a geometria é a mesma do frame anterior
-      // (só a frente, cheia, no candidato), então trocar a âncora não
-      // muda nada na tela.
-      anchorUrlRef.current = nearest.url;
-      setMobilePill({ url: nearest.url, geom: idlePillGeom(nx, slot) });
+      // Transferência completa: a geometria aqui é idêntica à de "parada"
+      // no alvo, então trocar a âncora não muda nada na tela. (Num fling
+      // que pulou vários ícones, o frame seguinte recomeça a partir desta
+      // âncora nova — a pílula nunca fica presa dois ícones atrás.)
+      anchorUrlRef.current = t.url;
+      setMobilePill({ url: t.url, geom: idlePillGeom(tx, slot) });
       return;
     }
 
-    setMobilePill({ url: anchorUrl as string, geom: transferPillGeom(ax, nx, slot, p) });
-  }, [findNearest]);
+    setMobilePill({ url: anchorUrl as string, geom: transferPillGeom(ax, tx, slot, p) });
+  }, [findNearest, SWITCH_AT]);
+
+  // Geometria da pílula do mobile num instante p, entre duas ROTAS (e não
+  // entre "âncora e quem está no centro"). É o que o toque usa: o dedo não
+  // dita o progresso, o relógio dita — mas as posições continuam medidas ao
+  // vivo, então a pílula acompanha a faixa deslizando por baixo.
+  const measureMobile = useCallback(
+    (fromUrl: string, toUrl: string, p: number): PillGeom | null => {
+      const scroller = navRef.current;
+      if (!scroller) return null;
+      const navRect = scroller.getBoundingClientRect();
+      const navCenter = navRect.left + navRect.width / 2;
+
+      // Destino: a cópia que está indo pro centro.
+      let toEl: HTMLElement | null = null;
+      let bestTo = Infinity;
+      scroller
+        .querySelectorAll<HTMLElement>(`[data-nav-url="${CSS.escape(toUrl)}"]`)
+        .forEach((el) => {
+          const r = el.getBoundingClientRect();
+          const d = Math.abs(r.left + r.width / 2 - navCenter);
+          if (d < bestTo) {
+            bestTo = d;
+            toEl = el;
+          }
+        });
+      if (!toEl) return null;
+      const toRect = (toEl as HTMLElement).getBoundingClientRect();
+      const slot = toRect.width;
+      const tx = toRect.left - navRect.left;
+
+      // Origem: a cópia mais perto do DESTINO (não do centro) — senão num
+      // salto longo a pílula se esticaria pro outro bloco do loop.
+      let fromEl: HTMLElement | null = null;
+      let bestFrom = Infinity;
+      scroller
+        .querySelectorAll<HTMLElement>(`[data-nav-url="${CSS.escape(fromUrl)}"]`)
+        .forEach((el) => {
+          const r = el.getBoundingClientRect();
+          const d = Math.abs(r.left - toRect.left);
+          if (d < bestFrom) {
+            bestFrom = d;
+            fromEl = el;
+          }
+        });
+      if (!fromEl || p >= SWITCH_AT) return idlePillGeom(tx, slot);
+
+      const ax = (fromEl as HTMLElement).getBoundingClientRect().left - navRect.left;
+      return transferPillGeom(ax, tx, slot, p);
+    },
+    [SWITCH_AT]
+  );
 
   // Geometria da pílula do desktop num instante p da transferência.
   // Coordenadas relativas ao WRAPPER (que não rola), medidas ao vivo a
@@ -358,15 +442,55 @@ export const Header = () => {
     if (!scroller) return;
     const nearest = findNearest(scroller, location.pathname);
     if (nearest && nearest.dist > 4) {
-      // Rota mudou por fora da roleta (card, toque num ícone longe do
-      // centro): a pílula desgruda direto pra rota nova e a faixa desliza
-      // até centralizar — os frames desse scroll suave passam por
-      // updateMobilePill normalmente.
-      anchorUrlRef.current = location.pathname;
+      // Rota mudou por fora da roleta (toque num ícone, card no Dashboard):
+      // a faixa desliza até centralizar o destino E a pílula faz a
+      // transferência ANIMADA NO TEMPO, igual ao desktop.
+      //
+      // Antes, esta linha era `anchorUrlRef.current = location.pathname`:
+      // a âncora pulava pro destino ANTES do scroll, então âncora ==
+      // candidato e a geometria virava idlePillGeom. A pílula só aparecia
+      // no destino, sem transferência nenhuma — nem o pescoço de 1 passo,
+      // nem o crossfade de salto longo. Era o "pula para a página do nada".
+      const from = anchorUrlRef.current;
+      const to = location.pathname;
       nearest.el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      updateMobilePill();
+
+      if (!from || from === to) {
+        anchorUrlRef.current = to;
+        updateMobilePill();
+        return;
+      }
+
+      // Enquanto esta animação roda, o scroll suave NÃO manda na pílula
+      // (senão os dois brigariam pelo mesmo estado a cada frame) — mas as
+      // posições continuam sendo remedidas ao vivo, então a pílula
+      // acompanha a faixa deslizando por baixo.
+      tapAnimRef.current = true;
+      const started = performance.now();
+      const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+      const tick = (now: number) => {
+        const scrollerNow = navRef.current;
+        if (!scrollerNow) {
+          tapAnimRef.current = false;
+          return;
+        }
+        const u = Math.min(1, (now - started) / MOBILE_TAP_MS);
+        const g = measureMobile(from, to, ease(u) * SWITCH_AT);
+        if (g) setMobilePill({ url: from, geom: g });
+        if (u < 1) {
+          tapRafRef.current = requestAnimationFrame(tick);
+        } else {
+          tapRafRef.current = null;
+          tapAnimRef.current = false;
+          anchorUrlRef.current = to;
+          candidateUrlRef.current = to;
+          updateMobilePill();
+        }
+      };
+      if (tapRafRef.current) cancelAnimationFrame(tapRafRef.current);
+      tapRafRef.current = requestAnimationFrame(tick);
     }
-  }, [isMobile, location.pathname, findNearest, updateMobilePill]);
+  }, [isMobile, location.pathname, findNearest, updateMobilePill, measureMobile, SWITCH_AT]);
 
   const onNavScroll = () => {
     if (!isMobile) return;
@@ -391,11 +515,15 @@ export const Header = () => {
     // faixa, em vez de só trocar quando o scroll assenta. Throttle via
     // rAF (não a cada evento de scroll bruto, que dispara dezenas de
     // vezes por frame durante inércia) pra não sobrecarregar.
-    if (!mobilePillRafRef.current) {
+    // Enquanto a animação de TOQUE roda, quem manda na pílula é o relógio
+    // dela — este scroll é o deslizar da própria faixa indo centralizar o
+    // destino, e se ele também escrevesse a geometria os dois brigariam
+    // pelo mesmo estado a cada frame.
+    if (!tapAnimRef.current && !mobilePillRafRef.current) {
       mobilePillRafRef.current = true;
       requestAnimationFrame(() => {
         mobilePillRafRef.current = false;
-        updateMobilePill();
+        if (!tapAnimRef.current) updateMobilePill();
       });
     }
 
@@ -415,6 +543,7 @@ export const Header = () => {
   useEffect(() => {
     return () => {
       if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+      if (tapRafRef.current) cancelAnimationFrame(tapRafRef.current);
     };
   }, []);
 
