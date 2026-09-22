@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, NodeToolbar, Position, type NodeProps } from '@xyflow/react';
-import { Spline, Minus, MoreHorizontal, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Bezier, Minus, More } from 'iconsax-react';
 import type { RateNodeData, FunnelNodeComputed } from '../../../types/funnel';
 import { formatNumber } from '../../../lib/format';
 import { useFunnelActions } from '../funnelContext';
@@ -23,7 +24,7 @@ function RateNodeImpl({ id, data, selected }: RateNodeProps) {
       <NodeToolbar position={Position.Top} isVisible={selected} className="nodrag nopan mb-1" offset={6}>
         <div className="flex overflow-hidden rounded-md border border-porceli-gray-700 bg-porceli-gray-900 shadow-lg">
           <ToolButton active={curve === 'bezier'} title="Linha curva" onClick={() => setStyle({ curve: 'bezier' })}>
-            <Spline size={13} />
+            <Bezier size={13} />
           </ToolButton>
           <ToolButton active={curve === 'straight'} title="Linha reta" onClick={() => setStyle({ curve: 'straight' })}>
             <Minus size={13} />
@@ -33,7 +34,7 @@ function RateNodeImpl({ id, data, selected }: RateNodeProps) {
             <Minus size={13} strokeWidth={3} />
           </ToolButton>
           <ToolButton active={dashed} title="Tracejada (indireto)" onClick={() => setStyle({ dashed: true })}>
-            <MoreHorizontal size={13} />
+            <More size={13} />
           </ToolButton>
           <span className="w-px bg-porceli-gray-700" />
           <ToolButton title="Remover conexão" onClick={() => deleteNode(id)}>

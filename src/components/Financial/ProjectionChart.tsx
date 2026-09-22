@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/area-charts-2";
-import { TrendingUp } from "lucide-react";
+import { TrendUp } from 'iconsax-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 interface ContractProjection {
@@ -217,7 +217,7 @@ export function ProjectionChart({ contracts = [], activeContractsCount, financia
         ) : (
           <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center opacity-20">
-              <TrendingUp className="w-8 h-8 text-white" />
+              <TrendUp className="w-8 h-8 text-white" />
             </div>
             <p className="text-white/20 text-sm font-medium">Nenhum dado disponível para exibir</p>
           </div>

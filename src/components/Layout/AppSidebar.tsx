@@ -1,18 +1,18 @@
-import { BarChart2, Filter, FileText, DollarSign, MessageSquare, Users, LogOut, Calendar, Zap, LayoutGrid, ChevronRight, Clock, Workflow } from "lucide-react";
+import { ArrowRight2, Calendar, Category, Chart2, Clock, DocumentText, DollarCircle, Filter, Flash, Hierarchy, Logout, MessageSquare, Profile2User } from 'iconsax-react';
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
+  { title: "Dashboard", url: "/dashboard", icon: Category },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
-  { title: "Mapas de Funil", url: "/funnel-maps", icon: Workflow },
-  { title: "Contratos", url: "/contracts", icon: FileText },
-  { title: "Financeiro", url: "/financial", icon: DollarSign },
+  { title: "Mapas de Funil", url: "/funnel-maps", icon: Hierarchy },
+  { title: "Contratos", url: "/contracts", icon: DocumentText },
+  { title: "Financeiro", url: "/financial", icon: DollarCircle },
 
-  { title: "Clientes", url: "/clients", icon: Users },
-  { title: "Automações",  url: "/automations",        icon: Zap   },
+  { title: "Clientes", url: "/clients", icon: Profile2User },
+  { title: "Automações",  url: "/automations",        icon: Flash   },
   { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
 ];
 
@@ -77,7 +77,7 @@ export function AppSidebar() {
                     layoutId="active-indicator"
                     className="ml-auto"
                   >
-                    <ChevronRight className="w-4 h-4 text-white/20" />
+                    <ArrowRight2 className="w-4 h-4 text-white/20" />
                   </motion.div>
                 )}
               </motion.div>
@@ -93,7 +93,7 @@ export function AppSidebar() {
           className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 group"
         >
           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-red-400/20">
-            <LogOut className="w-5 h-5" />
+            <Logout className="w-5 h-5" />
           </div>
           <span className="font-medium">Sair</span>
         </button>

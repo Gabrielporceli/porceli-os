@@ -1,6 +1,7 @@
 import { memo, useRef } from 'react';
 import type { NodeProps } from '@xyflow/react';
-import { ImageIcon, Upload, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Export, Image as ImageIcon } from 'iconsax-react';
 import type { ImageNodeData } from '../../../types/funnel';
 import { useFunnelActions } from '../funnelContext';
 
@@ -38,7 +39,7 @@ function ImageNodeImpl({ id, data }: ImageNodeProps) {
         >
           <ImageIcon size={22} />
           <span className="flex items-center gap-1 text-[11px]">
-            <Upload size={11} /> Enviar imagem
+            <Export size={11} /> Enviar imagem
           </span>
         </button>
       )}

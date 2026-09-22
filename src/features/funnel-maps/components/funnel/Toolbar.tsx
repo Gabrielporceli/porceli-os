@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Upload, Plus, Trash2, Check, ChevronDown } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { Add, ArrowDown2, Export, Import, Trash } from 'iconsax-react';
 import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import type { FunnelMap } from '../../types/funnel';
 
@@ -54,7 +55,7 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
             </option>
           ))}
         </select>
-        <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40" />
+        <ArrowDown2 size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40" />
       </div>
 
       <span className="flex items-center gap-1 text-[11px] text-white/40">
@@ -69,13 +70,13 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
 
       <div className="ml-auto flex items-center gap-2">
         <LiquidGlassButton onClick={onNew} className="h-9 px-4 text-xs font-medium">
-          <Plus size={13} /> Novo mapa
+          <Add size={13} /> Novo mapa
         </LiquidGlassButton>
         <LiquidGlassButton onClick={onExport} className="h-9 px-4 text-xs font-medium">
-          <Download size={13} /> Exportar
+          <Import size={13} /> Exportar
         </LiquidGlassButton>
         <LiquidGlassButton onClick={() => fileInputRef.current?.click()} className="h-9 px-4 text-xs font-medium">
-          <Upload size={13} /> Importar
+          <Export size={13} /> Importar
         </LiquidGlassButton>
         <input
           ref={fileInputRef}
@@ -95,7 +96,7 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
           title={maps.length <= 1 ? 'Mantenha ao menos um mapa' : 'Excluir mapa'}
           className="h-9 w-9 text-red-300"
         >
-          <Trash2 size={13} />
+          <Trash size={13} />
         </LiquidGlassButton>
       </div>
     </header>

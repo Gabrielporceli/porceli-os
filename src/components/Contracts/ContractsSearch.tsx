@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Filter, SearchNormal1 } from 'iconsax-react';
 
 interface ContractsSearchProps {
   searchTerm: string;
@@ -13,7 +13,7 @@ export function ContractsSearch({ searchTerm, onSearchChange, onFiltersOpen }: C
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+        <SearchNormal1 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
         <Input
           placeholder="Buscar contratos..."
           className="pl-10 bg-Porceli-gray-800 border-Porceli-gray-600 text-white placeholder:text-white/50"

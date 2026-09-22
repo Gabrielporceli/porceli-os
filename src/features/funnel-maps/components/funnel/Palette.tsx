@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from 'react';
-import { Search, StickyNote, Image as ImageIcon, LineChart, Plus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Add, Chart, Image as ImageIcon, SearchNormal1, SidebarLeft, SidebarRight, Stickynote } from 'iconsax-react';
 import { ElementIcon } from './ElementIcon';
 import {
   ELEMENT_LIBRARY,
@@ -64,17 +64,17 @@ export function Palette({ onDragStart }: PaletteProps) {
         title="Mostrar elementos"
         className="flex w-9 shrink-0 flex-col items-center border-r border-white/5 pt-3 text-white/40 hover:text-white"
       >
-        <PanelLeftOpen size={16} />
+        <SidebarRight size={16} />
       </button>
     );
   }
 
   return (
     <aside className="flex w-72 shrink-0 flex-col border-r border-white/5 text-white">
-      {/* Search + collapse */}
+      {/* SearchNormal1 + collapse */}
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
-          <Search size={13} className="shrink-0 text-white/40" />
+          <SearchNormal1 size={13} className="shrink-0 text-white/40" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -88,7 +88,7 @@ export function Palette({ onDragStart }: PaletteProps) {
           title="Recolher painel"
           className="shrink-0 text-white/40 hover:text-white"
         >
-          <PanelLeftClose size={15} />
+          <SidebarLeft size={15} />
         </button>
       </div>
 
@@ -133,7 +133,7 @@ export function Palette({ onDragStart }: PaletteProps) {
               className="flex w-16 cursor-grab flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/5 active:cursor-grabbing"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-white/20 text-white/40">
-                <Plus size={18} />
+                <Add size={18} />
               </span>
               <span className="w-full truncate text-center text-[9px] leading-tight text-white/50">Criar</span>
             </div>
@@ -142,9 +142,9 @@ export function Palette({ onDragStart }: PaletteProps) {
           {/* Tools */}
           <Section title="Ferramentas">
             <div className="flex flex-wrap gap-1.5">
-              <ToolChip icon={StickyNote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
+              <ToolChip icon={Stickynote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
               <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
-              <ToolChip icon={LineChart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
+              <ToolChip icon={Chart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
             </div>
           </Section>
         </div>
@@ -195,7 +195,7 @@ function ToolChip({
   className,
   onDragStart,
 }: {
-  icon: typeof StickyNote;
+  icon: typeof Stickynote;
   label: string;
   className: string;
   onDragStart: (event: DragEvent) => void;

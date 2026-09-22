@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Add } from 'iconsax-react';
 import { motion } from "framer-motion";
 
 interface ClientsHeaderProps {

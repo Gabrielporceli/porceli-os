@@ -8,13 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Edit,
-  EllipsisVertical,
-  GripVertical,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { GripVertical } from 'lucide-react';
+import { Add, Edit, More2, Trash } from 'iconsax-react';
 
 import {
   ContextMenu,
@@ -682,7 +677,7 @@ export default function LeadsKanban() {
                         onClick={() => handleEditStage(stage)}
                         data-no-pan
                       >
-                        <EllipsisVertical className="w-4 h-4" />
+                        <More2 className="w-4 h-4" />
                       </Button>
                     </motion.div>
                   </div>
@@ -759,7 +754,7 @@ export default function LeadsKanban() {
                                             }}
                                             title="Editar Lead"
                                           >
-                                            <EllipsisVertical className="w-5 h-5" />
+                                            <More2 className="w-5 h-5" />
                                           </button>
 
                                         </div>
@@ -811,7 +806,7 @@ export default function LeadsKanban() {
                                       }}
                                       className="text-red-400 data-[highlighted]:bg-white/[0.05] data-[highlighted]:text-red-400"
                                     >
-                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      <Trash className="w-4 h-4 mr-2" />
                                       Excluir Lead
                                     </ContextMenuItem>
                                   </ContextMenuContent>

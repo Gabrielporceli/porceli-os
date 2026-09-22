@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/area-charts-2';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Eye, ShoppingCart, Store, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
+import { Card as CreditCard, DollarCircle, Eye, Shop, ShoppingCart, TrendDown, TrendUp } from 'iconsax-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -229,7 +229,7 @@ export function RevenueYoYChart({
                             'inline-flex items-center gap-1 text-xs font-medium',
                             yoyGrowth >= 0 ? 'text-green-500' : 'text-red-500'
                           )}>
-                            {yoyGrowth >= 0 ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+                            {yoyGrowth >= 0 ? <TrendUp className="size-4" /> : <TrendDown className="size-4" />}
                             {Math.abs(Math.round(yoyGrowth))}%
                           </span>
                         )}

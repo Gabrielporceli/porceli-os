@@ -15,31 +15,8 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import {
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  RefreshCw, 
-  ExternalLink, 
-  BookOpen, 
-  Loader2, 
-  AlertCircle, 
-  CheckCircle2, 
-  Trash2,
-  Edit,
-  Clock,
-  MoreVertical,
-  CheckCircle,
-  Save,
-  Lock,
-  LockIcon,
-  LockOpenIcon,
-  Unlock,
-  Repeat,
-  Tag,
-  GripVertical
-} from "lucide-react";
+import { Loader2, GripVertical, Save } from 'lucide-react';
+import { Add, ArrowLeft2, ArrowRight2, Book1, Calendar as CalendarIcon, Clock, Edit, ExportSquare, Lock, More2, Refresh, Repeat, Tag, TickCircle, Trash, Unlock, Warning2 } from 'iconsax-react';
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
@@ -1124,7 +1101,7 @@ export default function Calendar() {
               >
                 {(googleConnected ? loadingGoogle : connectingGoogle)
                   ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <RefreshCw className="w-4 h-4" />}
+                  : <Refresh className="w-4 h-4" />}
                 Google
               </LiquidGlassButton>
 
@@ -1136,7 +1113,7 @@ export default function Calendar() {
               >
                 {(notionConnected ? loadingNotion : connectingNotion)
                   ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <RefreshCw className="w-4 h-4" />}
+                  : <Refresh className="w-4 h-4" />}
                 Notion
               </LiquidGlassButton>
             </div>
@@ -1165,7 +1142,7 @@ export default function Calendar() {
               title="Dia anterior"
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ArrowLeft2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPanelDate(new Date())}
@@ -1179,7 +1156,7 @@ export default function Calendar() {
               title="Próximo dia"
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ArrowRight2 className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -1452,7 +1429,7 @@ export default function Calendar() {
                             whileTap={{ scale: 0.9 }}
                             className="text-white/20 hover:text-primary transition-all flex-shrink-0 flex items-center mb-1"
                           >
-                             <ExternalLink className="w-3.5 h-3.5" />
+                             <ExportSquare className="w-3.5 h-3.5" />
                           </motion.a>
                         )}
                       </div>
@@ -1530,8 +1507,8 @@ export default function Calendar() {
               <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>
                 <div className="flex items-center gap-2">
                   {selectedDay && isDayLocked(selectedDay)
-                    ? <LockIcon className="w-4 h-4 text-red-400" />
-                    : <LockOpenIcon className="w-4 h-4 text-white/60" />}
+                    ? <Lock className="w-4 h-4 text-red-400" />
+                    : <Unlock className="w-4 h-4 text-white/60" />}
                   <span className={`text-xs font-bold uppercase tracking-wider ${selectedDay && isDayLocked(selectedDay) ? 'text-red-400' : 'text-white/70'}`}>
                     {selectedDay && isDayLocked(selectedDay) ? 'Dia Trancado' : 'Trancar Dia'}
                   </span>
@@ -1831,7 +1808,7 @@ export default function Calendar() {
                        }}
                        className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-10 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
                      >
-                       <CheckCircle className="w-4 h-4 text-white/40 group-hover:text-green-500 transition-colors" />
+                       <TickCircle className="w-4 h-4 text-white/40 group-hover:text-green-500 transition-colors" />
                        <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Realizado</span>
                      </button>
                    </motion.div>
@@ -1899,7 +1876,7 @@ export default function Calendar() {
                   className="h-11 w-11"
                   title="Excluir Atividade"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash className="w-5 h-5" />
                 </LiquidGlassButton>
               </motion.div>
             </div>
@@ -1911,7 +1888,7 @@ export default function Calendar() {
         <AlertDialogContent className="liquid-glass border-white/10 shadow-2xl text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
+              <Warning2 className="w-5 h-5 text-red-500" />
               Confirmar Exclusão
             </AlertDialogTitle>
             <AlertDialogDescription className="text-white/70">

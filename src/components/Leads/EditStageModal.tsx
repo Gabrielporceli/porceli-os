@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Stage } from "@/hooks/useStages";
-import { Save, Trash2 } from "lucide-react";
+import { Save } from 'lucide-react';
+import { Trash } from 'iconsax-react';
 
 interface EditStageModalProps {
   open: boolean;
@@ -172,7 +173,7 @@ export function EditStageModal({
                   className="h-12 w-12"
                   title="Excluir Etapa"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash className="w-5 h-5" />
                 </LiquidGlassButton>
               </motion.div>
             )}

@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { FileText, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Clock, CloseCircle, DocumentText, TickCircle } from 'iconsax-react';
 
 interface Contract {
   id: number;
@@ -28,7 +28,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
       <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-Porceli-purple/20 rounded-lg flex items-center justify-center">
-            <FileText className="w-6 h-6 text-Porceli-purple" />
+            <DocumentText className="w-6 h-6 text-Porceli-purple" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{contracts.length}</p>
@@ -40,7 +40,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
       <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center">
-            <CheckCircle className="w-6 h-6 text-green-400" />
+            <TickCircle className="w-6 h-6 text-green-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{activeContracts}</p>
@@ -64,7 +64,7 @@ export function ContractsKPIs({ contracts }: ContractsKPIsProps) {
       <Card className="bg-Porceli-gray-800 border-Porceli-gray-700 p-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center">
-            <FileText className="w-6 h-6 text-blue-400" />
+            <DocumentText className="w-6 h-6 text-blue-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">

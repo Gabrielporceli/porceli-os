@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, AlertCircle, TrendingDown, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Add as Plus, ArrowDown2, ArrowRight2, DollarCircle, TrendDown, TrendUp, Warning2 } from 'iconsax-react';
 import { FinancialKPIs } from "@/components/Financial/FinancialKPIs";
 import { FinancialHeader } from "@/components/Financial/FinancialHeader";
 import { ExpenseModal } from "@/components/Financial/ExpenseModal";
@@ -361,8 +361,8 @@ export default function Financial() {
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="flex-shrink-0">
                           {isExpanded
-                            ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
-                            : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            ? <ArrowDown2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            : <ArrowRight2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                           }
                         </div>
                         <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
@@ -473,7 +473,7 @@ export default function Financial() {
             </div>
           ) : normalEntries.length === 0 ? (
             <div className="text-center py-8">
-              <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+              <TrendDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
               <p className="text-white/50">Nenhum lançamento encontrado</p>
             </div>
           ) : (
@@ -568,7 +568,7 @@ export default function Financial() {
             if (filteredExpenses.length === 0) {
               return (
                 <div className="text-center py-8">
-                  <TrendingDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                  <TrendDown className="w-16 h-16 text-white/40 mx-auto mb-4" />
                   <p className="text-white/50">Nenhuma despesa encontrada</p>
                 </div>
               );

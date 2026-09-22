@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Mail, Lock, Eye, EyeClosed, ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye, EyeSlash, Lock, Sms } from 'iconsax-react';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -132,7 +132,7 @@ const Login = () => {
                       <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300 z-10 ${
                         focusedInput === "email" ? 'text-porceli-purple' : 'text-white/40'
                       }`}>
-                        <Mail className="w-4 h-4" />
+                        <Sms className="w-4 h-4" />
                       </div>
                       <input
                         type="email"
@@ -178,7 +178,7 @@ const Login = () => {
                         {showPassword ? (
                           <Eye className="w-4 h-4 text-white/40 hover:text-porceli-purple transition-colors duration-300" />
                         ) : (
-                          <EyeClosed className="w-4 h-4 text-white/40 hover:text-porceli-purple transition-colors duration-300" />
+                          <EyeSlash className="w-4 h-4 text-white/40 hover:text-porceli-purple transition-colors duration-300" />
                         )}
                       </button>
                     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Loader2, CreditCard, Landmark, QrCode, CheckSquare, Square } from "lucide-react";
+import { Loader2, Square } from 'lucide-react';
+import { Bank, Card as CreditCard, Scan, TickSquare } from 'iconsax-react';
 import { Switch } from "@/components/ui/switch";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Label } from "@/components/ui/label";
@@ -37,8 +38,8 @@ interface RenegotiationModalProps {
 }
 
 const BILLING_OPTIONS = [
-  { value: "BOLETO",      label: "Boleto Bancário",  icon: Landmark },
-  { value: "PIX",         label: "PIX",              icon: QrCode },
+  { value: "BOLETO",      label: "Boleto Bancário",  icon: Bank },
+  { value: "PIX",         label: "PIX",              icon: Scan },
   { value: "CREDIT_CARD", label: "Cartão de Crédito", icon: CreditCard },
 ] as const;
 
@@ -387,7 +388,7 @@ export function RenegotiationModal({
                       )}
                     >
                       {selected
-                        ? <CheckSquare className="w-4 h-4 text-white/70 flex-shrink-0" />
+                        ? <TickSquare className="w-4 h-4 text-white/70 flex-shrink-0" />
                         : <Square className="w-4 h-4 text-white/20 flex-shrink-0" />
                       }
                       <div className="flex-1 min-w-0">

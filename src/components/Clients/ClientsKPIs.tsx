@@ -1,6 +1,6 @@
 
 import { StatsCard } from "@/components/Dashboard/StatsCard";
-import { Building2 } from "lucide-react";
+import { Building } from 'iconsax-react';
 
 interface Client {
   id: string;
@@ -27,25 +27,25 @@ export function ClientsKPIs({ clients }: ClientsKPIsProps) {
       <StatsCard
         title="Total de Clientes"
         value={clients.length}
-        icon={Building2}
+        icon={Building}
         className="[animation-delay:100ms]"
       />
       <StatsCard
         title="Clientes Ativos"
         value={clients.filter(c => c.tags.includes("Ativo")).length}
-        icon={Building2}
+        icon={Building}
         className="[animation-delay:200ms]"
       />
       <StatsCard
         title="Contratos A Vencer"
         value={clients.filter(c => c.tags.includes("A vencer")).length}
-        icon={Building2}
+        icon={Building}
         className="[animation-delay:300ms]"
       />
       <StatsCard
         title="Clientes Inativos"
         value={clients.filter(c => c.tags.includes("Inativo") || c.tags.includes("Vencido")).length}
-        icon={Building2}
+        icon={Building}
         className="[animation-delay:400ms]"
       />
     </div>

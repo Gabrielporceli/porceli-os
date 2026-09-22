@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { AlertTriangle, Clock, DollarSign, FileText } from "lucide-react";
+import { Clock, Danger, DocumentText, DollarCircle } from 'iconsax-react';
 import { cn } from "@/lib/utils";
 
 export interface Alert {
@@ -20,13 +20,13 @@ interface AlertCardProps {
 const getAlertIcon = (type: Alert['type']) => {
   switch (type) {
     case 'danger':
-      return <DollarSign className="w-4 h-4" />;
+      return <DollarCircle className="w-4 h-4" />;
     case 'warning':
-      return <FileText className="w-4 h-4" />;
+      return <DocumentText className="w-4 h-4" />;
     case 'info':
       return <Clock className="w-4 h-4" />;
     default:
-      return <AlertTriangle className="w-4 h-4" />;
+      return <Danger className="w-4 h-4" />;
   }
 };
 
@@ -42,7 +42,7 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
       <div className="overflow-y-auto overflow-x-hidden max-h-[560px] scrollbar-hide">
         {alertsToShow.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 opacity-30">
-            <AlertTriangle className="w-12 h-12 mb-2" />
+            <Danger className="w-12 h-12 mb-2" />
             <p className="text-sm text-white">Sem alertas no momento</p>
           </div>
         ) : (

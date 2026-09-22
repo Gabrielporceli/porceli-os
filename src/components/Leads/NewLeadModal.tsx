@@ -7,7 +7,8 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Calendar, CalendarOff } from "lucide-react";
+import { X } from 'lucide-react';
+import { Add, Calendar, CalendarRemove } from 'iconsax-react';
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -321,7 +322,7 @@ export function NewLeadModal({
               onClick={handleCancelMeeting}
               className="border-red-500/30 text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-all rounded-lg gap-2"
             >
-              <CalendarOff className="w-3.5 h-3.5" />
+              <CalendarRemove className="w-3.5 h-3.5" />
               Limpar
             </Button>
           </div>
@@ -352,7 +353,7 @@ export function NewLeadModal({
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <LiquidGlassButton tint="primary" onClick={handleSubmit} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
-              <Plus className="w-5 h-5 mr-2" />
+              <Add className="w-5 h-5 mr-2" />
               Criar Lead
             </LiquidGlassButton>
           </motion.div>

@@ -1,5 +1,5 @@
 import type { Node } from '@xyflow/react';
-import { Trash2 } from 'lucide-react';
+import { Trash } from 'iconsax-react';
 import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import { CATEGORY_DEFS, findVariant, type FunnelNodeCategory, type FunnelNodeComputed, type FunnelNodeData } from '../../types/funnel';
 import { formatCurrency, formatNumber } from '../../lib/format';
@@ -129,7 +129,7 @@ export function PropertiesPanel({ node, onUpdate, onDelete }: PropertiesPanelPro
         </div>
 
         <LiquidGlassButton tint="danger" onClick={() => onDelete(node.id)} className="h-9 text-xs font-medium text-red-300">
-          <Trash2 size={13} /> Remover elemento
+          <Trash size={13} /> Remover elemento
         </LiquidGlassButton>
       </div>
     </aside>

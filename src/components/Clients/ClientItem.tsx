@@ -1,6 +1,6 @@
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Phone, Mail, Calendar, Hash, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowDown2, ArrowRight2, Building, Calendar, Call, Hashtag, Sms } from 'iconsax-react';
 import { usePlansContext } from "@/contexts/PlansContext";
 import { motion } from "framer-motion";
 
@@ -95,9 +95,9 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
         <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
           <div className="flex-shrink-0 mt-1 sm:mt-0">
             {isExpanded ? (
-              <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+              <ArrowDown2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
             ) : (
-              <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+              <ArrowRight2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
             )}
           </div>
 
@@ -164,7 +164,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Building2 className="w-4 h-4 text-primary" />
+                    <Building className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1">
                     <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">CNPJ</span>
@@ -174,7 +174,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Phone className="w-4 h-4 text-primary" />
+                    <Call className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1">
                     <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Responsável</span>
@@ -184,7 +184,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Phone className="w-4 h-4 text-primary" />
+                    <Call className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1">
                     <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Telefone</span>
@@ -194,7 +194,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
 
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Hash className="w-4 h-4 text-primary" />
+                    <Hashtag className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1">
                     <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Grupo ID</span>
@@ -206,7 +206,7 @@ export function ClientItem({ client, isExpanded, onToggleExpanded, onEdit, onDel
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <Mail className="w-4 h-4 text-primary" />
+                    <Sms className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1">
                     <span className="text-white/40 text-[10px] uppercase font-black tracking-widest block mb-1">Email</span>

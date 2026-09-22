@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format, addDays, differenceInDays } from "date-fns";
-import { FileText, DollarSign, AlertCircle } from "lucide-react";
+import { DocumentText, DollarCircle, Warning2 } from 'iconsax-react';
 import {
   Dialog,
   DialogContent,
@@ -157,7 +157,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Contrato Vigente</span>
-                                    <FileText className="w-4 h-4 text-white/20" />
+                                    <DocumentText className="w-4 h-4 text-white/20" />
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                     <div className="space-y-1">
@@ -209,7 +209,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                                         {singlePayment ? "Valor Total (R$)" : "Novo Valor Mensal (R$)"}
                                     </Label>
                                     <div className="relative group">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
+                                        <DollarCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-yellow-500 transition-colors" />
                                         <Input
                                             id="monthlyValue"
                                             type="text"
@@ -291,7 +291,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             />
 
                             <div className="flex items-start gap-4 p-5 rounded-2xl bg-yellow-500/5 border border-yellow-500/10">
-                                <AlertCircle className="w-5 h-5 text-yellow-500/60 mt-0.5 shrink-0" />
+                                <Warning2 className="w-5 h-5 text-yellow-500/60 mt-0.5 shrink-0" />
                                 <p className="text-[11px] text-white/40 leading-relaxed font-medium">
                                     Esta ação criará um <span className="text-white/70">novo contrato ativo</span>. O contrato anterior <span className="text-white/70">permanecerá ativo</span> até seu término. Novas faturas financeiras serão geradas automaticamente.
                                 </p>

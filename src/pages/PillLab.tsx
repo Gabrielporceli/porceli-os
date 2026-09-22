@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LayoutGrid, Calendar, Filter, Users, FileText, DollarSign, Zap, Clock, Globe, LogOut } from "lucide-react";
+import { Calendar, Category, Clock, DocumentText, DollarCircle, Filter, Flash, Global as Globe, Logout, Profile2User } from 'iconsax-react';
 import { cn } from "@/lib/utils";
 import { appBackgroundStyle } from "@/lib/appBackground";
 import {
@@ -36,7 +36,7 @@ const GAP = MOBILE_GAP;
 const PITCH = SLOT + GAP;
 const WINDOW_W = MOBILE_WINDOW;
 
-const ICONS = [LayoutGrid, Calendar, Filter, Users, FileText, DollarSign, Zap, Clock];
+const ICONS = [Category, Calendar, Filter, Profile2User, DocumentText, DollarCircle, Flash, Clock];
 
 type TuneKey = keyof PillTuning;
 const TUNE_META: { key: TuneKey; label: string; hint: string; min: number; max: number; step: number }[] = [
@@ -121,7 +121,7 @@ export default function PillLab() {
 
   // Ícones ao redor (índice 0 = âncora, 1 = candidato).
   const icons = useMemo(() => {
-    const list: { k: number; Icon: typeof LayoutGrid; x: number }[] = [];
+    const list: { k: number; Icon: typeof Category; x: number }[] = [];
     const range = desktop ? [0, dist + 1] : [-3, 4];
     for (let k = range[0]; k <= range[1]; k++) {
       const c = anchorC + (desktop ? 1 : dir) * k * PITCH;
@@ -205,7 +205,7 @@ export default function PillLab() {
               </div>
 
               <div className="flex items-center shrink-0 pl-1.5 border-l border-white/5">
-                <LogOut className="w-5 h-5 text-white/40" />
+                <Logout className="w-5 h-5 text-white/40" />
               </div>
             </div>
           </div>

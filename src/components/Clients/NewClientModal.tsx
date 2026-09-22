@@ -18,7 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { Users, Plus, X, ChevronDown } from "lucide-react";
+import { X } from 'lucide-react';
+import { Add, ArrowDown2, Profile2User } from 'iconsax-react';
 import { motion } from "framer-motion";
 import { ColorPicker } from "./ColorPicker";
 import { usePlansContext } from "@/contexts/PlansContext";

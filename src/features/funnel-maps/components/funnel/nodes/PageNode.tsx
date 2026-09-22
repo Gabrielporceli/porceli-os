@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import type { NodeProps } from '@xyflow/react';
-import { RefreshCw } from 'lucide-react';
+import { Refresh } from 'iconsax-react';
 import { CATEGORY_DEFS, findVariant, type FunnelNodeData, type FunnelNodeComputed } from '../../../types/funnel';
 import { useFunnelActions } from '../funnelContext';
 import { NodeMetrics } from './NodeMetrics';
@@ -116,7 +116,7 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
                 className="nodrag shrink-0 text-porceli-gray-400 hover:text-porceli-gray-700"
                 title="Verificar novamente"
               >
-                <RefreshCw size={9} className={siteStatus === 'checking' ? 'animate-spin' : ''} />
+                <Refresh size={9} className={siteStatus === 'checking' ? 'animate-spin' : ''} />
               </button>
             </>
           )}

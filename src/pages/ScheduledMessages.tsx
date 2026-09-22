@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Clock, Send, Users, MessageSquare, Phone,
-  CheckCircle2, AlertCircle, Ban, Loader2,
-} from "lucide-react";
+import { Loader2 } from 'lucide-react';
+import { Call, Clock, Forbidden, MessageSquare, Profile2User, Send2, TickCircle, Warning2 } from 'iconsax-react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -61,9 +59,9 @@ function formatDateTimeBRT(iso: string): string {
 
 const STATUS_CONFIG: Record<MessageStatus, { label: string; icon: React.ElementType; className: string }> = {
   pending:   { label: "Agendada",  icon: Clock,         className: "bg-amber-500/15 text-amber-400 border-amber-500/20" },
-  sent:      { label: "Enviada",   icon: CheckCircle2,  className: "bg-green-500/15 text-green-400 border-green-500/20" },
-  failed:    { label: "Falhou",    icon: AlertCircle,   className: "bg-red-500/15 text-red-400 border-red-500/20" },
-  cancelled: { label: "Cancelada", icon: Ban,           className: "bg-white/10 text-white/40 border-white/10" },
+  sent:      { label: "Enviada",   icon: TickCircle,  className: "bg-green-500/15 text-green-400 border-green-500/20" },
+  failed:    { label: "Falhou",    icon: Warning2,   className: "bg-red-500/15 text-red-400 border-red-500/20" },
+  cancelled: { label: "Cancelada", icon: Forbidden,           className: "bg-white/10 text-white/40 border-white/10" },
 };
 
 const RECIPIENT_LABELS: Record<RecipientType, string> = {
@@ -201,8 +199,8 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                         : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     )}
                   >
-                    {type === "responsible" && <><Phone className="w-3 h-3 inline mr-1" />Responsável</>}
-                    {type === "group"       && <><Users className="w-3 h-3 inline mr-1" />Grupo</>}
+                    {type === "responsible" && <><Call className="w-3 h-3 inline mr-1" />Responsável</>}
+                    {type === "group"       && <><Profile2User className="w-3 h-3 inline mr-1" />Grupo</>}
                     {type === "custom"      && <><MessageSquare className="w-3 h-3 inline mr-1" />Avulso</>}
                   </button>
                 ))}
@@ -284,7 +282,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
             >
               {isCreating
                 ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <><Send className="w-4 h-4 mr-1.5" />Agendar</>}
+                : <><Send2 className="w-4 h-4 mr-1.5" />Agendar</>}
             </LiquidGlassButton>
           </motion.div>
         </div>

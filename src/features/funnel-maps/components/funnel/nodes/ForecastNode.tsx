@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { NodeProps } from '@xyflow/react';
-import { LineChart, Users, DollarSign, Wallet, TrendingUp, Percent, Target, UserCheck, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Chart, DollarCircle, Gps, PercentageSquare, Profile2User, TrendUp, UserTick, Wallet } from 'iconsax-react';
 import type { ForecastSummary } from '../../../lib/funnelMath';
 import { formatCurrency, formatNumber } from '../../../lib/format';
 import { useFunnelActions } from '../funnelContext';
@@ -14,7 +15,7 @@ function ForecastNodeImpl({ id, data }: ForecastNodeProps) {
   return (
     <div className="group nodrag w-80 rounded-xl border border-porceli-gray-700 bg-porceli-gray-900 shadow-xl">
       <div className="flex items-center gap-1.5 border-b border-porceli-gray-800 px-3 py-2">
-        <LineChart size={14} className="text-porceli-purpleLight" />
+        <Chart size={14} className="text-porceli-purpleLight" />
         <span className="flex-1 text-xs font-semibold text-porceli-gray-200">Forecast</span>
         <button
           type="button"
@@ -26,16 +27,16 @@ function ForecastNodeImpl({ id, data }: ForecastNodeProps) {
         </button>
       </div>
       <div className="grid grid-cols-2 gap-px bg-porceli-gray-800">
-        <Stat icon={Users} color="#0ea5e9" label="Pessoas" value={formatNumber(s.people)} />
-        <Stat icon={UserCheck} color="#f59e0b" label="Leads / Conversões" value={formatNumber(s.leads)} />
-        <Stat icon={DollarSign} color="#22c55e" label="Receita" value={formatCurrency(s.revenue)} />
+        <Stat icon={Profile2User} color="#0ea5e9" label="Pessoas" value={formatNumber(s.people)} />
+        <Stat icon={UserTick} color="#f59e0b" label="Leads / Conversões" value={formatNumber(s.leads)} />
+        <Stat icon={DollarCircle} color="#22c55e" label="Receita" value={formatCurrency(s.revenue)} />
         <Stat icon={Wallet} color="#ef4444" label="Investimento" value={formatCurrency(s.expenses)} />
-        <Stat icon={Target} color="#0ea5e9" label="Custo / lead" value={s.cpl === null ? '—' : formatCurrency(s.cpl)} />
-        <Stat icon={TrendingUp} color="#6829c0" label="Lucro" value={formatCurrency(s.profit)} />
+        <Stat icon={Gps} color="#0ea5e9" label="Custo / lead" value={s.cpl === null ? '—' : formatCurrency(s.cpl)} />
+        <Stat icon={TrendUp} color="#6829c0" label="Lucro" value={formatCurrency(s.profit)} />
       </div>
       <div className="flex items-center justify-between border-t border-porceli-gray-800 px-3 py-2">
         <span className="flex items-center gap-1.5 text-[11px] text-porceli-gray-400">
-          <Percent size={12} /> Retorno sobre investimento
+          <PercentageSquare size={12} /> Retorno sobre investimento
         </span>
         <span className="text-sm font-bold text-porceli-gray-100">{s.roi === null ? '—' : `${s.roi.toFixed(2)}x`}</span>
       </div>
@@ -49,7 +50,7 @@ function Stat({
   label,
   value,
 }: {
-  icon: typeof Users;
+  icon: typeof Profile2User;
   color: string;
   label: string;
   value: string;

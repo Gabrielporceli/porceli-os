@@ -15,7 +15,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X, FileText, DollarSign, Landmark, QrCode, CreditCard } from "lucide-react";
+import { X } from 'lucide-react';
+import { Bank, Card as CreditCard, DocumentText, DollarCircle, Scan } from 'iconsax-react';
 import { useClients } from "@/hooks/useClients";
 import { ContractBillingPreview } from "./ContractBillingPreview";
 
@@ -225,7 +226,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                       {singlePayment ? "Valor Total (R$) *" : "Valor Mensal (R$) *"}
                     </Label>
                     <div className="relative group">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                      <DollarCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                       <Input
                         id="monthly_value"
                         type="text"
@@ -343,8 +344,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
               <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Forma de Pagamento</Label>
               <div className="grid grid-cols-3 gap-2">
                 {([
-                  { value: "BOLETO",      label: "Boleto",  Icon: Landmark  },
-                  { value: "PIX",         label: "PIX",     Icon: QrCode    },
+                  { value: "BOLETO",      label: "Boleto",  Icon: Bank  },
+                  { value: "PIX",         label: "PIX",     Icon: Scan    },
                   { value: "CREDIT_CARD", label: "Cartão",  Icon: CreditCard },
                 ] as const).map(({ value, label, Icon }) => (
                   <button

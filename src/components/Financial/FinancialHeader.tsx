@@ -1,5 +1,5 @@
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { RefreshCw } from "lucide-react";
+import { Refresh } from 'iconsax-react';
 import { motion } from "framer-motion";
 
 interface FinancialHeaderProps {
@@ -26,7 +26,7 @@ export function FinancialHeader({ onNewTransaction, onSync, isSyncing }: Financi
               title="Gerar e Atualizar Lançamentos Faltantes"
               className="w-11 h-11"
             >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
+              <Refresh className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
             </LiquidGlassButton>
           </motion.div>
         )}

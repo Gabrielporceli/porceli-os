@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/Dashboard/StatsCard";
-import { FileText, Calendar, DollarSign, AlertTriangle, Settings, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowDown2, ArrowRight2, Calendar, Danger, DocumentText, DollarCircle, ExportSquare, Setting2 } from 'iconsax-react';
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
@@ -313,17 +313,17 @@ export default function Contracts() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatsCard title="Total de Contratos" value={contracts.length} icon={FileText} className="[animation-delay:100ms]" />
-        <StatsCard title="Contratos Ativos" value={activeContracts.length} icon={FileText} className="[animation-delay:200ms]" />
-        <StatsCard title="A Vencer" value={expiringContracts.length} icon={AlertTriangle} className="[animation-delay:300ms]" />
-        <StatsCard title="Inativos" value={inactiveContracts.length} icon={FileText} className="[animation-delay:400ms]" />
+        <StatsCard title="Total de Contratos" value={contracts.length} icon={DocumentText} className="[animation-delay:100ms]" />
+        <StatsCard title="Contratos Ativos" value={activeContracts.length} icon={DocumentText} className="[animation-delay:200ms]" />
+        <StatsCard title="A Vencer" value={expiringContracts.length} icon={Danger} className="[animation-delay:300ms]" />
+        <StatsCard title="Inativos" value={inactiveContracts.length} icon={DocumentText} className="[animation-delay:400ms]" />
       </div>
 
       {/* Expiring Contracts Alert */}
       {expiringContracts.length > 0 && (
         <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
           <div className="p-6 border-b border-white/5 flex items-center gap-3">
-            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <Danger className="w-4 h-4 text-yellow-500" />
             <h3 className="text-xl font-bold text-white tracking-tight">Atenção Prioritária</h3>
           </div>
           <div className="divide-y divide-white/5">
@@ -374,7 +374,7 @@ export default function Contracts() {
         {contracts.length === 0 ? (
           <div className="p-20 text-center">
             <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
-              <FileText className="w-10 h-10 text-white/20" />
+              <DocumentText className="w-10 h-10 text-white/20" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
             <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
@@ -402,8 +402,8 @@ export default function Contracts() {
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="flex-shrink-0">
                           {isExpanded
-                            ? <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
-                            : <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            ? <ArrowDown2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+                            : <ArrowRight2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                           }
                         </div>
                         <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
@@ -437,7 +437,7 @@ export default function Contracts() {
                           className="text-white/20 hover:text-primary transition-all p-1 shrink-0 flex items-center justify-center mb-1"
                           title="Abrir contrato"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExportSquare className="w-3.5 h-3.5" />
                         </motion.a>
                       )}
                     </div>
@@ -446,7 +446,7 @@ export default function Contracts() {
                   <div>
                     <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
                     <div className="flex items-center gap-2">
-                      <DollarSign className={cn(
+                      <DollarCircle className={cn(
                         "w-3.5 h-3.5 opacity-50",
                         contract.status === 'active' && "text-green-500",
                         contract.status === 'concluded' && "text-blue-500",

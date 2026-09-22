@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { Search, Filter } from "lucide-react";
+import { Filter, SearchNormal1 } from 'iconsax-react';
 import { motion } from "framer-motion";
 
 interface ClientsSearchProps {
@@ -15,7 +15,7 @@ export function ClientsSearch({ searchTerm, onSearchChange, onFiltersOpen, onNew
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
+        <SearchNormal1 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
         <Input
           placeholder="Buscar clientes..."
           className="pl-10 bg-white/[0.03] border-white/5 text-white placeholder:text-white/40 h-11 rounded-xl transition-all"

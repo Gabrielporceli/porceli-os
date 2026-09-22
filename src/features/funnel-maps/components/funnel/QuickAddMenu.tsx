@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { SearchNormal1 } from 'iconsax-react';
 import { ElementIcon } from './ElementIcon';
 import { ALL_VARIANTS, CATEGORY_DEFS, type FunnelNodeCategory } from '../../types/funnel';
 
@@ -31,7 +31,7 @@ export function QuickAddMenu({ x, y, onPick, onClose }: QuickAddMenuProps) {
         style={{ left, top }}
       >
         <div className="flex items-center gap-2 border-b border-white/5 px-2.5 py-2">
-          <Search size={13} className="text-white/40" />
+          <SearchNormal1 size={13} className="text-white/40" />
           <input
             autoFocus
             value={query}

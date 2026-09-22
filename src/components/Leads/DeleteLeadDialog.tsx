@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, X, AlertTriangle, Users } from "lucide-react";
+import { X } from 'lucide-react';
+import { Danger, Profile2User, Trash } from 'iconsax-react';
 import ReactDOM from "react-dom";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { Lead } from "@/hooks/useLeads";
@@ -83,7 +84,7 @@ export function DeleteLeadDialog({
         <div className="flex items-center justify-between p-4 border-b border-white/[0.05]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-              <Trash2 className="w-5 h-5 text-red-400" />
+              <Trash className="w-5 h-5 text-red-400" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white leading-tight">Excluir Lead</h2>
@@ -106,7 +107,7 @@ export function DeleteLeadDialog({
           {/* Warning Section */}
           <div className="bg-red-600/10 border border-red-600/20 rounded-xl p-3">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+              <Danger className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
               <div className="space-y-1">
                 <h3 className="font-semibold text-red-400 text-sm">
                   Atenção: Exclusão Permanente
@@ -127,7 +128,7 @@ export function DeleteLeadDialog({
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-Porceli-purple/10 flex items-center justify-center border border-Porceli-purple/20">
-                  <Users className="w-5 h-5 text-Porceli-purple" />
+                  <Profile2User className="w-5 h-5 text-Porceli-purple" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-white font-bold text-base truncate">{lead.name}</p>

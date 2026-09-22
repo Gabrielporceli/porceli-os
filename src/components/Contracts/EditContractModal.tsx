@@ -10,7 +10,8 @@ import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { X, DollarSign } from "lucide-react";
+import { X } from 'lucide-react';
+import { DollarCircle } from 'iconsax-react';
 import {
   Dialog,
   DialogContent,
@@ -187,7 +188,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 <div className="space-y-1.5">
                   <Label htmlFor="monthlyValue" className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Valor Mensal (R$)</Label>
                   <div className="relative group">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-colors" />
+                    <DollarCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-colors" />
                     <Input
                       id="monthlyValue"
                       type="text"

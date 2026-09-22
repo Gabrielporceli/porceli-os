@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus } from "lucide-react";
+import { Add } from 'iconsax-react';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
 
@@ -102,7 +102,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
       {externalOpen === undefined && (
         <DialogTrigger asChild>
           <LiquidGlassButton tint="danger" className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
-            <Plus className="w-4 h-4" />
+            <Add className="w-4 h-4" />
             Nova Despesa
           </LiquidGlassButton>
         </DialogTrigger>

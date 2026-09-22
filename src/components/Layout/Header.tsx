@@ -1,24 +1,38 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, Users, Zap, LogOut, Clock, Workflow } from 'lucide-react';
+import {
+  Calendar,
+  Category,
+  Clock,
+  DocumentText,
+  DollarCircle,
+  Filter,
+  Flash,
+  Hierarchy,
+  Logout,
+  Profile2User,
+} from 'iconsax-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { MOBILE_SLOT, MOBILE_WINDOW, PILL_DEFAULTS, idlePillGeom, transferPillGeom, type PillGeom } from './mobilePillGeometry';
 import { MobilePillBlob } from './MobilePillBlob';
 
+// Ícones do Iconsax (iconsax-react). O estilo é escolhido em runtime pela
+// prop `variant`; sem ela, cada ícone cai no Linear, que é o traço fino
+// que combina com o vidro. Os nomes saem de `npm run icons -- <busca>`.
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
+  { title: "Dashboard", url: "/dashboard", icon: Category },
   { title: "Calendário", url: "/calendar", icon: Calendar },
   { title: "Funil", url: "/leads", icon: Filter },
   // Some do menu no mobile — a rota /funnel-maps continua existindo,
   // só não precisa de espaço na barra de ícones do celular.
-  { title: "Mapas de Funil", url: "/funnel-maps", icon: Workflow, hideOnMobile: true },
-  { title: "Clientes", url: "/clients", icon: Users },
-  { title: "Contratos", url: "/contracts", icon: FileText },
-  { title: "Financeiro", url: "/financial", icon: DollarSign },
-  { title: "Automações",   url: "/automations",        icon: Zap   },
+  { title: "Mapas de Funil", url: "/funnel-maps", icon: Hierarchy, hideOnMobile: true },
+  { title: "Clientes", url: "/clients", icon: Profile2User },
+  { title: "Contratos", url: "/contracts", icon: DocumentText },
+  { title: "Financeiro", url: "/financial", icon: DollarCircle },
+  { title: "Automações",   url: "/automations",        icon: Flash },
   { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
 ];
 
@@ -571,7 +585,7 @@ export const Header = () => {
               )}
               title="Sair"
             >
-              <LogOut className="w-5 h-5" />
+              <Logout className="w-5 h-5" />
             </button>
           </div>
         </header>

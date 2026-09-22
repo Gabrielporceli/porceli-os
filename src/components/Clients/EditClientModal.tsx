@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { Edit } from "lucide-react";
+import { Edit } from 'iconsax-react';
 import { motion } from "framer-motion";
 import { useScrollLock } from "@/hooks/useScrollLock";
 

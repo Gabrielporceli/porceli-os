@@ -2,10 +2,8 @@ import { useState } from "react";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CalendarDays, Bell, DollarSign, Trash2, Play, Clock, Edit2, Zap,
-  Save, CheckCircle2, AlertCircle, Loader2, Webhook,
-} from "lucide-react";
+import { Loader2, Save } from 'lucide-react';
+import { Calendar1, Clock, DollarCircle, Edit2, Flash, Link2, Notification as Bell, Play, TickCircle, Trash, Warning2 } from 'iconsax-react';
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -28,7 +26,7 @@ import {
 
 // Mapa de ícones
 const ICONS: Record<string, React.ElementType> = {
-  CalendarDays, Bell, DollarSign, Trash2, Zap, Play, Clock,
+  Calendar1, Bell, DollarCircle, Trash, Flash, Play, Clock,
 };
 
 // Cores por categoria
@@ -90,7 +88,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
     updateSchedule.mutate({ id: automation.id, schedule: newCron }, { onSuccess: onClose });
   };
 
-  const Icon = ICONS[automation.icon] ?? Zap;
+  const Icon = ICONS[automation.icon] ?? Flash;
   const colors = CATEGORY_COLORS[automation.category] ?? CATEGORY_COLORS.sistema;
 
   return (
@@ -125,7 +123,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
             </label>
             {isWebhook ? (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <Webhook className="w-4 h-4 text-white/40" />
+                <Link2 className="w-4 h-4 text-white/40" />
                 <span className="text-white/70 text-sm">Disparada automaticamente ao cadastrar um novo cliente</span>
               </div>
             ) : isEveryMinute ? (
@@ -189,7 +187,7 @@ function AutomationRow({
 }) {
   const toggle = useToggleAutomation();
   const trigger = useTriggerAutomation();
-  const Icon = ICONS[automation.icon] ?? Zap;
+  const Icon = ICONS[automation.icon] ?? Flash;
   const colors = CATEGORY_COLORS[automation.category] ?? CATEGORY_COLORS.sistema;
   const isRunning = trigger.isPending && trigger.variables === automation.id;
 
@@ -223,7 +221,7 @@ function AutomationRow({
         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Frequência</p>
         <div className="flex items-center gap-1.5">
           {automation.trigger_type === 'webhook'
-            ? <Webhook className="w-3 h-3 text-white/20 flex-shrink-0" />
+            ? <Link2 className="w-3 h-3 text-white/20 flex-shrink-0" />
             : <Clock className="w-3 h-3 text-white/20 flex-shrink-0" />
           }
           <p className="text-white/70 font-medium text-sm">{automation.schedule_human}</p>
@@ -235,8 +233,8 @@ function AutomationRow({
         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Último envio</p>
         <div className="flex items-center justify-center gap-1.5">
           {automation.enabled
-            ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400/70" />
-            : <AlertCircle className="w-3.5 h-3.5 text-white/20" />
+            ? <TickCircle className="w-3.5 h-3.5 text-green-400/70" />
+            : <Warning2 className="w-3.5 h-3.5 text-white/20" />
           }
           <p className="text-white/70 font-medium text-sm">{formatLastRun(automation.last_triggered_at)}</p>
         </div>

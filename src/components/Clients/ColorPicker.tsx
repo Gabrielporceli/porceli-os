@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check } from "lucide-react";
+import { Check } from 'lucide-react';
 
 interface ColorPickerProps {
   selectedColor: string;

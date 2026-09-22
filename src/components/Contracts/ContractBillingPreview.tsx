@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CalendarClock } from "lucide-react";
+import { CalendarTick } from 'iconsax-react';
 import { computeContractBilling } from "@/lib/contractBilling";
 
 interface ContractBillingPreviewProps {
@@ -44,7 +44,7 @@ export function ContractBillingPreview({ startDate, endDate, paymentDay, value, 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarClock className="w-3.5 h-3.5 text-white/30" />
+          <CalendarTick className="w-3.5 h-3.5 text-white/30" />
           <Label>Preview das Cobranças ({items.length})</Label>
         </div>
         {items.length > 1 && (

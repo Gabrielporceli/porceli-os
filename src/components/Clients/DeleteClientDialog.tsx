@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, X } from "lucide-react";
+import { X } from 'lucide-react';
+import { Danger } from 'iconsax-react';
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
@@ -90,7 +91,7 @@ export function DeleteClientDialog({
             {/* Warning Section */}
             <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <Danger className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                 <div className="space-y-1">
                   <h3 className="text-sm font-black text-red-500 uppercase tracking-widest">
                     Atenção: Exclusão Permanente

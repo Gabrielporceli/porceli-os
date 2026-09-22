@@ -18,6 +18,7 @@ import Automations from "./pages/Automations"
 import ScheduledMessages from "./pages/ScheduledMessages"
 import FunnelMaps from "./pages/FunnelMaps"
 import PillLab from "./pages/PillLab"
+import IconLab from "./pages/IconLab"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -50,6 +51,8 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   {/* Laboratório de design da pílula do menu mobile — pública, sem layout. */}
                   <Route path="/dev/pill" element={<PillLab />} />
+                  {/* Exemplo dos ícones do iconsax — pública, sem layout. */}
+                  <Route path="/dev/icons" element={<IconLab />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
                   <Route

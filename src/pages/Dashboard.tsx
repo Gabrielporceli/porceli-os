@@ -1,7 +1,7 @@
 import { StatsCard } from "@/components/Dashboard/StatsCard";
 import { AlertCard, type Alert } from "@/components/Dashboard/AlertCard";
 import { Card } from "@/components/ui/card";
-import { DollarSign, Users, TrendingUp, Calendar } from "lucide-react";
+import { Calendar, DollarCircle, Profile2User, TrendUp } from 'iconsax-react';
 import { cn } from "@/lib/utils";
 import { Component as EtherealShadow } from "@/components/ui/etheral-shadow";
 import { PageLoader } from "@/components/ui/PageLoader";
@@ -623,19 +623,19 @@ export default function Dashboard() {
         <StatsCard
           title="MRR (Mensal)"
           value={formatCurrency(monthlyRevenue)}
-          icon={DollarSign}
+          icon={DollarCircle}
           description="Contratos ativos"
         />
         <StatsCard
           title="ARR (Anual)"
           value={formatCurrency(arr)}
-          icon={TrendingUp}
+          icon={TrendUp}
           description="MRR × 12"
         />
         <StatsCard
           title="Clientes Ativos"
           value={activeClients.toString()}
-          icon={Users}
+          icon={Profile2User}
           description="Com tag Ativo"
         />
         <StatsCard

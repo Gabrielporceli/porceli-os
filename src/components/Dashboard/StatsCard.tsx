@@ -1,5 +1,5 @@
 
-import { LucideIcon } from "lucide-react";
+import type { AppIcon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { AnimatedValue } from "@/components/ui/AnimatedValue";
 import { DeconstructedCard } from "@/components/ui/deconstructed-card";
@@ -7,7 +7,7 @@ import { DeconstructedCard } from "@/components/ui/deconstructed-card";
 interface StatsCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: AppIcon;
   trend?: {
     value: number;
     isPositive: boolean;

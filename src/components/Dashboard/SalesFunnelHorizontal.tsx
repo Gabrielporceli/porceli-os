@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
+import { TrendUp } from 'iconsax-react';
 import type { Stage } from "@/hooks/useStages";
 import type { Lead } from "@/hooks/useLeads";
 
@@ -136,7 +136,7 @@ export function SalesFunnelHorizontalChart({
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-5 h-5 text-primary" />
+            <TrendUp className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-white">{title}</h3>
           </div>
           <p className="text-white/50 text-sm leading-relaxed">{description}</p>

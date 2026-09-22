@@ -7,7 +7,8 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, Trash2, CalendarOff, ArrowUpRight } from "lucide-react";
+import { Save, X } from 'lucide-react';
+import { ArrowRight, CalendarRemove, Trash } from 'iconsax-react';
 import { Lead } from "@/hooks/useLeads";
 import { Tag } from "@/hooks/useTags";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -198,7 +199,7 @@ export function EditLeadModal({
                   <span className="pointer-events-none absolute -inset-2 flex items-center justify-center rounded-[26px] bg-transparent transition-colors duration-300 group-hover:bg-[#0d0b12]/[0.82]">
                     <span className="flex items-center gap-1.5 rounded-full bg-transparent px-3.5 py-2 text-[12px] font-semibold text-transparent transition-colors duration-300 group-hover:bg-white group-hover:text-[#18181d]">
                       Abrir conversa
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </span>
                 </button>
@@ -400,7 +401,7 @@ export function EditLeadModal({
               onClick={handleCancelMeeting}
               className="border-red-500/30 text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-all rounded-lg gap-2"
             >
-              <CalendarOff className="w-3.5 h-3.5" />
+              <CalendarRemove className="w-3.5 h-3.5" />
               Limpar
             </Button>
           </div>
@@ -452,7 +453,7 @@ export function EditLeadModal({
                 className="h-12 w-12"
                 title="Excluir Lead"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash className="w-5 h-5" />
               </LiquidGlassButton>
             </motion.div>
           )}

@@ -7,7 +7,8 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Save, X, Trash2 } from "lucide-react";
+import { Save, X } from 'lucide-react';
+import { Add, Edit, Trash } from 'iconsax-react';
 import { Card } from "@/components/ui/card";
 import { useTags, type Tag } from "@/hooks/useTags";
 
@@ -297,7 +298,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                               variant="ghost"
                               className="h-8 px-3 rounded-xl font-bold text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all"
                             >
-                              <Trash2 className="w-3.5 h-3.5 mr-1.5 text-red-500/80" />
+                              <Trash className="w-3.5 h-3.5 mr-1.5 text-red-500/80" />
                               Excluir
                             </Button>
                           </motion.div>

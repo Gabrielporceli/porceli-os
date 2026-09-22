@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { NodeProps } from '@xyflow/react';
-import { StickyNote, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Stickynote } from 'iconsax-react';
 import type { NoteNodeData } from '../../../types/funnel';
 import { useFunnelActions } from '../funnelContext';
 
@@ -12,7 +13,7 @@ function NoteNodeImpl({ id, data }: NoteNodeProps) {
   return (
     <div className="group flex h-40 w-56 flex-col rounded-lg border border-amber-400/30 bg-amber-300/10 shadow-lg backdrop-blur-sm">
       <div className="flex items-center gap-1.5 border-b border-amber-400/20 px-2 py-1.5">
-        <StickyNote size={13} className="text-amber-400" />
+        <Stickynote size={13} className="text-amber-400" />
         <span className="flex-1 text-[10px] font-medium uppercase tracking-wide text-amber-400/80">Nota</span>
         <button
           type="button"
