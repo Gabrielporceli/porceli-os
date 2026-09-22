@@ -202,7 +202,8 @@ export type Database = {
           numero?: string | null
           phone: string
           remote_jid?: string | null
-          stage?: string | null\n          tag?: string | null
+          stage?: string | null
+          tag?: string | null
           unread_count?: number | null
           updated_at?: string | null
           user_id: string
@@ -351,7 +352,8 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
-          client_id?: string | null\n          created_at?: string | null
+          client_id?: string | null
+          created_at?: string | null
           date?: string
           description?: string
           id?: string
@@ -752,7 +754,8 @@ export type Database = {
         }
         Insert: {
           actor?: string | null
-          content?: string | null\n          created_at?: string | null
+          content?: string | null
+          created_at?: string | null
           direction: string
           id?: string
           lead_id?: string | null
@@ -968,7 +971,8 @@ export type Tables<
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R\n    }
+      Row: infer R
+    }
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &

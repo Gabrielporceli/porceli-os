@@ -505,6 +505,25 @@ button:focus-visible,
       0px 1px 3px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 5%), transparent) !important;
   }
 
+  /* Reativa a refração real (backdrop-filter + feDisplacementMap) só pra
+     pílula do menu MOBILE — pedido explícito pra testar a sensação
+     "gooey" de verdade (óptica, não forma). Some por cima de
+     .lqg-lens--nav (mesma especificidade — !important + 1 classe —
+     então quem vem depois no arquivo vence: esta regra tem que ficar
+     DEPOIS dela, como está aqui).
+
+     RISCO CONHECIDO: a pílula mobile está aninhada dentro do
+     backdrop-filter do próprio header (.liquid-glass) — exatamente a
+     mesma estrutura que causou a "tarja clara" (Chrome recompondo as
+     camadas a cada repaint) e motivou criar .lqg-lens--nav SEM
+     backdrop-filter em primeiro lugar. Não tem como confirmar aqui se o
+     bug volta — só testando no dispositivo real. Se a tarja aparecer,
+     tirar essa classe do <span> da pílula mobile resolve na hora. */
+  .lqg-lens--nav-refract {
+    backdrop-filter: blur(8px) url(#liquid-glass-refraction) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+  }
+
   /* Tons coloridos do vidro (mesmo material, cor translúcida na lente) */
   .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.9); }
   .lqg-btn:hover .lqg-lens--primary { background-color: rgba(104, 41, 192, 0.98); }

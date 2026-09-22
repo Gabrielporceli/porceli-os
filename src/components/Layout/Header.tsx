@@ -5,6 +5,8 @@ import { LayoutGrid, Calendar, Filter, FileText, DollarSign, MessageSquare, User
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { MOBILE_SLOT, MOBILE_WINDOW, PILL_DEFAULTS, idlePillGeom, transferPillGeom, type PillGeom } from './mobilePillGeometry';
+import { MobilePillBlob } from './MobilePillBlob';
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutGrid },
@@ -31,7 +33,16 @@ export const Header = () => {
 
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [pill, setPill] = useState<{ x: number; width: number } | null>(null);
+  // Pílula do desktop: mesma geometria líquida do mobile (bolha drena de
+  // um ícone, cresce no outro, pescoço liga as duas). A diferença é o que
+  // dirige o progresso: no mobile é o dedo (scroll); aqui não há gesto,
+  // então a transferência é animada no TEMPO a cada troca de rota.
+  const [deskPill, setDeskPill] = useState<{ geom: PillGeom; w: number; slot: number } | null>(null);
+  const deskWrapRef = useRef<HTMLDivElement>(null);
+  const deskAnchorRef = useRef<string | null>(null);
+  const deskRafRef = useRef<number | null>(null);
+  /** duração da transferência no desktop (ms) */
+  const DESK_MS = 620;
 
   // ===== Roleta infinita (só mobile) =====
   // Janela fixa de ~5 ícones. O item central é sempre a página ativa: ao
@@ -50,13 +61,25 @@ export const Header = () => {
   const hasCenteredOnceRef = useRef(false);
   const settleTimerRef = useRef<number | null>(null);
   const mobilePillRafRef = useRef(false);
-  // Pílula do mobile: {x, url} do item mais próximo do centro AGORA — ao
-  // contrário da versão anterior (parada no centro), esta vive dentro do
-  // próprio <nav> que rola, então ela desliza junto com o conteúdo. O
-  // efeito de "migrar" vem de recalcular o alvo (x) a cada frame de scroll
-  // — como ela é a MESMA <span>, o navegador anima o transform sozinho
-  // (transition abaixo) em vez de simplesmente aparecer/sumir.
-  const [mobilePill, setMobilePill] = useState<{ x: number; url: string } | null>(null);
+  // Pílula do mobile — "transferência de líquido" com gooey effect:
+  //   • ÂNCORA: o ícone onde a pílula está grudada (a página atual).
+  //   • CANDIDATO: o ícone mais próximo do centro AGORA.
+  // Parada, é uma bolha só. Enquanto o candidato avança rumo ao centro, a
+  // bolha de TRÁS (na âncora) vai encolhendo, um pescoço liga as duas e a
+  // bolha da FRENTE (no candidato) cresce — e o filtro gooey funde tudo
+  // numa forma única (ver MobilePillBlob). Quando só sobra a da frente, o
+  // candidato vira a nova âncora — sem salto, porque a geometria nesse
+  // instante é idêntica à de "parada". Rolando de volta antes, recolhe.
+  //
+  // Mora FORA do <nav> que rola (camada irmã): coordenadas de VIEWPORT
+  // (posição na tela), não de conteúdo — por isso o salto do loop
+  // infinito por baixo (±1 bloco) não afeta em nada.
+  const [mobilePill, setMobilePill] = useState<{ url: string; geom: PillGeom } | null>(null);
+  const anchorUrlRef = useRef<string | null>(null);
+  const candidateUrlRef = useRef<string | null>(null);
+  // Marcos do progresso e parâmetros do gooey vivem em
+  // mobilePillGeometry.ts — calibráveis ao vivo em /dev/pill.
+  const { SWITCH_AT } = PILL_DEFAULTS;
 
   // Acha, dentro de um container, o elemento (por [data-nav-url]) mais
   // próximo do centro horizontal da faixa visível — é assim que sabemos
@@ -80,46 +103,120 @@ export const Header = () => {
     return best;
   }, []);
 
-  // Recalcula {x, url} do item mais próximo do centro AGORA e atualiza a
-  // pílula viva do mobile — chamada a cada frame de scroll (throttle via
-  // rAF em onNavScroll) e uma vez no 1º paint.
+  const sameGeom = (p: PillGeom, q: PillGeom) =>
+    Math.abs(p.back.x - q.back.x) < 0.5 && p.back.s === q.back.s &&
+    Math.abs(p.front.x - q.front.x) < 0.5 && p.front.s === q.front.s &&
+    p.neck.w === q.neck.w && p.neck.h === q.neck.h;
+
+  // Recalcula a geometria da pílula a cada frame de scroll (throttle via
+  // rAF em onNavScroll) e uma vez no 1º paint. Tudo em coordenada de
+  // viewport do <nav> (rect.left - navRect.left, sem somar scrollLeft).
+  //
+  // A geometria é uma função CONTÍNUA do progresso p do candidato rumo ao
+  // centro (0 = acabou de virar o mais próximo, 1 = centro exato):
+  //   • bolha da FRENTE (no candidato): cresce de 0 a cheia até
+  //     p = FRONT_DONE_AT (rápida no início, assenta suave);
+  //   • bolha de TRÁS (na âncora): cheia até p = BACK_START_AT, depois
+  //     encolhe ACELERANDO até sumir em p = SWITCH_AT — o "drenar";
+  //   • PESCOÇO entre as duas: nasce com a frente, pinça com a trás.
+  // Em p = SWITCH_AT só existe a bolha da frente, cheia, no candidato —
+  // idêntica à geometria "parada" —, então a troca de âncora não muda
+  // nada na tela: zero salto. (Versões anteriores trocavam a âncora com
+  // a forma ainda no meio do caminho e dependiam de uma mola pra
+  // disfarçar — que o frame seguinte do scroll interrompia.)
   const updateMobilePill = useCallback(() => {
     const scroller = navRef.current;
     if (!scroller) return;
     const nearest = findNearest(scroller);
     if (!nearest) return;
     const navRect = scroller.getBoundingClientRect();
-    const elRect = nearest.el.getBoundingClientRect();
-    const x = elRect.left - navRect.left + scroller.scrollLeft;
-    setMobilePill((prev) =>
-      prev && prev.url === nearest.url && Math.abs(prev.x - x) < 0.5 ? prev : { x, url: nearest.url }
-    );
-  }, [findNearest]);
+    const nRect = nearest.el.getBoundingClientRect();
+    const nx = nRect.left - navRect.left;
+    const slot = nRect.width;
 
-  const updatePill = useCallback((pathname: string) => {
-    const nav = navRef.current;
-    const el = itemRefs.current.get(pathname);
-    if (!nav || !el) {
-      setPill(null);
+    // Fling rápido: o candidato anterior pode ter sido pulado antes de
+    // chegar a SWITCH_AT. Se o candidato mudou e o anterior não era a
+    // âncora, a âncora passa a ser ele — a pílula não pode ficar presa
+    // dois ícones atrás.
+    const prevCandidate = candidateUrlRef.current;
+    if (prevCandidate && prevCandidate !== nearest.url && prevCandidate !== anchorUrlRef.current) {
+      anchorUrlRef.current = prevCandidate;
+    }
+    candidateUrlRef.current = nearest.url;
+
+    let anchorUrl = anchorUrlRef.current;
+    let anchorEl: HTMLElement | null = null;
+    if (anchorUrl) {
+      // A âncora existe em 3 cópias (loop infinito) — usa a cópia mais
+      // próxima do candidato, senão a pílula esticaria pro outro bloco.
+      const copies = scroller.querySelectorAll<HTMLElement>(
+        `[data-nav-url="${CSS.escape(anchorUrl)}"]`
+      );
+      let bestD = Infinity;
+      copies.forEach((el) => {
+        const d = Math.abs(el.getBoundingClientRect().left - nRect.left);
+        if (d < bestD) {
+          bestD = d;
+          anchorEl = el;
+        }
+      });
+    }
+    if (!anchorEl) {
+      anchorUrlRef.current = nearest.url;
+      anchorUrl = nearest.url;
+      setMobilePill({ url: nearest.url, geom: idlePillGeom(nx, slot) });
       return;
     }
-    const navRect = nav.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const x = elRect.left - navRect.left + nav.scrollLeft;
-    const width = elRect.width;
-    // Só atualiza o state se o valor REALMENTE mudou (>0.5px de diferença).
-    // Sem isso, qualquer reflow espúrio durante o carregamento da página
-    // (fonte custom terminando de carregar, scrollbar aparecendo/sumindo)
-    // reagenda a transição do zero a cada disparo do ResizeObserver — com
-    // vários dispositivos, isso interrompe a mola repetidas vezes antes
-    // dela chegar visualmente ao destino, dando a impressão de "travada".
-    setPill((prev) => {
-      if (prev && Math.abs(prev.x - x) < 0.5 && Math.abs(prev.width - width) < 0.5) {
-        return prev;
-      }
-      return { x, width };
-    });
-  }, []);
+
+    const ax = (anchorEl as HTMLElement).getBoundingClientRect().left - navRect.left;
+
+    if (nearest.url === anchorUrl) {
+      // Candidato é a própria âncora: bolha única parada nela (segue o
+      // scroll porque ax é remedido a cada frame).
+      const g = idlePillGeom(ax, slot);
+      setMobilePill((prev) =>
+        prev && prev.url === anchorUrl && sameGeom(prev.geom, g) ? prev : { url: anchorUrl as string, geom: g }
+      );
+      return;
+    }
+
+    const dx = nx - ax;
+    const half = Math.abs(dx) / 2;
+    const p = half > 0 ? Math.min(1, Math.max(0, 1 - nearest.dist / half)) : 1;
+
+    if (p >= SWITCH_AT) {
+      // Transferência completa: a geometria é a mesma do frame anterior
+      // (só a frente, cheia, no candidato), então trocar a âncora não
+      // muda nada na tela.
+      anchorUrlRef.current = nearest.url;
+      setMobilePill({ url: nearest.url, geom: idlePillGeom(nx, slot) });
+      return;
+    }
+
+    setMobilePill({ url: anchorUrl as string, geom: transferPillGeom(ax, nx, slot, p) });
+  }, [findNearest]);
+
+  // Geometria da pílula do desktop num instante p da transferência.
+  // Coordenadas relativas ao WRAPPER (que não rola), medidas ao vivo a
+  // cada frame — assim resize/scroll da barra são acompanhados de graça.
+  const measureDesk = useCallback((fromUrl: string | null, toUrl: string, p: number) => {
+    const wrap = deskWrapRef.current;
+    const toEl = itemRefs.current.get(toUrl);
+    if (!wrap || !toEl) return null;
+    const wrapRect = wrap.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+    const slot = toRect.width;
+    const nx = toRect.left - wrapRect.left;
+    const fromEl = fromUrl && fromUrl !== toUrl ? itemRefs.current.get(fromUrl) : null;
+    // `slot` sai da MEDIÇÃO do item (w-10 → 40px, w-11 → 44px a partir de
+    // md), nunca de uma constante: a pílula é alinhada pela borda esquerda,
+    // então qualquer diferença de largura tira o ícone do centro dela.
+    if (!fromEl || p >= SWITCH_AT) {
+      return { geom: idlePillGeom(nx, slot), w: wrapRect.width, slot };
+    }
+    const ax = fromEl.getBoundingClientRect().left - wrapRect.left;
+    return { geom: transferPillGeom(ax, nx, slot, p), w: wrapRect.width, slot };
+  }, [SWITCH_AT]);
 
   // Lógica para esconder o header ao rolar para baixo e mostrar ao rolar para cima
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -145,21 +242,62 @@ export const Header = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Recalcula a pílula na troca de rota, e observa resize do item ativo e
-  // da barra de nav (labels somem/aparecem em breakpoints, fonte custom
-  // ainda carregando, etc.) — o guard em updatePill acima evita que isso
-  // reagende a animação à toa quando o valor não mudou de verdade.
+  // Desktop: anima a transferência quando a rota muda. A rota nova só
+  // vira âncora no fim — até lá a bolha antiga ainda está drenando.
+  // ResizeObserver mantém a pílula no lugar quando a barra muda de
+  // tamanho (rótulos somem/aparecem em breakpoints, fonte custom
+  // terminando de carregar, scrollbar aparecendo).
   useLayoutEffect(() => {
     if (isMobile) return;
-    updatePill(location.pathname);
-    const nav = navRef.current;
-    const el = itemRefs.current.get(location.pathname);
-    if (!nav || !el) return;
-    const ro = new ResizeObserver(() => updatePill(location.pathname));
-    ro.observe(nav);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [location.pathname, updatePill, isMobile]);
+    const from = deskAnchorRef.current;
+    const to = location.pathname;
+    const stop = () => {
+      if (deskRafRef.current) cancelAnimationFrame(deskRafRef.current);
+      deskRafRef.current = null;
+    };
+    stop();
+
+    if (!itemRefs.current.get(to)) {
+      // Rota sem item no menu (ex.: /funnel-maps aberta por link direto
+      // num breakpoint onde ela não aparece): some a pílula.
+      deskAnchorRef.current = null;
+      setDeskPill(null);
+      return;
+    }
+
+    if (!from || from === to) {
+      deskAnchorRef.current = to;
+      setDeskPill(measureDesk(to, to, 1));
+    } else {
+      const started = performance.now();
+      // easeInOutCubic: sai devagar, ganha corpo no meio, assenta suave.
+      const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+      const tick = (now: number) => {
+        const u = Math.min(1, (now - started) / DESK_MS);
+        setDeskPill(measureDesk(from, to, ease(u) * SWITCH_AT));
+        if (u < 1) {
+          deskRafRef.current = requestAnimationFrame(tick);
+        } else {
+          deskRafRef.current = null;
+          deskAnchorRef.current = to;
+          setDeskPill(measureDesk(to, to, 1));
+        }
+      };
+      deskRafRef.current = requestAnimationFrame(tick);
+    }
+
+    const wrap = deskWrapRef.current;
+    if (!wrap) return stop;
+    const ro = new ResizeObserver(() => {
+      // Só reposiciona quando parada — no meio da animação o próximo
+      // frame já remede tudo sozinho.
+      if (!deskRafRef.current && deskAnchorRef.current) {
+        setDeskPill(measureDesk(deskAnchorRef.current, deskAnchorRef.current, 1));
+      }
+    });
+    ro.observe(wrap);
+    return () => { stop(); ro.disconnect(); };
+  }, [location.pathname, isMobile, measureDesk, SWITCH_AT]);
 
   // Mede a largura de 1 bloco (pro loop) sempre que ela mudar (fonte
   // custom terminando de carregar, rotação de tela etc.).
@@ -197,6 +335,7 @@ export const Header = () => {
       hasCenteredOnceRef.current = true;
       // Posiciona a pílula já no 1º paint (senão ela só apareceria depois
       // do primeiro evento de scroll do usuário).
+      anchorUrlRef.current = location.pathname;
       updateMobilePill();
       return;
     }
@@ -205,7 +344,13 @@ export const Header = () => {
     if (!scroller) return;
     const nearest = findNearest(scroller, location.pathname);
     if (nearest && nearest.dist > 4) {
+      // Rota mudou por fora da roleta (card, toque num ícone longe do
+      // centro): a pílula desgruda direto pra rota nova e a faixa desliza
+      // até centralizar — os frames desse scroll suave passam por
+      // updateMobilePill normalmente.
+      anchorUrlRef.current = location.pathname;
       nearest.el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      updateMobilePill();
     }
   }, [isMobile, location.pathname, findNearest, updateMobilePill]);
 
@@ -215,7 +360,11 @@ export const Header = () => {
     const w = loopWidthRef.current;
     if (scroller && w) {
       // Loop infinito: imediato, a cada evento de scroll — sem isso o
-      // usuário eventualmente bate no fim de um dos 3 blocos.
+      // usuário eventualmente bate no fim de um dos 3 blocos. Como a
+      // pílula agora é posicionada em coordenada de VIEWPORT (não de
+      // conteúdo — ver updateMobilePill), esse salto não afeta ela nem
+      // um pouco: a posição NA TELA do ícone mais próximo do centro não
+      // muda 1px (os 3 blocos são idênticos).
       if (scroller.scrollLeft < w * 0.5) {
         scroller.scrollLeft += w;
       } else if (scroller.scrollLeft > w * 1.5) {
@@ -302,138 +451,109 @@ export const Header = () => {
               menu escondido atrás de mais um botão. */}
           {isMobile ? (
             // ===== Mobile: roleta com loop infinito =====
-            <nav
-              ref={navRef}
-              onScroll={onNavScroll}
-              // Janela fixa de 5 ícones de 40px + 4 vãos de 4px = 216px —
-              // junto com logo/sair enxutos, cabe até em telas de ~360px.
-              className="relative flex items-center gap-1 h-full w-[216px] max-w-full shrink-0 mx-auto overflow-x-auto scrollbar-hide snap-x snap-mandatory"
-              style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}
+            // Wrapper EXTERNO, sem overflow próprio — é nele que a pílula
+            // fica ancorada (irmã do <nav>, não filha). O <nav> tem
+            // overflow-x-auto pra rolar os ícones; se a pílula morasse
+            // DENTRO dele, o overflow cortaria o blur do filtro gooey numa
+            // borda reta (era o bug da "caixa feia"). Aqui fora, nada corta.
+            <div
+              className="relative max-w-full shrink-0 mx-auto h-full"
+              style={{ width: MOBILE_WINDOW }}
             >
-              {/* Pílula de vidro DENTRO da faixa que rola — mesma técnica do
-                  desktop (posição calculada em coordenadas do CONTEÚDO,
-                  x = elRect.left - navRect.left + scrollLeft), só que aqui o
-                  alvo é recalculado a cada frame de scroll (updateMobilePill),
-                  não só na troca de rota. Por ser a MESMA <span>, o navegador
-                  anima o transition de transform sozinho a cada novo alvo —
-                  é isso que faz ela "migrar" fisicamente de um ícone pro
-                  outro enquanto o dedo arrasta, em vez de saltar. */}
               {mobilePill && (
-                <span
-                  aria-hidden="true"
-                  // Mesma largura do slot do ícone (h-10 w-10 = 40px): como
-                  // a pílula é alinhada pela borda esquerda (left:0 +
-                  // translateX), qualquer diferença de largura vira um
-                  // desalinhamento visível puxado pra um lado — não some
-                  // sozinho mesmo estando "no lugar certo" em x.
-                  className="lqg-lens lqg-lens--nav absolute left-0 top-1/2 w-10 h-10 -translate-y-1/2 rounded-full pointer-events-none z-0"
-                  style={{
-                    transform: `translate(${mobilePill.x}px, -50%)`,
-                    transition: "transform 180ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                />
+                <MobilePillBlob geom={mobilePill.geom} windowW={MOBILE_WINDOW} slot={MOBILE_SLOT} />
               )}
-              {[0, 1, 2].map((setIndex) => (
-                <div
-                  key={setIndex}
-                  ref={setIndex === 1 ? middleSetRef : undefined}
-                  className="relative z-10 flex items-center gap-1 shrink-0"
-                >
-                  {mobileItems.map((item) => {
-                    // Enquanto a pílula ainda não mediu nada (1er frame),
-                    // cai pra rota atual; depois disso, quem manda é o item
-                    // mais próximo do centro AGORA — não espera a navegação
-                    // de verdade (essa só acontece quando o scroll assenta).
-                    const isHighlighted = mobilePill ? mobilePill.url === item.url : location.pathname === item.url;
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={`${setIndex}-${item.title}`}
-                        to={item.url}
-                        title={item.title}
-                        data-nav-url={item.url}
-                        className="snap-center h-10 w-10 flex items-center justify-center shrink-0"
-                      >
-                        <Icon className={cn("w-5 h-5 transition-colors duration-300", isHighlighted ? "lqg-text text-white" : "text-white/40")} />
-                        <span className="sr-only">{item.title}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ))}
-            </nav>
-          ) : (
-            // ===== Desktop: lista única com a pílula deslizante =====
-            <nav
-              ref={navRef}
-              className="relative flex items-center justify-center gap-0.5 sm:gap-1 flex-1 h-full overflow-x-auto scrollbar-hide"
-            >
-              {/* Causa raiz real (achada com diagnostico no navegador do
-                  usuario, não na minha ferramenta de teste): <nav> é um flex
-                  container com justify-center. Um filho position:absolute
-                  SEM `left` explícito não usa "0" como base — pela spec de
-                  Flexbox, a posição estática de um item absoluto dentro de
-                  um container com justify-content:center é calculada como
-                  se ele estivesse CENTRALIZADO entre os itens, não colado
-                  na borda esquerda. Meu cálculo de x sempre assumiu base
-                  zero (nav.left), então o transform aplicado ficava certo
-                  MATEMATICAMENTE mas renderizava deslocado pelo offset
-                  dessa centralização "fantasma" — daí a pílula aparecer
-                  sempre num item diferente do calculado, de forma
-                  consistente nas 3 tentativas anteriores (layoutId,
-                  motion.span, CSS transition), já que nenhuma delas fixava
-                  essa base. `left: 0` remove a ambiguidade: a base passa a
-                  ser sempre a borda esquerda do <nav>, batendo com a conta
-                  em JS (elRect.left - navRect.left + nav.scrollLeft). */}
-              {pill && (
-                <span
-                  // top-1/2 + translateY(-50%): os itens do menu (h-10) ficam
-                  // centralizados verticalmente dentro do <nav>, que é mais
-                  // alto (h-full, herda os 64px do header) via items-center —
-                  // top-0 alinhava a pílula na BORDA do nav, não no centro
-                  // onde os itens realmente estão (12px de diferença, testado
-                  // e confirmado no navegador do usuário). Centralizar do
-                  // mesmo jeito que o flexbox centraliza os itens elimina
-                  // essa conta duplicada e qualquer chance de dessincronizar.
-                  className="lqg-lens lqg-lens--nav absolute left-0 top-1/2 h-10 rounded-full pointer-events-none z-0"
-                  style={{
-                    transform: `translate(${pill.x}px, -50%)`,
-                    width: pill.width,
-                    transition: "transform 250ms cubic-bezier(0.22, 1, 0.36, 1), width 250ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                />
-              )}
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                const Icon = item.icon;
 
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    title={item.title}
-                    className="h-10 flex items-center shrink-0"
+              <nav
+                ref={navRef}
+                onScroll={onNavScroll}
+                // Janela fixa (MOBILE_WINDOW = 5 slots + 4 vãos = 216px) —
+                // junto com logo/sair enxutos, cabe até em telas de ~360px.
+                // gap-1 e h-10/w-10 abaixo TÊM que casar com MOBILE_GAP e
+                // MOBILE_SLOT: a pílula é posicionada em pixels por fora.
+                className="relative z-20 flex items-center gap-1 h-full w-full overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}
+              >
+                {[0, 1, 2].map((setIndex) => (
+                  <div
+                    key={setIndex}
+                    ref={setIndex === 1 ? middleSetRef : undefined}
+                    className="flex items-center gap-1 shrink-0"
                   >
-                    <div
-                      ref={(el) => {
-                        if (el) itemRefs.current.set(item.url, el);
-                        else itemRefs.current.delete(item.url);
-                      }}
-                      className="group relative isolate z-10 w-10 md:w-11 h-full flex items-center justify-center rounded-full transform-gpu will-change-transform"
+                    {mobileItems.map((item) => {
+                      // Enquanto a pílula ainda não mediu nada (1º frame),
+                      // cai pra rota atual; depois disso, quem manda é o
+                      // item mais próximo do centro AGORA — não espera a
+                      // navegação de verdade (só acontece quando o scroll
+                      // assenta).
+                      const isHighlighted = mobilePill ? mobilePill.url === item.url : location.pathname === item.url;
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={`${setIndex}-${item.title}`}
+                          to={item.url}
+                          title={item.title}
+                          data-nav-url={item.url}
+                          className="snap-center h-10 w-10 flex items-center justify-center shrink-0"
+                        >
+                          <Icon className={cn("w-5 h-5 transition-colors duration-500", isHighlighted ? "lqg-text text-white" : "text-white/40")} />
+                          <span className="sr-only">{item.title}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+            </div>
+          ) : (
+            // ===== Desktop: mesma pílula líquida, animada no tempo =====
+            // Wrapper EXTERNO (sem overflow) segurando a pílula, igual ao
+            // mobile: o <nav> tem overflow-x-auto e cortaria o blur do
+            // filtro gooey numa borda reta.
+            <div ref={deskWrapRef} className="relative flex-1 h-full">
+              {deskPill && (
+                <MobilePillBlob
+                  geom={deskPill.geom}
+                  windowW={deskPill.w}
+                  slot={deskPill.slot}
+                />
+              )}
+              <nav
+                ref={navRef}
+                className="relative z-20 flex items-center justify-center gap-0.5 sm:gap-1 h-full w-full overflow-x-auto scrollbar-hide"
+              >
+                {menuItems.map((item) => {
+                  const isActive = location.pathname === item.url;
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      title={item.title}
+                      className="h-10 flex items-center shrink-0"
                     >
-                      {!isActive && (
-                        <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                      )}
-                      <Icon className={cn(
-                        "relative z-10 w-4 h-4 sm:w-[18px] sm:h-[18px] transition-colors",
-                        isActive ? "lqg-text text-white" : "text-white/40 group-hover:text-white/70"
-                      )} />
-                      <span className="sr-only">{item.title}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
+                      <div
+                        ref={(el) => {
+                          if (el) itemRefs.current.set(item.url, el);
+                          else itemRefs.current.delete(item.url);
+                        }}
+                        className="group relative isolate z-10 w-10 md:w-11 h-full flex items-center justify-center rounded-full transform-gpu will-change-transform"
+                      >
+                        {!isActive && (
+                          <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        )}
+                        <Icon className={cn(
+                          "relative z-10 w-4 h-4 sm:w-[18px] sm:h-[18px] transition-colors",
+                          isActive ? "lqg-text text-white" : "text-white/40 group-hover:text-white/70"
+                        )} />
+                        <span className="sr-only">{item.title}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
           )}
 
           {/* User Actions */}

@@ -17,6 +17,7 @@ import Calendar from "./pages/Calendar"
 import Automations from "./pages/Automations"
 import ScheduledMessages from "./pages/ScheduledMessages"
 import FunnelMaps from "./pages/FunnelMaps"
+import PillLab from "./pages/PillLab"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -47,6 +48,8 @@ function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<Login />} />
+                  {/* Laboratório de design da pílula do menu mobile — pública, sem layout. */}
+                  <Route path="/dev/pill" element={<PillLab />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
                   <Route
