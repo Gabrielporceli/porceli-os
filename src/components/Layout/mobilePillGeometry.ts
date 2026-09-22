@@ -73,6 +73,7 @@ export const PILL_DEFAULTS: PillTuning = {
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
 const easeIn = (t: number) => t * t;
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) * (-2 * t + 2)) / 2);
 
 /** Geometria "parada": só uma bolha cheia no ícone. */
 export function idlePillGeom(x: number, slot: number): PillGeom {
@@ -92,6 +93,31 @@ export function transferPillGeom(
 ): PillGeom {
   const dx = nx - ax;
 
+  // Vizinho ou não? No mobile o passo é sempre de um ícone (slot + vão);
+  // no desktop a pílula pode pular meia barra (Dashboard → Agendamentos).
+  // slot * 1.3 fica confortavelmente entre um passo (slot + vão ≈ 1,1·slot)
+  // e dois (≈ 2,2·slot).
+  const oneStep = slot * 1.3;
+
+  // SALTO LONGO: sem pescoço. Esticar o fio por meia barra fica feio — a
+  // pílula vira uma minhoca atravessando o menu. Aqui as duas bolhas são
+  // independentes: a da origem encolhe e a do destino cresce AO MESMO
+  // TEMPO, com o mesmo material. Como ficam longe uma da outra, o filtro
+  // gooey não as funde, que é justamente o "desgrudar" desejado.
+  if (Math.abs(dx) > oneStep) {
+    // Normalizado por SWITCH_AT: em p = SWITCH_AT a bolha da frente está
+    // cheia no destino e a de trás sumiu — idêntico à geometria parada.
+    // É isso que deixa trocar a âncora naquele instante sem salto na tela.
+    const e = easeInOut(clamp01(p / t.SWITCH_AT));
+    return {
+      back: { x: ax, s: 1 - e },
+      front: { x: nx, s: e },
+      neck: { x: nx + slot / 2, w: 0, h: 0 },
+    };
+  }
+
+  // --- daqui pra baixo: salto de UM ícone, a transferência com pescoço ---
+
   // Frente: cresce cedo e rápido, assenta suave.
   const sFront = easeOut(clamp01(p / t.FRONT_DONE_AT));
   // Trás: segura, depois encolhe acelerando — o "drenar" da bolha antiga.
@@ -99,18 +125,10 @@ export function transferPillGeom(
   // Pescoço: nasce junto com a frente, pinça junto com a trás.
   const rise = easeOut(clamp01(p / t.NECK_RISE_AT));
   const fall = 1 - easeIn(clamp01((p - t.FRONT_DONE_AT) / (t.SWITCH_AT - t.FRONT_DONE_AT)));
-  // Quanto mais esticado o fio, mais fino — como líquido de verdade. Só
-  // vale ACIMA de um salto de 1 slot: no mobile o salto é sempre entre
-  // ícones vizinhos (dx ≈ slot + vão), e ali o pescoço tem que ficar na
-  // espessura cheia. Quem se beneficia é o desktop, onde a pílula pode
-  // pular vários ícones (Dashboard → Agendamentos) — sem isso o pescoço
-  // vira uma barra grossa atravessando meia barra.
-  // (Uma versão anterior media |dx|/(slot*1.1), o que dava fator máximo
-  // já no salto de 1 slot e afinava o mobile em 55% sem querer.)
-  const oneStep = slot * 1.3;
-  const stretch = clamp01((Math.abs(dx) - oneStep) / (slot * 3));
-  const thin = 1 - 0.55 * stretch;
-  const neckH = slot * t.NECK_H * rise * fall * thin;
+  // Espessura cheia: aqui o salto é sempre de um ícone só. (O afinamento
+  // por esticamento que existia antes virou código morto quando o salto
+  // longo passou a sair pelo caminho de cima, sem pescoço nenhum.)
+  const neckH = slot * t.NECK_H * rise * fall;
 
   // Pescoço vai da borda da bolha de trás até a borda da bolha da frente
   // (1px pra dentro de cada, pra não deixar fresta de sub-pixel — no
