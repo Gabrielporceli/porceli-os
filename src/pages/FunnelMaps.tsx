@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { PageLoader } from '@/components/ui/PageLoader';
+import { usePageReady } from '@/hooks/usePageReady';
 import { FunnelCanvas } from '@/features/funnel-maps/components/funnel/FunnelCanvas';
 import { Toolbar } from '@/features/funnel-maps/components/funnel/Toolbar';
 import { useFunnelMaps } from '@/features/funnel-maps/hooks/useFunnelMaps';
@@ -36,6 +37,10 @@ export default function FunnelMaps() {
   }, []);
 
   const activeMap = maps.find((m) => m.id === activeId) ?? null;
+  // `!activeMap` entra como "ainda carregando" porque no 1º acesso o mapa
+  // inicial é criado logo após a query terminar — sem isso a página tentaria
+  // desenhar a Toolbar sem mapa.
+  const isReady = usePageReady(isLoading || !activeMap);
 
   const persist = useCallback(
     (id: string, patch: Partial<{ name: string; nodes: FunnelMapNode[]; edges: FunnelMapEdge[] }>) => {
@@ -96,13 +101,14 @@ export default function FunnelMaps() {
     [createMap],
   );
 
-  if (isLoading || !activeMap) {
-    return (
-      <div className="flex h-64 items-center justify-center gap-2 text-white/50">
-        <Loader2 size={16} className="animate-spin" /> Carregando mapas de funil…
-      </div>
-    );
-  }
+  // Mesma convenção das outras páginas: quem desenha o "carregando" é a
+  // transição do layout (overlay de blur + logo), não a página. Antes esta
+  // aqui era a única que tinha spinner próprio — e, como nunca montava o
+  // PageLoader, nunca avisava a transição de que estava carregando: a
+  // animação simplesmente não acontecia ao entrar nela.
+  // O `!activeMap` também serve pro TypeScript: é ele que estreita o tipo
+  // pro Toolbar/FunnelCanvas abaixo, que exigem um mapa de verdade.
+  if (!isReady || !activeMap) return <PageLoader />;
 
   return (
     <div className="liquid-glass no-elevation flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl">
