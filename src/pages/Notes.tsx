@@ -28,6 +28,7 @@ import {
   NoteText,
   Refresh,
   SearchNormal1,
+  Setting2,
   Tag,
   Trash,
 } from "iconsax-react";
@@ -38,8 +39,9 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
-import { caminhoNoCofre } from "@/features/notes/markdown";
+import { caminhoNoCofre, extrairWikilinks } from "@/features/notes/markdown";
 import { lerConfigSync, sincronizarNota } from "@/features/notes/sync";
+import { VaultConfigDialog } from "@/features/notes/VaultConfigDialog";
 
 type Aba = "notas" | "quadros";
 type Rascunho = { title: string; body: string; folder: string; tags: string };
@@ -55,6 +57,7 @@ export default function Notes() {
   const [abertaId, setAbertaId] = useState<string | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
   const [temSync, setTemSync] = useState(false);
+  const [configAberta, setConfigAberta] = useState(false);
 
   // Rascunho local: o textarea não pode esperar a ida ao banco a cada tecla.
   const [rascunho, setRascunho] = useState<Rascunho | null>(null);
@@ -142,6 +145,27 @@ export default function Notes() {
     else toast.error("Falhou ao sincronizar", { description: r.error ?? "erro desconhecido" });
   };
 
+  /**
+   * Resolve um `[[link]]` como o Obsidian: casa pelo TÍTULO, não por caminho.
+   * Sem correspondência, cria a nota na mesma pasta da atual — é o
+   * comportamento que a pessoa espera ao clicar num link que ainda não
+   * existe, e evita link morto acumulando no cofre.
+   */
+  const abrirPorTitulo = async (titulo: string) => {
+    const alvo = notes.find((n) => n.title.toLowerCase() === titulo.toLowerCase());
+    if (alvo) {
+      setAbertaId(alvo.id);
+      return;
+    }
+    try {
+      const n = await criar({ title: titulo, folder: rascunho?.folder ?? "" });
+      setAbertaId(n.id);
+      toast.success("Nota criada", { description: titulo });
+    } catch {
+      toast.error("Não foi possível criar a nota");
+    }
+  };
+
   const excluir = async (id: string) => {
     try {
       await remover(id);
@@ -164,6 +188,16 @@ export default function Notes() {
               : `${notes.length} nota${notes.length > 1 ? "s" : ""}${temSync ? "" : " · cofre não configurado"}`}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setConfigAberta(true)}
+          title="Configurar o cofre"
+          className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-2 text-sm text-white/70 transition-colors hover:bg-white/10"
+        >
+          <Icon as={Setting2} size={16} />
+          Cofre
+        </button>
         <button
           type="button"
           onClick={aba === "notas" ? novaNota : undefined}
@@ -177,7 +211,14 @@ export default function Notes() {
           <Icon as={Add} size={16} />
           {aba === "notas" ? "Nova nota" : "Novo quadro"}
         </button>
+        </div>
       </header>
+
+      <VaultConfigDialog
+        open={configAberta}
+        onOpenChange={setConfigAberta}
+        onSaved={(c) => setTemSync(Boolean(c?.enabled))}
+      />
 
       <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
         {/* ── Pastas e etiquetas ──────────────────────────────────── */}
@@ -381,6 +422,64 @@ export default function Notes() {
                 rows={18}
                 className="w-full resize-y rounded-2xl bg-white/[0.03] p-4 font-mono text-sm leading-relaxed text-white/85 placeholder:text-white/20 outline-none"
               />
+
+              {(() => {
+                const saem = extrairWikilinks(rascunho.body);
+                // Backlinks: quem aponta pra esta nota. O Obsidian mostra isso
+                // por padrão, e é o que transforma notas soltas em grafo.
+                const entram = notes.filter(
+                  (n) =>
+                    n.id !== aberta.id &&
+                    extrairWikilinks(n.body).some(
+                      (l) => l.toLowerCase() === rascunho.title.toLowerCase()
+                    )
+                );
+                if (!saem.length && !entram.length) return null;
+                return (
+                  <div className="space-y-2 border-t border-white/[0.06] pt-3">
+                    {saem.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] uppercase tracking-widest text-white/30">Aponta para</span>
+                        {saem.map((l) => {
+                          const existe = notes.some((n) => n.title.toLowerCase() === l.toLowerCase());
+                          return (
+                            <button
+                              key={l}
+                              type="button"
+                              onClick={() => abrirPorTitulo(l)}
+                              title={existe ? "Abrir" : "Criar esta nota"}
+                              className={cn(
+                                "rounded-full px-2.5 py-1 text-xs transition-colors",
+                                existe
+                                  ? "bg-white/[0.06] text-white/70 hover:bg-white/10"
+                                  : "border border-dashed border-white/15 text-white/35 hover:text-white/60"
+                              )}
+                            >
+                              {l}
+                              {!existe && " +"}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {entram.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] uppercase tracking-widest text-white/30">Apontam para cá</span>
+                        {entram.map((n) => (
+                          <button
+                            key={n.id}
+                            type="button"
+                            onClick={() => setAbertaId(n.id)}
+                            className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-white/70 transition-colors hover:bg-white/10"
+                          >
+                            {n.title}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <p className="text-[11px] text-white/25">
                 No cofre: <code>{caminhoNoCofre({ title: rascunho.title, folder: rascunho.folder })}</code>
