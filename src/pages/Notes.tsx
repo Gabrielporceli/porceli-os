@@ -171,7 +171,12 @@ export default function Notes() {
     await recarregar();
     const novas = (r.importadas ?? 0) + (r.atualizadas ?? 0);
     const partes = [`${r.importadas ?? 0} nova(s)`, `${r.atualizadas ?? 0} atualizada(s)`];
+    if (r.movidas?.length) partes.push(`${r.movidas.length} mudou de pasta`);
     if (r.conflitos?.length) partes.push(`${r.conflitos.length} com edicao local (nao tocadas)`);
+    // Ausente = o arquivo sumiu do cofre. A funcao nunca apaga por conta
+    // propria, entao sem avisar aqui a nota fica no CRM pra sempre sem que
+    // ninguem saiba que ela nao existe mais do outro lado.
+    if (r.ausentes?.length) partes.push(`${r.ausentes.length} sem arquivo no cofre`);
     toast[novas > 0 ? "success" : "info"](
       novas > 0 ? "Cofre importado" : "Nada novo no cofre",
       { description: partes.join(" · ") }
