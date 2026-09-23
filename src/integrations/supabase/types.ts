@@ -599,6 +599,108 @@ export type Database = {
           },
         ]
       }
+      notes: {
+        Row: {
+          body: string
+          client_id: string | null
+          created_at: string
+          extra_frontmatter: Json
+          folder: string
+          git_sha: string | null
+          id: string
+          lead_id: string | null
+          synced_at: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          user_id: string
+          vault_path: string | null
+        }
+        Insert: {
+          body?: string
+          client_id?: string | null
+          created_at?: string
+          extra_frontmatter?: Json
+          folder?: string
+          git_sha?: string | null
+          id?: string
+          lead_id?: string | null
+          synced_at?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id: string
+          vault_path?: string | null
+        }
+        Update: {
+          body?: string
+          client_id?: string | null
+          created_at?: string
+          extra_frontmatter?: Json
+          folder?: string
+          git_sha?: string | null
+          id?: string
+          lead_id?: string | null
+          synced_at?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vault_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes_sync_config: {
+        Row: {
+          base_path: string
+          branch: string
+          created_at: string
+          enabled: boolean
+          last_error: string | null
+          last_sync_at: string | null
+          repo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_path?: string
+          branch?: string
+          created_at?: string
+          enabled?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          repo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_path?: string
+          branch?: string
+          created_at?: string
+          enabled?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          repo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           conversa_id: string | null
