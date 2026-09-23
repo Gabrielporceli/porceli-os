@@ -10,28 +10,83 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      "Clientes Mensagem": {
+      automations: {
         Row: {
-          created_at: string
-          id: number
-          Nome: string | null
-          Numero: string | null
+          category: string | null
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          enabled: boolean | null
+          function_name: string
+          icon: string | null
+          id: string
+          jobname: string
+          last_triggered_at: string | null
+          schedule: string
+          trigger_type: string | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          id: number
-          Nome?: string | null
-          Numero?: string | null
+          category?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          enabled?: boolean | null
+          function_name: string
+          icon?: string | null
+          id?: string
+          jobname: string
+          last_triggered_at?: string | null
+          schedule: string
+          trigger_type?: string | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
-          id?: number
-          Nome?: string | null
-          Numero?: string | null
+          category?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          enabled?: boolean | null
+          function_name?: string
+          icon?: string | null
+          id?: string
+          jobname?: string
+          last_triggered_at?: string | null
+          schedule?: string
+          trigger_type?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -45,6 +100,8 @@ export type Database = {
           email: string
           group_id: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           monthly_value: number | null
           payment_day: number | null
           phone: string
@@ -58,16 +115,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          cnpj: string
+          cnpj?: string
           company: string
           contract_end?: string | null
           created_at?: string | null
-          email: string
+          email?: string
           group_id?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           monthly_value?: number | null
           payment_day?: number | null
-          phone: string
+          phone?: string
           plan?: string | null
           responsible: string
           single_payment?: boolean
@@ -85,6 +144,8 @@ export type Database = {
           email?: string
           group_id?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           monthly_value?: number | null
           payment_day?: number | null
           phone?: string
@@ -98,36 +159,10 @@ export type Database = {
         }
         Relationships: []
       }
-      contatos: {
-        Row: {
-          created_at: string
-          id: string
-          nome: string | null
-          numero: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          nome?: string | null
-          numero: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          nome?: string | null
-          numero?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       contracts: {
         Row: {
           client_id: string
+          contract_url: string | null
           created_at: string | null
           end_date: string
           id: string
@@ -141,6 +176,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          contract_url?: string | null
           created_at?: string | null
           end_date: string
           id?: string
@@ -154,6 +190,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          contract_url?: string | null
           created_at?: string | null
           end_date?: string
           id?: string
@@ -175,149 +212,6 @@ export type Database = {
           },
         ]
       }
-      conversations: {
-        Row: {
-          client_id: string | null
-          contact_name: string | null
-          created_at: string | null
-          direction: string | null
-          id: string
-          last_message: string | null
-          numero: string | null
-          phone: string
-          remote_jid: string | null
-          stage: string | null
-          tag: string | null
-          unread_count: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          client_id?: string | null
-          contact_name?: string | null
-          created_at?: string | null
-          direction?: string | null
-          id?: string
-          last_message?: string | null
-          numero?: string | null
-          phone: string
-          remote_jid?: string | null
-          stage?: string | null
-          tag?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          client_id?: string | null
-          contact_name?: string | null
-          created_at?: string | null
-          direction?: string | null
-          id?: string
-          last_message?: string | null
-          numero?: string | null
-          phone?: string
-          remote_jid?: string | null
-          stage?: string | null
-          tag?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversations_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      "Dados Mensagem": {
-        Row: {
-          Cliente: string | null
-          created_at: string
-          Enviado: boolean | null
-          Horario_envio: string | null
-          id: number
-          Mensagem: string | null
-        }
-        Insert: {
-          Cliente?: string | null
-          created_at?: string
-          Enviado?: boolean | null
-          Horario_envio?: string | null
-          id: number
-          Mensagem?: string | null
-        }
-        Update: {
-          Cliente?: string | null
-          created_at?: string
-          Enviado?: boolean | null
-          Horario_envio?: string | null
-          id?: number
-          Mensagem?: string | null
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          chunk_index: number | null
-          content: string | null
-          created_at: string
-          document_id: string | null
-          embedding: string | null
-          file_id: string | null
-          id: number
-          metadata: Json | null
-          mime_type: string | null
-          namespace: string | null
-          row_type: Database["public"]["Enums"]["documents_row_type"]
-          sha1_checksum: string | null
-          source_url: string | null
-          tags: string[] | null
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          chunk_index?: number | null
-          content?: string | null
-          created_at?: string
-          document_id?: string | null
-          embedding?: string | null
-          file_id?: string | null
-          id?: number
-          metadata?: Json | null
-          mime_type?: string | null
-          namespace?: string | null
-          row_type?: Database["public"]["Enums"]["documents_row_type"]
-          sha1_checksum?: string | null
-          source_url?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          chunk_index?: number | null
-          content?: string | null
-          created_at?: string
-          document_id?: string | null
-          embedding?: string | null
-          file_id?: string | null
-          id?: number
-          metadata?: Json | null
-          mime_type?: string | null
-          namespace?: string | null
-          row_type?: Database["public"]["Enums"]["documents_row_type"]
-          sha1_checksum?: string | null
-          source_url?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       finances: {
         Row: {
           amount: number
@@ -336,7 +230,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          category: string
+          category?: string
           client_id?: string | null
           created_at?: string | null
           date: string
@@ -377,41 +271,44 @@ export type Database = {
       financial_entries: {
         Row: {
           amount: number
+          asaas_payment_id: string | null
           client_id: string
-          created_at: string
+          created_at: string | null
           due_date: string
           id: string
           name: string
           paid_date: string | null
           reference: string
           status: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          asaas_payment_id?: string | null
           client_id: string
-          created_at?: string
+          created_at?: string | null
           due_date: string
           id?: string
           name: string
           paid_date?: string | null
           reference: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           amount?: number
+          asaas_payment_id?: string | null
           client_id?: string
-          created_at?: string
+          created_at?: string | null
           due_date?: string
           id?: string
           name?: string
           paid_date?: string | null
           reference?: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -454,24 +351,87 @@ export type Database = {
         }
         Relationships: []
       }
-      ia_master: {
+      google_calendar_events: {
         Row: {
-          created_at: string
-          id: number
-          message: Json
-          session_id: string
+          all_day: boolean | null
+          color_id: string | null
+          description: string | null
+          end_time: string | null
+          google_event_id: string
+          html_link: string | null
+          id: string
+          location: string | null
+          start_time: string | null
+          status: string | null
+          synced_at: string | null
+          title: string | null
+          user_id: string | null
         }
         Insert: {
-          created_at?: string
-          id?: number
-          message: Json
-          session_id: string
+          all_day?: boolean | null
+          color_id?: string | null
+          description?: string | null
+          end_time?: string | null
+          google_event_id: string
+          html_link?: string | null
+          id?: string
+          location?: string | null
+          start_time?: string | null
+          status?: string | null
+          synced_at?: string | null
+          title?: string | null
+          user_id?: string | null
         }
         Update: {
-          created_at?: string
-          id?: number
-          message?: Json
-          session_id?: string
+          all_day?: boolean | null
+          color_id?: string | null
+          description?: string | null
+          end_time?: string | null
+          google_event_id?: string
+          html_link?: string | null
+          id?: string
+          location?: string | null
+          start_time?: string | null
+          status?: string | null
+          synced_at?: string | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      google_calendar_tokens: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          expiry_date: number | null
+          id: string
+          refresh_token: string | null
+          scope: string | null
+          token_type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          expiry_date?: number | null
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          expiry_date?: number | null
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -524,13 +484,7 @@ export type Database = {
           phone: string | null
           remotejid: string | null
           reuniao_realizada: boolean | null
-          sdr_followup_count: number | null
-          sdr_human_takeover_at: string | null
-          sdr_last_contact_at: string | null
-          sdr_qualified: boolean | null
-          sdr_quality_score: number | null
-          sdr_started_at: string | null
-          sdr_status: string | null
+          source: string | null
           stage: string | null
           tags: string[] | null
           updated_at: string | null
@@ -550,13 +504,7 @@ export type Database = {
           phone?: string | null
           remotejid?: string | null
           reuniao_realizada?: boolean | null
-          sdr_followup_count?: number | null
-          sdr_human_takeover_at?: string | null
-          sdr_last_contact_at?: string | null
-          sdr_qualified?: boolean | null
-          sdr_quality_score?: number | null
-          sdr_started_at?: string | null
-          sdr_status?: string | null
+          source?: string | null
           stage?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -576,13 +524,7 @@ export type Database = {
           phone?: string | null
           remotejid?: string | null
           reuniao_realizada?: boolean | null
-          sdr_followup_count?: number | null
-          sdr_human_takeover_at?: string | null
-          sdr_last_contact_at?: string | null
-          sdr_qualified?: boolean | null
-          sdr_quality_score?: number | null
-          sdr_started_at?: string | null
-          sdr_status?: string | null
+          source?: string | null
           stage?: string | null
           tags?: string[] | null
           updated_at?: string | null
@@ -595,6 +537,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_stage_fkey"
+            columns: ["stage"]
+            isOneToOne: false
+            referencedRelation: "stages"
             referencedColumns: ["id"]
           },
         ]
@@ -701,183 +650,226 @@ export type Database = {
         }
         Relationships: []
       }
-      messages: {
+      notification_logs: {
         Row: {
-          conversa_id: string | null
-          conversation_id: string
-          created_at: string | null
-          data_hora: string | null
-          direcao: boolean | null
+          asaas_customer_id: string | null
+          asaas_payment_id: string | null
+          channel: string
+          client_name: string | null
+          days_overdue: number | null
+          error_message: string | null
           id: string
-          media_filename: string | null
-          media_size: number | null
-          media_type: string | null
-          media_url: string | null
-          mensagem: string | null
-          nome_contato: string | null
-          numero: string | null
-          text: string
+          metadata: Json | null
+          sent_at: string | null
+          status: string | null
+          type: string
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          channel: string
+          client_name?: string | null
+          days_overdue?: number | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          type: string
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          channel?: string
+          client_name?: string | null
+          days_overdue?: number | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      notion_config: {
+        Row: {
+          created_at: string | null
+          database_id: string | null
+          database_name: string | null
+          id: string
+          last_synced_at: string | null
           updated_at: string | null
         }
         Insert: {
-          conversa_id?: string | null
-          conversation_id: string
           created_at?: string | null
-          data_hora?: string | null
-          direcao?: boolean | null
+          database_id?: string | null
+          database_name?: string | null
           id?: string
-          media_filename?: string | null
-          media_size?: number | null
-          media_type?: string | null
-          media_url?: string | null
-          mensagem?: string | null
-          nome_contato?: string | null
-          numero?: string | null
-          text: string
+          last_synced_at?: string | null
           updated_at?: string | null
         }
         Update: {
-          conversa_id?: string | null
-          conversation_id?: string
           created_at?: string | null
-          data_hora?: string | null
-          direcao?: boolean | null
+          database_id?: string | null
+          database_name?: string | null
           id?: string
-          media_filename?: string | null
-          media_size?: number | null
-          media_type?: string | null
-          media_url?: string | null
-          mensagem?: string | null
-          nome_contato?: string | null
-          numero?: string | null
-          text?: string
+          last_synced_at?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations_metrics"
-            referencedColumns: ["conversation_id"]
-          },
-        ]
+        Relationships: []
+      }
+      notion_tasks: {
+        Row: {
+          due_date: string | null
+          id: string
+          notion_page_id: string
+          priority: string | null
+          properties: Json | null
+          status: string | null
+          synced_at: string | null
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          due_date?: string | null
+          id?: string
+          notion_page_id: string
+          priority?: string | null
+          properties?: Json | null
+          status?: string | null
+          synced_at?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          due_date?: string | null
+          id?: string
+          notion_page_id?: string
+          priority?: string | null
+          properties?: Json | null
+          status?: string | null
+          synced_at?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      notion_tokens: {
+        Row: {
+          access_token: string
+          bot_id: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          workspace_id: string | null
+          workspace_name: string | null
+        }
+        Insert: {
+          access_token: string
+          bot_id?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          workspace_id?: string | null
+          workspace_name?: string | null
+        }
+        Update: {
+          access_token?: string
+          bot_id?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          workspace_id?: string | null
+          workspace_name?: string | null
+        }
+        Relationships: []
       }
       plans: {
         Row: {
           color: string | null
-          created_at: string
+          created_at: string | null
           id: string
           is_default: boolean | null
           name: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           color?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_default?: boolean | null
           name: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           color?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_default?: boolean | null
           name?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
       }
-      sdr_meetings: {
+      scheduled_messages: {
         Row: {
-          conversation_id: string | null
+          client_id: string | null
+          client_name: string | null
           created_at: string | null
+          error_message: string | null
           id: string
-          lead_id: string
-          rescheduled_count: number | null
+          message: string
+          phone: string
+          recipient_type: string
           scheduled_at: string
+          sent_at: string | null
           status: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          conversation_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
-          lead_id: string
-          rescheduled_count?: number | null
+          message: string
+          phone: string
+          recipient_type: string
           scheduled_at: string
-          status: string
+          sent_at?: string | null
+          status?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          conversation_id?: string | null
+          client_id?: string | null
+          client_name?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
-          lead_id?: string
-          rescheduled_count?: number | null
+          message?: string
+          phone?: string
+          recipient_type?: string
           scheduled_at?: string
+          sent_at?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sdr_meetings_lead_id_fkey"
-            columns: ["lead_id"]
+            foreignKeyName: "scheduled_messages_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sdr_messages: {
-        Row: {
-          actor: string | null
-          content: string | null
-          created_at: string | null
-          direction: string
-          id: string
-          lead_id: string | null
-          type: string | null
-        }
-        Insert: {
-          actor?: string | null
-          content?: string | null
-          created_at?: string | null
-          direction: string
-          id?: string
-          lead_id?: string | null
-          type?: string | null
-        }
-        Update: {
-          actor?: string | null
-          content?: string | null
-          created_at?: string | null
-          direction?: string
-          id?: string
-          lead_id?: string | null
-          type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sdr_messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -885,32 +877,32 @@ export type Database = {
       stages: {
         Row: {
           color: string
-          created_at: string
+          created_at: string | null
           id: string
           is_default: boolean
           name: string
           position: number
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           color?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_default?: boolean
           name: string
           position?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           color?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_default?: boolean
           name?: string
           position?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -918,61 +910,33 @@ export type Database = {
       tags: {
         Row: {
           color: string
-          created_at: string
+          created_at: string | null
           id: string
           name: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           color?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           name: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           color?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           name?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
-        }
-        Relationships: []
-      }
-      webhook_logs: {
-        Row: {
-          created_at: string | null
-          id: number
-          payload: Json | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          payload?: Json | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          payload?: Json | null
         }
         Relationships: []
       }
     }
     Views: {
-      conversations_metrics: {
-        Row: {
-          conversation_id: string | null
-          created_at: string | null
-          messages_count: number | null
-          phone: string | null
-          remote_jid: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       apply_no_show: { Args: { p_user_id: string }; Returns: undefined }
@@ -984,39 +948,28 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: undefined
       }
-      insert_message: {
+      manage_automation_cron: {
         Args: {
-          p_contact_name?: string
-          p_date_time: string
-          p_direction: boolean
-          p_message: string
-          p_message_id: string
-          p_phone: string
-          p_remote_jid: string
-          p_user_id: string
+          p_action: string
+          p_command?: string
+          p_jobname: string
+          p_schedule?: string
         }
-        Returns: string
-      }
-      match_documents: {
-        Args: { filter?: Json; match_count?: number; query_embedding: string }
-        Returns: {
-          content: string
-          id: number
-          metadata: Json
-          similarity: number
-        }[]
+        Returns: undefined
       }
       process_webhook_message: {
         Args: {
-          p_data_hora: string
-          p_direcao: boolean
-          p_media_filename: string
-          p_media_key: string
-          p_media_size: number
-          p_media_type: string
-          p_media_url: string
-          p_mensagem: string
-          p_nome_contato: string
+          p_contact_photo?: string
+          p_data_hora?: string
+          p_direcao?: boolean
+          p_is_group?: boolean
+          p_media_filename?: string
+          p_media_key?: string
+          p_media_size?: number
+          p_media_type?: string
+          p_media_url?: string
+          p_mensagem?: string
+          p_nome_contato?: string
           p_numero: string
           p_user_id: string
         }
@@ -1031,7 +984,6 @@ export type Database = {
         }
         Returns: Json
       }
-      unaccent: { Args: { "": string }; Returns: string }
       update_client_tags_from_contracts: { Args: never; Returns: undefined }
       upsert_conversation: {
         Args: {
@@ -1046,7 +998,7 @@ export type Database = {
       webhook_insert_message: { Args: { webhook_data: Json }; Returns: string }
     }
     Enums: {
-      documents_row_type: "doc" | "chunk"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1062,12 +1014,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1091,11 +1043,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1116,11 +1068,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1141,11 +1093,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1158,11 +1110,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1172,9 +1124,10 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
-    Enums: {
-      documents_row_type: ["doc", "chunk"],
-    },
+    Enums: {},
   },
 } as const
