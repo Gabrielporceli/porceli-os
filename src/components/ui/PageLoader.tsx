@@ -1,10 +1,14 @@
+/**
+ * Renderizado pelas páginas enquanto `usePageReady()` é false.
+ *
+ * Não desenha nada: quem cobre a tela é o overlay da transição, que mora
+ * no CRMLayout (ver PageTransition.tsx). Aqui só ocupamos uma altura
+ * mínima pro documento não colapsar a zero e dar salto de scroll quando o
+ * conteúdo real montar.
+ *
+ * Também não avisa mais ninguém: o "estou carregando" passou a sair do
+ * próprio usePageReady, que é quem realmente sabe se os dados chegaram.
+ */
 export function PageLoader() {
-  return (
-    <div className="flex items-center justify-center h-[70vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 rounded-full border-2 border-white/10 border-t-purple-500 animate-spin" />
-        <p className="text-white/40 text-sm tracking-wide">Carregando dados...</p>
-      </div>
-    </div>
-  );
+  return <div className="h-[70vh]" aria-busy="true" />;
 }

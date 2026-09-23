@@ -1,10 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useIsFetching } from "@tanstack/react-query";
+import { usePageRevealGate } from "@/components/ui/PageTransition";
 
 /**
- * Retorna `true` quando todas as queries React Query terminaram e o
- * tempo mínimo de loading passou. Garante que animações sempre partem
- * do zero com dados completos.
+ * Retorna `true` quando a página pode DESENHAR — o que são duas coisas:
+ *
+ *   1. os dados chegaram (queries do React Query + o `extraLoading`), e
+ *   2. a transição de página liberou (ver usePageRevealGate).
+ *
+ * O item 2 existe porque, com os dados em cache, a página ficava pronta
+ * ANTES de o overlay de carregamento subir: ela pintava nítida, o blur
+ * chegava por cima e sumia logo em seguida. Agora o conteúdo espera o
+ * desfoque estar cobrindo, monta escondido atrás dele e é revelado pela
+ * saída — nunca aparece nítido antes da hora.
+ *
+ * Fora do CRMLayout (página pública) não há transição e vale só o item 1.
  *
  * @param extraLoading - loading adicional de hooks useState (ex: useLeads)
  */
@@ -30,5 +40,5 @@ export function usePageReady(extraLoading = false): boolean {
     return () => clearTimeout(t);
   }, [fetchingCount, extraLoading, isReady]);
 
-  return isReady;
+  return usePageRevealGate(isReady);
 }

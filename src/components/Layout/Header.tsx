@@ -18,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { MOBILE_SLOT, MOBILE_WINDOW, PILL_DEFAULTS, idlePillGeom, transferPillGeom, type PillGeom } from './mobilePillGeometry';
 import { MobilePillBlob } from './MobilePillBlob';
+import { useHeaderAnimSignal } from '@/components/ui/PageTransition';
 
 // Ícones do Iconsax (iconsax-react). O estilo é escolhido em runtime pela
 // prop `variant`; sem ela, cada ícone cai no Linear, que é o traço fino
@@ -38,6 +39,10 @@ const menuItems = [
 
 export const Header = () => {
   const { logout } = useAuth();
+  // Avisa o overlay de carregamento (PageTransition) quando a pílula vai
+  // animar, pra ele não subir por cima do movimento. No-op se o Header
+  // estiver fora do CRMLayout (ex.: laboratório /dev/pill).
+  const signalHeaderAnim = useHeaderAnimSignal();
   const location = useLocation();
   const navigate = useNavigate();
   const { scrollY } = useScroll();
@@ -367,6 +372,9 @@ export const Header = () => {
       deskAnchorRef.current = to;
       setDeskPill(measureDesk(to, to, 1));
     } else {
+      // Segura a entrada do overlay de carregamento até esta transferência
+      // acabar — senão ele cobriria o header bem no meio do movimento.
+      signalHeaderAnim(DESK_MS);
       const started = performance.now();
       // easeInOutCubic: sai devagar, ganha corpo no meio, assenta suave.
       const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
@@ -395,7 +403,7 @@ export const Header = () => {
     });
     ro.observe(wrap);
     return () => { stop(); ro.disconnect(); };
-  }, [location.pathname, isMobile, measureDesk, SWITCH_AT]);
+  }, [location.pathname, isMobile, measureDesk, SWITCH_AT, signalHeaderAnim]);
 
   // Mede a largura de 1 bloco (pro loop) sempre que ela mudar (fonte
   // custom terminando de carregar, rotação de tela etc.).
@@ -465,6 +473,9 @@ export const Header = () => {
       // (senão os dois brigariam pelo mesmo estado a cada frame) — mas as
       // posições continuam sendo remedidas ao vivo, então a pílula
       // acompanha a faixa deslizando por baixo.
+      // Mesma ideia do desktop: o overlay de carregamento espera esta
+      // transferência terminar antes de cobrir a tela.
+      signalHeaderAnim(MOBILE_TAP_MS);
       tapAnimRef.current = true;
       const started = performance.now();
       const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
@@ -490,7 +501,7 @@ export const Header = () => {
       if (tapRafRef.current) cancelAnimationFrame(tapRafRef.current);
       tapRafRef.current = requestAnimationFrame(tick);
     }
-  }, [isMobile, location.pathname, findNearest, updateMobilePill, measureMobile, SWITCH_AT]);
+  }, [isMobile, location.pathname, findNearest, updateMobilePill, measureMobile, SWITCH_AT, signalHeaderAnim]);
 
   const onNavScroll = () => {
     if (!isMobile) return;
