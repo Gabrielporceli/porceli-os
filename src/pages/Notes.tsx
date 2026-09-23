@@ -26,6 +26,7 @@ import {
   Folder,
   Hierarchy2,
   NoteText,
+  Import,
   Refresh,
   SearchNormal1,
   Tag,
@@ -39,13 +40,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
 import { caminhoNoCofre, extrairWikilinks } from "@/features/notes/markdown";
-import { sincronizarNota } from "@/features/notes/sync";
+import { importarDoCofre, sincronizarNota } from "@/features/notes/sync";
 
 type Aba = "notas" | "quadros";
 type Rascunho = { title: string; body: string; folder: string; tags: string };
 
 export default function Notes() {
-  const { notes, pastas, etiquetas, isLoading, criar, atualizar, remover } = useNotes();
+  const { notes, pastas, etiquetas, isLoading, criar, atualizar, remover, recarregar } = useNotes();
   const isReady = usePageReady(isLoading);
 
   const [aba, setAba] = useState<Aba>("notas");
@@ -54,6 +55,7 @@ export default function Notes() {
   const [busca, setBusca] = useState("");
   const [abertaId, setAbertaId] = useState<string | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
+  const [importando, setImportando] = useState(false);
 
   // Rascunho local: o textarea não pode esperar a ida ao banco a cada tecla.
   const [rascunho, setRascunho] = useState<Rascunho | null>(null);
@@ -158,6 +160,24 @@ export default function Notes() {
     }
   };
 
+  const importar = async () => {
+    setImportando(true);
+    const r = await importarDoCofre();
+    setImportando(false);
+    if (!r.ok) {
+      toast.error("Falhou ao importar", { description: r.error ?? "erro desconhecido" });
+      return;
+    }
+    await recarregar();
+    const novas = (r.importadas ?? 0) + (r.atualizadas ?? 0);
+    const partes = [`${r.importadas ?? 0} nova(s)`, `${r.atualizadas ?? 0} atualizada(s)`];
+    if (r.conflitos?.length) partes.push(`${r.conflitos.length} com edicao local (nao tocadas)`);
+    toast[novas > 0 ? "success" : "info"](
+      novas > 0 ? "Cofre importado" : "Nada novo no cofre",
+      { description: partes.join(" · ") }
+    );
+  };
+
   const excluir = async (id: string) => {
     try {
       await remover(id);
@@ -180,6 +200,17 @@ export default function Notes() {
               : `${notes.length} nota${notes.length > 1 ? "s" : ""}`}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={importar}
+          disabled={importando}
+          title="Trazer as notas do cofre do Obsidian"
+          className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 disabled:opacity-50"
+        >
+          <Icon as={Import} size={16} className={importando ? "animate-pulse" : ""} />
+          {importando ? "Importando..." : "Importar do cofre"}
+        </button>
         <button
           type="button"
           onClick={aba === "notas" ? novaNota : undefined}
@@ -193,6 +224,7 @@ export default function Notes() {
           <Icon as={Add} size={16} />
           {aba === "notas" ? "Nova nota" : "Novo quadro"}
         </button>
+        </div>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[220px_1fr]">

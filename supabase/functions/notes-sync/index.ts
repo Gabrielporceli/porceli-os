@@ -106,7 +106,6 @@ Deno.serve(async (req) => {
     const token = Deno.env.get("NOTES_GITHUB_TOKEN");
     const repo = Deno.env.get("NOTES_GITHUB_REPO");           // "usuario/cofre"
     const branch = Deno.env.get("NOTES_GITHUB_BRANCH") ?? "main";
-    const base = (Deno.env.get("NOTES_BASE_PATH") ?? "Porceli").replace(/^\/+|\/+$/g, "");
     if (!token) return json({ ok: false, error: "NOTES_GITHUB_TOKEN não configurado" }, 500);
     if (!repo) return json({ ok: false, error: "NOTES_GITHUB_REPO não configurado" }, 500);
 
@@ -126,7 +125,13 @@ Deno.serve(async (req) => {
     const { data: nota, error: e1 } = await db.from("notes").select("*").eq("id", noteId).single();
     if (e1 || !nota) return json({ ok: false, error: "nota não encontrada" }, 404);
 
-    const caminho = [base, nota.vault_path].filter(Boolean).join("/");
+    // `vault_path` JA E o caminho completo no repositorio. Nao ha prefixo a
+    // acrescentar: notas criadas no CRM nascem na pasta "Porceli", e notas
+    // importadas do cofre guardam o caminho real onde vivem. Prefixar aqui
+    // mandaria uma nota importada de "Areas/X.md" para "Porceli/Areas/X.md",
+    // duplicando-a no lugar errado.
+    const caminho = nota.vault_path as string;
+    if (!caminho) return json({ ok: false, error: "nota sem caminho no cofre" }, 400);
 
     const conteudo = toMarkdown(nota);
 
@@ -164,7 +169,7 @@ Deno.serve(async (req) => {
 
     // Renomeada: apaga o arquivo antigo, senão fica órfão no cofre.
     if (renamedFrom) {
-      const antigo = [base, renamedFrom].filter(Boolean).join("/");
+      const antigo = renamedFrom as string;
       const info = await fetch(
         `${GITHUB}/repos/${repo}/contents/${encodeURI(antigo)}?ref=${branch}`,
         { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }

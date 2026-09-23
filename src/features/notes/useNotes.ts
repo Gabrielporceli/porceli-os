@@ -61,6 +61,16 @@ function linhaParaNota(r: NoteRow): NoteComEstado {
 
 export type NovaNota = Partial<Pick<Note, "title" | "body" | "folder" | "tags" | "clientId" | "leadId">>;
 
+/**
+ * Pasta padrao das notas criadas no CRM.
+ *
+ * `vault_path` e sempre o caminho COMPLETO no repositorio — notas
+ * importadas guardam onde de fato vivem no cofre ("Areas/..."), e as
+ * criadas aqui nascem sob esta pasta. Sem essa uniformidade, a funcao de
+ * envio teria de adivinhar quando prefixar e quando nao.
+ */
+export const PASTA_PADRAO = "Porceli";
+
 export function useNotes() {
   const [notes, setNotes] = useState<NoteComEstado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +103,7 @@ export function useNotes() {
       if (!user) throw new Error("Usuário não autenticado");
 
       const titulo = nova.title?.trim() || "Sem título";
-      const pasta = nova.folder ?? "";
+      const pasta = nova.folder ?? PASTA_PADRAO;
 
       const { data, error } = await supabase
         .from("notes")
