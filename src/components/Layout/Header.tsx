@@ -5,12 +5,14 @@ import {
   Calendar,
   Category,
   Clock,
+  Cpu,
   DocumentText,
   DollarCircle,
   Filter,
   Flash,
   Hierarchy,
   Logout,
+  NoteText,
   Profile2User,
 } from 'iconsax-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,6 +37,8 @@ const menuItems = [
   { title: "Financeiro", url: "/financial", icon: DollarCircle },
   { title: "Automações",   url: "/automations",        icon: Flash },
   { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
+  { title: "Agentes", url: "/agents", icon: Cpu },
+  { title: "Notas", url: "/notes", icon: NoteText },
 ];
 
 export const Header = () => {

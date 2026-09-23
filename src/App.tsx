@@ -17,6 +17,8 @@ import Calendar from "./pages/Calendar"
 import Automations from "./pages/Automations"
 import ScheduledMessages from "./pages/ScheduledMessages"
 import FunnelMaps from "./pages/FunnelMaps"
+import AgentsHub from "./pages/AgentsHub"
+import Notes from "./pages/Notes"
 import PillLab from "./pages/PillLab"
 import IconLab from "./pages/IconLab"
 import { CRMLayout } from "./components/Layout/CRMLayout"
@@ -55,6 +57,26 @@ function App() {
                   <Route path="/dev/icons" element={<IconLab />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
+                  <Route
+                    path="/agents"
+                    element={
+                      <ProtectedRoute>
+                        <CRMLayout>
+                          <AgentsHub />
+                        </CRMLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/notes"
+                    element={
+                      <ProtectedRoute>
+                        <CRMLayout>
+                          <Notes />
+                        </CRMLayout>
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="/dashboard"
                     element={
