@@ -262,45 +262,6 @@ export default function Calendar() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<{ id: string; type: 'google' | 'notion' | 'crm'; title: string; time?: string; status?: string; recurrence_type?: string; recurrence?: string; client?: string; clients?: string[]; color?: string; description?: string; due_date?: string; due_time?: string } | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [dbStatus, setDbStatus] = useState<"checking" | "ok" | "error">("checking");
-  const [dbError, setDbError] = useState("");
-
-  const checkDb = async () => {
-    console.log("Checando banco...");
-    try {
-      const { data, error } = await supabase.from('recurring_tasks').select('id').limit(1);
-      if (error) {
-        setDbStatus("error");
-        setDbError(error.message);
-      } else {
-        setDbStatus("ok");
-      }
-    } catch (e: any) {
-      setDbStatus("error");
-      setDbError(e.message);
-    }
-  };
-
-  useEffect(() => {
-    console.log("Calendário montado com sucesso!");
-    checkDb();
-  }, []);
-
-  const handleTestInsert = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { error } = await supabase.from('recurring_tasks').insert({
-        user_id: session.user.id,
-        title: "TESTE RAPIDO",
-        due_date: new Date().toISOString().split('T')[0],
-        status: 'pending'
-      });
-      if (!error) fetchRecurringTasks();
-    } catch (e: any) {
-      console.error(e);
-    }
-  };
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [editTime, setEditTime] = useState("");
   const [editClient, setEditClient] = useState("");
@@ -1801,8 +1762,6 @@ export default function Calendar() {
                        onClick={() => {
                          if (editingItem?.type === 'notion') {
                            handleUpdateNotionTask(editingItem.id, { status: "Realizado" });
-                         } else {
-                           supabase.from("recurring_tasks").update({ status: "completed" }).eq("id", editingItem?.id).then(() => {});
                          }
                          setIsEditActivityModalOpen(false);
                        }}
@@ -1823,8 +1782,6 @@ export default function Calendar() {
                        onClick={() => {
                          if (editingItem?.type === 'notion') {
                            handleUpdateNotionTask(editingItem.id, { status: "Em andamento" });
-                         } else {
-                           supabase.from("recurring_tasks").update({ status: "in_progress" }).eq("id", editingItem?.id).then(() => {});
                          }
                          setIsEditActivityModalOpen(false);
                        }}
