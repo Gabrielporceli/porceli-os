@@ -3,8 +3,7 @@
  * que é o cofre do Obsidian.
  *
  * Por que uma Edge Function e não o navegador: o token do GitHub não pode
- * chegar ao cliente. `notes_sync_config` é lida via RLS pelo próprio
- * navegador, então o token vive aqui, como secret.
+ * chegar ao cliente. Aqui ele é secret, junto do repositório e da branch.
  *
  * Direção: SÓ DE IDA (CRM → cofre), por enquanto. Ler mudanças feitas no
  * Obsidian exige política de conflito, e o campo `git_sha` existe para isso:
@@ -96,8 +95,20 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
+    // Configuração TODA por variável de ambiente, junto do token.
+    //
+    // Antes isto vinha de uma tabela `notes_sync_config` com tela própria.
+    // Não se pagava: o sistema tem UM usuário e UM cofre, então repositório,
+    // branch e subpasta são constantes — e a tabela ainda criava um passo de
+    // configuração que dá pra esquecer, além de uma tela pra manter. O token
+    // já tinha que viver aqui de qualquer jeito (a tabela era lida pelo
+    // navegador via RLS, então não podia guardá-lo).
     const token = Deno.env.get("NOTES_GITHUB_TOKEN");
+    const repo = Deno.env.get("NOTES_GITHUB_REPO");           // "usuario/cofre"
+    const branch = Deno.env.get("NOTES_GITHUB_BRANCH") ?? "main";
+    const base = (Deno.env.get("NOTES_BASE_PATH") ?? "Porceli").replace(/^\/+|\/+$/g, "");
     if (!token) return json({ ok: false, error: "NOTES_GITHUB_TOKEN não configurado" }, 500);
+    if (!repo) return json({ ok: false, error: "NOTES_GITHUB_REPO não configurado" }, 500);
 
     // Cliente com o JWT de quem chamou: a RLS continua valendo, então esta
     // função nunca enxerga nota de outro usuário.
@@ -115,11 +126,6 @@ Deno.serve(async (req) => {
     const { data: nota, error: e1 } = await db.from("notes").select("*").eq("id", noteId).single();
     if (e1 || !nota) return json({ ok: false, error: "nota não encontrada" }, 404);
 
-    const { data: cfg, error: e2 } = await db.from("notes_sync_config").select("*").single();
-    if (e2 || !cfg) return json({ ok: false, error: "sincronização não configurada" }, 400);
-    if (!cfg.enabled) return json({ ok: false, error: "sincronização desligada" }, 400);
-
-    const base = String(cfg.base_path ?? "").replace(/^\/+|\/+$/g, "");
     const caminho = [base, nota.vault_path].filter(Boolean).join("/");
 
     const conteudo = toMarkdown(nota);
@@ -127,10 +133,10 @@ Deno.serve(async (req) => {
     // O SHA do blob é obrigatório para SOBRESCREVER um arquivo existente.
     // Guardamos o da última sincronização; se o arquivo nunca foi enviado,
     // vai sem sha e a API cria.
-    const put = await githubPUT(token, cfg.repo, caminho, {
+    const put = await githubPUT(token, repo, caminho, {
       message: `notas: ${nota.title}`,
       content: paraBase64(conteudo),
-      branch: cfg.branch,
+      branch: branch,
       ...(nota.git_sha ? { sha: nota.git_sha } : {}),
     });
 
@@ -143,7 +149,6 @@ Deno.serve(async (req) => {
         put.status === 409
           ? "conflito: o arquivo mudou no cofre desde a última sincronização"
           : `GitHub ${put.status}: ${JSON.stringify(put.body).slice(0, 300)}`;
-      await db.from("notes_sync_config").update({ last_error: msg }).eq("user_id", nota.user_id);
       return json({ ok: false, error: msg }, 409);
     }
 
@@ -158,27 +163,22 @@ Deno.serve(async (req) => {
     if (renamedFrom) {
       const antigo = [base, renamedFrom].filter(Boolean).join("/");
       const info = await fetch(
-        `${GITHUB}/repos/${cfg.repo}/contents/${encodeURI(antigo)}?ref=${cfg.branch}`,
+        `${GITHUB}/repos/${repo}/contents/${encodeURI(antigo)}?ref=${branch}`,
         { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
       );
       if (info.ok) {
         const { sha } = await info.json();
-        await fetch(`${GITHUB}/repos/${cfg.repo}/contents/${encodeURI(antigo)}`, {
+        await fetch(`${GITHUB}/repos/${repo}/contents/${encodeURI(antigo)}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/vnd.github+json",
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message: `notas: remove ${renamedFrom}`, sha, branch: cfg.branch }),
+          body: JSON.stringify({ message: `notas: remove ${renamedFrom}`, sha, branch: branch }),
         });
       }
     }
-
-    await db
-      .from("notes_sync_config")
-      .update({ last_sync_at: new Date().toISOString(), last_error: null })
-      .eq("user_id", nota.user_id);
 
     return json({ ok: true, path: caminho, sha: novoSha });
   } catch (e) {

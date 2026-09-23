@@ -35,53 +35,24 @@ justamente onde mais se usa.
 
 ---
 
-## 2. O que já existe no código
+## 2. O que já está pronto
 
 - **`src/features/notes/markdown.ts`** — serialização Markdown + frontmatter,
   caminho no cofre e extração de wikilinks. Coberto por 22 asserções.
-- **`supabase/migrations/20260923000001_notes.sql`** — tabelas `notes` e
-  `notes_sync_config`. **Escrita, ainda não aplicada.**
-- **`src/pages/Notes.tsx`** — a tela, ainda como esqueleto (estados vazios).
+- **`src/features/notes/useNotes.ts`** — CRUD contra o Supabase.
+- **`src/pages/Notes.tsx`** — a tela: lista, editor com salvamento automático,
+  pastas, etiquetas, busca, wikilinks navegáveis e backlinks.
+- **`supabase/functions/notes-sync/`** — publicada e ativa.
+- Tabela **`notes`** — criada, com RLS e política.
+- Tipos do Supabase — regenerados.
+
+Falta só o **passo 3**: os segredos.
 
 ---
 
 ## 3. Passo a passo
 
-### 3.1. Aplicar a migração
-
-Dois caminhos; escolha um.
-
-**Pelo painel do Supabase** — SQL Editor → cole o conteúdo de
-`supabase/migrations/20260923000001_notes.sql` → Run.
-
-**Pela CLI**, com o projeto já linkado:
-
-```bash
-supabase db push
-```
-
-Confira depois que as duas tabelas existem e que o RLS está ligado nas duas.
-A migração cria:
-
-- `notes` — as notas
-- `notes_sync_config` — repositório, branch e subpasta
-
-### 3.2. Regenerar os tipos do TypeScript
-
-Sem isto o cliente do Supabase não conhece `notes` e o `tsc` acusa erro em
-qualquer consulta à tabela nova.
-
-```bash
-supabase gen types typescript --project-id <ID_DO_PROJETO> > src/integrations/supabase/types.ts
-```
-
-> **Cuidado:** este arquivo já precisou de conserto manual uma vez — a geração
-> tinha deixado `\n` literais no meio de declarações, quebrando o parse.
-> Depois de regenerar, rode `npx tsc --noEmit -p tsconfig.app.json` e confira
-> que a contagem de erros não subiu (a linha de base atual é **29**, todos
-> pré-existentes e sem relação com notas).
-
-### 3.3. Preparar o cofre no GitHub
+### 3.1. Preparar o cofre no GitHub
 
 1. Coloque o cofre do Obsidian num repositório (privado).
 2. No Obsidian, instale o plugin **Obsidian Git** e configure o
@@ -90,7 +61,7 @@ supabase gen types typescript --project-id <ID_DO_PROJETO> > src/integrations/su
 3. Escolha a subpasta onde o CRM vai escrever — o padrão da migração é
    `Porceli/`. Isolar numa subpasta mantém o resto do cofre só seu.
 
-### 3.4. Token do GitHub
+### 3.2. Token do GitHub
 
 Crie um **fine-grained personal access token** com acesso **só a esse
 repositório** e permissão **Contents: Read and write**.
@@ -99,39 +70,48 @@ repositório** e permissão **Contents: Read and write**.
 > `repo` — que dá acesso a **todos** os seus repositórios. Prefira o
 > fine-grained.
 
-### 3.5. Guardar o token como segredo da Edge Function
+### 3.3. Configurar a função (tudo por segredo)
 
-**O token não pode ir para a tabela.** `notes_sync_config` é lida pelo
-navegador via RLS; um token ali é um segredo entregue ao cliente.
+Repositório, branch e subpasta são variáveis de ambiente da Edge Function,
+junto do token. Não há tabela nem tela de configuração: o sistema tem um
+usuário e um cofre, então isso é constante — e o token teria de viver aqui
+de qualquer forma, já que uma tabela lida pelo navegador não pode guardá-lo.
 
 ```bash
 supabase secrets set NOTES_GITHUB_TOKEN=github_pat_...
+supabase secrets set NOTES_GITHUB_REPO=usuario/meu-cofre
+supabase secrets set NOTES_GITHUB_BRANCH=main      # opcional, padrão main
+supabase secrets set NOTES_BASE_PATH=Porceli       # opcional, padrão Porceli
 ```
 
-### 3.6. Ligar a sincronização
+Faltando qualquer um dos obrigatórios, a função responde com a mensagem
+exata do que falta, e ela aparece no aviso da tela.
 
-Com as tabelas criadas, inserir a linha de configuração do seu usuário:
+### 3.4. Testar
 
-```sql
-INSERT INTO public.notes_sync_config (user_id, repo, branch, base_path, enabled)
-VALUES (auth.uid(), 'seu-usuario/seu-cofre', 'main', 'Porceli', true);
+A função já está publicada. Depois dos segredos, abra uma nota e clique em
+**Sincronizar** — deve aparecer `<subpasta>/<Título>.md` no repositório, com
+o frontmatter no topo.
+
+Se precisar republicar depois de mexer no código dela:
+
+```bash
+supabase functions deploy notes-sync
 ```
-
-(Ou pela tela de Notas, quando a configuração estiver na interface.)
 
 ---
 
-## 4. O que ainda precisa ser escrito
+## 4. O que ainda não foi feito
 
-Em ordem de dependência:
+1. **Os quadros** (mapa mental / fluxograma) — ver seção 6.
+2. **Vincular nota a cliente/lead** — as colunas `client_id` e `lead_id`
+   existem e viram `porceli.client` / `porceli.lead` no frontmatter, mas nada
+   na tela as preenche ainda.
+3. **Sincronização de duas mãos** — ver seção 5.
 
-1. **CRUD das notas** — hook `useNotes` com React Query, no padrão dos outros
-   hooks do projeto. Sem isto a tela continua vazia.
-2. **Tela de Notas de verdade** — editor, criar/renomear pasta, etiquetas.
-3. **Edge Function `notes-sync`** — commita os `.md` no repositório pela API
-   do GitHub. É onde o token é usado.
-4. **Configuração na interface** — repositório, branch, subpasta, ligar/desligar.
-5. **Os quadros** (mapa mental / fluxograma) — ver seção 6.
+E um aviso: **o CRUD nunca rodou com sessão real**. Criar, editar e excluir
+nota dependem de login, então o primeiro uso de verdade é também o primeiro
+teste.
 
 ---
 

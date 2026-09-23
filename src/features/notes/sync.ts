@@ -31,12 +31,3 @@ export async function sincronizarNota(
     return { ok: false, error: String(e) };
   }
 }
-
-/** Configuração da ponte, para a tela saber se há o que sincronizar. */
-export async function lerConfigSync() {
-  const { data } = await supabase
-    .from("notes_sync_config")
-    .select("repo, branch, base_path, enabled, last_sync_at, last_error")
-    .maybeSingle();
-  return data ?? null;
-}

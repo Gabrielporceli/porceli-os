@@ -28,7 +28,6 @@ import {
   NoteText,
   Refresh,
   SearchNormal1,
-  Setting2,
   Tag,
   Trash,
 } from "iconsax-react";
@@ -40,8 +39,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
 import { caminhoNoCofre, extrairWikilinks } from "@/features/notes/markdown";
-import { lerConfigSync, sincronizarNota } from "@/features/notes/sync";
-import { VaultConfigDialog } from "@/features/notes/VaultConfigDialog";
+import { sincronizarNota } from "@/features/notes/sync";
 
 type Aba = "notas" | "quadros";
 type Rascunho = { title: string; body: string; folder: string; tags: string };
@@ -56,18 +54,12 @@ export default function Notes() {
   const [busca, setBusca] = useState("");
   const [abertaId, setAbertaId] = useState<string | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
-  const [temSync, setTemSync] = useState(false);
-  const [configAberta, setConfigAberta] = useState(false);
 
   // Rascunho local: o textarea não pode esperar a ida ao banco a cada tecla.
   const [rascunho, setRascunho] = useState<Rascunho | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const aberta = notes.find((n) => n.id === abertaId) ?? null;
-
-  useEffect(() => {
-    lerConfigSync().then((c) => setTemSync(Boolean(c?.enabled)));
-  }, []);
 
   // Trocar de nota descarta o temporizador pendente da anterior — senão o
   // texto de uma seria gravado por cima da outra.
@@ -185,19 +177,9 @@ export default function Notes() {
           <p className="text-sm text-white/45">
             {notes.length === 0
               ? "Notas em pastas e etiquetas, com quadros para mapas mentais e fluxogramas."
-              : `${notes.length} nota${notes.length > 1 ? "s" : ""}${temSync ? "" : " · cofre não configurado"}`}
+              : `${notes.length} nota${notes.length > 1 ? "s" : ""}`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setConfigAberta(true)}
-          title="Configurar o cofre"
-          className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-2 text-sm text-white/70 transition-colors hover:bg-white/10"
-        >
-          <Icon as={Setting2} size={16} />
-          Cofre
-        </button>
         <button
           type="button"
           onClick={aba === "notas" ? novaNota : undefined}
@@ -211,14 +193,7 @@ export default function Notes() {
           <Icon as={Add} size={16} />
           {aba === "notas" ? "Nova nota" : "Novo quadro"}
         </button>
-        </div>
       </header>
-
-      <VaultConfigDialog
-        open={configAberta}
-        onOpenChange={setConfigAberta}
-        onSaved={(c) => setTemSync(Boolean(c?.enabled))}
-      />
 
       <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
         {/* ── Pastas e etiquetas ──────────────────────────────────── */}
@@ -362,9 +337,9 @@ export default function Notes() {
                   </span>
                   <button
                     type="button"
-                    disabled={!temSync || sincronizando}
+                    disabled={sincronizando}
                     onClick={() => sincronizar(aberta)}
-                    title={temSync ? "Enviar para o cofre" : "Cofre não configurado"}
+                    title="Enviar para o cofre"
                     className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Icon as={Refresh} size={14} className={sincronizando ? "animate-spin" : ""} />

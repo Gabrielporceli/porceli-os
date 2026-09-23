@@ -18,28 +18,15 @@ demais são independentes entre si.
 > npx tsc --noEmit -p tsconfig.app.json
 > ```
 >
-> Linha de base de hoje: **25 erros**, todos anteriores às notas.
+> Linha de base de hoje: **15 erros**, todos anteriores às notas.
 
 ---
 
-## 1. Publicar a `notes-sync` — *eu*
+## 1. Publicar a `notes-sync` — ✅ FEITO
 
-**O que é.** A Edge Function que escreve os `.md` no repositório existe em
-`supabase/functions/notes-sync/`, mas nunca foi publicada. O botão
-*Sincronizar* na tela de Notas não tem o que chamar.
-
-**Como confirmar.** Painel do Supabase → Edge Functions. Hoje há 21 funções
-ativas e nenhuma é a `notes-sync`.
-
-**Passos.**
-
-```bash
-supabase functions deploy notes-sync
-```
-
-Pode ser publicada **antes** do token existir: sem o secret ela responde
-`NOTES_GITHUB_TOKEN não configurado`, que é justamente o que a tela mostra
-no campo de último erro.
+A Edge Function que escreve os `.md` no repositório. Publicada em 23/09/2026, status ACTIVE, `verify_jwt: true` (ela precisa do
+JWT de quem chama para a RLS valer). Sem os segredos ela responde dizendo
+exatamente qual falta.
 
 ---
 
@@ -57,10 +44,13 @@ no campo de último erro.
    permissão **Contents: Read and write**.
    - Se usar token clássico, o escopo necessário é `repo`, que dá acesso a
      **todos** os seus repositórios. Prefira o fine-grained.
-4. **Guardar como secret** — não mande o token por chat:
+4. **Guardar os segredos** — não mande o token por chat:
 
 ```bash
 supabase secrets set NOTES_GITHUB_TOKEN=github_pat_...
+supabase secrets set NOTES_GITHUB_REPO=usuario/meu-cofre
+supabase secrets set NOTES_GITHUB_BRANCH=main      # opcional
+supabase secrets set NOTES_BASE_PATH=Porceli       # opcional
 ```
 
 ---
@@ -70,16 +60,13 @@ supabase secrets set NOTES_GITHUB_TOKEN=github_pat_...
 **Passos.**
 
 1. Entrar no sistema e abrir **Notas**.
-2. Clicar em **Cofre** e preencher repositório (`usuario/repo`), branch e
-   subpasta. Ligar o toggle. Salvar.
-3. Criar uma nota, escrever algo, clicar em **Sincronizar**.
-4. Conferir no GitHub que apareceu `<subpasta>/<Título>.md`, com o
+2. Criar uma nota, escrever algo, clicar em **Sincronizar**.
+3. Conferir no GitHub que apareceu `<subpasta>/<Título>.md`, com o
    frontmatter no topo.
-5. Abrir o cofre no Obsidian e confirmar que a nota aparece, e que as
+4. Abrir o cofre no Obsidian e confirmar que a nota aparece, e que as
    `tags` do frontmatter aparecem no painel de tags dele.
 
-**Se falhar.** A mensagem aparece no toast e fica guardada em
-`notes_sync_config.last_error`, visível no próprio diálogo do Cofre.
+**Se falhar.** A mensagem aparece no toast, dizendo exatamente o que faltou.
 `409` significa que o arquivo mudou no cofre desde a última sincronização
 — ou seja, foi editado no Obsidian. Enquanto a sincronização é só de ida,
 isso é reportado em vez de sobrescrever.
@@ -128,37 +115,18 @@ problema, e a A mantém os dois.
 
 ---
 
-## 5. `types.ts` desatualizado — *eu*
+## 5. `types.ts` desatualizado — ✅ FEITO
 
-**O que é.** O arquivo de tipos do Supabase não bate com o banco: faltam
-tabelas que existem e sobram tabelas já derrubadas. É a causa da maioria
-dos 25 erros de tipo.
+O arquivo de tipos não batia com o banco: faltavam 10 tabelas que existem e
+sobravam 6 já derrubadas.
 
-**Como confirmar.**
+Regenerado em 23/09/2026 com `supabase gen types typescript`, agora que o
+`config.toml` aponta pro projeto certo. **Erros de tipo: 25 → 15** — sumiram
+os de `useAutomations`, `useScheduledMessages` e `useContracts`.
 
-```bash
-npx tsc --noEmit -p tsconfig.app.json | grep "Argument of type"
-```
-
-Hoje acusa `automations` e `scheduled_messages` — duas tabelas que
-**existem no banco** e não estão no arquivo.
-
-**Passos.**
-
-```bash
-supabase gen types typescript --project-id dygadnfeoiimmbeqbsvt > src/integrations/supabase/types.ts
-npx tsc --noEmit -p tsconfig.app.json
-```
-
-**Dois cuidados.**
-
-- Este arquivo já precisou de conserto manual uma vez: a geração deixou
-  `\n` literais no meio de declarações e quebrou o parse. Confira depois.
-- A regeneração muda a base de erros **nos dois sentidos**: some com os de
-  tabela ausente, mas pode acusar código que usa tabelas já derrubadas —
-  que é exatamente a pendência 6.
-
-Vale commit próprio, separado de qualquer outra mudança.
+Conferido: a corrupção de contrabarra-n literais que já aconteceu neste
+arquivo não voltou (0 ocorrências), e nenhuma das 6 tabelas mortas removidas
+é consultada por código.
 
 ---
 
@@ -181,7 +149,7 @@ Enquanto não se decide, são 6 erros de tipo permanentes.
 
 ---
 
-## 7. `notion_config` e `notion_tasks` com RLS sem política — *eu*
+## 7. `notion_config` e `notion_tasks` com RLS sem política — ⏸ nada a fazer
 
 **O que é.** As duas tabelas têm RLS ligado e **nenhuma política criada**.
 Na prática isso bloqueia todo acesso pelo cliente — o que pode ser
@@ -212,10 +180,10 @@ Se o acesso for mesmo só pelas Edge Functions, não há o que fazer: o aviso
 
 | # | pendência | quem | bloqueia |
 |---|---|---|---|
-| 1 | publicar `notes-sync` | eu | o botão Sincronizar |
-| 2 | repositório + token + secret | você | tudo da sincronização |
+| 1 | ~~publicar `notes-sync`~~ | — | ✅ feito |
+| 2 | repositório + 4 segredos | você | tudo da sincronização |
 | 3 | configurar e testar | você | primeiro teste real do CRUD |
 | 4 | toasts invisíveis | decisão sua | erros não aparecem na tela |
-| 5 | regenerar `types.ts` | eu | ~16 erros de tipo |
+| 5 | ~~regenerar `types.ts`~~ | — | ✅ feito (25→15 erros) |
 | 6 | `meta_report_configs` morto | decisão sua | 6 erros de tipo |
-| 7 | RLS sem política no Notion | eu | possivelmente nada |
+| 7 | RLS sem política no Notion | — | nada: as tabelas não têm `user_id`, o acesso é só por service role |
