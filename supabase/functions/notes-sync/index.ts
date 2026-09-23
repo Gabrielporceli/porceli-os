@@ -145,11 +145,14 @@ Deno.serve(async (req) => {
       // desde a última sincronização — ou seja, foi editado no Obsidian.
       // Enquanto a sincronização é só de ida, reportamos em vez de
       // sobrescrever às cegas.
-      const msg =
-        put.status === 409
-          ? "conflito: o arquivo mudou no cofre desde a última sincronização"
-          : `GitHub ${put.status}: ${JSON.stringify(put.body).slice(0, 300)}`;
-      return json({ ok: false, error: msg }, 409);
+      const conflito = put.status === 409;
+      const msg = conflito
+        ? "conflito: o arquivo mudou no cofre desde a última sincronização"
+        : `GitHub ${put.status}: ${JSON.stringify(put.body).slice(0, 300)}`;
+      // Sem isto o log só registra o status e a causa real some.
+      console.error("notes-sync falhou:", msg, "caminho:", caminho, "repo:", repo);
+      // 409 só para conflito de verdade; falha do GitHub é erro de upstream.
+      return json({ ok: false, error: msg }, conflito ? 409 : 502);
     }
 
     const novoSha = (put.body as { content?: { sha?: string } })?.content?.sha ?? null;

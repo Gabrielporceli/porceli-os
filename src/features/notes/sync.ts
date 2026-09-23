@@ -25,7 +25,23 @@ export async function sincronizarNota(
     const { data, error } = await supabase.functions.invoke("notes-sync", {
       body: { noteId, renamedFrom: renamedFrom ?? null },
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      // O supabase-js devolve "Edge Function returned a non-2xx status code"
+      // e esconde o corpo em `context`. Sem ler dali, a mensagem especifica
+      // que a funcao montou ("GitHub 404: ...") se perde e o erro vira
+      // inutil pra diagnosticar.
+      let detalhe = error.message;
+      const ctx = (error as { context?: unknown }).context;
+      if (ctx instanceof Response) {
+        try {
+          const corpo = await ctx.clone().json();
+          if (corpo?.error) detalhe = String(corpo.error);
+        } catch {
+          try { detalhe = (await ctx.clone().text()) || detalhe; } catch { /* mantem */ }
+        }
+      }
+      return { ok: false, error: detalhe };
+    }
     return (data ?? { ok: false, error: "resposta vazia" }) as ResultadoSync;
   } catch (e) {
     return { ok: false, error: String(e) };
