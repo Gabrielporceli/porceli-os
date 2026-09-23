@@ -10,7 +10,9 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+// `sonner`, e nao o useToast do shadcn: o <Toaster/> do shadcn nao esta
+// montado no App.tsx, entao aqueles toasts sao engolidos em silencio.
+import { toast } from "sonner";
 import { caminhoNoCofre, type Note } from "./markdown";
 
 interface NoteRow {
@@ -62,7 +64,6 @@ export type NovaNota = Partial<Pick<Note, "title" | "body" | "folder" | "tags" |
 export function useNotes() {
   const [notes, setNotes] = useState<NoteComEstado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   const carregar = useCallback(async () => {
     try {
@@ -74,11 +75,11 @@ export function useNotes() {
       setNotes((data ?? []).map((d) => linhaParaNota(d as NoteRow)));
     } catch (e) {
       console.error("Erro ao carregar notas:", e);
-      toast({ title: "Erro", description: "Não foi possível carregar as notas", variant: "destructive" });
+      toast.error("Não foi possível carregar as notas");
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     carregar();

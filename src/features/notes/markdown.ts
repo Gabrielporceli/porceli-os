@@ -68,7 +68,7 @@ export function toMarkdown(note: Note): string {
   fm[NS] = meu;
 
   const yaml = dump(fm, { lineWidth: -1, noRefs: true, sortKeys: false }).trimEnd();
-  const corpo = note.body.replace(/^﻿/, "").trimEnd();
+  const corpo = note.body.replace(/^\uFEFF/, "").trimEnd();
   return `---\n${yaml}\n---\n\n${corpo}\n`;
 }
 
@@ -89,7 +89,7 @@ export interface ParsedNote extends Omit<Note, "id" | "folder"> {
  * decide se adota (gera id) ou ignora.
  */
 export function fromMarkdown(texto: string, tituloPadrao = "Sem título"): ParsedNote {
-  const limpo = texto.replace(/^﻿/, "");
+  const limpo = texto.replace(/^\uFEFF/, "");
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(limpo);
 
   let fm: Record<string, unknown> = {};
