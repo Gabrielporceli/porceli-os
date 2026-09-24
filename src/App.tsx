@@ -21,6 +21,7 @@ import AgentsHub from "./pages/AgentsHub"
 import Notes from "./pages/Notes"
 import PillLab from "./pages/PillLab"
 import IconLab from "./pages/IconLab"
+import NotesLab from "./pages/NotesLab"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -55,6 +56,9 @@ function App() {
                   <Route path="/dev/pill" element={<PillLab />} />
                   {/* Exemplo dos ícones do iconsax — pública, sem layout. */}
                   <Route path="/dev/icons" element={<IconLab />} />
+                  {/* Mural, janelas e quadros das Notas com dados falsos —
+                      a tela real fica atrás do login. Pública, sem layout. */}
+                  <Route path="/dev/notas" element={<NotesLab />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
                   <Route
