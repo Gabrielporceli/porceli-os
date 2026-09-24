@@ -16,7 +16,7 @@
  *     usa; ele toma a área principal, com volta explícita.
  *
  * O formato do arquivo (Markdown + frontmatter) vive em
- * src/features/notes/markdown.ts — ver docs/NOTAS-OBSIDIAN.md.
+ * src/features/notes/markdown.ts — ver docs/NOTAS.md.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {

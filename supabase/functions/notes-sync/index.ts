@@ -8,7 +8,7 @@
  * Direção: SÓ DE IDA (CRM → cofre), por enquanto. Ler mudanças feitas no
  * Obsidian exige política de conflito, e o campo `git_sha` existe para isso:
  * é o SHA do blob na última sincronização, e SHA divergente é a definição de
- * conflito. Ver docs/NOTAS-OBSIDIAN.md, seção 5.
+ * conflito. Ver docs/NOTAS.md, seção 5.
  *
  * Entrada:  POST { noteId: string }
  * Saída:    { ok, path, sha } ou { ok: false, error }

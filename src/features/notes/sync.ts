@@ -2,7 +2,7 @@
  * Disparo da sincronização com o cofre.
  *
  * Só chama a Edge Function — o token do GitHub vive lá, nunca aqui. Ver
- * supabase/functions/notes-sync/index.ts e docs/NOTAS-OBSIDIAN.md.
+ * supabase/functions/notes-sync/index.ts e docs/NOTAS.md.
  */
 import { supabase } from "@/integrations/supabase/client";
 

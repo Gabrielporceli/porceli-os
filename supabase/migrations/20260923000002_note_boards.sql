@@ -6,7 +6,7 @@
 --      com um blob que o Obsidian nao sabe renderizar.
 --   2. O Obsidian tem formato proprio pra isso (JSON Canvas, arquivos
 --      `.canvas`). Guardando separado, exportar pra la depois e so um
---      tradutor de `nodes`/`edges` — ver docs/NOTAS-OBSIDIAN.md secao 6.
+--      tradutor de `nodes`/`edges` (ver docs/NOTAS.md).
 --
 -- `nodes` e `edges` sao JSONB e nao tabelas normalizadas de proposito: o
 -- canvas grava o grafo inteiro a cada mudanca, e uma tabela por no

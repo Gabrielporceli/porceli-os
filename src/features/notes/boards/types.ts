@@ -3,7 +3,7 @@
  *
  * O formato de `nodes`/`edges` é deliberadamente próximo do JSON Canvas do
  * Obsidian (id, x, y, width, height, text) para que exportar depois seja um
- * tradutor e não uma reescrita. Ver docs/NOTAS-OBSIDIAN.md seção 6.
+ * tradutor e não uma reescrita. Ver docs/NOTAS.md.
  */
 
 /** Mapa mental e fluxograma compartilham o canvas; muda o vocabulário. */
