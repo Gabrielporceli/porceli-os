@@ -159,6 +159,48 @@ export type Database = {
         }
         Relationships: []
       }
+      content_ideas: {
+        Row: {
+          categoria: string
+          created_at: string
+          feito: boolean
+          formato: string
+          gancho: string
+          id: string
+          observacao: string
+          ordem: number
+          referencia: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          feito?: boolean
+          formato?: string
+          gancho?: string
+          id?: string
+          observacao?: string
+          ordem?: number
+          referencia?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          feito?: boolean
+          formato?: string
+          gancho?: string
+          id?: string
+          observacao?: string
+          ordem?: number
+          referencia?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           client_id: string

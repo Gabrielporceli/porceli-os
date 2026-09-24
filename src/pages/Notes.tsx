@@ -36,11 +36,12 @@ import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow"
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
 import { FolderTree } from "@/features/notes/FolderTree";
 import { TagPicker } from "@/features/notes/TagPicker";
+import { PautaConectada } from "@/features/notes/pauta/PautaTable";
 import { useBoards } from "@/features/notes/boards/useBoards";
 import { BoardCanvas } from "@/features/notes/boards/BoardCanvas";
 import type { TipoQuadro } from "@/features/notes/boards/types";
 
-type Aba = "notas" | "quadros";
+type Aba = "notas" | "pauta" | "quadros";
 
 interface Janela {
   id: string;
@@ -297,7 +298,9 @@ export default function Notes() {
           <p className="text-sm text-white/45">
             {aba === "notas"
               ? `${visiveis.length} de ${notes.length} nota${notes.length === 1 ? "" : "s"}`
-              : `${boards.length} quadro${boards.length === 1 ? "" : "s"}`}
+              : aba === "pauta"
+                ? "ganchos que vão virar post"
+                : `${boards.length} quadro${boards.length === 1 ? "" : "s"}`}
             {janelas.length > 0 && ` · ${janelas.length} aberta${janelas.length === 1 ? "" : "s"}`}
           </p>
         </div>
@@ -312,7 +315,7 @@ export default function Notes() {
             <Icon as={Import} size={16} className={importando ? "animate-pulse" : ""} />
             {importando ? "Importando..." : "Importar do cofre"}
           </button>
-          {aba === "notas" ? (
+          {aba === "pauta" ? null : aba === "notas" ? (
             <button
               type="button"
               onClick={novaNota}
@@ -398,7 +401,8 @@ export default function Notes() {
           </div>
         </section>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[236px_1fr]">
+        <div className={cn("grid gap-4", aba !== "pauta" && "lg:grid-cols-[236px_1fr]")}>
+          {aba !== "pauta" && (
           <aside className="liquid-glass h-fit space-y-4 rounded-3xl p-3.5 lg:sticky lg:top-32">
             <div className="space-y-2">
               <span className="px-1 text-[11px] font-black uppercase tracking-widest text-white/45">
@@ -423,11 +427,12 @@ export default function Notes() {
               />
             </div>
           </aside>
+          )}
 
           <div className="min-w-0 space-y-4">
             <div className="liquid-glass flex flex-wrap items-center gap-3 rounded-3xl p-3.5">
               <div className="flex items-center gap-1 rounded-full bg-white/[0.04] p-1">
-                {(["notas", "quadros"] as const).map((a) => (
+                {(["notas", "pauta", "quadros"] as const).map((a) => (
                   <button
                     key={a}
                     type="button"
@@ -472,7 +477,9 @@ export default function Notes() {
               )}
             </div>
 
-            {aba === "quadros" ? (
+            {aba === "pauta" ? (
+              <PautaConectada />
+            ) : aba === "quadros" ? (
               boards.length === 0 ? (
                 <Vazio
                   titulo="Nenhum quadro ainda"

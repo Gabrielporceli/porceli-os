@@ -12,6 +12,8 @@
 import { useMemo, useState } from "react";
 import { PostItWall } from "@/features/notes/PostItWall";
 import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
+import { PautaTable } from "@/features/notes/pauta/PautaTable";
+import type { Ideia } from "@/features/notes/pauta/usePauta";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
 import { FolderTree } from "@/features/notes/FolderTree";
@@ -79,6 +81,12 @@ export default function NotesLab() {
   const [pasta, setPasta] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [mostrarIndices, setMostrarIndices] = useState(false);
+  const [pauta, setPauta] = useState<Ideia[]>(() => [
+    { id: "p1", gancho: "A cada segundo que sua pagina demora pra carregar, voce perde 11% do trafego", categoria: "Trafego Pago", formato: "Video Narrado", referencia: "", observacao: "", feito: false, ordem: 10 },
+    { id: "p2", gancho: "Seu trafego esta valendo a pena?", categoria: "Trafego Pago", formato: "Conversa", referencia: "https://tiktok.com/@ads.comlucas/video/7490696973067029765", observacao: "", feito: false, ordem: 20 },
+    { id: "p3", gancho: "As pessoas compram com o emocional e justificam com o racional", categoria: "Marketing/Vendas", formato: "", referencia: "", observacao: "Copy", feito: false, ordem: 30 },
+    { id: "p4", gancho: "Decretar compromisso com a producao de conteudo", categoria: "Posicionamento", formato: "Conversa", referencia: "", observacao: "Posicionamento", feito: true, ordem: 40 },
+  ]);
   const [janelas, setJanelas] = useState<{ id: string; pos: PosicaoJanela; z: number }[]>([]);
   const [rascunhos, setRascunhos] = useState<Record<string, Rascunho>>({});
   const [tipoQuadro, setTipoQuadro] = useState<TipoQuadro>("mapa");
@@ -153,6 +161,17 @@ export default function NotesLab() {
         </aside>
 
         <div className="min-w-0 space-y-5">
+          <section>
+            <p className="mb-2 text-xs text-white/40">Pauta</p>
+            <PautaTable
+              ideias={pauta}
+              isLoading={false}
+              criar={() => setPauta((a) => [{ id: crypto.randomUUID(), gancho: "", categoria: "", formato: "", referencia: "", observacao: "", feito: false, ordem: 0 }, ...a])}
+              atualizar={(id, patch) => setPauta((a) => a.map((i) => (i.id === id ? { ...i, ...patch } : i)))}
+              remover={(id) => setPauta((a) => a.filter((i) => i.id !== id))}
+            />
+          </section>
+
           <section>
             <button
               type="button"
