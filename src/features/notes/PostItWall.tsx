@@ -33,15 +33,19 @@ const PostIt = memo(function PostIt({
     <button
       type="button"
       onClick={() => onAbrir(nota.id)}
+      data-aberto={aberto ? "true" : undefined}
       style={{
         background: cor.fundo,
-        border: `1px solid ${aberto ? cor.fita : cor.borda}`,
         transform: `rotate(${giro}deg)`,
-        boxShadow: aberto
-          ? `0 0 0 2px ${cor.fita}, 0 10px 30px rgba(0,0,0,0.45)`
-          : "0 6px 18px rgba(0,0,0,0.30)",
+        // A cor da fita vira variável pro CSS poder usá-la no anel de
+        // "aberto" — mantém a cor do papel mandando, e não um roxo fixo.
+        ["--fita" as string]: cor.fita,
       }}
-      className="mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl p-4 text-left backdrop-blur-sm transition-transform duration-200 hover:!rotate-0 hover:-translate-y-1"
+      /* `post-it` traz o mesmo bevel do .liquid-glass (ver index.css): é o
+         que faz o card ler como objeto, igual ao resto do sistema. A classe
+         de vidro inteira não serve aqui porque força o fundo e mataria a
+         cor do papel. */
+      className="post-it mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl p-4 text-left transition-[transform,box-shadow] duration-200 hover:!rotate-0 hover:-translate-y-1"
     >
       {/* Fita no topo: a pista visual de "papel colado". */}
       <span
@@ -50,7 +54,7 @@ const PostIt = memo(function PostIt({
       />
 
       <div className="flex items-start justify-between gap-2">
-        <h3 className="line-clamp-2 text-sm font-black leading-snug text-white">
+        <h3 className="line-clamp-2 text-sm font-black leading-snug tracking-tight text-white">
           {nota.title || "Sem título"}
         </h3>
         {nota.pendente && (
@@ -72,7 +76,7 @@ const PostIt = memo(function PostIt({
       {(nota.folder || nota.tags.length > 0) && (
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/[0.07] pt-2.5">
           {nota.folder && (
-            <span className="flex min-w-0 items-center gap-1 text-[10px] text-white/35">
+            <span className="flex min-w-0 items-center gap-1 text-[10px] font-black uppercase tracking-widest text-white/35">
               <Icon as={Folder2} size={11} />
               {/* Só a última pasta: o caminho inteiro não cabe e o que
                   interessa no card é onde ela está, não como se chega lá. */}

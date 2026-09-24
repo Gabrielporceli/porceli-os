@@ -13,6 +13,7 @@ import { useMemo, useState } from "react";
 import { PostItWall } from "@/features/notes/PostItWall";
 import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
 import { PautaTable } from "@/features/notes/pauta/PautaTable";
+import { ConfirmarExclusao } from "@/features/notes/ConfirmarExclusao";
 import type { Ideia } from "@/features/notes/pauta/usePauta";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
@@ -81,6 +82,7 @@ export default function NotesLab() {
   const [pasta, setPasta] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [mostrarIndices, setMostrarIndices] = useState(false);
+  const [paraExcluir, setParaExcluir] = useState<string | null>(null);
   const [pauta, setPauta] = useState<Ideia[]>(() => [
     { id: "p1", gancho: "A cada segundo que sua pagina demora pra carregar, voce perde 11% do trafego", categoria: "Trafego Pago", formato: "Video Narrado", referencia: "", observacao: "", feito: false, ordem: 10 },
     { id: "p2", gancho: "Seu trafego esta valendo a pena?", categoria: "Trafego Pago", formato: "Conversa", referencia: "https://tiktok.com/@ads.comlucas/video/7490696973067029765", observacao: "", feito: false, ordem: 20 },
@@ -236,6 +238,7 @@ export default function NotesLab() {
             }
             onMover={(p) => setJanelas((js) => js.map((x) => (x.id === j.id ? { ...x, pos: p } : x)))}
             onFechar={() => setJanelas((js) => js.filter((x) => x.id !== j.id))}
+            onExcluir={() => setParaExcluir(nota.title)}
           >
             <NoteEditor
               rascunho={r}
@@ -248,6 +251,11 @@ export default function NotesLab() {
           </PostItWindow>
         );
       })}
+      <ConfirmarExclusao
+        titulo={paraExcluir}
+        onCancelar={() => setParaExcluir(null)}
+        onConfirmar={() => { alert("excluiria: " + paraExcluir); setParaExcluir(null); }}
+      />
     </div>
   );
 }

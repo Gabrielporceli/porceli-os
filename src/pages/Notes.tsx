@@ -28,6 +28,10 @@ import { usePageReady } from "@/hooks/usePageReady";
 // `sonner`, e nao o useToast do shadcn: ver nota em useNotes.ts.
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
+import { StatsCard } from "@/components/Dashboard/StatsCard";
+import { motion } from "framer-motion";
+import { ConfirmarExclusao } from "@/features/notes/ConfirmarExclusao";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
 import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
 import { sincronizarNota } from "@/features/notes/sync";
@@ -67,6 +71,9 @@ export default function Notes() {
   const [mostrarIndices, setMostrarIndices] = useState(false);
   const [sincronizandoId, setSincronizandoId] = useState<string | null>(null);
   const [quadroAbertoId, setQuadroAbertoId] = useState<string | null>(null);
+  // Excluir nota nao pode ser um clique so: o botao mora ao lado do fechar,
+  // no cabecalho da janela, e ja custou uma nota inteira.
+  const [paraExcluir, setParaExcluir] = useState<string | null>(null);
 
   const [janelas, setJanelas] = useState<Janela[]>([]);
   const [rascunhos, setRascunhos] = useState<Record<string, Rascunho>>({});
@@ -289,11 +296,11 @@ export default function Notes() {
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="space-y-5">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
+    <div className="space-y-6 animate-fade-in md:space-y-8">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-black tracking-tight">Notas</h1>
-          <p className="text-sm text-white/45">
+          <h1 className="text-2xl font-black tracking-tighter">Notas</h1>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/40">
             {aba === "notas"
               ? `${visiveis.length} de ${notes.length} nota${notes.length === 1 ? "" : "s"}`
               : aba === "pauta"
@@ -304,46 +311,74 @@ export default function Notes() {
         </div>
         <div className="flex items-center gap-2">
           {aba === "pauta" ? null : aba === "notas" ? (
-            <button
-              type="button"
-              onClick={novaNota}
-              // Sem `btn-glass-primary` e sem a classe `.bg-primary`: as duas
-              // levam backdrop-filter, e um backdrop-filter logo abaixo do
-              // header fixo é o gatilho da "tarja de brilho" — ver
-              // CORRIGIR-TARJA-DE-BRILHO.md, seção 6.
-              style={{ backgroundColor: "hsl(var(--primary))" }}
-              className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+            <motion.div
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Icon as={Add} size={16} />
-              Nova nota
-            </button>
+              <LiquidGlassButton
+                tint="primary"
+                onClick={novaNota}
+                className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+              >
+                Nova nota
+              </LiquidGlassButton>
+            </motion.div>
           ) : (
             <div className="flex items-center gap-2">
-              <button
-                type="button"
+              <LiquidGlassButton
+                tint="primary"
                 onClick={() => novoQuadro("mapa")}
-                style={{ backgroundColor: "hsl(var(--primary))" }}
-                className="flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
               >
-                <Icon as={Hierarchy2} size={16} />
                 Mapa mental
-              </button>
-              <button
-                type="button"
+              </LiquidGlassButton>
+              <LiquidGlassButton
                 onClick={() => novoQuadro("fluxo")}
-                className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-2 text-sm font-bold text-white/80 transition-colors hover:bg-white/10"
+                className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
               >
-                <Icon as={Diagram} size={16} />
                 Fluxograma
-              </button>
+              </LiquidGlassButton>
             </div>
           )}
         </div>
       </header>
 
+      {/* Fileira de números, no padrão das outras páginas do sistema. */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+        <StatsCard
+          title="Notas"
+          value={notes.length}
+          icon={NoteText}
+          description={pastaAtiva ? `${visiveis.length} nesta pasta` : `em ${contagemPastas.size} pastas`}
+          className="[animation-delay:100ms]"
+        />
+        <StatsCard
+          title="Abertas"
+          value={janelas.length}
+          icon={NoteText}
+          description={janelas.length ? "na sua mesa agora" : "nenhuma na mesa"}
+          className="[animation-delay:200ms]"
+        />
+        <StatsCard
+          title="Etiquetas"
+          value={contagemTags.size}
+          icon={NoteText}
+          description={etiquetas.length ? `${etiquetas.length} filtrando` : "nenhuma filtrando"}
+          className="[animation-delay:300ms]"
+        />
+        <StatsCard
+          title="Quadros"
+          value={boards.length}
+          icon={Hierarchy2}
+          description="mapas e fluxogramas"
+          className="[animation-delay:400ms]"
+        />
+      </div>
+
       {/* ── Canvas em tela: ocupa a área toda, sem barra lateral ────────── */}
       {quadroAberto ? (
-        <section className="liquid-glass overflow-hidden rounded-3xl">
+        <section className="liquid-glass dashboard-glow overflow-hidden rounded-3xl border border-white/5">
           <div className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-2.5">
             <button
               type="button"
@@ -391,9 +426,9 @@ export default function Notes() {
       ) : (
         <div className={cn("grid gap-4", aba !== "pauta" && "lg:grid-cols-[236px_1fr]")}>
           {aba !== "pauta" && (
-          <aside className="liquid-glass h-fit space-y-4 rounded-3xl p-3.5 lg:sticky lg:top-32">
+          <aside className="liquid-glass dashboard-glow h-fit space-y-4 rounded-3xl border border-white/5 p-3.5 lg:sticky lg:top-32">
             <div className="space-y-2">
-              <span className="px-1 text-[11px] font-black uppercase tracking-widest text-white/45">
+              <span className="px-1 text-[10px] font-black uppercase tracking-widest text-white/40">
                 Pastas
               </span>
               <FolderTree
@@ -419,7 +454,7 @@ export default function Notes() {
           )}
 
           <div className="min-w-0 space-y-4">
-            <div className="liquid-glass flex flex-wrap items-center gap-3 rounded-3xl p-3.5">
+            <div className="liquid-glass dashboard-glow flex flex-wrap items-center gap-3 rounded-3xl border border-white/5 p-3.5">
               <div className="flex items-center gap-1 rounded-full bg-white/[0.04] p-1">
                 {(["notas", "pauta", "quadros"] as const).map((a) => (
                   <button
@@ -537,7 +572,7 @@ export default function Notes() {
             onMover={(p) => mover(j.id, p)}
             onFechar={() => fechar(j.id)}
             onSincronizar={() => { void sincronizar(nota); }}
-            onExcluir={() => { void excluir(j.id); }}
+            onExcluir={() => setParaExcluir(j.id)}
           >
             <NoteEditor
               rascunho={rascunho}
@@ -550,6 +585,12 @@ export default function Notes() {
           </PostItWindow>
         );
       })}
+
+      <ConfirmarExclusao
+        titulo={paraExcluir ? (notes.find((n) => n.id === paraExcluir)?.title ?? "") : null}
+        onCancelar={() => setParaExcluir(null)}
+        onConfirmar={() => { if (paraExcluir) void excluir(paraExcluir); setParaExcluir(null); }}
+      />
     </div>
   );
 }
