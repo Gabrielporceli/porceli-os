@@ -13,7 +13,7 @@ import { Editor } from "@tiptap/react";
 import { extensoesDaNota, markdownDoEditor } from "@/features/notes/editor/extensoes";
 
 interface Nota { nome: string; corpo: string }
-interface Resultado { nome: string; antes: number; depois: number; sumiram: string; escapes: number }
+interface Resultado { nome: string; antes: number; depois: number; sumiram: string; escapes: number; trecho: string; estavel: boolean; dif: string; ondeEscapou: string }
 
 const NL = "\n";
 const ASPAS = '"';
@@ -27,15 +27,22 @@ function palavras(s: string): string[] {
     .filter((w) => w.length > 2);
 }
 
-/** Contrabarra antes de colchete: a assinatura exata do defeito que nos trouxe aqui. */
+/**
+ * QUALQUER contrabarra de escape nova.
+ *
+ * Antes eu contava só as de colchete, o que escondia a contrabarra que o
+ * serializador põe antes da quebra de linha — o editor podia estar sujando
+ * o texto inteiro e o portão daria verde.
+ */
 function contarEscapes(s: string): number {
-  return (s.match(/\\[[\]]/g) ?? []).length;
+  return (s.match(/\\[\s\S]/g) ?? []).length;
 }
 
 export default function RoundTripLab() {
   const [res, setRes] = useState<Resultado[] | null>(null);
   const [casos, setCasos] = useState<Array<[string, string, string]>>([]);
   const [erro, setErro] = useState<string | null>(null);
+  const [dataview, setDataview] = useState<[string, string] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -48,6 +55,10 @@ export default function RoundTripLab() {
         for (const n of notas) {
           editor.commands.setContent(n.corpo);
           const volta = md();
+          // Idempotencia: salvar de novo nao pode continuar mudando o texto.
+          // Se mudar a cada volta, o arquivo degrada sozinho a cada gravacao.
+          editor.commands.setContent(volta);
+          const volta2 = md();
           const b = new Set(palavras(volta));
           const sumiram = palavras(n.corpo).filter((w) => !b.has(w));
           saida.push({
@@ -57,6 +68,32 @@ export default function RoundTripLab() {
             sumiram: sumiram.slice(0, 10).join(" · "),
             // Só conta escape NOVO: se a nota já tinha `\[`, não é culpa nossa.
             escapes: Math.max(0, contarEscapes(volta) - contarEscapes(n.corpo)),
+            estavel: volta.trim() === volta2.trim(),
+            ondeEscapou: (() => {
+              const m = /\\[\s\S]/.exec(volta);
+              return m ? JSON.stringify(volta.slice(Math.max(0, m.index - 70), m.index + 70)) : "";
+            })(),
+            dif: (() => {
+              if (volta.trim() === volta2.trim()) return "";
+              let i = 0;
+              while (i < volta.length && i < volta2.length && volta[i] === volta2[i]) i++;
+              return (
+                "1a: " + JSON.stringify(volta.slice(Math.max(0, i - 50), i + 50)) +
+                "  ||  2a: " + JSON.stringify(volta2.slice(Math.max(0, i - 50), i + 50))
+              );
+            })(),
+            // Trecho em volta da PRIMEIRA palavra sumida, nos dois lados: sem
+            // isso a lista diz o que sumiu mas nao por que.
+            trecho: (() => {
+              if (!sumiram.length) return "";
+              const alvo = sumiram[0];
+              const i = n.corpo.indexOf(alvo);
+              const j = volta.indexOf(alvo.slice(0, Math.max(3, alvo.length - 2)));
+              return (
+                "ANTES: " + JSON.stringify(n.corpo.slice(Math.max(0, i - 60), i + 60)) +
+                "  ||  DEPOIS: " + (j >= 0 ? JSON.stringify(volta.slice(Math.max(0, j - 60), j + 60)) : "(nao achou)")
+              );
+            })(),
           });
         }
 
@@ -76,11 +113,26 @@ export default function RoundTripLab() {
           ["lista simples", ["- um", "- dois"].join(NL)],
           ["wikilink DENTRO de tabela", ["| Area | O que e |", "| --- | --- |", "| [[Marca]] | a voz |"].join(NL)],
           ["colchete solto (script)", "Oi, [Nome]! Tudo bem?"],
+          ["embed de anexo", "Veja ![[icp-venn.svg]] acima."],
+          ["embed com largura", "Veja ![[icp-venn.svg|398]] acima."],
+          ["imagem markdown", "![alt](foto.png)"],
         ];
         const sc: Array<[string, string, string]> = [];
         for (const [nome, entrada] of CASOS) {
           editor.commands.setContent(entrada);
           sc.push([nome, entrada, md()]);
+        }
+        // Conferencia dirigida: a consulta dataview e o pedaco mais fragil
+        // do cofre (regex com barras dentro de crase). Tem de voltar igual.
+        const comDataview = notas.find((n) => n.corpo.includes("dataview"));
+        if (comDataview) {
+          editor.commands.setContent(comDataview.corpo);
+          const v = md();
+          const pegar = (s: string) => {
+            const i = s.indexOf("regexreplace");
+            return i < 0 ? "(nao achou)" : s.slice(i, i + 150);
+          };
+          setDataview([pegar(comDataview.corpo), pegar(v)]);
         }
         setCasos(sc);
         editor.destroy();
@@ -96,7 +148,8 @@ export default function RoundTripLab() {
 
   const comEscape = res.filter((r) => r.escapes > 0);
   const comPerda = res.filter((r) => r.sumiram.length > 0);
-  const passou = comEscape.length === 0 && comPerda.length === 0;
+  const instaveis = res.filter((r) => !r.estavel);
+  const passou = comEscape.length === 0 && comPerda.length === 0 && instaveis.length === 0;
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] p-6 text-white">
@@ -106,8 +159,17 @@ export default function RoundTripLab() {
         className={`mt-2 rounded-lg p-2 text-sm ${passou ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}
       >
         {res.length} notas · escapes novos: {comEscape.length} · perderam palavras: {comPerda.length}
+        {" · instaveis na 2a volta: "}{instaveis.length}
         {passou ? " · PASSOU" : " · REPROVOU"}
       </p>
+
+      {dataview && (
+        <div id="dataview" className={`mt-4 rounded-lg p-2 text-xs ${dataview[0] === dataview[1] ? "bg-emerald-500/15" : "bg-red-500/15"}`}>
+          <b>consulta dataview {dataview[0] === dataview[1] ? "INTACTA" : "ALTERADA"}</b>
+          <pre className="mt-1 whitespace-pre-wrap text-[10px] text-white/60">{dataview[0]}</pre>
+          <pre className="mt-1 whitespace-pre-wrap text-[10px] text-white/80">{dataview[1]}</pre>
+        </div>
+      )}
 
       <h2 className="mt-6 text-sm font-bold text-sky-300">Casos isolados</h2>
       <table id="casos" className="mt-2 w-full text-xs">
@@ -126,11 +188,17 @@ export default function RoundTripLab() {
         </tbody>
       </table>
 
+      <h2 className="mt-6 text-sm font-bold text-fuchsia-300">Mudam de novo na 2a gravacao ({instaveis.length})</h2>
+      <ul id="instaveis" className="mt-2 space-y-1 text-xs">
+        {instaveis.slice(0, 12).map((r) => (<li key={r.nome} className="rounded bg-fuchsia-500/10 p-1.5"><b>{r.nome}</b><pre className="mt-1 whitespace-pre-wrap text-[10px] text-white/45">{r.dif}</pre></li>))}
+      </ul>
+
       <h2 className="mt-6 text-sm font-bold text-red-400">Notas com escape novo ({comEscape.length})</h2>
       <ul id="escapes" className="mt-2 space-y-1 text-xs">
         {comEscape.slice(0, 12).map((r) => (
           <li key={r.nome} className="rounded bg-red-500/10 p-1.5">
             <b>{r.nome}</b> · {r.escapes} escapes · {r.antes}→{r.depois}
+            <pre className="mt-1 whitespace-pre-wrap text-[10px] text-white/45">{r.ondeEscapou}</pre>
           </li>
         ))}
       </ul>
@@ -140,6 +208,7 @@ export default function RoundTripLab() {
         {comPerda.slice(0, 12).map((r) => (
           <li key={r.nome} className="rounded bg-amber-500/10 p-1.5">
             <b>{r.nome}</b> {r.antes}→{r.depois} · sumiram: {r.sumiram}
+            <pre className="mt-1 whitespace-pre-wrap text-[10px] text-white/40">{r.trecho}</pre>
           </li>
         ))}
       </ul>

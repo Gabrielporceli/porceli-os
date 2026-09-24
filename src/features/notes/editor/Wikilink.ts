@@ -110,6 +110,27 @@ export const Wikilink = Node.create({
     return (node.attrs.rotulo as string) || (node.attrs.alvo as string);
   },
 
+  /**
+   * DÁ TEXTO AO ÁTOMO — é isto que salva o link dentro de tabela.
+   *
+   * O serializador de tabela do tiptap-markdown só escreve a célula quando
+   * `cellContent.textContent.trim()` é verdadeiro. Nó atômico tem
+   * `textContent` vazio por padrão, então `| [[Marca]] |` saía como `|  |`:
+   * o link era APAGADO, não escapado. Medido nas notas reais — atingia
+   * Porceli Mynd, Porceli Company e toda tabela de links.
+   *
+   * O ProseMirror lê `spec.leafText`, e o Tiptap só copia campos conhecidos
+   * pro spec; `extendNodeSchema` é a porta pra injetar os demais. Ele roda
+   * pra cada nó do esquema, daí a checagem de nome.
+   */
+  extendNodeSchema(extension) {
+    if (extension.name !== "wikilink") return {};
+    return {
+      leafText: (node: NoProse) =>
+        (node.attrs.rotulo as string) || (node.attrs.alvo as string),
+    };
+  },
+
   addStorage() {
     return {
       markdown: {
