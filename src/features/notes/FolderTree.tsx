@@ -11,7 +11,7 @@
  * pasta que só contém subpastas mostraria "0" e pareceria vazia.
  */
 import { useMemo, useState } from "react";
-import { ArrowDown2, ArrowRight2, Folder2, NoteText } from "iconsax-react";
+import { Add, ArrowDown2, ArrowRight2, CloseCircle, Folder2, NoteText } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +65,14 @@ interface Props {
   totalGeral: number;
   ativa: string | null;
   onSelecionar: (caminho: string | null) => void;
+  /**
+   * Cria a pasta com uma nota dentro.
+   *
+   * Pasta aqui NAO e registro — e o caminho da nota. Uma pasta sem nenhuma
+   * nota nao existiria em lugar nenhum e sumiria da arvore no proximo
+   * carregamento. Entao criar pasta e criar a primeira nota dela.
+   */
+  onNovaPasta?: (caminho: string) => void;
 }
 
 function Ramo({
@@ -128,7 +136,9 @@ function Ramo({
   );
 }
 
-export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar }: Props) {
+export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, onNovaPasta }: Props) {
+  const [criando, setCriando] = useState(false);
+  const [nome, setNome] = useState("");
   const arvore = useMemo(() => montarArvore(pastas, contagem), [pastas, contagem]);
 
   // Começa com o primeiro nível aberto: fechado demais esconde que existe
@@ -144,8 +154,62 @@ export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar }
       return novo;
     });
 
+  const confirmar = () => {
+    const limpo = nome.trim().replace(/^\/+|\/+$/g, "");
+    setCriando(false);
+    setNome("");
+    if (!limpo || !onNovaPasta) return;
+    // Nasce DENTRO da pasta selecionada — e o que se espera ao clicar em "+"
+    // com uma pasta aberta. Sem pasta selecionada, vai pra raiz de Áreas.
+    const base = ativa ?? "Áreas";
+    const caminho = `${base}/${limpo}`;
+    setAbertos((a) => new Set([...a, ...caminho.split("/").map((_, i, ps) => ps.slice(0, i + 1).join("/"))]));
+    onNovaPasta(caminho);
+  };
+
   return (
     <ul className="space-y-0.5">
+      {onNovaPasta && (
+        <li>
+          {criando ? (
+            <div className="flex items-center gap-1 rounded-xl bg-white/10 px-2 py-1">
+              <Icon as={Folder2} size={13} className="shrink-0 text-white/40" />
+              <input
+                autoFocus
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmar();
+                  if (e.key === "Escape") { setCriando(false); setNome(""); }
+                }}
+                onBlur={confirmar}
+                placeholder="nome da pasta"
+                className="min-w-0 flex-1 bg-transparent py-0.5 text-[13px] text-white placeholder:text-white/25 outline-none"
+              />
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); setCriando(false); setNome(""); }}
+                className="shrink-0 rounded p-0.5 text-white/30 hover:text-white/70"
+                aria-label="Cancelar"
+              >
+                <Icon as={CloseCircle} size={13} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCriando(true)}
+              title={ativa ? `Nova pasta dentro de ${ativa}` : "Nova pasta"}
+              className="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-[13px] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+            >
+              <Icon as={Add} size={13} className="shrink-0" />
+              <span className="flex-1 truncate">
+                {ativa ? `Nova pasta em ${ativa.split("/").pop()}` : "Nova pasta"}
+              </span>
+            </button>
+          )}
+        </li>
+      )}
       <li>
         <button
           type="button"

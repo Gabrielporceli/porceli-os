@@ -41,6 +41,11 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
   const [mostrarFicha, setMostrarFicha] = useState(false);
   const [mostrarCodigo, setMostrarCodigo] = useState(false);
 
+  // Sugestao de pasta: sem isto, mover uma nota obriga a digitar
+  // "Áreas/Marketing/Tráfego Pago/Google Ads" inteiro, sem errar um acento —
+  // e um erro de digitacao cria uma pasta nova em silencio.
+  const pastasExistentes = [...new Set(todas.map((n) => n.folder).filter(Boolean))].sort();
+
   const entram = todas.filter(
     (n) =>
       n.id !== nota.id &&
@@ -97,9 +102,13 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
               <input
                 value={rascunho.folder}
                 onChange={(e) => onEditar({ folder: e.target.value })}
+                list="pastas-existentes"
                 placeholder="Pasta/Subpasta"
                 className="min-w-0 flex-1 bg-transparent text-xs text-white placeholder:text-white/25 outline-none"
               />
+              <datalist id="pastas-existentes">
+                {pastasExistentes.map((f) => <option key={f} value={f} />)}
+              </datalist>
             </label>
             <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-2.5 py-2">
               <Icon as={Tag} size={14} className="shrink-0 text-white/30" />

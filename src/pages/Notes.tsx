@@ -20,7 +20,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Add, ArrowLeft2, Diagram, Hierarchy2, Import, NoteText, SearchNormal1, Trash,
+  Add, ArrowLeft2, Diagram, FolderAdd, Hierarchy2, NoteText, SearchNormal1, Trash,
 } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { PageLoader } from "@/components/ui/PageLoader";
@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
 import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
-import { importarDoCofre, sincronizarNota } from "@/features/notes/sync";
+import { sincronizarNota } from "@/features/notes/sync";
 import { PostItWall } from "@/features/notes/PostItWall";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
@@ -65,7 +65,6 @@ export default function Notes() {
   const [etiquetas, setEtiquetas] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
   const [mostrarIndices, setMostrarIndices] = useState(false);
-  const [importando, setImportando] = useState(false);
   const [sincronizandoId, setSincronizandoId] = useState<string | null>(null);
   const [quadroAbertoId, setQuadroAbertoId] = useState<string | null>(null);
 
@@ -218,6 +217,24 @@ export default function Notes() {
     }
   };
 
+  /**
+   * Cria a pasta criando a primeira nota dela.
+   *
+   * `folder` e caminho, nao registro: pasta sem nota nao existe em lugar
+   * nenhum e sumiria da arvore no proximo carregamento. Entao a pasta nasce
+   * com uma nota dentro, ja aberta pra voce escrever.
+   */
+  const novaPasta = async (caminho: string) => {
+    try {
+      const n = await criar({ folder: caminho, title: "Sem título" });
+      setPastaAtiva(caminho);
+      abrir(n.id);
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível criar a pasta");
+    }
+  };
+
   const abrirPorTitulo = async (titulo: string) => {
     const existente = notes.find((n) => n.title.toLowerCase() === titulo.toLowerCase());
     if (existente) { abrir(existente.id); return; }
@@ -256,25 +273,6 @@ export default function Notes() {
     }
   };
 
-  const importar = async () => {
-    setImportando(true);
-    const r = await importarDoCofre();
-    setImportando(false);
-    if (!r.ok) {
-      toast.error("Falhou ao importar", { description: r.error ?? "erro desconhecido" });
-      return;
-    }
-    await recarregar();
-    const novas = (r.importadas ?? 0) + (r.atualizadas ?? 0);
-    const partes = [`${r.importadas ?? 0} nova(s)`, `${r.atualizadas ?? 0} atualizada(s)`];
-    if (r.movidas?.length) partes.push(`${r.movidas.length} mudou de pasta`);
-    if (r.conflitos?.length) partes.push(`${r.conflitos.length} com edicao local (nao tocadas)`);
-    if (r.ausentes?.length) partes.push(`${r.ausentes.length} sem arquivo no cofre`);
-    toast[novas > 0 ? "success" : "info"](
-      novas > 0 ? "Cofre importado" : "Nada novo no cofre",
-      { description: partes.join(" · ") }
-    );
-  };
 
   const novoQuadro = async (kind: TipoQuadro) => {
     try {
@@ -305,16 +303,6 @@ export default function Notes() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={importar}
-            disabled={importando}
-            title="Trazer as notas do cofre do Obsidian"
-            className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 disabled:opacity-50"
-          >
-            <Icon as={Import} size={16} className={importando ? "animate-pulse" : ""} />
-            {importando ? "Importando..." : "Importar do cofre"}
-          </button>
           {aba === "pauta" ? null : aba === "notas" ? (
             <button
               type="button"
@@ -414,6 +402,7 @@ export default function Notes() {
                 totalGeral={notes.length}
                 ativa={pastaAtiva}
                 onSelecionar={setPastaAtiva}
+                onNovaPasta={(c) => { void novaPasta(c); }}
               />
             </div>
             <div className="border-t border-white/[0.06] pt-3.5">
@@ -513,7 +502,7 @@ export default function Notes() {
                 titulo={notes.length === 0 ? "Nenhuma nota ainda" : "Nada com esse filtro"}
                 texto={
                   notes.length === 0
-                    ? "Crie a primeira, ou traga as do cofre com “Importar do cofre”."
+                    ? "Crie a primeira com “Nova nota”."
                     : "Ajuste a busca, a pasta ou as etiquetas."
                 }
               />

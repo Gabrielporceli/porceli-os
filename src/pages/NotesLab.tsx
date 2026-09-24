@@ -148,6 +148,7 @@ export default function NotesLab() {
               totalGeral={notas.length}
               ativa={pasta}
               onSelecionar={setPasta}
+              onNovaPasta={(c) => { setPasta(c); alert("criaria nota em: " + c); }}
             />
           </div>
           <div className="border-t border-white/[0.06] pt-3.5">
