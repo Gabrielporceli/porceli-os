@@ -34,13 +34,19 @@ const PASTAS = [
 
 const TAGS = ["copy", "vendas", "conteúdo", "reels", "estratégia", "gancho", "filosofia", "índice", "tráfego", "psicologia"];
 
+/**
+ * Imita as construcoes medidas no cofre real: titulo (99% das notas),
+ * wikilink (98%), citacao (80%), negrito (76%), tabela (43%), tarefa,
+ * bloco de codigo e o `dataview` que so existe numa nota — e justamente o
+ * que nao pode quebrar na leitura.
+ */
 const CORPOS = [
-  "# Anatomia do Gancho\n\nUm gancho forte nasce do cruzamento entre uma promessa real e um desejo.\n\n> Promessa: emagreça de forma saudável\n> Desejo: emagreça comendo doce\n\nJuntos resolvem a objeção um do outro. Ver [[Fórmulas de Copy]].",
+  "# Anatomia do Gancho\n\nUm gancho forte nasce do cruzamento entre uma **promessa real** e um *desejo*.\n\n> Promessa: emagreça de forma saudável\n> Desejo: emagreça comendo doce\n\nJuntos resolvem a objeção um do outro. Ver [[Fórmulas de Copy]] e [[Persuasão|as armas]].",
   "Curto.",
   "",
-  "## Regra dos 5 segundos\n\nA cada 5 segundos precisa ter variação visual, senão a pessoa pula. Três formas: troca de take, imagem sobre o vídeo, vídeo sobre o vídeo.\n\nNo formato React o vídeo de fundo já fornece os estímulos — não precisa cortar.",
-  "Bushido: Gi, Yuki, Jin, Rei, Makoto, Meiyo, Chugi. Sete pilares, e nenhum deles é sobre vencer — são sobre como se comporta quem já decidiu o que é certo. Musashi escreveu o Livro dos Cinco Anéis numa caverna, depois de 61 duelos sem uma derrota.",
-  "- [ ] Falar sobre Ads Transparency\n- [ ] Como roubar estratégia do concorrente\n- [x] Decretar compromisso com conteúdo",
+  "## Regra dos 5 segundos\n\nA cada 5 segundos precisa ter variação visual, senão a pessoa pula.\n\n| Forma | Quando usar |\n| --- | --- |\n| Troca de take | Sempre que puder |\n| Imagem sobre o vídeo | Conteúdo técnico |\n| Vídeo sobre o vídeo | Quando tem clipe |\n\nNo formato React o vídeo de fundo já fornece os estímulos.",
+  "Bushido: Gi, Yuki, Jin, Rei, Makoto, Meiyo, Chugi.\n\n1. Retidão\n2. Coragem\n3. Benevolência\n\nMusashi escreveu o ~~Livro dos Quatro~~ Livro dos Cinco Anéis numa caverna. Ver [[Nota que nao existe]].",
+  "- [ ] Falar sobre Ads Transparency\n- [x] Decretar compromisso com conteúdo\n\n```dataview\nTABLE WITHOUT ID task.cat AS \"Categoria\"\nFROM \"\"\nWHERE task.cat\n```\n\nCampo inline: [cat:: Tráfego Pago] tem de sobreviver intacto.\n\n---\n\nVer ![[icp-venn.svg]] e [a referência](https://exemplo.com).",
 ];
 
 function fakeNotes(n: number): NoteComEstado[] {

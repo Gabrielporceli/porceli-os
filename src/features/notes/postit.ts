@@ -48,13 +48,26 @@ export function inclinacao(id: string): number {
   return Number((g * 1.6 - 0.8).toFixed(2)); // -0.8deg .. +0.8deg
 }
 
-/** Primeira linha útil do corpo, pro card mostrar algo além do título. */
+/**
+ * Prévia limpa do corpo, pro card mostrar texto e não código fonte.
+ *
+ * Tira a marcação toda: no mural não cabe formatar, e `- [ ]`, `|` de tabela
+ * e `##` no meio da prévia é exatamente a "linguagem tipada" que polui.
+ * Quem quiser o Markdown de verdade abre a nota e clica em escrever.
+ */
 export function resumo(body: string, limite = 180): string {
   const limpo = body
-    .replace(/^#{1,6}\s+.*$/gm, "")        // títulos: o card já mostra o dele
-    .replace(/^>\s?/gm, "")
-    .replace(/[*_`]/g, "")
-    .replace(/!?\[\[([^\]|]+)(\|[^\]]*)?\]\]/g, "$1")
+    .replace(/```[\s\S]*?```/g, " ")        // blocos de código inteiros
+    .replace(/^#{1,6}\s+.*$/gm, "")         // títulos: o card já mostra o dele
+    .replace(/^\s*\|.*\|\s*$/gm, " ")       // linhas de tabela
+    .replace(/^\s*[-:|\s]{3,}\s*$/gm, " ")  // separadores --- e |---|
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*[-*+]\s+\[[ xX]\]\s*/gm, "")  // - [ ] tarefa
+    .replace(/^\s*[-*+]\s+/gm, "")          // marcador de lista
+    .replace(/^\s*\d+\.\s+/gm, "")          // lista numerada
+    .replace(/!?\[\[([^\]|]+)(\|[^\]]*)?\]\]/g, "$1")  // wikilink -> nome
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")         // link md -> texto
+    .replace(/[*_`~]/g, "")
     .replace(/\s+/g, " ")
     .trim();
   return limpo.length > limite ? `${limpo.slice(0, limite)}…` : limpo;

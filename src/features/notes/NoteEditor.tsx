@@ -1,14 +1,21 @@
 /**
- * Conteúdo de um post-it aberto: título, corpo, pasta, etiquetas e os links.
+ * Conteúdo de um post-it aberto.
  *
- * Só o miolo — a moldura, o arrasto e os botões de topo são da PostItWindow.
- * Separar permite abrir a mesma nota em contextos diferentes sem duplicar a
- * lógica de edição.
+ * DOIS MODOS, e o padrão é LER. A nota abre formatada — título, citação,
+ * tabela, e os `[[links]]` como botões — não como código fonte. Escrever
+ * mostra o Markdown cru, porque é isso que vai pro cofre e é o único jeito
+ * de não perder `dataview` e campos `[cat:: x]` na volta. Duplo clique no
+ * texto entra em escrita, igual ao Obsidian.
+ *
+ * O modo é por nota e por janela: ler uma enquanto edita outra é justamente
+ * o que ter várias janelas serve.
  */
+import { useState } from "react";
+import { Book1, Edit2, Folder2, Tag } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
-import { Folder2, Tag } from "iconsax-react";
 import { cn } from "@/lib/utils";
 import { caminhoNoCofre, extrairWikilinks } from "./markdown";
+import { NoteRender } from "./NoteRender";
 import type { NoteComEstado } from "./useNotes";
 
 export interface Rascunho {
@@ -23,36 +30,72 @@ interface Props {
   nota: NoteComEstado;
   todas: NoteComEstado[];
   onEditar: (patch: Partial<Rascunho>) => void;
-  /** Abre outra nota pelo título (wikilink) — ou cria, se não existir. */
   onAbrirTitulo: (titulo: string) => void;
   onAbrirId: (id: string) => void;
 }
 
 export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onAbrirId }: Props) {
-  const saem = extrairWikilinks(rascunho.body);
+  const [escrevendo, setEscrevendo] = useState(false);
+
+  const existentes = new Set(todas.map((n) => n.title.toLowerCase()));
   const entram = todas.filter(
     (n) =>
       n.id !== nota.id &&
       extrairWikilinks(n.body).some((l) => l.toLowerCase() === rascunho.title.toLowerCase())
   );
+  const saem = extrairWikilinks(rascunho.body);
 
   return (
     <div className="space-y-3">
-      <input
-        value={rascunho.title}
-        onChange={(e) => onEditar({ title: e.target.value })}
-        placeholder="Título"
-        className="w-full bg-transparent text-lg font-black tracking-tight text-white placeholder:text-white/20 outline-none"
-      />
+      <div className="flex items-start gap-2">
+        <input
+          value={rascunho.title}
+          onChange={(e) => onEditar({ title: e.target.value })}
+          placeholder="Título"
+          className="min-w-0 flex-1 bg-transparent text-lg font-black tracking-tight text-white placeholder:text-white/20 outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setEscrevendo((v) => !v)}
+          title={escrevendo ? "Ver formatado" : "Editar o Markdown"}
+          className={cn(
+            "mt-1 flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold transition-colors",
+            escrevendo
+              ? "bg-white/90 text-black"
+              : "bg-white/[0.07] text-white/55 hover:bg-white/15 hover:text-white/85"
+          )}
+        >
+          <Icon as={escrevendo ? Book1 : Edit2} size={12} />
+          {escrevendo ? "ler" : "escrever"}
+        </button>
+      </div>
 
-      <textarea
-        value={rascunho.body}
-        onChange={(e) => onEditar({ body: e.target.value })}
-        placeholder="Escreva em Markdown. [[Nome da nota]] cria um link."
-        // `field-sizing` não é confiável em todos os navegadores ainda, então
-        // a altura é dada pelo contêiner e o textarea preenche.
-        className="min-h-[220px] w-full resize-y rounded-2xl bg-white/[0.03] p-3 text-sm leading-relaxed text-white/85 placeholder:text-white/20 outline-none focus:bg-white/[0.05]"
-      />
+      {escrevendo ? (
+        <textarea
+          value={rascunho.body}
+          onChange={(e) => onEditar({ body: e.target.value })}
+          onBlur={() => setEscrevendo(false)}
+          autoFocus
+          placeholder="Escreva em Markdown. [[Nome da nota]] cria um link."
+          // `font-mono` está aqui de propósito, mas hoje não muda nada: o
+          // tailwind.config mapeia mono (e serif) para a Founders Grotesk,
+          // a regra de uma fonte só do sistema. Se um dia valer alinhar
+          // tabela no Markdown cru, é lá que se troca — não aqui.
+          className="min-h-[220px] w-full resize-y rounded-2xl bg-white/[0.03] p-3 font-mono text-[13px] leading-relaxed text-white/85 placeholder:text-white/20 outline-none focus:bg-white/[0.05]"
+        />
+      ) : (
+        <div
+          onDoubleClick={() => setEscrevendo(true)}
+          title="Duplo clique para editar"
+          className="min-h-[120px] cursor-text rounded-2xl bg-white/[0.02] p-3"
+        >
+          <NoteRender
+            body={rascunho.body}
+            existentes={existentes}
+            onAbrirTitulo={onAbrirTitulo}
+          />
+        </div>
+      )}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-2.5 py-2">
@@ -75,47 +118,45 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
         </label>
       </div>
 
-      {(saem.length > 0 || entram.length > 0) && (
-        <div className="space-y-2 border-t border-white/[0.07] pt-3">
-          {saem.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-widest text-white/30">Aponta para</span>
-              {saem.map((l) => {
-                const existe = todas.some((n) => n.title.toLowerCase() === l.toLowerCase());
-                return (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => onAbrirTitulo(l)}
-                    title={existe ? "Abrir" : "Criar esta nota"}
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] transition-colors",
-                      existe
-                        ? "bg-white/[0.07] text-white/70 hover:bg-white/15"
-                        : "border border-dashed border-white/15 text-white/35 hover:text-white/60"
-                    )}
-                  >
-                    {l}{!existe && " +"}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {entram.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-widest text-white/30">Apontam pra cá</span>
-              {entram.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => onAbrirId(n.id)}
-                  className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-white/70 transition-colors hover:bg-white/15"
-                >
-                  {n.title}
-                </button>
-              ))}
-            </div>
-          )}
+      {/* "Aponta para" só na escrita: lendo, os links já estão no meio do
+          texto como botões, e repetir a lista embaixo é ruído. */}
+      {escrevendo && saem.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-white/[0.07] pt-3">
+          <span className="text-[10px] uppercase tracking-widest text-white/30">Aponta para</span>
+          {saem.map((l) => {
+            const existe = existentes.has(l.toLowerCase());
+            return (
+              <button
+                key={l}
+                type="button"
+                onClick={() => onAbrirTitulo(l)}
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[11px] transition-colors",
+                  existe
+                    ? "bg-white/[0.07] text-white/70 hover:bg-white/15"
+                    : "border border-dashed border-white/15 text-white/35 hover:text-white/60"
+                )}
+              >
+                {l}{!existe && " +"}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {entram.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-white/[0.07] pt-3">
+          <span className="text-[10px] uppercase tracking-widest text-white/30">Apontam pra cá</span>
+          {entram.map((n) => (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => onAbrirId(n.id)}
+              className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-white/70 transition-colors hover:bg-white/15"
+            >
+              {n.title}
+            </button>
+          ))}
         </div>
       )}
 
