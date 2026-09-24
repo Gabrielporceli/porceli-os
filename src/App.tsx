@@ -22,6 +22,7 @@ import Notes from "./pages/Notes"
 import PillLab from "./pages/PillLab"
 import IconLab from "./pages/IconLab"
 import NotesLab from "./pages/NotesLab"
+import RoundTripLab from "./pages/RoundTripLab"
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -59,6 +60,8 @@ function App() {
                   {/* Mural, janelas e quadros das Notas com dados falsos —
                       a tela real fica atrás do login. Pública, sem layout. */}
                   <Route path="/dev/notas" element={<NotesLab />} />
+                  {/* TEMPORARIO: medicao da ida e volta do Markdown. */}
+                  <Route path="/dev/roundtrip" element={<RoundTripLab />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
                   <Route

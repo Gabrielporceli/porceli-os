@@ -25,3 +25,7 @@ dist-ssr
 .env
 
 .claude/
+
+# Notas reais exportadas do cofre para o portao do editor (/dev/roundtrip).
+# NAO versionar: e o seu conteudo, e este repositorio e de codigo.
+public/_roundtrip.json
