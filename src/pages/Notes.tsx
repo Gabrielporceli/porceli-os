@@ -29,6 +29,7 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNotes, type NoteComEstado } from "@/features/notes/useNotes";
+import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
 import { importarDoCofre, sincronizarNota } from "@/features/notes/sync";
 import { PostItWall } from "@/features/notes/PostItWall";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
@@ -62,6 +63,7 @@ export default function Notes() {
   const [pastaAtiva, setPastaAtiva] = useState<string | null>(null);
   const [etiquetas, setEtiquetas] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
+  const [mostrarIndices, setMostrarIndices] = useState(false);
   const [importando, setImportando] = useState(false);
   const [sincronizandoId, setSincronizandoId] = useState<string | null>(null);
   const [quadroAbertoId, setQuadroAbertoId] = useState<string | null>(null);
@@ -197,20 +199,12 @@ export default function Notes() {
     return m;
   }, [notes]);
 
-  const visiveis = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    return notes.filter((n) => {
-      // Pasta filtra o RAMO: escolher "Marketing" tem de trazer o que está em
-      // "Marketing/Psicologia" também, senão clicar numa pasta com subpastas
-      // devolve vazio e parece defeito.
-      if (pastaAtiva !== null && n.folder !== pastaAtiva && !n.folder.startsWith(`${pastaAtiva}/`)) {
-        return false;
-      }
-      if (etiquetas.length && !etiquetas.every((t) => n.tags.includes(t))) return false;
-      if (!q) return true;
-      return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
-    });
-  }, [notes, pastaAtiva, etiquetas, busca]);
+  const indices = useMemo(() => notes.filter(ehNotaIndice).length, [notes]);
+
+  const visiveis = useMemo(
+    () => filtrarNotas(notes, { pastaAtiva, etiquetas, busca, mostrarIndices }),
+    [notes, pastaAtiva, etiquetas, busca, mostrarIndices]
+  );
 
   // ── ações ──────────────────────────────────────────────────────────────
   const novaNota = async () => {
@@ -449,15 +443,32 @@ export default function Notes() {
               </div>
 
               {aba === "notas" && (
-                <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-full bg-white/[0.04] px-3.5 py-2">
-                  <Icon as={SearchNormal1} size={16} className="text-white/35" />
-                  <input
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    placeholder="Buscar notas…"
-                    className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/25 outline-none"
-                  />
-                </div>
+                <>
+                  <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-full bg-white/[0.04] px-3.5 py-2">
+                    <Icon as={SearchNormal1} size={16} className="text-white/35" />
+                    <input
+                      value={busca}
+                      onChange={(e) => setBusca(e.target.value)}
+                      placeholder="Buscar notas…"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/25 outline-none"
+                    />
+                  </div>
+                  {indices > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setMostrarIndices((v) => !v)}
+                      title="Notas que só listam links das pastas, vindas do Obsidian"
+                      className={cn(
+                        "shrink-0 rounded-full px-3 py-1.5 text-xs transition-colors",
+                        mostrarIndices
+                          ? "bg-white/90 font-bold text-black"
+                          : "bg-white/[0.04] text-white/45 hover:text-white/80"
+                      )}
+                    >
+                      {mostrarIndices ? "ocultar" : "mostrar"} {indices} índices
+                    </button>
+                  )}
+                </>
               )}
             </div>
 

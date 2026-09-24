@@ -11,6 +11,7 @@
  */
 import { useMemo, useState } from "react";
 import { PostItWall } from "@/features/notes/PostItWall";
+import { filtrarNotas, ehNotaIndice } from "@/features/notes/filtro";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
 import { FolderTree } from "@/features/notes/FolderTree";
@@ -58,7 +59,10 @@ function fakeNotes(n: number): NoteComEstado[] {
       title: i % 11 === 0 ? "" : titulo,
       body: corpo,
       folder: PASTAS[i % PASTAS.length],
-      tags: TAGS.slice(i % 5, (i % 5) + (i % 4)),
+      // Uma a cada 8 e nota indice, pra exercitar o filtro do mural.
+      tags: i % 8 === 0
+        ? ["índice", "porceli-company"]
+        : TAGS.slice(i % 5, (i % 5) + (i % 4)),
       clientId: null,
       leadId: null,
       createdAt: new Date().toISOString(),
@@ -74,6 +78,7 @@ export default function NotesLab() {
   const notas = useMemo(() => fakeNotes(24), []);
   const [pasta, setPasta] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [mostrarIndices, setMostrarIndices] = useState(false);
   const [janelas, setJanelas] = useState<{ id: string; pos: PosicaoJanela; z: number }[]>([]);
   const [rascunhos, setRascunhos] = useState<Record<string, Rascunho>>({});
   const [tipoQuadro, setTipoQuadro] = useState<TipoQuadro>("mapa");
@@ -103,11 +108,7 @@ export default function NotesLab() {
     return m;
   }, [notas]);
 
-  const visiveis = notas.filter((n) => {
-    if (pasta && n.folder !== pasta && !n.folder.startsWith(`${pasta}/`)) return false;
-    if (tags.length && !tags.every((t) => n.tags.includes(t))) return false;
-    return true;
-  });
+  const visiveis = filtrarNotas(notas, { pastaAtiva: pasta, etiquetas: tags, busca: "", mostrarIndices });
 
   const abrir = (id: string) => {
     setJanelas((js) => {
@@ -153,6 +154,13 @@ export default function NotesLab() {
 
         <div className="min-w-0 space-y-5">
           <section>
+            <button
+              type="button"
+              onClick={() => setMostrarIndices((v) => !v)}
+              className={`mb-2 rounded-full px-3 py-1 text-xs ${mostrarIndices ? "bg-white/90 font-bold text-black" : "bg-white/10 text-white/50"}`}
+            >
+              {mostrarIndices ? "ocultar" : "mostrar"} indices
+            </button>
             <p className="mb-2 text-xs text-white/40">
               Mural — {visiveis.length} visíveis · clique pra abrir várias
             </p>
