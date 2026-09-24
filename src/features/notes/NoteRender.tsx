@@ -15,7 +15,7 @@
  * HTML dela na página seria um buraco desnecessário. O cofre tem 0 notas
  * com HTML, então não se perde nada.
  */
-import { useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import Markdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Link21, Gallery } from "iconsax-react";
@@ -54,16 +54,113 @@ export function prepararWikilinks(texto: string): string {
     .join("");
 }
 
+/**
+ * Marca/desmarca a tarefa da linha indicada, no Markdown cru.
+ *
+ * INVARIANTE DE QUE ISSO DEPENDE: `prepararWikilinks` faz só substituição
+ * dentro da linha, nunca acrescenta nem tira quebra. Então o número de linha
+ * que o renderizador informa (que é do texto preparado) é o MESMO do corpo
+ * original, e dá pra editar direto ali. Se um dia o preparo passar a mexer em
+ * linhas, isto marca a tarefa errada — por isso há teste cobrindo.
+ */
+export function alternarTarefaNaLinha(body: string, linha: number): string {
+  const linhas = body.split("\n");
+  const i = linha - 1;
+  if (i < 0 || i >= linhas.length) return body;
+  // Aceita -, * e + como marcador, e indentação (subtarefa).
+  const m = /^(\s*[-*+]\s+\[)([ xX])(\])/.exec(linhas[i]);
+  if (!m) return body;
+  const marca = m[2] === " " ? "x" : " ";
+  linhas[i] = m[1] + marca + linhas[i].slice(m[1].length + 1);
+  return linhas.join("\n");
+}
+
+/**
+ * Carrega a linha do item de lista até o checkbox, que é filho dele. O
+ * checkbox do GFM é um nó sintético e não tem posição própria — medido: vem
+ * sempre `position: null`. A do `<li>` é real.
+ */
+const LinhaDaTarefa = createContext<{
+  linha: number | null;
+  alternar?: (linha: number) => void;
+}>({ linha: null });
+
+function CaixaDeTarefa({ checked }: { checked?: boolean }) {
+  const { linha, alternar } = useContext(LinhaDaTarefa);
+  const clicavel = Boolean(alternar) && linha != null;
+
+  const visual = cn(
+    "mr-1.5 inline-flex h-3.5 w-3.5 translate-y-0.5 items-center justify-center rounded border text-[9px] transition-colors",
+    checked ? "border-primary bg-primary text-white" : "border-white/25"
+  );
+
+  if (!clicavel) {
+    return <span className={visual}>{checked ? "✓" : ""}</span>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => alternar!(linha!)}
+      title={checked ? "Desmarcar" : "Marcar"}
+      aria-pressed={checked}
+      className={cn(visual, "cursor-pointer hover:border-primary/70 hover:bg-primary/25")}
+    >
+      {checked ? "✓" : ""}
+    </button>
+  );
+}
+
 interface Props {
   body: string;
   /** Títulos existentes, pra link quebrado aparecer diferente. */
   existentes: Set<string>;
   onAbrirTitulo: (titulo: string) => void;
+  /** Sem isto as caixas aparecem, mas não clicam (ex.: pré-visualização). */
+  onAlternarTarefa?: (linha: number) => void;
   className?: string;
 }
 
-export function NoteRender({ body, existentes, onAbrirTitulo, className }: Props) {
-  const texto = useMemo(() => prepararWikilinks(body), [body]);
+/**
+ * Corta a seção "Relacionado" do fim da nota, só na leitura.
+ *
+ * Quase toda nota deste cofre termina com "## Relacionado" listando links —
+ * e esses mesmos links já aparecem no meio do texto como botões. Na tela era
+ * a mesma lista duas vezes. O Markdown NÃO é tocado: o Obsidian continua
+ * recebendo a seção, que lá tem função.
+ *
+ * Corta só do fim pra frente, e por isso as linhas anteriores mantêm o
+ * número — que é do que o clique na tarefa depende.
+ */
+export function semSecaoFinalRelacionado(texto: string): string {
+  const linhas = texto.split("\n");
+  for (let i = linhas.length - 1; i >= 0; i--) {
+    const cabecalho = /^#{1,6}\s+(.+?)\s*$/.exec(linhas[i]);
+    if (!cabecalho) continue;
+    // Só o ÚLTIMO título do documento conta: se "Relacionado" estiver no meio,
+    // tem conteúdo depois dele e cortar levaria junto.
+    if (/^relacionad[oa]s?$/i.test(cabecalho[1].replace(/[*_`]/g, "").trim())) {
+      // Sobe comendo linha em branco E separador `---`, alternadamente: no
+      // padrão deste cofre vem "texto / em branco / --- / em branco / título",
+      // então tratar os dois em laços separados deixava o traço pendurado.
+      let fim = i;
+      while (
+        fim > 0 &&
+        (linhas[fim - 1].trim() === "" || /^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(linhas[fim - 1]))
+      ) fim--;
+      return linhas.slice(0, fim).join("\n");
+    }
+    return texto; // o último título não é "Relacionado": não mexe
+  }
+  return texto;
+}
+
+export function NoteRender({
+  body, existentes, onAbrirTitulo, onAlternarTarefa, className,
+}: Props) {
+  const texto = useMemo(
+    () => prepararWikilinks(semSecaoFinalRelacionado(body)),
+    [body]
+  );
 
   if (!body.trim()) {
     return <p className="text-sm italic text-white/25">Nota vazia. Toque em escrever pra começar.</p>;
@@ -95,25 +192,26 @@ export function NoteRender({ body, existentes, onAbrirTitulo, className }: Props
           hr: () => <hr className="my-4 border-white/10" />,
           ul: ({ children }) => <ul className="ml-1 space-y-1">{children}</ul>,
           ol: ({ children }) => <ol className="ml-1 list-inside list-decimal space-y-1 marker:text-white/35">{children}</ol>,
-          li: ({ children, ...rest }) => {
+          li: ({ children, node, ...rest }) => {
             // Item de tarefa vem com checkbox do GFM; sem ele, marcador próprio.
             const temCaixa = (rest as { className?: string }).className?.includes("task-list-item");
-            return (
+            const li = (
               <li className={cn("text-sm text-white/75", temCaixa ? "list-none" : "list-none pl-4 -indent-4 before:mr-2 before:text-white/30 before:content-['•']")}>
                 {children}
               </li>
             );
+            if (!temCaixa) return li;
+            // A linha vem daqui porque o checkbox do GFM é sintético e não
+            // tem posição própria (medido: `position` vem sempre null).
+            return (
+              <LinhaDaTarefa.Provider
+                value={{ linha: node?.position?.start?.line ?? null, alternar: onAlternarTarefa }}
+              >
+                {li}
+              </LinhaDaTarefa.Provider>
+            );
           },
-          input: ({ checked }) => (
-            <span
-              className={cn(
-                "mr-1.5 inline-flex h-3.5 w-3.5 translate-y-0.5 items-center justify-center rounded border text-[9px]",
-                checked ? "border-primary bg-primary text-white" : "border-white/25"
-              )}
-            >
-              {checked ? "✓" : ""}
-            </span>
-          ),
+          input: ({ checked }) => <CaixaDeTarefa checked={checked} />,
           blockquote: ({ children }) => (
             <blockquote className="border-l-2 border-primary/50 bg-white/[0.03] py-1.5 pl-3 pr-2 text-sm italic text-white/65">
               {children}
