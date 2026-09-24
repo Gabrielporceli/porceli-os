@@ -1,26 +1,25 @@
 /**
  * Conteúdo de um post-it aberto.
  *
- * DOIS MODOS, e o padrão é LER. A nota abre formatada — título, citação,
- * tabela, caixa de tarefa clicável, e os `[[links]]` como botões no meio do
- * texto. Escrever mostra o Markdown cru, porque é isso que vai pro cofre e é
- * o único jeito de não perder `dataview` e campos `[cat:: x]` na volta.
- * Duplo clique no texto entra em escrita, igual ao Obsidian.
+ * UM MODO SÓ. O editor é o texto formatado: você lê, clica no link, marca a
+ * tarefa e escreve no mesmo lugar, e o Markdown fica gravado por baixo sem
+ * nunca aparecer. Antes havia "ler" e "escrever" porque escrever mostrava
+ * código — o motivo sumiu.
  *
- * LENDO SÓ APARECE A NOTA. Pasta, etiquetas, retrolinks e o caminho no cofre
- * moram no modo escrever. Eles são a ficha da nota, não a nota — e no post-it
- * ocupavam mais espaço que o conteúdo. Nada sumiu: está tudo a um clique.
+ * A FICHA FICA ESCONDIDA. Pasta, etiquetas e retrolinks são sobre a nota, não
+ * a nota; no post-it ocupavam mais espaço que o conteúdo. Ficam a um clique.
  *
- * O modo é por nota e por janela: ler uma enquanto edita outra é justamente
- * o que ter várias janelas serve.
+ * O editor é carregado sob demanda: são ~200 KB que só fazem sentido com uma
+ * nota aberta, e não devem pesar no resto do sistema.
  */
-import { useState } from "react";
-import { Book1, Edit2, Folder2, Tag } from "iconsax-react";
+import { Suspense, lazy, useState } from "react";
+import { Code1, Folder2, InfoCircle, Tag } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { caminhoNoCofre, extrairWikilinks } from "./markdown";
-import { NoteRender, alternarTarefaNaLinha } from "./NoteRender";
 import type { NoteComEstado } from "./useNotes";
+
+const NoteWysiwyg = lazy(() => import("./editor/NoteWysiwyg"));
 
 export interface Rascunho {
   title: string;
@@ -39,10 +38,9 @@ interface Props {
 }
 
 export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onAbrirId }: Props) {
-  const [escrevendo, setEscrevendo] = useState(false);
+  const [mostrarFicha, setMostrarFicha] = useState(false);
+  const [mostrarCodigo, setMostrarCodigo] = useState(false);
 
-  const existentes = new Set(todas.map((n) => n.title.toLowerCase()));
-  const saem = extrairWikilinks(rascunho.body);
   const entram = todas.filter(
     (n) =>
       n.id !== nota.id &&
@@ -51,7 +49,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-1">
         <input
           value={rascunho.title}
           onChange={(e) => onEditar({ title: e.target.value })}
@@ -60,34 +58,39 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
         />
         <button
           type="button"
-          onClick={() => setEscrevendo((v) => !v)}
-          title={escrevendo ? "Ver formatado" : "Editar o Markdown e a ficha"}
+          onClick={() => setMostrarFicha((v) => !v)}
+          title="Pasta, etiquetas e ligações"
           className={cn(
-            "mt-1 flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold transition-colors",
-            escrevendo
-              ? "bg-white/90 text-black"
-              : "bg-white/[0.07] text-white/55 hover:bg-white/15 hover:text-white/85"
+            "mt-1 shrink-0 rounded-lg p-1.5 transition-colors",
+            mostrarFicha ? "bg-white/15 text-white" : "text-white/35 hover:bg-white/10 hover:text-white/75"
           )}
         >
-          <Icon as={escrevendo ? Book1 : Edit2} size={12} />
-          {escrevendo ? "ler" : "escrever"}
+          <Icon as={InfoCircle} size={14} />
         </button>
       </div>
 
-      {escrevendo ? (
-        <>
-          <textarea
-            value={rascunho.body}
-            onChange={(e) => onEditar({ body: e.target.value })}
-            autoFocus
-            placeholder="Markdown. [[Nome]] vira link, - [ ] vira tarefa."
-            // `font-mono` está aqui de propósito, mas hoje não muda nada: o
-            // tailwind.config mapeia mono (e serif) para a Founders Grotesk,
-            // a regra de uma fonte só do sistema. Se um dia valer alinhar
-            // tabela no Markdown cru, é lá que se troca — não aqui.
-            className="min-h-[240px] w-full resize-y rounded-2xl bg-white/[0.03] p-3 font-mono text-[13px] leading-relaxed text-white/85 placeholder:text-white/20 outline-none focus:bg-white/[0.05]"
-          />
+      {mostrarCodigo ? (
+        <textarea
+          value={rascunho.body}
+          onChange={(e) => onEditar({ body: e.target.value })}
+          autoFocus
+          className="min-h-[240px] w-full resize-y rounded-2xl bg-white/[0.03] p-3 font-mono text-[13px] leading-relaxed text-white/85 outline-none focus:bg-white/[0.05]"
+        />
+      ) : (
+        <Suspense fallback={<p className="py-6 text-xs text-white/30">abrindo o editor…</p>}>
+          <div className="min-h-[140px] rounded-2xl bg-white/[0.02] p-3">
+            <NoteWysiwyg
+              body={rascunho.body}
+              chaveDaNota={nota.id}
+              onMudar={(markdown) => onEditar({ body: markdown })}
+              onAbrirTitulo={onAbrirTitulo}
+            />
+          </div>
+        </Suspense>
+      )}
 
+      {mostrarFicha && (
+        <div className="space-y-2.5 border-t border-white/[0.07] pt-3">
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-2.5 py-2">
               <Icon as={Folder2} size={14} className="shrink-0 text-white/30" />
@@ -109,30 +112,6 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
             </label>
           </div>
 
-          {saem.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-white/[0.07] pt-3">
-              <span className="text-[10px] uppercase tracking-widest text-white/30">Aponta para</span>
-              {saem.map((l) => {
-                const existe = existentes.has(l.toLowerCase());
-                return (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => onAbrirTitulo(l)}
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] transition-colors",
-                      existe
-                        ? "bg-white/[0.07] text-white/70 hover:bg-white/15"
-                        : "border border-dashed border-white/15 text-white/35 hover:text-white/60"
-                    )}
-                  >
-                    {l}{!existe && " +"}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
           {entram.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] uppercase tracking-widest text-white/30">Apontam pra cá</span>
@@ -149,24 +128,25 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
             </div>
           )}
 
-          <p className="text-[10px] text-white/25">
-            No cofre: <code>{caminhoNoCofre({ title: rascunho.title, folder: rascunho.folder })}</code>
-          </p>
-        </>
-      ) : (
-        <div
-          onDoubleClick={() => setEscrevendo(true)}
-          title="Duplo clique para editar"
-          className="min-h-[120px] cursor-text rounded-2xl bg-white/[0.02] p-3"
-        >
-          <NoteRender
-            body={rascunho.body}
-            existentes={existentes}
-            onAbrirTitulo={onAbrirTitulo}
-            onAlternarTarefa={(linha) =>
-              onEditar({ body: alternarTarefaNaLinha(rascunho.body, linha) })
-            }
-          />
+          <div className="flex items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-[10px] text-white/25">
+              <code>{caminhoNoCofre({ title: rascunho.title, folder: rascunho.folder })}</code>
+            </p>
+            {/* Saída de emergência: editar o Markdown na mão quando o editor
+                não souber expressar alguma coisa. Fora do caminho normal. */}
+            <button
+              type="button"
+              onClick={() => setMostrarCodigo((v) => !v)}
+              title="Editar o Markdown direto"
+              className={cn(
+                "flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] transition-colors",
+                mostrarCodigo ? "bg-white/90 font-bold text-black" : "bg-white/[0.06] text-white/40 hover:text-white/75"
+              )}
+            >
+              <Icon as={Code1} size={11} />
+              markdown
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 
+import { Suspense, lazy } from "react"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -19,10 +20,13 @@ import ScheduledMessages from "./pages/ScheduledMessages"
 import FunnelMaps from "./pages/FunnelMaps"
 import AgentsHub from "./pages/AgentsHub"
 import Notes from "./pages/Notes"
-import PillLab from "./pages/PillLab"
-import IconLab from "./pages/IconLab"
-import NotesLab from "./pages/NotesLab"
-import RoundTripLab from "./pages/RoundTripLab"
+// Laboratorios sao carregados sob demanda: o RoundTripLab puxa o Tiptap
+// inteiro, e importado direto ele arrastava ~200 KB pro pacote principal,
+// que carrega em TODA pagina do sistema.
+const PillLab = lazy(() => import("./pages/PillLab"))
+const IconLab = lazy(() => import("./pages/IconLab"))
+const NotesLab = lazy(() => import("./pages/NotesLab"))
+const RoundTripLab = lazy(() => import("./pages/RoundTripLab"))
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -51,6 +55,7 @@ function App() {
               <LiquidGlassFilter />
               <Toaster />
               <BrowserRouter>
+                <Suspense fallback={null}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   {/* Laboratório de design da pílula do menu mobile — pública, sem layout. */}
@@ -176,6 +181,7 @@ function App() {
                     }
                   />
                 </Routes>
+                </Suspense>
               </BrowserRouter>
             </PlansProvider>
           </AuthProvider>
