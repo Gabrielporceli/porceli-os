@@ -39,16 +39,6 @@ export function corPostIt(id: string): CorPostIt {
 }
 
 /**
- * Inclinação leve, também derivada do id. É o que separa "mural de post-it"
- * de "grade de cards" — mas em fração de grau, porque exagerar cansa numa
- * tela que se usa todo dia.
- */
-export function inclinacao(id: string): number {
-  const g = (hash(id + "x") % 100) / 100; // 0..1
-  return Number((g * 1.6 - 0.8).toFixed(2)); // -0.8deg .. +0.8deg
-}
-
-/**
  * Prévia limpa do corpo, pro card mostrar texto e não código fonte.
  *
  * Tira a marcação toda: no mural não cabe formatar, e `- [ ]`, `|` de tabela

@@ -27,10 +27,23 @@ interface Props {
   onAbrirTitulo: (titulo: string) => void;
   /** Só leitura: usado onde não se deve editar. */
   travado?: boolean;
+  /**
+   * Título da nota — usado só pra esconder o H1 do corpo quando ele repete o
+   * título (ver `.h1-duplicado` em index.css). Não afeta o Markdown salvo.
+   */
+  titulo?: string;
+}
+
+/** Esconde o primeiro H1 do corpo quando ele só repete o título de cima. */
+function marcarH1Duplicado(editor: ReturnType<typeof useEditor>, titulo: string) {
+  const primeiro = editor?.view.dom.querySelector(":scope > h1:first-child");
+  if (!primeiro) return;
+  const igual = primeiro.textContent?.trim().toLowerCase() === titulo.trim().toLowerCase();
+  primeiro.classList.toggle("h1-duplicado", Boolean(igual && titulo.trim()));
 }
 
 export default function NoteWysiwyg({
-  body, chaveDaNota, onMudar, onAbrirTitulo, travado,
+  body, chaveDaNota, onMudar, onAbrirTitulo, travado, titulo = "",
 }: Props) {
   const editor = useEditor(
     {
@@ -57,6 +70,7 @@ export default function NoteWysiwyg({
       },
       onUpdate({ editor: ed }) {
         onMudar(markdownDoEditor(ed));
+        marcarH1Duplicado(ed, titulo);
       },
     },
     // Recria o editor ao trocar de nota: mais simples e mais seguro que
@@ -67,6 +81,10 @@ export default function NoteWysiwyg({
   useEffect(() => {
     editor?.setEditable(!travado);
   }, [editor, travado]);
+
+  useEffect(() => {
+    marcarH1Duplicado(editor, titulo);
+  }, [editor, titulo]);
 
   return <EditorContent editor={editor} />;
 }

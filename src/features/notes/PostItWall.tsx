@@ -12,7 +12,7 @@
 import { memo } from "react";
 import { Folder2, Tag } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
-import { corPostIt, inclinacao, resumo } from "./postit";
+import { corPostIt, resumo } from "./postit";
 import type { NoteComEstado } from "./useNotes";
 
 interface Props {
@@ -27,7 +27,6 @@ const PostIt = memo(function PostIt({
 }: { nota: NoteComEstado; aberto: boolean; onAbrir: (id: string) => void }) {
   const cor = corPostIt(nota.id);
   const texto = resumo(nota.body);
-  const giro = inclinacao(nota.id);
 
   return (
     <button
@@ -36,7 +35,6 @@ const PostIt = memo(function PostIt({
       data-aberto={aberto ? "true" : undefined}
       style={{
         background: cor.fundo,
-        transform: `rotate(${giro}deg)`,
         // A cor da fita vira variável pro CSS poder usá-la no anel de
         // "aberto" — mantém a cor do papel mandando, e não um roxo fixo.
         ["--fita" as string]: cor.fita,
@@ -45,7 +43,7 @@ const PostIt = memo(function PostIt({
          que faz o card ler como objeto, igual ao resto do sistema. A classe
          de vidro inteira não serve aqui porque força o fundo e mataria a
          cor do papel. */
-      className="post-it mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl p-4 text-left transition-[transform,box-shadow] duration-200 hover:!rotate-0 hover:-translate-y-1"
+      className="post-it mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl p-4 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-1"
     >
       {/* Fita no topo: a pista visual de "papel colado". */}
       <span

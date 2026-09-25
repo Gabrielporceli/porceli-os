@@ -87,6 +87,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
             <NoteWysiwyg
               body={rascunho.body}
               chaveDaNota={nota.id}
+              titulo={rascunho.title}
               onMudar={(markdown) => onEditar({ body: markdown })}
               onAbrirTitulo={onAbrirTitulo}
             />
@@ -123,7 +124,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
 
           {entram.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-widest text-white/30">Apontam pra cá</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Apontam pra cá</span>
               {entram.map((n) => (
                 <button
                   key={n.id}

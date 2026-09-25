@@ -1112,6 +1112,10 @@ button:focus-visible,
   font-size: 0.875rem;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.78);
+  /* Sem isto o navegador desenha o anel de foco padrão em volta do
+     contenteditable inteiro ao marcar um checkbox da checklist — a "tarja
+     roxa" em volta da nota inteira, não do checkbox. */
+  outline: none;
 }
 .nota-editor > * + * { margin-top: 0.75rem; }
 
@@ -1125,6 +1129,11 @@ button:focus-visible,
   letter-spacing: 0.06em; color: rgba(255,255,255,0.6); margin-top: 0.9rem;
 }
 .nota-editor > *:first-child { margin-top: 0; }
+
+/* Some quando o H1 do corpo só repete o campo de título logo acima — não é
+   apagado do Markdown, só escondido na tela, então o H1 continua existindo
+   pra quem edita fora do sistema. Ver NoteWysiwyg.tsx. */
+.nota-editor h1.h1-duplicado { display: none; }
 
 .nota-editor strong { font-weight: 700; color: #fff; }
 .nota-editor em { font-style: italic; color: rgba(255,255,255,0.72); }

@@ -121,42 +121,43 @@ export function PostItWindow({
 
   return (
     <div
+      // `.liquid-glass` traz o mesmo bevel/fundo do resto do sistema — a
+      // janela lê como o mesmo objeto que os StatsCard e os paineis, e não
+      // mais como uma caixa à parte com fundo/sombra escritos na mão.
       className={cn(
-        "fixed flex flex-col overflow-hidden border backdrop-blur-2xl",
+        "liquid-glass fixed flex flex-col overflow-hidden",
         grande ? "rounded-3xl" : "rounded-none"
       )}
       style={{
         ...estilo,
-        background: "rgba(16,16,20,0.92)",
-        borderColor: ativa ? cor.fita : "rgba(255,255,255,0.10)",
-        boxShadow: ativa
-          ? "0 24px 70px rgba(0,0,0,0.65)"
-          : "0 12px 40px rgba(0,0,0,0.45)",
+        outline: ativa ? `1.5px solid ${cor.fita}` : "1.5px solid transparent",
+        outlineOffset: -1,
       }}
       onPointerDown={onFocar}
     >
       {/* Cabeçalho = alça de arrasto. `touch-none` impede o navegador de
-          rolar a página enquanto se arrasta com o dedo/caneta. */}
+          rolar a página enquanto se arrasta com o dedo/caneta. A fita colorida
+          vira só um traço fino no topo — o mesmo gesto do mural — em vez de
+          tingir o cabeçalho inteiro, que brigava com o vidro. */}
       <div
         onPointerDown={iniciarArrasto}
         onPointerMove={mover}
         onPointerUp={soltar}
         onPointerCancel={soltar}
         className={cn(
-          "flex shrink-0 items-center gap-2 border-b border-white/[0.07] px-3 py-2.5",
+          "flex shrink-0 items-center gap-2 border-b border-white/[0.07] px-3.5 py-2.5",
           grande && "cursor-grab touch-none active:cursor-grabbing"
         )}
-        style={{ background: cor.fundo }}
       >
-        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cor.fita }} />
-        <span className="flex-1 truncate text-xs font-bold text-white/85">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: cor.fita }} />
+        <span className="flex-1 truncate text-xs font-black tracking-tight text-white/85">
           {titulo || "Sem título"}
         </span>
 
         {pendente && (
           <span
             title="Editada aqui e ainda não enviada ao cofre"
-            className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-300"
+            className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-amber-300"
           >
             pendente
           </span>
@@ -168,7 +169,7 @@ export function PostItWindow({
             onClick={onSincronizar}
             disabled={sincronizando}
             title="Enviar esta nota para o cofre"
-            className="shrink-0 rounded-lg p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white/80 disabled:opacity-40"
+            className="shrink-0 rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/10 hover:text-white/80 disabled:opacity-40"
           >
             <Icon as={Refresh} size={14} className={sincronizando ? "animate-spin" : ""} />
           </button>
@@ -178,7 +179,7 @@ export function PostItWindow({
             type="button"
             onClick={onExcluir}
             title="Excluir nota"
-            className="shrink-0 rounded-lg p-1 text-white/45 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+            className="shrink-0 rounded-full p-1.5 text-white/45 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
           >
             <Icon as={Trash} size={14} />
           </button>
@@ -187,7 +188,7 @@ export function PostItWindow({
           type="button"
           onClick={onFechar}
           title="Fechar"
-          className="shrink-0 rounded-lg p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+          className="shrink-0 rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
         >
           <Icon as={CloseCircle} size={15} />
         </button>
