@@ -564,11 +564,6 @@ export default function LeadsKanban() {
         className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
-        <div>
-          <h2 className="text-lg font-black text-white tracking-tight leading-none">
-            Funil de Prospecção
-          </h2>
-        </div>
         <div className="flex flex-row flex-wrap items-center gap-3">
         <motion.div
           whileHover={{ scale: 1.05, translateY: -2 }}
@@ -629,8 +624,8 @@ export default function LeadsKanban() {
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 6px, black calc(100% - 80px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 6px, black calc(100% - 80px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 28px, black calc(100% - 80px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 28px, black calc(100% - 80px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
