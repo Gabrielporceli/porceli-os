@@ -2,9 +2,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -25,14 +22,11 @@ export function DeleteExpenseDialog({
 }: DeleteExpenseDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/5 text-white max-w-md shadow-2xl outline-none">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white tracking-tight">Excluir Despesa</DialogTitle>
-          <DialogDescription className="text-white/70 text-sm leading-relaxed mt-2">
-            Tem certeza que deseja excluir a despesa <span className="text-white font-bold">"{expenseDescription}"</span>? Essa ação não poderá ser desfeita e os dados serão removidos permanentemente.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:flex-row !justify-stretch">
+      <DialogContent className="text-white max-w-md" chip={<DialogTitle className="truncate font-bold tracking-tight">Excluir Despesa</DialogTitle>}>
+        <p className="text-white/70 text-sm leading-relaxed px-6 pb-2">
+          Tem certeza que deseja excluir a despesa <span className="text-white font-bold">"{expenseDescription}"</span>? Essa ação não poderá ser desfeita e os dados serão removidos permanentemente.
+        </p>
+        <div className="grid grid-cols-2 gap-3 p-6 pt-4 border-t border-white/[0.05] shrink-0">
           <motion.div 
             className="flex-1" 
             whileHover={{ scale: 1.05, translateY: -2 }} 
@@ -61,7 +55,7 @@ export function DeleteExpenseDialog({
               Excluir
             </LiquidGlassButton>
           </motion.div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

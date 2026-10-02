@@ -2,17 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X } from 'lucide-react';
 import { Danger } from 'iconsax-react';
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { cn } from "@/lib/utils";
 
 interface Client {
@@ -59,20 +56,10 @@ export function DeleteClientDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 !flex flex-col overflow-hidden !rounded-3xl">
-        <LiquidGlass className="h-full w-full flex flex-col !p-0" backgroundColor="rgba(28, 28, 34, 0.28)">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-            <div className="flex items-center gap-3">
-              <div>
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold text-white tracking-tight">Excluir Cliente</DialogTitle>
-                  <p className="text-white/40 text-sm">Esta ação é irreversível</p>
-                </DialogHeader>
-              </div>
-            </div>
-          </div>
-
+      <DialogContent
+        className="text-white max-w-lg"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Excluir Cliente</DialogTitle>}
+      >
           {/* Content */}
           <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar">
             <style>{`
@@ -174,7 +161,6 @@ export function DeleteClientDialog({
               </LiquidGlassButton>
             </motion.div>
           </div>
-        </LiquidGlass>
       </DialogContent>
     </Dialog>
   );

@@ -26,6 +26,12 @@ interface LiquidGlassProps extends React.HTMLAttributes<HTMLDivElement> {
      * "igual ao Editar Cliente" continue verdade se a classe mudar.
      */
     refraction?: boolean;
+    /**
+     * Classe do material quando `refraction={false}`. Padrão `.liquid-glass`
+     * (vidro neutro); `surface-flat` é o vidro cinza #2F2D2E dos modais e
+     * cards do sistema.
+     */
+    material?: "liquid-glass" | "surface-flat" | "surface-modal";
 }
 
 export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
@@ -41,6 +47,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
             backgroundColor = "rgba(18, 18, 18, 0.4)",
             borderColor = "rgba(255, 255, 255, 0.08)",
             refraction = true,
+            material = "liquid-glass",
             ...props
         },
         ref
@@ -174,7 +181,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
                     // Mesmo material do resto do sistema, vindo da MESMA regra
                     // CSS — não de uma cópia dos valores. Ver `refraction`.
                     <div
-                        className="liquid-glass absolute inset-0 z-0 pointer-events-none"
+                        className={cn(material, "absolute inset-0 z-0 pointer-events-none")}
                         style={{ borderRadius: radius }}
                     />
                 )}

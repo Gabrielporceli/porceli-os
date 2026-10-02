@@ -30,7 +30,7 @@ interface Props {
 export function ConfirmarExclusao({ titulo, onCancelar, onConfirmar }: Props) {
   return (
     <AlertDialog open={titulo !== null} onOpenChange={(aberto) => { if (!aberto) onCancelar(); }}>
-      <AlertDialogContent className="liquid-glass border-white/10 text-white shadow-2xl">
+      <AlertDialogContent className="surface-modal border-white/10 text-white shadow-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <Icon as={Trash} size={20} className="text-red-400" />

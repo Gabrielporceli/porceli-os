@@ -27,6 +27,7 @@ const PillLab = lazy(() => import("./pages/PillLab"))
 const IconLab = lazy(() => import("./pages/IconLab"))
 const NotesLab = lazy(() => import("./pages/NotesLab"))
 const RoundTripLab = lazy(() => import("./pages/RoundTripLab"))
+const ModalTest = lazy(() => import("./pages/ModalTest"))
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
@@ -67,6 +68,8 @@ function App() {
                   <Route path="/dev/notas" element={<NotesLab />} />
                   {/* TEMPORARIO: medicao da ida e volta do Markdown. */}
                   <Route path="/dev/roundtrip" element={<RoundTripLab />} />
+                  {/* Teste de alinhamento do X no modal largo (820px). */}
+                  <Route path="/dev/modal" element={<ModalTest />} />
                   <Route path="/" element={<Index />} />
                   <Route path="*" element={<NotFound />} />
                   <Route

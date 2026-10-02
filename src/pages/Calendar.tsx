@@ -4,6 +4,7 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui/fullscreen-calendar";
 import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
+import { DeconstructedCard } from "@/components/ui/deconstructed-card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { 
   AlertDialog, 
@@ -1089,11 +1090,11 @@ export default function Calendar() {
       </div>
 
       {/* Painel lateral — Atividades do dia (navegável) */}
-      <aside className="hidden lg:flex w-[340px] shrink-0 liquid-glass rounded-3xl overflow-hidden flex-col">
+      <aside className="hidden lg:flex w-[340px] shrink-0 surface-flat rounded-3xl overflow-hidden flex-col">
         <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-white tracking-tight">{panelLabel}</h3>
-            <p className="text-white/40 text-xs mt-0.5 capitalize truncate">
+            <p className="text-white/65 text-xs mt-0.5 capitalize truncate">
               {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </p>
           </div>
@@ -1101,21 +1102,21 @@ export default function Calendar() {
             <button
               onClick={() => shiftPanelDay(-1)}
               title="Dia anterior"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/65 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ArrowLeft2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPanelDate(new Date())}
               title="Hoje"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/65 hover:text-white hover:bg-white/10 transition-colors"
             >
               <CalendarIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => shiftPanelDay(1)}
               title="Próximo dia"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/65 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ArrowRight2 className="w-4 h-4" />
             </button>
@@ -1128,7 +1129,7 @@ export default function Calendar() {
           style={edgeFadeStyle(todayListFade)}
         >
           {todayItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-30">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
               <CalendarIcon className="w-10 h-10" />
               <p className="text-sm text-white text-center">Nenhuma atividade<br />neste dia</p>
             </div>
@@ -1145,7 +1146,7 @@ export default function Calendar() {
                     <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{event.name}</h4>
                     {st !== 'pending' && (
                       <span className={cn(
-                        "shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                        "shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
                         st === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
                       )}>
                         {st === 'done' ? 'Concluído' : 'Andamento'}
@@ -1153,11 +1154,11 @@ export default function Calendar() {
                     )}
                   </div>
                   {event.clients && event.clients.length > 0 && (
-                    <p className="text-white/40 text-xs mt-1 truncate">{event.clients[0]}</p>
+                    <p className="text-white/70 text-xs mt-1 truncate">{event.clients[0]}</p>
                   )}
-                  <div className="flex items-center gap-1.5 mt-3 text-white/50">
+                  <div className="flex items-center gap-1.5 mt-3 text-white/80">
                     <Clock className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[11px] font-bold">{event.time || 'Dia todo'}</span>
+                    <span className="text-xs font-bold">{event.time || 'Dia todo'}</span>
                   </div>
                   <div className="mt-3 h-1 rounded-full bg-white/10 overflow-hidden">
                     <div className={cn(
@@ -1178,18 +1179,16 @@ export default function Calendar() {
 
       {/* Modal do Dia Selecionado */}
       <Dialog open={selectedDay !== null} onOpenChange={(open) => !open && setSelectedDay(null)}>
-        <DialogContent className="sm:max-w-[820px] h-[85vh] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0 !flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="p-5 border-b border-white/[0.05] shrink-0">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold tracking-tight">
-                {selectedDay} de {MONTHS[currentDate.getMonth()]}
-              </DialogTitle>
-            </DialogHeader>
-          </div>
-
+        <DialogContent
+          className="sm:max-w-[820px] h-[85vh] text-white !overflow-hidden"
+          chip={
+            <DialogTitle className="truncate text-xl font-black tracking-tight">
+              {selectedDay} de {MONTHS[currentDate.getMonth()]}
+            </DialogTitle>
+          }
+        >
           {/* Body — 2 colunas (empilha em telas pequenas) */}
-          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden border-t border-white/[0.05]">
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
@@ -1337,114 +1336,101 @@ export default function Calendar() {
                                   : item.status === 'Em andamento' || isOngoing(item)
                                   ? 'ongoing'
                                   : 'pending';
+                              const abrirEdicao = () => {
+                                setEditingItem(item);
+                                setIsEditActivityModalOpen(true);
+                              };
+                              const nomeCliente: string | undefined =
+                                (item as any).clients?.length > 0
+                                  ? (item as any).clients.join(', ')
+                                  : (item as any).client;
+                              // Mesmo card desconstruído dos números do Dashboard
+                              // (MRR…): o chip leva o status e o arrasto, e o
+                              // círculo encaixado no recorte é o botão de editar.
+                              // O Draggable precisa de um elemento com ref — o
+                              // DeconstructedCard não repassa ref, então ele mora
+                              // dentro deste wrapper.
                               const cardEl = (
                 <div
                   ref={prov.innerRef}
                   {...prov.draggableProps}
-                  onClick={() => {
-                    setEditingItem(item);
-                    setIsEditActivityModalOpen(true);
-                  }}
+                  onClick={abrirEdicao}
                   className={cn(
-                    "status-card status-card--nested-glass p-3 sm:p-4 rounded-2xl group grid grid-cols-[auto_1fr_90px] items-center gap-2 transition-all cursor-pointer hover:brightness-110",
-                    snapshot.isDragging && "ring-2 ring-primary/40 shadow-xl"
+                    "group cursor-pointer transition-[filter] hover:brightness-110",
+                    snapshot.isDragging && "drop-shadow-2xl"
                   )}
                 >
-                  {/* Handle de arrastar */}
-                  <div
-                    {...prov.dragHandleProps}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center justify-center text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing transition-colors -ml-1"
-                    title="Arraste para reordenar"
-                  >
-                    <GripVertical className="w-4 h-4" />
-                  </div>
-                  {/* Coluna 1: Info */}
-                  <div className="flex items-center min-w-0">
-                    <div className="min-w-0 flex-1">
-                      {/* Selo de status na própria linha, ANTES do título: se
-                          ficasse ao lado do título (mesma linha flex), um
-                          título longo que quebra em várias linhas empurra o
-                          selo pro meio do bloco (items-center centraliza na
-                          altura toda) — cada card ficava com o selo numa
-                          posição diferente. Numa linha fixa em cima, sempre
-                          alinhado igual em todo card. */}
-                      {cardStatus !== 'pending' && (
-                        <span className={cn(
-                          "inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
-                          cardStatus === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
-                        )}>
-                          {cardStatus === 'done' ? 'Concluído' : 'Andamento'}
+                  <DeconstructedCard
+                    circle={
+                      <button
+                        type="button"
+                        title="Editar atividade"
+                        onClick={(e) => { e.stopPropagation(); abrirEdicao(); }}
+                        className="liquid-glass flex h-full w-full items-center justify-center !rounded-full transition-transform hover:scale-105 active:scale-95"
+                      >
+                        <Edit className="relative z-10 w-[18px] h-[18px] text-white/85" />
+                      </button>
+                    }
+                    chip={
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div
+                          {...prov.dragHandleProps}
+                          onClick={(e) => e.stopPropagation()}
+                          className="-ml-1 flex shrink-0 items-center text-white/35 hover:text-white/70 cursor-grab active:cursor-grabbing transition-colors"
+                          title="Arraste para reordenar"
+                        >
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                        <span
+                          className={cn(
+                            "h-2 w-2 shrink-0 rounded-full",
+                            cardStatus === 'done' ? "bg-green-400" : cardStatus === 'ongoing' ? "bg-blue-400" : "bg-white/35"
+                          )}
+                        />
+                        <span className="truncate text-[11px] font-black uppercase tracking-widest text-white/75">
+                          {cardStatus === 'done' ? 'Concluído' : cardStatus === 'ongoing' ? 'Em andamento' : 'Pendente'}
                         </span>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
-                          {item.title}
-                        </h4>
-                        {item.meetLink && (
-                          <motion.a 
-                            href={item.meetLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            whileHover={{ scale: 1.15, color: '#6829c0' }}
-                            whileTap={{ scale: 0.9 }}
-                            className="text-white/20 hover:text-primary transition-all flex-shrink-0 flex items-center mb-1"
-                          >
-                             <ExportSquare className="w-3.5 h-3.5" />
-                          </motion.a>
-                        )}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        {item.time && !item.isAllDay && (
-                           <div className="flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5 text-primary" />
-                              <span className="text-[11px] text-primary font-bold">
-                                 {formatTime(item.time)}
-                              </span>
-                           </div>
-                        )}
-                        {(item.isAllDay || (item.type === 'notion' && !item.time)) && (
-                          <div className="flex items-center gap-1.5">
-                             <Clock className="w-3.5 h-3.5 text-white/20" />
-                             <span className="text-[11px] text-white/20 font-bold uppercase tracking-wider">
-                                Tarefa do Dia
-                             </span>
-                          </div>
-                        )}
-                        {((item as any).clients?.length > 0 || (item as any).client) ? (
-                          <div className="flex items-center gap-1">
-                            <Tag className="w-3 h-3 text-primary/60 flex-shrink-0" />
-                            <span className="text-[11px] text-primary/80 font-semibold tracking-tight truncate max-w-[160px]">
-                              {(item as any).clients?.length > 0
-                                ? (item as any).clients.join(', ')
-                                : (item as any).client}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Tag className="w-3 h-3 text-white/20 flex-shrink-0" />
-                            <span className="text-[11px] text-white/20 font-semibold tracking-tight">
-                              Sem cliente
-                            </span>
-                          </div>
-                        )}
+                    }
+                  >
+                    <div className="flex items-center gap-2 -mt-2">
+                      <h4 className="text-base font-black text-white tracking-tight leading-snug">
+                        {item.title}
+                      </h4>
+                      {item.meetLink && (
+                        <motion.a
+                          href={item.meetLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Abrir reunião"
+                          className="text-white/50 hover:text-white transition-colors flex-shrink-0 flex items-center"
+                        >
+                          <ExportSquare className="w-4 h-4" />
+                        </motion.a>
+                      )}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                      {/* Hora só em atividade com horário; tarefa do dia não mostra nada. */}
+                      {item.time && !item.isAllDay && (
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-xs font-bold text-white">{formatTime(item.time)}</span>
+                        </div>
+                      )}
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 flex-shrink-0 text-white/50" />
+                        <span className={cn(
+                          "truncate max-w-[200px] text-xs font-semibold",
+                          nomeCliente ? "text-white/80" : "text-white/45"
+                        )}>
+                          {nomeCliente || 'Sem cliente'}
+                        </span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Coluna 2: Editar */}
-                  <div className="flex justify-end">
-                    <button 
-                      className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-white/5 transition-all group/btn"
-                      onClick={() => {
-                        setEditingItem(item);
-                        setIsEditActivityModalOpen(true);
-                      }}
-                    >
-                       <Edit className="w-4 h-4 text-white/50 group-hover/btn:text-white" />
-                       <span className="text-[10px] font-bold text-white/50 group-hover/btn:text-white uppercase">Editar</span>
-                    </button>
-                  </div>
+                  </DeconstructedCard>
                 </div>
                               );
                               return snapshot.isDragging ? createPortal(cardEl, document.body) : cardEl;
@@ -1552,15 +1538,17 @@ export default function Calendar() {
       </Dialog>
 
       <Dialog open={isCreateModalOpen} onOpenChange={(open) => !open && setIsCreateModalOpen(false)}>
-        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto border-white/[0.05] shadow-2xl text-white !p-0 !gap-0">
-          <DialogHeader className="p-6 border-b border-white/[0.05]">
-            <DialogTitle className="text-xl font-bold tracking-tight">
-               {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
+        <DialogContent
+          className="sm:max-w-[450px] max-h-[90vh] text-white"
+          chip={
+            <DialogTitle className="truncate text-lg font-black tracking-tight">
+              {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
             </DialogTitle>
-            <DialogDescription className="text-white/40">
-              Preencha os detalhes da nova atividade
-            </DialogDescription>
-          </DialogHeader>
+          }
+        >
+          <DialogDescription className="px-5 pt-1 text-white/60">
+            Preencha os detalhes da nova atividade
+          </DialogDescription>
           <div className="p-5 space-y-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
@@ -1678,17 +1666,17 @@ export default function Calendar() {
 
       {/* Modal de Edição de Atividade */}
       <Dialog open={isEditActivityModalOpen} onOpenChange={(open) => !open && setIsEditActivityModalOpen(false)}>
-        <DialogContent className="sm:max-w-[450px] border-white/[0.05] shadow-2xl text-white !p-0 !gap-0">
-          <div className="p-6 border-b border-white/[0.05]">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold tracking-tight">
-                 Editar {editingItem?.type === 'google' ? 'Evento' : editingItem?.type === 'notion' ? 'Tarefa Notion' : 'Atividade Recorrente'}
-              </DialogTitle>
-              <DialogDescription className="text-white/40">
-                Altere os detalhes desta atividade
-              </DialogDescription>
-            </DialogHeader>
-          </div>
+        <DialogContent
+          className="sm:max-w-[450px] text-white"
+          chip={
+            <DialogTitle className="truncate text-lg font-black tracking-tight">
+              Editar {editingItem?.type === 'google' ? 'Evento' : editingItem?.type === 'notion' ? 'Tarefa Notion' : 'Atividade Recorrente'}
+            </DialogTitle>
+          }
+        >
+          <DialogDescription className="px-5 pt-1 text-white/60">
+            Altere os detalhes desta atividade
+          </DialogDescription>
           
           <div className="p-5 space-y-3">
             <div className="space-y-1">
@@ -1842,7 +1830,7 @@ export default function Calendar() {
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="liquid-glass border-white/10 shadow-2xl text-white">
+        <AlertDialogContent className="surface-modal border-white/10 shadow-2xl text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
               <Warning2 className="w-5 h-5 text-red-500" />

@@ -23,12 +23,18 @@ interface StatsCardProps {
  * conectado ao corpo por uma curva côncava — ver DeconstructedCard (uma
  * única caixa recortada via clip-path, sem costura entre chip e corpo).
  */
-export function StatsCard({ title, value, trend, description, className, valueClassName }: StatsCardProps) {
+export function StatsCard({ title, value, icon: IconCmp, trend, description, className, valueClassName }: StatsCardProps) {
+  const Ic = IconCmp as React.ComponentType<{ size?: number; className?: string }>;
   return (
     <DeconstructedCard
       className={cn("animate-premium-in", className)}
+      circle={
+        <span className="liquid-glass flex h-full w-full items-center justify-center !rounded-full">
+          <Ic size={18} className="relative z-10 text-white/85" />
+        </span>
+      }
       chip={
-        <span className="text-white/70 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+        <span className="min-w-0 truncate text-white/75 text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
           {title}
         </span>
       }
@@ -37,7 +43,7 @@ export function StatsCard({ title, value, trend, description, className, valueCl
         <AnimatedValue value={String(value)} />
       </p>
       {description && (
-        <p className="text-white/40 text-[10px] mt-1 leading-relaxed font-medium">{description}</p>
+        <p className="text-white/55 text-xs mt-1 leading-relaxed font-medium">{description}</p>
       )}
       {trend && (
         <div className="flex items-center mt-2.5">

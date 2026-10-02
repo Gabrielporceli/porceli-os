@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -341,18 +340,11 @@ export function RenegotiationModal({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-          <div>
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white tracking-tight">Renegociar Pagamentos</DialogTitle>
-              <p className="text-white/40 text-sm">{clientName}</p>
-            </DialogHeader>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto custom-scrollbar p-6 space-y-6" style={{ maxHeight: '55vh' }}>
+      <DialogContent
+        className="text-white max-w-xl max-h-[85vh] !overflow-hidden"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Renegociar Pagamentos</DialogTitle>}
+      >
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           <style>{`
             .custom-scrollbar::-webkit-scrollbar { width: 8px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

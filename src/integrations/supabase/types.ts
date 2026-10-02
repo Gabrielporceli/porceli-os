@@ -203,6 +203,8 @@ export type Database = {
       }
       contracts: {
         Row: {
+          cancelled_at: string | null
+          category: string
           client_id: string
           contract_url: string | null
           created_at: string | null
@@ -217,6 +219,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancelled_at?: string | null
+          category?: string
           client_id: string
           contract_url?: string | null
           created_at?: string | null
@@ -231,6 +235,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancelled_at?: string | null
+          category?: string
           client_id?: string
           contract_url?: string | null
           created_at?: string | null

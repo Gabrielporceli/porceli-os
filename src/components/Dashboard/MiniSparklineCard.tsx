@@ -14,6 +14,8 @@ type MiniSparklineCardProps = {
   trend?: 'up' | 'down';
   color?: string;
   className?: string;
+  /** Superfície chapada em vez de vidro — pra variar a página. */
+  flat?: boolean;
 };
 
 export function MiniSparklineCard({
@@ -22,19 +24,20 @@ export function MiniSparklineCard({
   description,
   data,
   trend = 'up',
-  color = '#22c55e',
-  className
+  color,
+  className,
+  flat
 }: MiniSparklineCardProps) {
   const isPositive = trend === 'up';
   const displayColor = color || (isPositive ? '#22c55e' : '#ef4444');
   const gradientId = `gradient-${title.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
   return (
-    <Card className={cn("liquid-glass border-white/[0.05] overflow-hidden flex flex-col p-0", className)}>
+    <Card className={cn(flat ? "surface-flat" : "liquid-glass border-white/[0.05]", "overflow-hidden flex flex-col p-0", className)}>
       <div className="p-5 pb-2">
         <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1">{title}</p>
         <div className="flex flex-col gap-1">
-          <p className="text-2xl font-bold text-white tracking-tight leading-none">
+          <p className="text-xl font-bold text-white tracking-tight leading-none 2xl:text-2xl">
             <AnimatedValue value={value} />
           </p>
           {description && <p className="text-xs text-white/40 font-medium">{description}</p>}

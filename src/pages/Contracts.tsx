@@ -29,6 +29,8 @@ interface Contract {
   status: 'active' | 'inactive' | 'expiring' | 'concluded';
   payment_day?: number;
   contract_url?: string;
+  /** recorrente entra no MRR/churn do Dashboard; pontual e rescisão não. */
+  category?: 'recorrente' | 'pontual' | 'rescisao';
 }
 
 export default function Contracts() {
@@ -65,7 +67,8 @@ export default function Contracts() {
     endDate: contract.end_date,
     status: contract.status as Contract['status'],
     payment_day: contract.client?.payment_day,
-    contract_url: contract.contract_url
+    contract_url: contract.contract_url,
+    category: (contract as any).category ?? 'recorrente',
   }));
 
   const getStatusBadge = (status: Contract['status']) => {
@@ -126,7 +129,8 @@ export default function Contracts() {
           end_date: contractData.endDate,
           status: contractData.status,
           payment_day: contractData.payment_day,
-          contract_url: contractData.contract_url
+          contract_url: contractData.contract_url,
+          category: contractData.category,
         } as any);
         setEditingContract(null);
       } catch (error) {

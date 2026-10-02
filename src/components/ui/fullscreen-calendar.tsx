@@ -122,7 +122,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
             <Button
               onClick={goToToday}
-              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/70 border-none h-10 font-bold text-[10px] uppercase tracking-[0.2em]"
+              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/85 border-none h-10 font-bold text-[11px] uppercase tracking-[0.2em]"
               variant="ghost"
             >
               Hoje
@@ -158,9 +158,9 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
           deixando "pontas" escuras nos 4 cantos (o recorte entre a curva do
           card e o canto quadrado do clip). O card interno já se auto-clipa. */}
       <div className="lg:flex lg:flex-auto lg:flex-col min-h-0">
-        <div className="liquid-glass no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
+        <div className="surface-flat no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 text-center text-[10px] font-black uppercase tracking-[0.2em] text-white/20 px-1.5 pt-3 pb-1">
+          <div className="grid grid-cols-7 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/60 px-1.5 pt-3 pb-1">
             <div>Dom</div>
             <div>Seg</div>
             <div>Ter</div>
@@ -186,7 +186,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                 // Roxo escuro da marca (#6829c0) com rampa forte: níveis nítidos
                 // e dias cheios em roxo sólido, destacando-se do fundo.
                 const bg =
-                  count === 0 ? "rgba(255,255,255,0.03)" :
+                  count === 0 ? "rgba(255,255,255,0.05)" :
                   count === 1 ? "rgba(104,41,192,0.45)" :
                   count <= 3  ? "rgba(104,41,192,0.68)" :
                   count <= 6  ? "rgba(104,41,192,0.90)" :
@@ -206,8 +206,8 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                     >
                       <header className="flex items-center justify-between px-2.5 pt-2 shrink-0">
                         <span className={cn(
-                          "text-xs font-black tabular-nums",
-                          selected ? "text-white" : today ? "text-white" : count > 0 ? "text-white" : "text-white/40"
+                          "text-sm font-black tabular-nums",
+                          selected ? "text-white" : today ? "text-white" : count > 0 ? "text-white" : "text-white/65"
                         )}>
                           {format(day, "d")}
                         </span>
@@ -250,7 +250,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                       {/* Contador de atividades no rodapé */}
                       <div className="flex-1 flex items-end justify-end px-2.5 pb-1.5 min-h-0">
                         {count > 0 && (
-                          <span className="text-[10px] font-black text-white/50 leading-none">
+                          <span className="text-[11px] font-black text-white/85 leading-none">
                             {count} {count === 1 ? 'ativ.' : 'ativs.'}
                           </span>
                         )}

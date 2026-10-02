@@ -13,7 +13,6 @@ import { DocumentText, DollarCircle, Warning2 } from 'iconsax-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ContractBillingPreview } from "./ContractBillingPreview";
@@ -130,20 +129,10 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="!flex !flex-col border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[95vh] overflow-hidden !rounded-3xl">
-                <div className="w-full h-full min-h-0 flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-                        <div>
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Renovação de Contrato</DialogTitle>
-                                <p className="text-white/40 text-sm">
-                                    Editando: <span className="text-white/70 font-black uppercase tracking-widest text-[10px] ml-1">{contract.client}</span>
-                                </p>
-                            </DialogHeader>
-                        </div>
-                    </div>
-
+            <DialogContent
+              className="text-white max-w-3xl max-h-[95vh] !overflow-hidden"
+              chip={<DialogTitle className="truncate font-bold tracking-tight">Renovação de Contrato</DialogTitle>}
+            >
                     {/* Content */}
                     <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
                         <style>{`
@@ -324,7 +313,6 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                             </LiquidGlassButton>
                         </motion.div>
                     </div>
-                </div>
             </DialogContent>
         </Dialog>
     );

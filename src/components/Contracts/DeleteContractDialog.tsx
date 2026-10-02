@@ -8,10 +8,8 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LiquidGlass } from "@/components/ui/liquid-glass";
 
 interface Contract {
   id: string;
@@ -95,22 +93,14 @@ export function DeleteContractDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-lg !p-0 !gap-0 !flex flex-col overflow-hidden !rounded-3xl">
-        <LiquidGlass className="h-full w-full flex flex-col !p-0" backgroundColor="rgba(28, 28, 34, 0.28)">
-
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-white tracking-tight">
-                {step === 'fine-form' ? 'Definir Multa Rescisória' : 'Cancelar Contrato'}
-              </DialogTitle>
-              <p className="text-white/40 text-sm">
-                {step === 'fine-form'
-                  ? `Informe os dados da cobrança${contract.client ? ` — ${contract.client}` : ''}`
-                  : 'Rescisão e cálculo de multa'}
-              </p>
-            </DialogHeader>
-          </div>
+      <DialogContent
+        className="text-white max-w-lg"
+        chip={
+          <DialogTitle className="truncate font-bold tracking-tight">
+            {step === 'fine-form' ? 'Definir Multa Rescisória' : 'Cancelar Contrato'}
+          </DialogTitle>
+        }
+      >
 
           {/* Content — Step: confirm */}
           {step === 'confirm' && (
@@ -258,7 +248,6 @@ export function DeleteContractDialog({
             </div>
           )}
 
-        </LiquidGlass>
       </DialogContent>
     </Dialog>
   );

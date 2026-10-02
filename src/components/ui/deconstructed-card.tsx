@@ -11,7 +11,21 @@ export interface DeconstructedCardProps {
   radius?: number;
   /** Raio da curva côncava de transição chip→corpo (px). */
   fillet?: number;
+  /**
+   * Círculo encaixado no canto superior-direito. Com ele, o recorte deixa de
+   * ser a faixa inteira à direita do chip e vira uma "mordida" do tamanho do
+   * círculo: o chip ocupa o topo todo menos o canto. A curva côncava usa o
+   * mesmo raio dos cantos externos.
+   */
+  circle?: React.ReactNode;
+  /** Classes extras do corpo (ex.: tirar o padding quando o conteúdo já traz o seu). */
+  bodyClassName?: string;
 }
+
+/** Diâmetro do círculo do canto e o vão entre ele e o card (px). */
+const CIRCLE_D = 44;
+const CIRCLE_GAP = 6;
+const NOTCH = CIRCLE_D + CIRCLE_GAP * 2;
 
 /*
   Réplica GEOMÉTRICA do bevel do .liquid-glass (os 7 box-shadow insets).
@@ -56,8 +70,15 @@ export function DeconstructedCard({
   children,
   className,
   radius = 20,
-  fillet = 18,
+  fillet: filletProp = 18,
+  circle,
+  bodyClassName,
 }: DeconstructedCardProps) {
+  // Com o círculo, a côncava é um soquete que ABRAÇA a bola: raio = raio da
+  // bola + o vão (CIRCLE_D/2 + CIRCLE_GAP). Com um raio menor (ex.: o dos
+  // cantos externos) sobrava um vão diagonal entre a curva e a bola, e ela
+  // lia como solta no canto em vez de encaixada.
+  const fillet = circle ? CIRCLE_D / 2 + CIRCLE_GAP : filletProp;
   const containerRef = React.useRef<HTMLDivElement>(null);
   const chipRef = React.useRef<HTMLDivElement>(null);
   const [shape, setShape] = React.useState<{ d: string; w: number; h: number } | null>(null);
@@ -105,16 +126,20 @@ export function DeconstructedCard({
     return () => ro.disconnect();
   }, [radius, fillet]);
 
-  return (
+  const card = (
     <div
       ref={containerRef}
-      className={cn("dc-single", className)}
+      className={cn("dc-single", circle ? "h-full" : className)}
       style={{ clipPath: shape ? `path('${shape.d}')` : undefined }}
     >
-      <div ref={chipRef} className="dc-chip-row">
+      <div
+        ref={chipRef}
+        className="dc-chip-row"
+        style={circle ? { width: `calc(100% - ${NOTCH}px)`, height: NOTCH } : undefined}
+      >
         {chip}
       </div>
-      <div className="dc-body-content">{children}</div>
+      <div className={cn("dc-body-content", bodyClassName)}>{children}</div>
 
       {shape && (
         <svg
@@ -200,6 +225,21 @@ export function DeconstructedCard({
           />
         </svg>
       )}
+    </div>
+  );
+
+  if (!circle) return card;
+
+  // O círculo mora FORA do elemento recortado — dentro, o clip-path o cortaria.
+  return (
+    <div className={cn("relative", className)}>
+      {card}
+      <div
+        className="absolute flex items-center justify-center"
+        style={{ top: CIRCLE_GAP, right: CIRCLE_GAP, width: CIRCLE_D, height: CIRCLE_D }}
+      >
+        {circle}
+      </div>
     </div>
   );
 }

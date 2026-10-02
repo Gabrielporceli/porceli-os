@@ -18,6 +18,7 @@ type FinancialEntry = {
 type RevenueYoYChartProps = {
   financialEntries: FinancialEntry[];
   maxYearsToShow?: number;
+  className?: string;
 };
 
 const formatCurrency = (value: number) =>
@@ -121,6 +122,7 @@ export const calculateRevenueKPIs = (financialEntries: FinancialEntry[]) => {
 export function RevenueYoYChart({
   financialEntries,
   maxYearsToShow = 4,
+  className,
 }: RevenueYoYChartProps) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -198,7 +200,7 @@ export function RevenueYoYChart({
   const yoyGrowth = prevYearTotal > 0 ? ((currentTotal - prevYearTotal) / prevYearTotal) * 100 : 0;
 
   return (
-    <Card className="liquid-glass border-white/[0.05] dashboard-glow w-full">
+    <Card className={cn("surface-flat w-full", className)}>
       <CardHeader className="border-0 min-h-auto py-6">
         <CardTitle className="text-lg font-semibold text-white">Crescimento de Receita (YoY)</CardTitle>
       </CardHeader>

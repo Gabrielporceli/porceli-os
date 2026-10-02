@@ -10,12 +10,10 @@ import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { X } from 'lucide-react';
 import { DollarCircle } from 'iconsax-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 interface Contract {
@@ -29,6 +27,8 @@ interface Contract {
   status: 'active' | 'inactive' | 'expiring' | 'concluded';
   payment_day?: number;
   contract_url?: string;
+  /** recorrente entra no MRR/churn do Dashboard; pontual e rescisão não. */
+  category?: 'recorrente' | 'pontual' | 'rescisao';
 }
 
 interface EditContractModalProps {
@@ -49,7 +49,8 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     endDate: '',
     status: 'active' as Contract['status'],
     payment_day: '1',
-    contract_url: ''
+    contract_url: '',
+    category: 'recorrente' as NonNullable<Contract['category']>,
   });
   const updateClient = useUpdateClient();
 
@@ -64,7 +65,8 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
         endDate: contract.endDate,
         status: contract.status,
         payment_day: (contract.payment_day || 1).toString(),
-        contract_url: contract.contract_url || ''
+        contract_url: contract.contract_url || '',
+        category: contract.category ?? 'recorrente',
       });
     }
   }, [contract]);
@@ -130,22 +132,12 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] overflow-hidden !rounded-3xl flex flex-col">
-        <div className="w-full flex flex-col flex-1 min-h-0">
-          {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-white/[0.05] shrink-0">
-            <div className="flex items-center gap-3">
-              <div>
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-white tracking-tight">Editar Contrato</DialogTitle>
-                  <p className="text-white/40 text-xs">Atualize os dados e condições do contrato</p>
-                </DialogHeader>
-              </div>
-            </div>
-          </div>
-
+      <DialogContent
+        className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Contrato</DialogTitle>}
+      >
           {/* Content */}
-          <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
@@ -271,6 +263,20 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 </Select>
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-white/50 text-[10px] font-bold uppercase tracking-widest ml-1">Tipo de receita</Label>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                  <SelectTrigger className="bg-white/[0.02] border-white/[0.05] h-10 rounded-xl text-white/70 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recorrente" className="cursor-pointer">Recorrente (mensalidade)</SelectItem>
+                    <SelectItem value="pontual" className="cursor-pointer">Pontual (trabalho avulso)</SelectItem>
+                    <SelectItem value="rescisao" className="cursor-pointer">Rescisão (distrato / multa)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
             </form>
           </div>
 
@@ -297,7 +303,6 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
               </LiquidGlassButton>
             </motion.div>
           </div>
-        </div>
       </DialogContent>
     </Dialog>
   );

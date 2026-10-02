@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 import type { PillGeom, PillTuning } from "./mobilePillGeometry";
 import { PILL_DEFAULTS } from "./mobilePillGeometry";
 
@@ -96,25 +97,43 @@ export function MobilePillBlob({
   windowW,
   slot,
   tuning = PILL_DEFAULTS,
+  vertical = false,
 }: {
   geom: PillGeom;
   windowW: number;
   slot: number;
   tuning?: PillTuning;
+  /** true = a faixa de ícones é uma COLUNA (menu lateral), não uma fileira.
+   *  A geometria em si (back/front/neck) não muda — só troca qual eixo do
+   *  SVG recebe a posição `x` de cada peça. */
+  vertical?: boolean;
 }) {
   const image = useMemo(() => {
     const t = tuning;
     const r = slot / 2;
-    const cy = r;
+    const cross = r; // centro do eixo perpendicular ao movimento
     const { back, front, neck } = geom;
     const f2 = (v: number) => v.toFixed(2);
+    // (main, cross) → (x, y) do SVG: na horizontal é (x, y) direto; na
+    // vertical o eixo que a pílula percorre vira Y, e o slot (espessura)
+    // vira X.
+    const pt = (main: number, crossV: number) => (vertical ? { x: crossV, y: main } : { x: main, y: crossV });
     const shapes: string[] = [];
-    if (back.s > 0.001) shapes.push(`<circle cx='${f2(back.x + r)}' cy='${cy}' r='${f2(back.s * r)}'/>`);
-    if (front.s > 0.001) shapes.push(`<circle cx='${f2(front.x + r)}' cy='${cy}' r='${f2(front.s * r)}'/>`);
+    if (back.s > 0.001) {
+      const p = pt(back.x + r, cross);
+      shapes.push(`<circle cx='${f2(p.x)}' cy='${f2(p.y)}' r='${f2(back.s * r)}'/>`);
+    }
+    if (front.s > 0.001) {
+      const p = pt(front.x + r, cross);
+      shapes.push(`<circle cx='${f2(p.x)}' cy='${f2(p.y)}' r='${f2(front.s * r)}'/>`);
+    }
     if (neck.w > 0.5 && neck.h > 0.5) {
-      shapes.push(
-        `<rect x='${f2(neck.x)}' y='${f2(cy - neck.h / 2)}' width='${f2(neck.w)}' height='${f2(neck.h)}' rx='${f2(neck.h / 2)}'/>`
-      );
+      const nx = neck.x;
+      const ny = cross - neck.h / 2;
+      const rect = vertical
+        ? `<rect x='${f2(ny)}' y='${f2(nx)}' width='${f2(neck.h)}' height='${f2(neck.w)}' rx='${f2(neck.h / 2)}'/>`
+        : `<rect x='${f2(nx)}' y='${f2(ny)}' width='${f2(neck.w)}' height='${f2(neck.h)}' rx='${f2(neck.h / 2)}'/>`;
+      shapes.push(rect);
     }
 
     // Um inset, do jeito que o CSS realmente calcula:
@@ -173,9 +192,15 @@ export function MobilePillBlob({
       `<feMergeNode in='outer'/><feMergeNode in='fill'/>` +
       NAV_INSETS.map((_, i) => `<feMergeNode in='s${NAV_INSETS.length - 1 - i}'/>`).join("");
 
-    // Tudo em sRGB pra os alfas baterem com o CSS.
+    // Tudo em sRGB pra os alfas baterem com o CSS. A folga generosa fica no
+    // eixo em que a pílula NÃO se move (onde o blur do gooey precisa de
+    // espaço pra "respirar" sem cortar) — na horizontal é o vertical, na
+    // vertical é o horizontal.
+    const filterRect = vertical
+      ? "x='-200%' y='-20%' width='500%' height='140%'"
+      : "x='-20%' y='-200%' width='140%' height='500%'";
     const filter =
-      `<filter id='m' x='-20%' y='-200%' width='140%' height='500%' color-interpolation-filters='sRGB'>` +
+      `<filter id='m' ${filterRect} color-interpolation-filters='sRGB'>` +
       `<feGaussianBlur in='SourceGraphic' stdDeviation='${t.GOO_BLUR}' result='blur'/>` +
       `<feColorMatrix in='blur' type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${t.GOO_K} -${t.GOO_O}' result='goo'/>` +
       `<feFlood flood-color='#fff' flood-opacity='${NAV_FILL_A}' result='ff'/>` +
@@ -192,20 +217,25 @@ export function MobilePillBlob({
       `<feMerge>${mergeNodes}</feMerge>` +
       `</filter>`;
 
+    const svgW = vertical ? slot : windowW;
+    const svgH = vertical ? windowW : slot;
     const svg =
-      `<svg xmlns='http://www.w3.org/2000/svg' width='${windowW}' height='${slot}' viewBox='0 0 ${windowW} ${slot}'>` +
+      `<svg xmlns='http://www.w3.org/2000/svg' width='${svgW}' height='${svgH}' viewBox='0 0 ${svgW} ${svgH}'>` +
       `<defs>${filter}</defs>` +
       `<g filter='url(#m)' fill='#fff'>${shapes.join("")}</g></svg>`;
     return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
-  }, [geom, windowW, slot, tuning]);
+  }, [geom, windowW, slot, tuning, vertical]);
 
   return (
     <div
       aria-hidden="true"
-      className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+      className={cn(
+        "pointer-events-none absolute z-10",
+        vertical ? "left-1/2 top-0 -translate-x-1/2" : "left-0 top-1/2 -translate-y-1/2"
+      )}
       style={{
-        width: windowW,
-        height: slot,
+        width: vertical ? slot : windowW,
+        height: vertical ? windowW : slot,
         backgroundImage: image,
         backgroundSize: "100% 100%",
         backgroundRepeat: "no-repeat",

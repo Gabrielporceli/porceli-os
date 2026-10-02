@@ -1,7 +1,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
@@ -15,7 +14,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import ReactDOM from "react-dom";
-import { X } from 'lucide-react';
 import { Bank, Card as CreditCard, DocumentText, DollarCircle, Scan } from 'iconsax-react';
 import { useClients } from "@/hooks/useClients";
 import { ContractBillingPreview } from "./ContractBillingPreview";
@@ -33,6 +31,7 @@ interface NewContractModalProps {
     status: string;
     contract_url?: string;
     single_payment?: boolean;
+    category?: string;
   }) => void;
   isPending?: boolean;
 }
@@ -43,6 +42,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX" | "CREDIT_CARD">("BOLETO");
   const [singlePayment, setSinglePayment] = useState(false);
+  // Recorrente entra no MRR e no churn do Dashboard; pontual e rescisão não.
+  const [category, setCategory] = useState<"recorrente" | "pontual" | "rescisao">("recorrente");
   const [formData, setFormData] = useState({
     client_id: '',
     type: '',
@@ -75,6 +76,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
       status: formData.status,
       contract_url: formData.contract_url,
       single_payment: singlePayment,
+      // Pagamento único não é mensalidade (o banco também garante isso).
+      category: singlePayment && category === 'recorrente' ? 'pontual' : category,
       billing_type: billingType,
     } as any);
   };
@@ -122,21 +125,12 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-          <div className="flex items-center gap-3">
-            <div>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Novo Contrato</DialogTitle>
-                <p className="text-white/40 text-sm">Crie um contrato para um cliente existente</p>
-              </DialogHeader>
-            </div>
-          </div>
-        </div>
-
+      <DialogContent
+        className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Contrato</DialogTitle>}
+      >
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;
@@ -333,6 +327,20 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                       <SelectItem value="expiring" className="cursor-pointer">A vencer</SelectItem>
                       <SelectItem value="concluded" className="cursor-pointer">Concluído</SelectItem>
                       <SelectItem value="inactive" className="cursor-pointer">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Tipo de receita</Label>
+                  <Select value={category} onValueChange={(value) => setCategory(value as typeof category)}>
+                    <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70 font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recorrente" className="cursor-pointer">Recorrente (mensalidade)</SelectItem>
+                      <SelectItem value="pontual" className="cursor-pointer">Pontual (trabalho avulso)</SelectItem>
+                      <SelectItem value="rescisao" className="cursor-pointer">Rescisão (distrato / multa)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

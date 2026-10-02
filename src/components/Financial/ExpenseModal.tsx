@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,11 +107,9 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
           </LiquidGlassButton>
         </DialogTrigger>
       )}
-      <DialogContent className="border-white/5 text-white max-w-md shadow-2xl outline-none">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white tracking-tight">Nova Despesa</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-5 pt-4">
+      <DialogContent className="text-white max-w-md max-h-[85vh] !overflow-hidden" chip={<DialogTitle className="truncate font-bold tracking-tight">Nova Despesa</DialogTitle>}>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+        <form id="expense-form" onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="space-y-2">
             <Label htmlFor="description" className="text-white/70 text-sm font-medium ml-1">Descrição *</Label>
             <Input
@@ -205,38 +203,40 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 pt-4 sm:flex-row !justify-stretch border-t border-white/[0.05]">
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <LiquidGlassButton
-                tint="danger"
-                type="button"
-                onClick={() => setOpen(false)}
-                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
-            </motion.div>
-            <motion.div
-              className="flex-1"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <LiquidGlassButton
-                tint="primary"
-                type="submit"
-                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              >
-                Adicionar
-              </LiquidGlassButton>
-            </motion.div>
-          </div>
         </form>
+        </div>
+        <div className="grid grid-cols-2 gap-3 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton
+              tint="danger"
+              type="button"
+              onClick={() => setOpen(false)}
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+            >
+              Cancelar
+            </LiquidGlassButton>
+          </motion.div>
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <LiquidGlassButton
+              tint="primary"
+              type="submit"
+              form="expense-form"
+              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+            >
+              Adicionar
+            </LiquidGlassButton>
+          </motion.div>
+        </div>
       </DialogContent>
     </Dialog>
   );

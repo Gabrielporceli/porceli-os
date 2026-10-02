@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -111,7 +110,10 @@ export function EditClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
+      <DialogContent
+        className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Cliente</DialogTitle>}
+      >
         <style>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
@@ -132,23 +134,8 @@ export function EditClientModal({
           }
         `}</style>
 
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-Porceli-purple rounded-lg flex items-center justify-center">
-              <Edit className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Editar Cliente</DialogTitle>
-                <p className="text-white/40 text-sm">Atualize os dados do cliente</p>
-              </DialogHeader>
-            </div>
-          </div>
-        </div>
-
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <form id="edit-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">

@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -213,21 +212,12 @@ export function NewClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-3xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/[0.05] shrink-0">
-          <div className="flex items-center gap-3">
-            <div>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Novo Cliente</DialogTitle>
-                <p className="text-white/40 text-sm">Preencha os dados do novo cliente</p>
-              </DialogHeader>
-            </div>
-          </div>
-        </div>
-
+      <DialogContent
+        className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Cliente</DialogTitle>}
+      >
         {/* Content with Custom Scrollbar */}
-        <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <style>{`
             .custom-scrollbar::-webkit-scrollbar {
               width: 8px;

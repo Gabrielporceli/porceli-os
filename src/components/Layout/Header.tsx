@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   Calendar,
@@ -41,6 +40,42 @@ const menuItems = [
   { title: "Notas", url: "/notes", icon: NoteText },
 ];
 
+/**
+ * Alinha o wallpaper pintado dentro da .side-nav com o fundo real da página
+ * (CRMLayout: fixed, cover, center) — é o que faz a barra parecer vidro sem
+ * ter backdrop-filter. `background-attachment: fixed` não serve: o blur do
+ * ::before é um `filter`, e o Chrome desliga o fixed em elemento filtrado.
+ */
+function useSideNavWallpaper(ref: React.RefObject<HTMLElement>, enabled: boolean) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!enabled || !el) return;
+    const FOLGA = 40; // o mesmo `inset: -40px` do ::before
+    let nat: { w: number; h: number } | null = null;
+    const alinhar = () => {
+      if (!nat) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const k = Math.max(vw / nat.w, vh / nat.h);
+      const dw = nat.w * k;
+      const dh = nat.h * k;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--sn-w", `${dw}px`);
+      el.style.setProperty("--sn-h", `${dh}px`);
+      el.style.setProperty("--sn-x", `${(vw - dw) / 2 - (r.left - FOLGA)}px`);
+      el.style.setProperty("--sn-y", `${(vh - dh) / 2 - (r.top - FOLGA)}px`);
+    };
+    const img = new Image();
+    img.onload = () => {
+      nat = { w: img.naturalWidth, h: img.naturalHeight };
+      alinhar();
+    };
+    img.src = "/app-bg.webp";
+    window.addEventListener("resize", alinhar);
+    return () => window.removeEventListener("resize", alinhar);
+  }, [ref, enabled]);
+}
+
 export const Header = () => {
   const { logout } = useAuth();
   // Avisa o overlay de carregamento (PageTransition) quando a pílula vai
@@ -49,12 +84,11 @@ export const Header = () => {
   const signalHeaderAnim = useHeaderAnimSignal();
   const location = useLocation();
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
   const isMobile = useIsMobile();
-  const [hidden, setHidden] = useState(false);
-  const [isMouseAtTop, setIsMouseAtTop] = useState(false);
 
   const navRef = useRef<HTMLElement>(null);
+  const sideNavRef = useRef<HTMLElement>(null);
+  useSideNavWallpaper(sideNavRef, !isMobile);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   // Pílula do desktop: mesma geometria líquida do mobile (bolha drena de
   // um ícone, cresce no outro, pescoço liga as duas). A diferença é o que
@@ -306,48 +340,30 @@ export const Header = () => {
   // Geometria da pílula do desktop num instante p da transferência.
   // Coordenadas relativas ao WRAPPER (que não rola), medidas ao vivo a
   // cada frame — assim resize/scroll da barra são acompanhados de graça.
+  //
+  // O menu agora é uma COLUNA (barra lateral), não uma fileira — a pílula
+  // se move no eixo VERTICAL (top/height), e não mais horizontal
+  // (left/width). A geometria em si (mobilePillGeometry.ts) não sabe nem
+  // precisa saber disso: ela só lida com "posição ao longo do eixo de
+  // movimento" e "espessura do slot", nomes que aqui viram top/height.
   const measureDesk = useCallback((fromUrl: string | null, toUrl: string, p: number) => {
     const wrap = deskWrapRef.current;
     const toEl = itemRefs.current.get(toUrl);
     if (!wrap || !toEl) return null;
     const wrapRect = wrap.getBoundingClientRect();
     const toRect = toEl.getBoundingClientRect();
-    const slot = toRect.width;
-    const nx = toRect.left - wrapRect.left;
+    const slot = toRect.height;
+    const nx = toRect.top - wrapRect.top;
     const fromEl = fromUrl && fromUrl !== toUrl ? itemRefs.current.get(fromUrl) : null;
-    // `slot` sai da MEDIÇÃO do item (w-10 → 40px, w-11 → 44px a partir de
-    // md), nunca de uma constante: a pílula é alinhada pela borda esquerda,
-    // então qualquer diferença de largura tira o ícone do centro dela.
+    // `slot` sai da MEDIÇÃO do item (h-10 → 40px, h-11 → 44px a partir de
+    // md), nunca de uma constante: a pílula é alinhada pela borda de cima,
+    // então qualquer diferença de altura tira o ícone do centro dela.
     if (!fromEl || p >= SWITCH_AT) {
-      return { geom: idlePillGeom(nx, slot), w: wrapRect.width, slot };
+      return { geom: idlePillGeom(nx, slot), w: wrapRect.height, slot };
     }
-    const ax = fromEl.getBoundingClientRect().left - wrapRect.left;
-    return { geom: transferPillGeom(ax, nx, slot, p), w: wrapRect.width, slot };
+    const ax = fromEl.getBoundingClientRect().top - wrapRect.top;
+    return { geom: transferPillGeom(ax, nx, slot, p), w: wrapRect.height, slot };
   }, [SWITCH_AT]);
-
-  // Lógica para esconder o header ao rolar para baixo e mostrar ao rolar para cima
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious();
-    if (latest > previous && latest > 150) {
-      setHidden(true);
-    } else {
-      setHidden(false);
-    }
-  });
-
-  // Mostrar o header se o mouse estiver no topo da tela.
-  // Limiar de 90px cobre toda a altura do header (evita cruzar a linha ao
-  // passar o mouse por cima dele) e só atualiza o estado quando ele muda de
-  // verdade — assim não há re-render em rajada que faz o backdrop-filter
-  // piscar aquela "tarja" clara na emenda com os cards.
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const atTop = e.clientY < 90;
-      setIsMouseAtTop((prev) => (prev === atTop ? prev : atTop));
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Desktop: anima a transferência quando a rota muda. A rota nova só
   // vira âncora no fim — até lá a bolha antiga ainda está drenando.
@@ -562,178 +578,171 @@ export const Header = () => {
     };
   }, []);
 
-  // No mobile o header mora embaixo (bottom tab bar — mais fácil de
-  // alcançar com o polegar) e fica sempre visível, sem o esconder/mostrar
-  // ao rolar que só faz sentido pra uma barra no topo competindo por
-  // espaço com o conteúdo.
-  const showHeader = isMobile ? true : (!hidden || isMouseAtTop);
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ y: 0 }}
-        animate={{ y: showHeader ? 0 : (isMobile ? 100 : -100) }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className={cn(
-          "w-full px-4 sm:px-6 pt-4 fixed left-0 right-0 z-[60] flex justify-center pointer-events-none will-change-transform",
-          // Embaixo no mobile (com respiro pra área segura do iPhone),
-          // volta pro topo a partir de md.
-          "bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] md:bottom-auto md:top-0 md:pb-4"
-        )}
+  if (isMobile) {
+    // ===== Mobile: barra embaixo, roleta com loop infinito =====
+    // Mais fácil de alcançar com o polegar — e sem o esconder/mostrar ao
+    // rolar, que só fazia sentido pra uma barra no topo competindo por
+    // espaço com o conteúdo (o de cima nunca existiu aqui: fica sempre à
+    // vista).
+    return (
+      <div
+        className="fixed bottom-0 left-0 right-0 z-[60] flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6"
       >
         <header
-          className={cn(
-            "liquid-glass h-16 w-full max-w-7xl flex items-center pointer-events-auto",
-            // No mobile o espaço é curto (logo + janela de 5 ícones + sair
-            // TODOS precisam caber numa tela de ~360-430px) — padding e gap
-            // bem mais enxutos que no desktop, onde a nav é flex-1 e
-            // absorve a largura sobrando.
-            isMobile ? "px-3 gap-1.5" : "px-4 sm:px-6 gap-4"
-          )}
+          className="liquid-glass flex h-16 w-full max-w-7xl items-center gap-1.5 px-3"
           style={{ willChange: "backdrop-filter, transform", transform: "translateZ(0)" }}
         >
-
-          {/* Logo Section */}
-          <div
-            className={cn(
-              "flex items-center shrink-0",
-              isMobile ? "pr-1.5 border-r border-white/5" : "mr-2 sm:mr-4 pr-2 sm:pr-4 border-r border-white/5"
-            )}
-          >
-            <img src="/logo.png" alt="Porceli" className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
+          {/* Logo */}
+          <div className="flex shrink-0 items-center border-r border-white/5 pr-1.5">
+            <img src="/logo.png" alt="Porceli" className="h-7 w-7 object-contain" />
           </div>
 
-          {/* Navigation Items - Center Styled. Só ícones (rótulo virou
-              tooltip). Quando não cabem todos numa tela estreita, a
-              própria barra rola horizontalmente (overflow-x-auto) — sem
-              menu escondido atrás de mais um botão. */}
-          {isMobile ? (
-            // ===== Mobile: roleta com loop infinito =====
-            // Wrapper EXTERNO, sem overflow próprio — é nele que a pílula
-            // fica ancorada (irmã do <nav>, não filha). O <nav> tem
-            // overflow-x-auto pra rolar os ícones; se a pílula morasse
-            // DENTRO dele, o overflow cortaria o blur do filtro gooey numa
-            // borda reta (era o bug da "caixa feia"). Aqui fora, nada corta.
-            <div
-              className="relative max-w-full shrink-0 mx-auto h-full"
-              style={{ width: MOBILE_WINDOW }}
-            >
-              {mobilePill && (
-                <MobilePillBlob geom={mobilePill.geom} windowW={MOBILE_WINDOW} slot={MOBILE_SLOT} />
-              )}
-
-              <nav
-                ref={navRef}
-                onScroll={onNavScroll}
-                // Janela fixa (MOBILE_WINDOW = 5 slots + 4 vãos = 216px) —
-                // junto com logo/sair enxutos, cabe até em telas de ~360px.
-                // gap-1 e h-10/w-10 abaixo TÊM que casar com MOBILE_GAP e
-                // MOBILE_SLOT: a pílula é posicionada em pixels por fora.
-                className="relative z-20 flex items-center gap-1 h-full w-full overflow-x-auto scrollbar-hide snap-x snap-mandatory"
-                style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}
-              >
-                {[0, 1, 2].map((setIndex) => (
-                  <div
-                    key={setIndex}
-                    ref={setIndex === 1 ? middleSetRef : undefined}
-                    className="flex items-center gap-1 shrink-0"
-                  >
-                    {mobileItems.map((item) => {
-                      // Enquanto a pílula ainda não mediu nada (1º frame),
-                      // cai pra rota atual; depois disso, quem manda é o
-                      // item mais próximo do centro AGORA — não espera a
-                      // navegação de verdade (só acontece quando o scroll
-                      // assenta).
-                      const isHighlighted = mobilePill ? mobilePill.url === item.url : location.pathname === item.url;
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={`${setIndex}-${item.title}`}
-                          to={item.url}
-                          title={item.title}
-                          data-nav-url={item.url}
-                          className="snap-center h-10 w-10 flex items-center justify-center shrink-0"
-                        >
-                          <Icon className={cn("w-5 h-5 transition-colors duration-500", isHighlighted ? "lqg-text text-white" : "text-white/40")} />
-                          <span className="sr-only">{item.title}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ))}
-              </nav>
-            </div>
-          ) : (
-            // ===== Desktop: mesma pílula líquida, animada no tempo =====
-            // Wrapper EXTERNO (sem overflow) segurando a pílula, igual ao
-            // mobile: o <nav> tem overflow-x-auto e cortaria o blur do
-            // filtro gooey numa borda reta.
-            <div ref={deskWrapRef} className="relative flex-1 h-full">
-              {deskPill && (
-                <MobilePillBlob
-                  geom={deskPill.geom}
-                  windowW={deskPill.w}
-                  slot={deskPill.slot}
-                />
-              )}
-              <nav
-                ref={navRef}
-                className="relative z-20 flex items-center justify-center gap-0.5 sm:gap-1 h-full w-full overflow-x-auto scrollbar-hide"
-              >
-                {menuItems.map((item) => {
-                  const isActive = location.pathname === item.url;
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.title}
-                      to={item.url}
-                      title={item.title}
-                      className="h-10 flex items-center shrink-0"
-                    >
-                      <div
-                        ref={(el) => {
-                          if (el) itemRefs.current.set(item.url, el);
-                          else itemRefs.current.delete(item.url);
-                        }}
-                        className="group relative isolate z-10 w-10 md:w-11 h-full flex items-center justify-center rounded-full transform-gpu will-change-transform"
-                      >
-                        {!isActive && (
-                          <span className="absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                        )}
-                        <Icon className={cn(
-                          "relative z-10 w-4 h-4 sm:w-[18px] sm:h-[18px] transition-colors",
-                          isActive ? "lqg-text text-white" : "text-white/40 group-hover:text-white/70"
-                        )} />
-                        <span className="sr-only">{item.title}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          )}
-
-          {/* User Actions */}
-          <div
-            className={cn(
-              "flex items-center shrink-0",
-              isMobile ? "pl-1.5 border-l border-white/5" : "ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-white/5"
+          {/* Wrapper EXTERNO, sem overflow próprio — é nele que a pílula
+              fica ancorada (irmã do <nav>, não filha). O <nav> tem
+              overflow-x-auto pra rolar os ícones; se a pílula morasse
+              DENTRO dele, o overflow cortaria o blur do filtro gooey numa
+              borda reta (era o bug da "caixa feia"). Aqui fora, nada corta. */}
+          <div className="relative mx-auto h-full max-w-full shrink-0" style={{ width: MOBILE_WINDOW }}>
+            {mobilePill && (
+              <MobilePillBlob geom={mobilePill.geom} windowW={MOBILE_WINDOW} slot={MOBILE_SLOT} />
             )}
-          >
+
+            <nav
+              ref={navRef}
+              onScroll={onNavScroll}
+              // Janela fixa (MOBILE_WINDOW = 5 slots + 4 vãos = 216px) —
+              // junto com logo/sair enxutos, cabe até em telas de ~360px.
+              // gap-1 e h-10/w-10 abaixo TÊM que casar com MOBILE_GAP e
+              // MOBILE_SLOT: a pílula é posicionada em pixels por fora.
+              className="relative z-20 flex h-full w-full items-center gap-1 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+              style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}
+            >
+              {[0, 1, 2].map((setIndex) => (
+                <div
+                  key={setIndex}
+                  ref={setIndex === 1 ? middleSetRef : undefined}
+                  className="flex shrink-0 items-center gap-1"
+                >
+                  {mobileItems.map((item) => {
+                    // Enquanto a pílula ainda não mediu nada (1º frame),
+                    // cai pra rota atual; depois disso, quem manda é o
+                    // item mais próximo do centro AGORA — não espera a
+                    // navegação de verdade (só acontece quando o scroll
+                    // assenta).
+                    const isHighlighted = mobilePill ? mobilePill.url === item.url : location.pathname === item.url;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={`${setIndex}-${item.title}`}
+                        to={item.url}
+                        title={item.title}
+                        data-nav-url={item.url}
+                        className="flex h-10 w-10 shrink-0 snap-center items-center justify-center"
+                      >
+                        <Icon className={cn("h-5 w-5 transition-colors duration-500", isHighlighted ? "lqg-text text-white" : "text-white/40")} />
+                        <span className="sr-only">{item.title}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          {/* Sair */}
+          <div className="flex shrink-0 items-center border-l border-white/5 pl-1.5">
             <button
               onClick={() => logout()}
-              className={cn(
-                "text-white/40 hover:text-red-500 transition-all duration-300",
-                isMobile ? "p-1.5" : "p-2 sm:p-2.5"
-              )}
+              className="p-1.5 text-white/40 transition-all duration-300 hover:text-red-500"
               title="Sair"
             >
-              <Logout className="w-5 h-5" />
+              <Logout className="h-5 w-5" />
             </button>
           </div>
         </header>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    );
+  }
+
+  // ===== Desktop e tablet: barra lateral esquerda =====
+  // Mesma pílula líquida de sempre, só que o eixo em que ela se move virou
+  // vertical (ver measureDesk e o prop `vertical` do MobilePillBlob) — o
+  // menu é uma coluna, não mais uma fileira no topo. Fica sempre visível:
+  // esconder/mostrar ao rolar fazia sentido pra uma barra competindo por
+  // espaço no topo, não pra uma lateral fina que já não cobre conteúdo.
+  return (
+    <div className="fixed bottom-4 left-0 top-0 z-[60] flex items-stretch py-4 pl-4">
+      <div className="side-nav-shadow flex">
+      <header
+        ref={sideNavRef}
+        // `.side-nav`, não `.liquid-glass`: essa barra é fixa e vizinha de
+        // QUALQUER card de vidro na altura do mouse — com backdrop-filter
+        // aqui, o hover num ícone acendia a "tarja de brilho" no card ao
+        // lado. O vidro é refeito sem backdrop-filter (ver .side-nav em
+        // index.css e CORRIGIR-TARJA-DE-BRILHO.md, seção 6).
+        className="side-nav flex w-[72px] flex-col items-center gap-3 py-4"
+      >
+        {/* Logo */}
+        <div className="flex w-full shrink-0 items-center justify-center border-b border-white/5 pb-3">
+          <img src="/logo.png" alt="Porceli" className="h-8 w-8 object-contain" />
+        </div>
+
+        {/* Wrapper EXTERNO (sem overflow) segurando a pílula — o <nav> tem
+            overflow-y-auto e cortaria o blur do filtro gooey numa borda
+            reta se ela morasse dentro dele. */}
+        <div ref={deskWrapRef} className="relative w-full flex-1">
+          {deskPill && (
+            <MobilePillBlob
+              geom={deskPill.geom}
+              windowW={deskPill.w}
+              slot={deskPill.slot}
+              vertical
+            />
+          )}
+          <nav
+            ref={navRef}
+            className="relative z-20 flex h-full w-full flex-col items-center justify-center gap-0.5 overflow-y-auto scrollbar-hide"
+          >
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.url;
+              const Icon = item.icon;
+
+              return (
+                <Link key={item.title} to={item.url} title={item.title} className="flex w-full shrink-0 items-center justify-center">
+                  <div
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(item.url, el);
+                      else itemRefs.current.delete(item.url);
+                    }}
+                    className="group relative isolate z-10 flex h-10 w-10 shrink-0 transform-gpu items-center justify-center rounded-full will-change-transform md:h-11 md:w-11"
+                  >
+                    {!isActive && (
+                      <span className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    )}
+                    <Icon className={cn(
+                      "relative z-10 h-4 w-4 transition-colors sm:h-[18px] sm:w-[18px]",
+                      isActive ? "lqg-text text-white" : "text-white/40 group-hover:text-white/70"
+                    )} />
+                    <span className="sr-only">{item.title}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Sair */}
+        <div className="flex w-full shrink-0 items-center justify-center border-t border-white/5 pt-3">
+          <button
+            onClick={() => logout()}
+            className="p-2 text-white/40 transition-all duration-300 hover:text-red-500"
+            title="Sair"
+          >
+            <Logout className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+      </div>
+    </div>
   );
 };
