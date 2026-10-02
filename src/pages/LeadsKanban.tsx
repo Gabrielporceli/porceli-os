@@ -627,13 +627,13 @@ export default function LeadsKanban() {
         >
           <div
             ref={kanbanRef}
-            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing px-16 pb-2"
+            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing px-4 lg:px-6 pb-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 48px, black calc(100% - 80px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 48px, black calc(100% - 80px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
@@ -649,7 +649,7 @@ export default function LeadsKanban() {
                 <div
                   key={stage.id}
                   className={cn(
-                    "flex-shrink-0 flex flex-col rounded-3xl overflow-hidden surface-modal",
+                    "flex-shrink-0 flex flex-col rounded-3xl overflow-hidden bg-[#2f2d2e] ring-1 ring-white/[0.05]",
                     isMobile ? "w-72" : "w-[300px]"
                   )}
                 >
