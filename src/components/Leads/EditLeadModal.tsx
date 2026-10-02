@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -148,7 +147,10 @@ export function EditLeadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-[500px] !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
+      <DialogContent
+        className="text-white w-full max-w-[500px] !overflow-hidden"
+        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Editar Lead</DialogTitle>}
+      >
         {/* QR de acesso rápido à conversa — só desktop, flutuando à direita.
             Tile branco + módulos escuros (estilo QR de pagamento): contraste
             máximo pra câmera e visual limpo. O QR inteiro é um botão que abre
@@ -210,36 +212,7 @@ export function EditLeadModal({
           );
         })()}
 
-        <div className="p-6 border-b border-white/[0.05] shrink-0">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold tracking-tight">Editar Lead</DialogTitle>
-            <DialogDescription className="text-white/40">
-              Altere as informações do lead
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '55vh' }}>
-          <style>{`
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 8px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: #6829c0;
-              border-radius: 4px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-              background: #7C3AED;
-            }
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 transparent;
-            }
-          `}</style>
-
+        <div className="overflow-y-auto p-6" style={{ maxHeight: '60vh' }}>
           <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-white/70 text-sm font-medium">Nome</Label>
@@ -409,7 +382,6 @@ export function EditLeadModal({
           </div>
         </div>
 
-        {/* Footer fixo */}
         <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
             className="flex-1"

@@ -3,10 +3,7 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
@@ -81,15 +78,11 @@ export function EditStageModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold tracking-tight text-white">Editar Etapa</DialogTitle>
-          <DialogDescription className="text-white/40">
-            Altere as informações e a cor da etapa
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
+      <DialogContent
+        className="text-white max-w-md"
+        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Editar Etapa</DialogTitle>}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
 
             <div className="space-y-2">
               <Label className="text-white/70 text-sm font-medium">Nome da Etapa *</Label>

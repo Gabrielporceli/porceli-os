@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,15 +53,11 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold tracking-tight text-white">Adicionar Nova Etapa</DialogTitle>
-          <DialogDescription className="text-white/40">
-            Crie uma nova etapa para organizar seus leads
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
+      <DialogContent
+        className="text-white max-w-md"
+        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Nova Etapa</DialogTitle>}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div className="space-y-2">
             <Label htmlFor="stage-name" className="text-white/70 text-sm font-medium">
               Nome da Etapa *
@@ -97,10 +93,10 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
             </Select>
           </div>
 
-          <DialogFooter className="gap-3 pt-2 flex-row sm:flex-row !justify-stretch">
-            <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
+          <div className="flex gap-3 pt-2">
+            <motion.div
+              className="flex-1"
+              whileHover={{ scale: 1.05, translateY: -2 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
@@ -127,7 +123,7 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
                 Adicionar
               </LiquidGlassButton>
             </motion.div>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

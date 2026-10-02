@@ -1,15 +1,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Save, X } from 'lucide-react';
-import { Add, Edit, Trash } from 'iconsax-react';
-import { Card } from "@/components/ui/card";
+import { Save } from 'lucide-react';
+import { Edit, Trash } from 'iconsax-react';
 import { useTags, type Tag } from "@/hooks/useTags";
 
 interface TagsManagementModalProps {
@@ -78,8 +76,11 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="border-white/[0.05] text-white max-w-2xl min-h-[400px] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
+        <DialogContent
+          className="text-white max-w-2xl"
+          chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Gerenciar Tags</DialogTitle>}
+        >
+          <div className="flex flex-col items-center gap-4 p-12">
             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
             <div className="text-white/50 font-medium">Carregando tags...</div>
           </div>
@@ -90,38 +91,12 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white max-w-2xl !p-0 !gap-0 max-h-[85vh] !flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-white/[0.05] shrink-0">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold tracking-tight text-white">Gerenciar Tags</DialogTitle>
-            <DialogDescription className="text-white/40">
-              Crie, edite ou remova tags para categorizar seus leads
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
-          <style>{`
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 8px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: #6829c0;
-              border-radius: 4px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-              background: #7C3AED;
-            }
-            .custom-scrollbar {
-              scrollbar-width: thin;
-              scrollbar-color: #6829c0 transparent;
-            }
-          `}</style>
-
-          <div className="space-y-6 pt-2">
+      <DialogContent
+        className="text-white max-w-2xl !overflow-hidden"
+        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Gerenciar Tags</DialogTitle>}
+      >
+        <div className="overflow-y-auto p-6" style={{ maxHeight: '65vh' }}>
+          <div className="space-y-6">
             {/* Create New Tag */}
           <div className="liquid-glass border-white/[0.05] rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">

@@ -1,14 +1,9 @@
 
-"use client";
-
-import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Danger, Profile2User, Trash } from 'iconsax-react';
-import ReactDOM from "react-dom";
-import { useScrollLock } from "@/hooks/useScrollLock";
 import { Lead } from "@/hooks/useLeads";
 
 interface DeleteLeadDialogProps {
@@ -18,13 +13,12 @@ interface DeleteLeadDialogProps {
   onConfirm: () => void;
 }
 
-export function DeleteLeadDialog({ 
-  isOpen, 
-  lead, 
-  onClose, 
-  onConfirm 
+export function DeleteLeadDialog({
+  isOpen,
+  lead,
+  onClose,
+  onConfirm
 }: DeleteLeadDialogProps) {
-  useScrollLock(isOpen);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {
@@ -36,75 +30,18 @@ export function DeleteLeadDialog({
     }
   };
 
-  if (!isOpen || !lead) return null;
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return ReactDOM.createPortal(
-    <div 
-      style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed', zIndex: 10000000, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      className="flex items-center justify-center animate-fade-in"
-      onClick={handleOverlayClick}
-    >
-      <div 
-        className="relative liquid-glass rounded-2xl shadow-2xl w-full max-w-md border border-white/[0.05] animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Dialog open={isOpen && !!lead} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="text-white max-w-md"
+        chip={
+          <DialogTitle className="truncate text-xl font-black tracking-tight flex items-center gap-2">
+            <Trash className="w-4 h-4 text-red-400 shrink-0" />
+            Excluir Lead
+          </DialogTitle>
+        }
       >
-        <style>{`
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes scale-in {
-            from { 
-              transform: scale(0.95);
-              opacity: 0;
-            }
-            to { 
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-          
-          .animate-fade-in {
-            animation: fade-in 0.2s ease-out;
-          }
-          
-          .animate-scale-in {
-            animation: scale-in 0.2s ease-out;
-          }
-        `}</style>
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/[0.05]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-              <Trash className="w-5 h-5 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white leading-tight">Excluir Lead</h2>
-              <p className="text-white/40 text-xs mt-0.5">Esta ação não pode ser desfeita</p>
-            </div>
-          </div>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-white/40 hover:text-white hover:bg-white/10 rounded-lg h-8 w-8 transition-colors"
-            disabled={isDeleting}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="p-4 space-y-4">
-          {/* Warning Section */}
+        <div className="p-6 space-y-4">
           <div className="bg-red-600/10 border border-red-600/20 rounded-xl p-3">
             <div className="flex items-start gap-3">
               <Danger className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
@@ -119,46 +56,44 @@ export function DeleteLeadDialog({
             </div>
           </div>
 
-          {/* Lead Info Section */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">
-              Dados do Lead
-            </h4>
-            
-            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-Porceli-purple/10 flex items-center justify-center border border-Porceli-purple/20">
-                  <Profile2User className="w-5 h-5 text-Porceli-purple" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white font-bold text-base truncate">{lead.name}</p>
-                  <p className="text-white/40 text-sm truncate">{lead.company}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                {lead.phone && (
-                  <div>
-                    <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">Telefone</span>
-                    <p className="text-white/70 text-xs truncate">{lead.phone}</p>
+          {lead && (
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">
+                Dados do Lead
+              </h4>
+              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-Porceli-purple/10 flex items-center justify-center border border-Porceli-purple/20">
+                    <Profile2User className="w-5 h-5 text-Porceli-purple" />
                   </div>
-                )}
-                {lead.email && (
-                  <div>
-                    <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">E-mail</span>
-                    <p className="text-white/70 text-xs truncate" title={lead.email}>{lead.email}</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-bold text-base truncate">{lead.name}</p>
+                    <p className="text-white/40 text-sm truncate">{lead.company}</p>
                   </div>
-                )}
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  {lead.phone && (
+                    <div>
+                      <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">Telefone</span>
+                      <p className="text-white/70 text-xs truncate">{lead.phone}</p>
+                    </div>
+                  )}
+                  {lead.email && (
+                    <div>
+                      <span className="text-white/20 text-[10px] font-bold uppercase block mb-0.5">E-mail</span>
+                      <p className="text-white/70 text-xs truncate" title={lead.email}>{lead.email}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 p-4 border-t border-white/[0.05]">
-          <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
+        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div
+            className="flex-1"
+            whileHover={{ scale: 1.05, translateY: -2 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
@@ -186,7 +121,7 @@ export function DeleteLeadDialog({
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Excluindo...
                 </div>
               ) : (
@@ -195,8 +130,7 @@ export function DeleteLeadDialog({
             </LiquidGlassButton>
           </motion.div>
         </div>
-      </div>
-    </div>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }
