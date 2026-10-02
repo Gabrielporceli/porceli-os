@@ -568,9 +568,6 @@ export default function LeadsKanban() {
           <h2 className="text-lg font-black text-white tracking-tight leading-none">
             Funil de Prospecção
           </h2>
-          <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-2">
-            {optimisticLeads.length} {optimisticLeads.length === 1 ? "lead no funil" : "leads no funil"}
-          </p>
         </div>
         <div className="flex flex-row flex-wrap items-center gap-3">
         <motion.div
@@ -615,7 +612,7 @@ export default function LeadsKanban() {
         </div>
       </div>
 
-      <div className="pb-6 -mx-4 lg:-mx-10 px-4 lg:px-10">
+      <div className="pb-6 -mx-4 lg:-mx-10 pr-4 lg:pr-10">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -627,13 +624,13 @@ export default function LeadsKanban() {
         >
           <div
             ref={kanbanRef}
-            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing px-4 lg:px-6 pb-2"
+            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing pl-0 pr-4 lg:pr-6 pb-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 48px, black calc(100% - 80px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 48px, black calc(100% - 80px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 16px, black calc(100% - 80px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 16px, black calc(100% - 80px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
