@@ -561,10 +561,9 @@ export default function LeadsKanban() {
       {/* Cabeçalho no mesmo padrão do Calendário: título forte à esquerda,
           pills de vidro líquido à direita. */}
       <div
-        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8"
+        className="flex flex-row flex-wrap items-center justify-end gap-3 mb-8"
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
-        <div className="flex flex-row flex-wrap items-center gap-3">
         <motion.div
           whileHover={{ scale: 1.05, translateY: -2 }}
           whileTap={{ scale: 0.95 }}
@@ -604,10 +603,9 @@ export default function LeadsKanban() {
             {isMobile ? "Lead" : "Novo Lead"}
           </LiquidGlassButton>
         </motion.div>
-        </div>
       </div>
 
-      <div className="pb-6 -mx-4 lg:-mx-10 pr-4 lg:pr-10">
+      <div className="pb-6 -ml-4 lg:-ml-16 -mr-4 lg:-mr-10 pr-4 lg:pr-10">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -624,8 +622,8 @@ export default function LeadsKanban() {
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 4px, black calc(100% - 80px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 4px, black calc(100% - 80px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 40px, black calc(100% - 80px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 40px, black calc(100% - 80px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
