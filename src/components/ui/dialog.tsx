@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { LiquidGlass } from "./liquid-glass"
+import { DeconstructedCard } from "./deconstructed-card"
 
 /**
  * Rastreia a posição do último clique/toque na página inteira: é a origem
@@ -56,12 +57,12 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay ref={ref} asChild {...props}>
     <motion.div
-      // 35% e não 50%: o vidro do modal amostra ESTE overlay, então cada
-      // ponto de escurecimento aqui sai direto do brilho do modal. A 50% a
-      // tela ficava dramática e o modal, apagado. A 35% a separação de fundo
-      // continua clara e o modal respira. É o número a mexer se quiser o
-      // modal mais claro ou mais escuro.
-      className={cn("fixed inset-0 z-50 bg-black/35 backdrop-blur-[4px]", className)}
+      // Escurecimento + desfoque do fundo pra o modal se destacar. Cuidado:
+      // o vidro do modal amostra ESTE overlay, então escurecer demais aqui
+      // também apaga o modal (a 50% sem desfoque ele ficava sem vida). O
+      // desfoque maior é o que compensa: separa o modal do fundo sem precisar
+      // de mais preto. São os dois números a mexer (opacidade e blur).
+      className={cn("fixed inset-0 z-50 bg-black/50 backdrop-blur-[10px]", className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -75,8 +76,15 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, style, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    /**
+     * Topo desconstruído, igual aos cards de MRR do Dashboard: este conteúdo
+     * (normalmente o <DialogTitle>) vai no chip, e o botão de fechar vira o
+     * círculo encaixado no recorte do canto. O resto (`children`) é o corpo.
+     */
+    chip?: React.ReactNode
+  }
+>(({ className, children, style, chip, ...props }, ref) => {
   const isOpen = React.useContext(DialogOpenContext)
 
   return (
@@ -85,9 +93,15 @@ const DialogContent = React.forwardRef<
         <DialogPortal forceMount>
           <DialogOverlay forceMount />
           <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
-            <GrowFromClickOrigin style={style} className={className}>
-              {children}
-            </GrowFromClickOrigin>
+            {chip ? (
+              <NotchedFromClickOrigin style={style} className={className} chip={chip}>
+                {children}
+              </NotchedFromClickOrigin>
+            ) : (
+              <GrowFromClickOrigin style={style} className={className}>
+                {children}
+              </GrowFromClickOrigin>
+            )}
           </DialogPrimitive.Content>
         </DialogPortal>
       )}
@@ -133,6 +147,9 @@ const GrowFromClickOrigin = React.forwardRef<
       // Bônus: some um backdrop-filter com feDisplacementMap por modal
       // aberto, que é dos efeitos mais caros da tela.
       refraction={false}
+      // Vidro CINZA (#2F2D2E) dos cards do sistema, na versão mais sólida
+      // pra modal (.surface-modal).
+      material="surface-modal"
       radius={24}
       className={cn(
         // w-[calc(100%-2rem)] em vez de w-full: dá 1rem de respiro nas
@@ -141,7 +158,7 @@ const GrowFromClickOrigin = React.forwardRef<
         // margens). max-h/overflow evita que o modal estoure a altura da
         // tela num celular — quem já define sua própria altura (max-h-[85vh]
         // etc.) sobrescreve isso via cn().
-        "fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto gap-4 p-6 shadow-lg sm:rounded-3xl",
+        "modal-legivel fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto gap-4 p-6 shadow-lg sm:rounded-3xl",
         className
       )}
       initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
@@ -168,6 +185,75 @@ const GrowFromClickOrigin = React.forwardRef<
   )
 })
 GrowFromClickOrigin.displayName = "GrowFromClickOrigin"
+
+/**
+ * Mesma animação do GrowFromClickOrigin, mas o material não é a caixa
+ * retangular do LiquidGlass: é um DeconstructedCard (vidro recortado por
+ * clip-path, bevel seguindo o recorte) no cinza do modal (.dc-modal). A
+ * caixa externa fica transparente e sem sombra — sombra retangular
+ * apareceria atrás do recorte.
+ */
+const NotchedFromClickOrigin = React.forwardRef<
+  HTMLDivElement,
+  {
+    className?: string
+    style?: React.CSSProperties
+    children?: React.ReactNode
+    chip: React.ReactNode
+  } & React.HTMLAttributes<HTMLDivElement>
+>(({ className, style, children, chip, ...rest }, ref) => {
+  const [origin] = React.useState(() => ({
+    x: lastPointerPosition.x - window.innerWidth / 2,
+    y: lastPointerPosition.y - window.innerHeight / 2,
+  }))
+
+  return (
+    <motion.div
+      {...(rest as unknown as Record<string, never>)}
+      ref={ref}
+      style={style}
+      className={cn(
+        "modal-notched modal-legivel fixed left-[50%] top-[50%] z-50 w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto",
+        className,
+        // Depois do className de propósito: o chamador costuma mandar
+        // shadow-2xl/borda, que aqui desenhariam um retângulo em volta do
+        // recorte. A elevação vem do drop-shadow do próprio card.
+        "!border-0 !shadow-none !bg-transparent"
+      )}
+      initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
+      animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+      exit={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
+      transition={{
+        opacity: { duration: 0.12, ease: "easeOut" },
+        default: { type: "spring", bounce: 0, duration: 0.35 },
+      }}
+      transformTemplate={(_, generated) => `translate(-50%, -50%) ${generated}`}
+    >
+      <DeconstructedCard
+        className="dc-modal h-full w-full"
+        radius={24}
+        bodyClassName="!p-0"
+        chip={<div className="min-w-0 flex-1 truncate">{chip}</div>}
+        circle={
+          // `.surface-modal`, não `.liquid-glass`: o card deste modal é o
+          // cinza sólido (.dc-modal > .dc-single), e o círculo em vidro claro
+          // destoava — parecia uma bolha separada flutuando por cima, não
+          // parte do mesmo objeto.
+          <DialogPrimitive.Close
+            title="Fechar"
+            className="surface-modal flex h-full w-full items-center justify-center !rounded-full transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <X className="relative z-10 h-[18px] w-[18px] text-white/85" />
+            <span className="sr-only">Fechar</span>
+          </DialogPrimitive.Close>
+        }
+      >
+        {children}
+      </DeconstructedCard>
+    </motion.div>
+  )
+})
+NotchedFromClickOrigin.displayName = "NotchedFromClickOrigin"
 
 const DialogHeader = ({
   className,
