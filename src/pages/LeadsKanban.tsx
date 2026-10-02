@@ -649,29 +649,29 @@ export default function LeadsKanban() {
                 <div
                   key={stage.id}
                   className={cn(
-                    “flex-shrink-0 flex flex-col rounded-3xl overflow-hidden surface-modal”,
-                    isMobile ? “w-72” : “w-[300px]”
+                    "flex-shrink-0 flex flex-col rounded-3xl overflow-hidden surface-modal",
+                    isMobile ? "w-72" : "w-[300px]"
                   )}
                 >
                   {/* Cabeçalho da coluna */}
-                  <div className=”flex items-center justify-between gap-2 px-4 py-3 border-b border-white/[0.06] shrink-0”>
-                    <div className=”flex items-center gap-2.5 min-w-0 flex-1”>
+                  <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/[0.06] shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className={`w-2 h-2 rounded-full ${stage.color} flex-shrink-0`} />
-                      <h3 className=”font-black text-white text-xs uppercase tracking-[0.15em] truncate”>
+                      <h3 className="font-black text-white text-xs uppercase tracking-[0.15em] truncate">
                         {stage.name}
                       </h3>
-                      <span className=”text-[10px] font-black text-white/30 leading-none flex-shrink-0”>
+                      <span className="text-[10px] font-black text-white/30 leading-none flex-shrink-0">
                         {count}
                       </span>
                     </div>
                     <Button
-                      variant=”ghost”
-                      size=”icon”
-                      className=”text-white/30 hover:bg-white/10 hover:text-white w-7 h-7 rounded-lg shrink-0”
+                      variant="ghost"
+                      size="icon"
+                      className="text-white/30 hover:bg-white/10 hover:text-white w-7 h-7 rounded-lg shrink-0"
                       onClick={() => handleEditStage(stage)}
                       data-no-pan
                     >
-                      <More2 className=”w-3.5 h-3.5” />
+                      <More2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
 
@@ -682,8 +682,8 @@ export default function LeadsKanban() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                          “flex-1 p-3 space-y-3 min-h-[300px] sm:min-h-[400px] transition-colors”,
-                          snapshot.isDraggingOver && “bg-primary/[0.05]”
+                          "flex-1 p-3 space-y-3 min-h-[300px] sm:min-h-[400px] transition-colors",
+                          snapshot.isDraggingOver && "bg-primary/[0.05]"
                         )}
                       >
                         {filteredLeads.map((lead, index) => (
@@ -696,35 +696,35 @@ export default function LeadsKanban() {
                                 }}
                                 {...provided.draggableProps}
                                 style={provided.draggableProps.style}
-                                className={snapshot.isDragging ? “scale-[1.02] opacity-90” : “”}
+                                className={snapshot.isDragging ? "scale-[1.02] opacity-90" : ""}
                               >
                                 <ContextMenu>
                                   <ContextMenuTrigger asChild>
                                     <div
                                       className={cn(
-                                        “transition-all duration-200 hover:-translate-y-0.5”,
-                                        snapshot.isDragging && “ring-2 ring-primary/40 rounded-[20px]”
+                                        "transition-all duration-200 hover:-translate-y-0.5",
+                                        snapshot.isDragging && "ring-2 ring-primary/40 rounded-[20px]"
                                       )}
                                     >
                                       <DeconstructedCard
                                         chip={
-                                          <div className=”flex items-center gap-1.5 min-w-0”>
+                                          <div className="flex items-center gap-1.5 min-w-0">
                                             <div
                                               {...provided.dragHandleProps}
                                               data-dnd-handle
-                                              style={{ touchAction: “none” }}
-                                              className=”shrink-0 touch-none text-white/25 hover:text-white/70 transition-colors cursor-grab active:cursor-grabbing”
+                                              style={{ touchAction: "none" }}
+                                              className="shrink-0 touch-none text-white/25 hover:text-white/70 transition-colors cursor-grab active:cursor-grabbing"
                                             >
-                                              <GripVertical className=”w-3.5 h-3.5” />
+                                              <GripVertical className="w-3.5 h-3.5" />
                                             </div>
-                                            <span className=”text-[11px] font-bold text-white/50 uppercase tracking-wider truncate”>
+                                            <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider truncate">
                                               {lead.company || lead.phone}
                                             </span>
                                           </div>
                                         }
                                         circle={
                                           <button
-                                            className=”flex h-full w-full items-center justify-center rounded-full surface-modal transition-transform hover:scale-105 active:scale-95”
+                                            className="flex h-full w-full items-center justify-center rounded-full surface-modal transition-transform hover:scale-105 active:scale-95"
                                             data-no-pan
                                             onPointerDown={(e) => {
                                               e.preventDefault();
@@ -732,32 +732,32 @@ export default function LeadsKanban() {
                                               handleEditLead(lead);
                                             }}
                                           >
-                                            <More2 className=”h-4 w-4 text-white/70” />
+                                            <More2 className="h-4 w-4 text-white/70" />
                                           </button>
                                         }
                                       >
                                         <div
-                                          className=”px-4 py-3 space-y-2 cursor-pointer”
+                                          className="px-4 py-3 space-y-2 cursor-pointer"
                                           onClick={() => handleEditLead(lead)}
                                         >
-                                          <h4 className=”font-bold text-white text-sm tracking-tight leading-snug”>
+                                          <h4 className="font-bold text-white text-sm tracking-tight leading-snug">
                                             {lead.name}
                                           </h4>
 
                                           {lead.value != null && (
-                                            <p className=”text-primary font-bold text-xs tabular-nums”>
-                                              R$ {lead.value.toLocaleString(“pt-BR”)}
+                                            <p className="text-primary font-bold text-xs tabular-nums">
+                                              R$ {lead.value.toLocaleString("pt-BR")}
                                             </p>
                                           )}
 
                                           {lead.tags && lead.tags.length > 0 && (
-                                            <div className=”flex gap-1 flex-wrap”>
+                                            <div className="flex gap-1 flex-wrap">
                                               {lead.tags.map(tagName => {
                                                 const tagObj = tags.find(t => t.name === tagName);
                                                 return (
                                                   <span
                                                     key={tagName}
-                                                    className=”inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.08] text-white/60”
+                                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.08] text-white/60"
                                                   >
                                                     {tagObj && <span className={`w-1.5 h-1.5 rounded-full ${tagObj.color}`} />}
                                                     {tagName}
@@ -767,14 +767,14 @@ export default function LeadsKanban() {
                                             </div>
                                           )}
 
-                                          <div className=”flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]”>
-                                            <span className=”text-[10px] font-bold uppercase tracking-wider text-white/20 flex-shrink-0”>
-                                              {new Date(lead.updated_at).toLocaleDateString(“pt-BR”, {
-                                                day: “2-digit”, month: “2-digit”
+                                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-white/20 flex-shrink-0">
+                                              {new Date(lead.updated_at).toLocaleDateString("pt-BR", {
+                                                day: "2-digit", month: "2-digit"
                                               })}
                                             </span>
                                             {lead.meeting_date && !lead.reuniao_realizada && (
-                                              <span className=”shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary”>
+                                              <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary">
                                                 {new Date(lead.meeting_date).toLocaleString('pt-BR', {
                                                   day: '2-digit', month: '2-digit',
                                                   hour: '2-digit', minute: '2-digit'
@@ -787,12 +787,12 @@ export default function LeadsKanban() {
                                     </div>
                                   </ContextMenuTrigger>
 
-                                  <ContextMenuContent className=”liquid-glass border-white/[0.05]”>
+                                  <ContextMenuContent className="liquid-glass border-white/[0.05]">
                                     <ContextMenuItem
                                       onClick={() => handleEditLead(lead)}
-                                      className=”text-white data-[highlighted]:bg-primary/80 data-[highlighted]:text-white”
+                                      className="text-white data-[highlighted]:bg-primary/80 data-[highlighted]:text-white"
                                     >
-                                      <Edit className=”w-4 h-4 mr-2” />
+                                      <Edit className="w-4 h-4 mr-2" />
                                       Editar Lead
                                     </ContextMenuItem>
                                     <ContextMenuItem
@@ -800,9 +800,9 @@ export default function LeadsKanban() {
                                         setLeadToDelete(lead);
                                         setIsDeleteLeadDialogOpen(true);
                                       }}
-                                      className=”text-red-400 data-[highlighted]:bg-white/[0.05] data-[highlighted]:text-red-400”
+                                      className="text-red-400 data-[highlighted]:bg-white/[0.05] data-[highlighted]:text-red-400"
                                     >
-                                      <Trash className=”w-4 h-4 mr-2” />
+                                      <Trash className="w-4 h-4 mr-2" />
                                       Excluir Lead
                                     </ContextMenuItem>
                                   </ContextMenuContent>
@@ -815,8 +815,8 @@ export default function LeadsKanban() {
                         {provided.placeholder}
 
                         {filteredLeads.length === 0 && (
-                          <div className=”border-2 border-dashed border-white/[0.08] rounded-2xl p-6 text-center”>
-                            <p className=”text-[10px] font-black uppercase tracking-[0.2em] text-white/20”>
+                          <div className="border-2 border-dashed border-white/[0.08] rounded-2xl p-6 text-center">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
                               Arraste leads para cá
                             </p>
                           </div>
