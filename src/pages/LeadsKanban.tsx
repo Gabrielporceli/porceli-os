@@ -622,8 +622,8 @@ export default function LeadsKanban() {
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 40px, black calc(100% - 80px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 40px, black calc(100% - 80px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 80px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 80px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
