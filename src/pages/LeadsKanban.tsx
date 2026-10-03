@@ -617,7 +617,7 @@ export default function LeadsKanban() {
         >
           <div
             ref={kanbanRef}
-            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing pl-0 pr-4 lg:pr-6 pb-2"
+            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing pl-3 sm:pl-4 pr-4 lg:pr-6 pb-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
