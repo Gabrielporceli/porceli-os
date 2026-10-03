@@ -592,6 +592,15 @@ button:focus-visible,
       drop-shadow(0 14px 36px rgba(0, 0, 0, 0.26));
   }
 
+  /* Card de lead dentro do kanban: sem fundo visível (a coluna é sólida,
+     o backdrop-filter clareia e cria contraste indesejado). */
+  .dc-kanban-card .dc-single {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    filter: none;
+  }
+
   .dc-chip-row {
     /* Largura FIXA (não mais max-content): todos os cards ficam com o
        mesmo tamanho de chip, independente do texto. 240px cobre com folga

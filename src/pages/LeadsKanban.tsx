@@ -697,6 +697,7 @@ export default function LeadsKanban() {
                                       )}
                                     >
                                       <DeconstructedCard
+                                        className="dc-kanban-card"
                                         chip={
                                           <div className="flex items-center gap-1.5 min-w-0">
                                             <div
