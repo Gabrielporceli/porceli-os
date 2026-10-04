@@ -592,6 +592,26 @@ button:focus-visible,
       drop-shadow(0 14px 36px rgba(0, 0, 0, 0.26));
   }
 
+  /* Kanban: margem esquerda responsiva que encosta na sidebar sem quebrar
+     em monitores largos onde max-w-[1600px] + mx-auto centralizam o
+     conteúdo (adicionando margem auto extra além do px-4/px-10 fixo).
+
+     Sidebar real = 88px (pl-4=16 + w-[72px]=72).
+     CRMLayout reserva md:pl-28 = 112px → gap fixo de 24px.
+     px-4 em md (768-1023px): precisa cancelar 16px + 24px = 40px.
+     px-10 em lg+ (≥1024px): cancela 40px + 24px = 64px, MAIS a margem
+     auto que surge quando 100vw > 112px (sidebar) + 1600px (max-w) = 1712px. */
+  @media (min-width: 768px) {
+    .kanban-breakout-left {
+      margin-left: -40px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .kanban-breakout-left {
+      margin-left: calc(-64px - max(0px, (100vw - 1712px) / 2));
+    }
+  }
+
   /* Card de lead dentro do kanban: sem fundo visível (a coluna é sólida,
      o backdrop-filter clareia e cria contraste indesejado). */
   .dc-kanban-card .dc-single {

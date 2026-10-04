@@ -605,7 +605,7 @@ export default function LeadsKanban() {
         </motion.div>
       </div>
 
-      <div className="pb-6 -ml-4 lg:-ml-16 -mr-4 lg:-mr-10 pr-4 lg:pr-10">
+      <div className="pb-6 kanban-breakout-left -mr-4 lg:-mr-10 pr-4 lg:pr-10">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -617,13 +617,13 @@ export default function LeadsKanban() {
         >
           <div
             ref={kanbanRef}
-            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing pl-3 sm:pl-4 pr-4 lg:pr-6 pb-2"
+            className="flex gap-3 sm:gap-4 min-h-[520px] sm:min-h-[620px] overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing pl-3 sm:pl-4 pr-3 sm:pr-4 pb-2"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              maskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 80px), transparent)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 80px), transparent)",
+              maskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent)",
             }}
             onPointerDown={onPointerDownPan}
             onPointerMove={onPointerMovePan}
