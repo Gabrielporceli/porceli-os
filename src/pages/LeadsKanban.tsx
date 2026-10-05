@@ -176,8 +176,9 @@ export default function LeadsKanban() {
 
   // ===== Otimista =====
   const [optimisticLeads, setOptimisticLeads] = useState<Lead[]>([]);
+  const isDraggingRef = useRef(false);
   useEffect(() => {
-    if (leads) setOptimisticLeads(leads);
+    if (leads && !isDraggingRef.current) setOptimisticLeads(leads);
   }, [leads]);
 
   // ===== DnD state =====
@@ -502,11 +503,13 @@ export default function LeadsKanban() {
   // ===== DnD =====
   const onDragStart = (_: DragStart) => {
     cancelPan();
+    isDraggingRef.current = true;
     setIsDraggingCard(true);
     dragStartPointerRef.current = { ...currentPointerRef.current };
   };
 
   const onDragEnd = async (result: DropResult) => {
+    isDraggingRef.current = false;
     setIsDraggingCard(false);
     dragStartPointerRef.current = null;
     if (freeDragElRef.current) freeDragElRef.current.style.transform = "";

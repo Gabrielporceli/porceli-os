@@ -267,8 +267,13 @@ export function useLeads() {
               filter: `user_id=eq.${user.id}`
             },
             (payload) => {
-              console.log('Lead change detected:', payload);
-              fetchLeads(); // Recarregar leads quando houver mudanças
+              if (payload.eventType === 'UPDATE' && payload.new) {
+                setLeads(prev => prev.map(l => l.id === (payload.new as Lead).id ? (payload.new as Lead) : l));
+              } else if (payload.eventType === 'INSERT' && payload.new) {
+                setLeads(prev => [payload.new as Lead, ...prev]);
+              } else if (payload.eventType === 'DELETE' && payload.old) {
+                setLeads(prev => prev.filter(l => l.id !== (payload.old as Lead).id));
+              }
             }
           )
           .subscribe();
