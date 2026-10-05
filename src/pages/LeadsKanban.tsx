@@ -605,7 +605,7 @@ export default function LeadsKanban() {
         </motion.div>
       </div>
 
-      <div className="pb-6 kanban-breakout-left -mr-4 lg:-mr-10 pr-4 lg:pr-10">
+      <div className="pb-6 kanban-breakout-left">
         <DragDropContext
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}

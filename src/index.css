@@ -604,11 +604,13 @@ button:focus-visible,
   @media (min-width: 768px) {
     .kanban-breakout-left {
       margin-left: -40px;
+      margin-right: -16px;
     }
   }
   @media (min-width: 1024px) {
     .kanban-breakout-left {
       margin-left: calc(-64px - max(0px, (100vw - 1712px) / 2));
+      margin-right: calc(-40px - max(0px, (100vw - 1712px) / 2));
     }
   }
 
