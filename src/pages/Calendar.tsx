@@ -1822,7 +1822,7 @@ export default function Calendar() {
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent
-          className="text-white max-w-sm"
+          className="text-white max-w-sm !overflow-hidden"
           chip={
             <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
               <Warning2 className="w-5 h-5 text-red-500" />
