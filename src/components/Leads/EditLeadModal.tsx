@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, X } from 'lucide-react';
 import { ArrowRight, CalendarRemove, Trash } from 'iconsax-react';
 import { Lead } from "@/hooks/useLeads";
-import { Tag } from "@/hooks/useTags";
+
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { parseISO, format } from "date-fns";
@@ -27,7 +27,6 @@ interface EditLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead | null;
-  tags: Tag[];
   stages: Stage[];
   onUpdateLead: (lead: Lead) => void;
   onDeleteLead?: (lead: Lead) => void;
@@ -37,7 +36,6 @@ export function EditLeadModal({
   open,
   onOpenChange,
   lead,
-  tags,
   stages,
   onUpdateLead,
   onDeleteLead,
@@ -48,7 +46,6 @@ export function EditLeadModal({
     phone: "",
     email: "",
     stage: "",
-    tags: [] as string[],
     value: "",
     notes: "",
     meeting_date: "",
@@ -64,7 +61,6 @@ export function EditLeadModal({
         phone: lead.phone || "",
         email: lead.email || "",
         stage: lead.stage || "",
-        tags: lead.tags || [],
         value: lead.value ? `R$ ${lead.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "",
         notes: lead.notes || "",
         meeting_date: lead.meeting_date ? format(parseISO(lead.meeting_date), "yyyy-MM-dd") : "",
@@ -93,7 +89,6 @@ export function EditLeadModal({
       phone: formData.phone,
       email: formData.email || null,
       stage: formData.stage,
-      tags: formData.tags.length > 0 ? formData.tags : null,
       value: value,
       notes: formData.notes || null,
       meeting_date: formData.meeting_date && formData.meeting_time 
@@ -283,39 +278,6 @@ export function EditLeadModal({
               className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
               inputMode="decimal"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tag" className="text-white/70 text-sm font-medium">Tag (opcional)</Label>
-            <Select
-              value={formData.tags[0] || ""}
-              onValueChange={value => setFormData(prev => ({ ...prev, tags: value ? [value] : [] }))}
-            >
-              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                <SelectValue>
-                  {(() => {
-                    const selected = tags.find(t => t.name === formData.tags[0]);
-                    if (!selected) return <span className="text-white/40">Selecione uma tag</span>;
-                    return (
-                      <span className="flex items-center gap-2 font-medium">
-                        <span className={`w-2.5 h-2.5 rounded-full ${selected.color}`} />
-                        {selected.name}
-                      </span>
-                    );
-                  })()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {tags.map(tag => (
-                  <SelectItem key={tag.id} value={tag.name}>
-                    <span className="flex items-center gap-3 font-medium">
-                      <span className={`w-3 h-3 rounded-full ${tag.color}`} />
-                      {tag.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

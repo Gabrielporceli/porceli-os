@@ -18,7 +18,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 
-import { TagsManagementModal } from "@/components/Leads/TagsManagementModal";
 import { EditLeadModal } from "@/components/Leads/EditLeadModal";
 import { AddStageModal } from "@/components/Leads/AddStageModal";
 import { NewLeadModal } from "@/components/Leads/NewLeadModal";
@@ -29,7 +28,6 @@ import { DeconstructedCard } from "@/components/ui/deconstructed-card";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLeads, type Lead } from "@/hooks/useLeads";
-import { useTags, type Tag } from "@/hooks/useTags";
 import { useStages, type Stage } from "@/hooks/useStages";
 import { useToast } from "@/hooks/use-toast";
 import { NOISE_LAYER_URL } from "@/lib/appBackground";
@@ -149,7 +147,6 @@ export default function LeadsKanban() {
     updateLeadStage,
   } = useLeads();
 
-  const { tags, isLoading: tagsLoading } = useTags();
   const {
     stages,
     isLoading: stagesLoading,
@@ -158,10 +155,9 @@ export default function LeadsKanban() {
     deleteStage,
   } = useStages();
 
-  const isReady = usePageReady(leadsLoading || tagsLoading || stagesLoading);
+  const isReady = usePageReady(leadsLoading || stagesLoading);
 
   // ===== Modais / Seleções =====
-  const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
   const [isEditLeadModalOpen, setIsEditLeadModalOpen] = useState(false);
   const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -171,8 +167,6 @@ export default function LeadsKanban() {
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
   const [isDeleteLeadDialogOpen, setIsDeleteLeadDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
-
-  const [activeFilter, setActiveFilter] = useState<string>("all");
 
   // ===== Otimista =====
   const [optimisticLeads, setOptimisticLeads] = useState<Lead[]>([]);
@@ -378,18 +372,8 @@ export default function LeadsKanban() {
   }, []);
 
   // ===== Helpers =====
-  const tagColorClass = (tagName: string) => {
-    const t = tags.find((x) => x.name === tagName);
-    return t?.color ?? "bg-zinc-600";
-  };
-
   const getLeadsByStage = (stageId: string) =>
     optimisticLeads.filter((l) => l.stage === stageId);
-
-  const getFilteredLeads = (stageLeads: Lead[]) => {
-    if (activeFilter === "all") return stageLeads;
-    return stageLeads.filter((l) => l.tags?.includes(activeFilter));
-  };
 
   // ===== Handlers (CRUD) =====
   const handleEditLead = (lead: Lead) => {
@@ -405,7 +389,6 @@ export default function LeadsKanban() {
         phone: updatedLead.phone,
         email: updatedLead.email,
         stage: updatedLead.stage,
-        tags: updatedLead.tags,
         value: updatedLead.value,
         notes: updatedLead.notes,
         meeting_date: updatedLead.meeting_date,
@@ -573,19 +556,6 @@ export default function LeadsKanban() {
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <LiquidGlassButton
-            onClick={() => setIsTagsModalOpen(true)}
-            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
-          >
-            {isMobile ? "Tags" : "Gerenciar Tags"}
-          </LiquidGlassButton>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05, translateY: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <LiquidGlassButton
             onClick={() => setIsAddStageModalOpen(true)}
             className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
           >
@@ -634,8 +604,7 @@ export default function LeadsKanban() {
             onPointerCancel={onPointerCancelPan}
           >
             {stages.map((stage: Stage) => {
-              const stageLeads = getLeadsByStage(stage.id);
-              const filteredLeads = getFilteredLeads(stageLeads);
+              const filteredLeads = getLeadsByStage(stage.id);
               const count = filteredLeads.length;
 
               return (
@@ -810,13 +779,10 @@ export default function LeadsKanban() {
         </DragDropContext>
 
         {/* Modais */}
-        <TagsManagementModal open={isTagsModalOpen} onOpenChange={setIsTagsModalOpen} />
-
         <EditLeadModal
           open={isEditLeadModalOpen}
           onOpenChange={setIsEditLeadModalOpen}
           lead={selectedLead}
-          tags={tags}
           stages={stages}
           onUpdateLead={handleUpdateLead}
           onDeleteLead={(lead) => {
@@ -835,7 +801,6 @@ export default function LeadsKanban() {
         <NewLeadModal
           open={isNewLeadModalOpen}
           onOpenChange={setIsNewLeadModalOpen}
-          tags={tags}
           stages={stages}
           onAddLead={handleAddLead}
         />

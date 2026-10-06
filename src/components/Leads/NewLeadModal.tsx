@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Add, CalendarRemove } from 'iconsax-react';
-import { Tag } from "@/hooks/useTags";
+
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { format, parseISO } from "date-fns";
@@ -23,7 +23,6 @@ interface Stage {
 interface NewLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tags: Tag[];
   stages: Stage[];
   onAddLead: (lead: {
     name: string;
@@ -31,7 +30,6 @@ interface NewLeadModalProps {
     phone: string;
     email?: string;
     stage: string;
-    tags?: string[];
     value?: number;
     meeting_date?: string;
     reuniao_realizada?: boolean;
@@ -41,7 +39,6 @@ interface NewLeadModalProps {
 export function NewLeadModal({
   open,
   onOpenChange,
-  tags,
   stages,
   onAddLead,
 }: NewLeadModalProps) {
@@ -51,7 +48,6 @@ export function NewLeadModal({
     phone: "",
     email: "",
     stage: "",
-    tags: [] as string[],
     value: "",
     meeting_date: "",
     meeting_time: "",
@@ -74,7 +70,6 @@ export function NewLeadModal({
       phone: formData.phone,
       email: formData.email || undefined,
       stage: formData.stage,
-      tags: formData.tags.length > 0 ? formData.tags : undefined,
       value: value,
       meeting_date: formData.meeting_date && formData.meeting_time 
         ? new Date(`${formData.meeting_date}T${formData.meeting_time}:00`).toISOString()
@@ -89,7 +84,6 @@ export function NewLeadModal({
       phone: "",
       email: "",
       stage: "",
-      tags: [],
       value: "",
       meeting_date: "",
       meeting_time: "",
@@ -213,39 +207,6 @@ export function NewLeadModal({
               className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
               inputMode="decimal"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-white/70 text-sm font-medium">Tag (Opcional)</Label>
-            <Select
-              value={formData.tags[0] || ""}
-              onValueChange={value => setFormData(prev => ({ ...prev, tags: value ? [value] : [] }))}
-            >
-              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/70">
-                <SelectValue>
-                  {(() => {
-                    const selected = tags.find(t => t.name === formData.tags[0]);
-                    if (!selected) return <span className="text-white/40">Selecione uma tag</span>;
-                    return (
-                      <span className="flex items-center gap-2 font-medium">
-                        <span className={`w-2.5 h-2.5 rounded-full ${selected.color}`} />
-                        {selected.name}
-                      </span>
-                    );
-                  })()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {tags.map(tag => (
-                  <SelectItem key={tag.id} value={tag.name}>
-                    <span className="flex items-center gap-3 font-medium">
-                      <span className={`w-3 h-3 rounded-full ${tag.color}`} />
-                      {tag.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
