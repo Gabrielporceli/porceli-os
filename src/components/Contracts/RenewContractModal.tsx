@@ -130,11 +130,11 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent
-              className="text-white max-w-3xl max-h-[95vh] !overflow-hidden"
+              className="text-white max-w-3xl !overflow-hidden"
               chip={<DialogTitle className="truncate font-bold tracking-tight">Renovação de Contrato</DialogTitle>}
             >
                     {/* Content */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
+                    <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '65vh' }}>
                         <style>{`
                             .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

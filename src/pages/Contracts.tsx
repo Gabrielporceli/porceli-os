@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import { StatsCard } from "@/components/Dashboard/StatsCard";
-import { ArrowDown2, ArrowRight2, Calendar, Danger, DocumentText, DollarCircle, ExportSquare, Setting2 } from 'iconsax-react';
+import { Calendar, Danger, DocumentText, DollarCircle, ExportSquare } from 'iconsax-react';
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
@@ -16,7 +15,10 @@ import { NewContractModal } from "@/components/Contracts/NewContractModal";
 import { useUpdateClient } from "@/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+
+const PANEL_BG = 'rgba(255,255,255,0.07)';
+const CLIENT_ROW_H = 52;
 
 interface Contract {
   id: string;
@@ -44,16 +46,63 @@ export default function Contracts() {
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
-  const [expandedClients, setExpandedClients] = useState<string[]>([]);
-
-  const toggleClient = (client: string) => {
-    setExpandedClients(prev =>
-      prev.includes(client) ? prev.filter(c => c !== client) : [...prev, client]
-    );
-  };
+  const [selectedClientName, setSelectedClientName] = useState<string | null>(null);
+  const clientListRef = useRef<HTMLDivElement>(null);
+  const [clientListFade, setClientListFade] = useState({ top: false, bottom: false });
+  // A aba do cliente selecionado fica FORA do container com máscara de fade,
+  // senão o fade apaga a aba e ela descola do painel. Posição = índice − scroll.
+  const tabScroll = useMotionValue(0);
+  const tabOffset = useSpring(0, { stiffness: 420, damping: 38 });
+  const tabTargetRef = useRef<number | null>(null);
+  const tabY = useTransform(() => tabOffset.get() - tabScroll.get());
+  const panelTopRadius = useTransform(() => {
+    const y = tabY.get();
+    if (y + CLIENT_ROW_H <= 0) return 16;
+    return y <= 0 ? 0 : Math.min(16, y);
+  });
+  const panelBottomRadius = useTransform(() => {
+    const h = clientListRef.current?.clientHeight ?? Infinity;
+    const gap = h - (tabY.get() + CLIENT_ROW_H);
+    if (tabY.get() >= h) return 16;
+    return gap <= 0 ? 0 : Math.min(16, gap);
+  });
+  const updateClientListFade = useCallback(() => {
+    const el = clientListRef.current;
+    if (!el) return;
+    tabScroll.set(el.scrollTop);
+    setClientListFade({
+      top: el.scrollTop > 0,
+      bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 1,
+    });
+  }, [tabScroll]);
+  useEffect(() => {
+    const raf = requestAnimationFrame(updateClientListFade);
+    return () => cancelAnimationFrame(raf);
+  }, [updateClientListFade]);
+  const clientFadeStyle = (fade: { top: boolean; bottom: boolean }) => ({
+    maskImage: `linear-gradient(to bottom, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`,
+    WebkitMaskImage: `linear-gradient(to bottom, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`,
+  });
   const createContractMutation = useCreateContract();
 
   const isReady = usePageReady(isLoading);
+
+  // Altura = espaço que sobra até o fim da janela, pra página nunca ganhar scroll
+  // (o alerta de vencimento acima muda de tamanho conforme os dados).
+  const masterRef = useRef<HTMLDivElement>(null);
+  const [masterHeight, setMasterHeight] = useState<number>();
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = masterRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      setMasterHeight(Math.max(280, window.innerHeight - top - 32));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isReady, contractsData]);
+
   if (!isReady) return <PageLoader />;
 
   // Transform Supabase contracts to component format
@@ -283,9 +332,60 @@ export default function Contracts() {
     }
   };
 
-  const activeContracts = contracts.filter(c => c.status === 'active');
   const expiringContracts = contracts.filter(c => c.status === 'expiring');
-  const inactiveContracts = contracts.filter(c => c.status === 'inactive');
+
+  const clientGroups = contracts.reduce<Record<string, typeof contracts>>((acc, c) => {
+    const key = c.client || 'Sem cliente';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(c);
+    return acc;
+  }, {});
+
+  const getClientPriority = (cc: typeof contracts) => {
+    if (cc.some(c => c.status === 'active')) return 0;
+    if (cc.some(c => c.status === 'expiring')) return 1;
+    if (cc.some(c => c.status === 'concluded')) return 2;
+    return 3;
+  };
+
+  const clientNames = Object.keys(clientGroups).sort(
+    (a, b) => getClientPriority(clientGroups[a]) - getClientPriority(clientGroups[b])
+  );
+
+  const effectiveClient = selectedClientName ?? clientNames[0] ?? null;
+
+  const tabTarget = Math.max(0, clientNames.indexOf(effectiveClient ?? '')) * CLIENT_ROW_H;
+  if (tabTargetRef.current !== tabTarget) {
+    if (tabTargetRef.current === null) tabOffset.jump(tabTarget);
+    else tabOffset.set(tabTarget);
+    tabTargetRef.current = tabTarget;
+  }
+
+  const getClientStatusColor = (clientContracts: typeof contracts) => {
+    if (clientContracts.some(c => c.status === 'expiring')) return 'bg-yellow-500';
+    if (clientContracts.some(c => c.status === 'active')) return 'bg-green-500';
+    if (clientContracts.some(c => c.status === 'concluded')) return 'bg-blue-500';
+    return 'bg-white/20';
+  };
+
+  const getStatusAccentClass = (status: Contract['status']) => {
+    switch (status) {
+      case 'active': return 'border-l-green-500';
+      case 'expiring': return 'border-l-yellow-500';
+      case 'inactive': return 'border-l-red-500/40';
+      case 'concluded': return 'border-l-blue-500';
+      default: return 'border-l-white/10';
+    }
+  };
+
+  const contractStatusOrder: Record<Contract['status'], number> = { active: 0, expiring: 1, concluded: 2, inactive: 3 };
+
+  const selectedContracts = (effectiveClient ? (clientGroups[effectiveClient] ?? []) : [])
+    .slice()
+    .sort((a, b) => contractStatusOrder[a.status] - contractStatusOrder[b.status]);
+  const selectedMRR = selectedContracts
+    .filter(c => c.status === 'active' || c.status === 'expiring')
+    .reduce((sum, c) => sum + c.monthlyValue, 0);
 
   if (isLoading) {
     return (
@@ -315,17 +415,9 @@ export default function Contracts() {
     <div className="space-y-6 md:space-y-8 animate-fade-in">
       <ContractsHeader onNewContract={() => setIsNewContractModalOpen(true)} />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatsCard title="Total de Contratos" value={contracts.length} icon={DocumentText} className="[animation-delay:100ms]" />
-        <StatsCard title="Contratos Ativos" value={activeContracts.length} icon={DocumentText} className="[animation-delay:200ms]" />
-        <StatsCard title="A Vencer" value={expiringContracts.length} icon={Danger} className="[animation-delay:300ms]" />
-        <StatsCard title="Inativos" value={inactiveContracts.length} icon={DocumentText} className="[animation-delay:400ms]" />
-      </div>
-
       {/* Expiring Contracts Alert */}
       {expiringContracts.length > 0 && (
-        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+        <div className="surface-flat no-elevation rounded-3xl overflow-hidden">
           <div className="p-6 border-b border-white/5 flex items-center gap-3">
             <Danger className="w-4 h-4 text-yellow-500" />
             <h3 className="text-xl font-bold text-white tracking-tight">Atenção Prioritária</h3>
@@ -365,172 +457,177 @@ export default function Contracts() {
               </motion.div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Contracts List */}
-      <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-white tracking-tight">Lista de Contratos</h3>
-          <p className="text-[10px] text-white/20 font-medium">Sincronizado automaticamente</p>
-        </div>
-
-        {contracts.length === 0 ? (
-          <div className="p-20 text-center">
-            <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
-              <DocumentText className="w-10 h-10 text-white/20" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
-            <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
+      {/* Master-Detail */}
+      {contracts.length === 0 ? (
+        <div className="surface-flat no-elevation rounded-3xl p-20 text-center">
+          <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
+            <DocumentText className="w-10 h-10 text-white/20" />
           </div>
-        ) : (
-          <div className="divide-y divide-white/5">
-            {(() => {
-              const groups = contracts.reduce<Record<string, typeof contracts>>((acc, c) => {
-                const key = c.client || 'Sem cliente';
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(c);
-                return acc;
-              }, {});
-
-              return Object.entries(groups).map(([clientName, clientContracts]) => {
-                const isExpanded = expandedClients.includes(clientName);
-
+          <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
+          <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
+        </div>
+      ) : (
+        <div ref={masterRef} className="surface-flat no-elevation rounded-3xl p-3.5 flex" style={{ height: masterHeight ?? 'calc(100vh - 320px)' }}>
+          {/* Coluna de clientes */}
+          <div className="relative w-[220px] shrink-0 overflow-hidden">
+            <motion.div
+              className="absolute left-0 right-0 top-0 h-[52px] rounded-l-2xl pointer-events-none"
+              style={{ y: tabY, background: PANEL_BG }}
+            >
+              {/* Cantos côncavos que fundem a aba ao painel */}
+              <span className="absolute right-0 -top-4 w-4 h-4" style={{ background: `radial-gradient(circle at top left, transparent 15.5px, ${PANEL_BG} 16px)` }} />
+              <span className="absolute right-0 -bottom-4 w-4 h-4" style={{ background: `radial-gradient(circle at bottom left, transparent 15.5px, ${PANEL_BG} 16px)` }} />
+            </motion.div>
+            <div ref={clientListRef} onScroll={updateClientListFade} className="relative h-full overflow-y-auto scrollbar-hide" style={clientFadeStyle(clientListFade)}>
+              {clientNames.map((name) => {
+                const cc = clientGroups[name];
+                const isSelected = effectiveClient === name;
                 return (
-                  <div key={clientName} className="hover:bg-white/[0.04] transition-all duration-300 group">
-                    {/* Header do grupo */}
-                    <div
-                      className="flex items-center justify-between gap-3 p-4 sm:p-6 cursor-pointer transition-all duration-300"
-                      onClick={() => toggleClient(clientName)}
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                        <div className="flex-shrink-0">
-                          {isExpanded
-                            ? <ArrowDown2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
-                            : <ArrowRight2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
-                          }
-                        </div>
-                        <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
-                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full shrink-0">
-                          {clientContracts.length} {clientContracts.length === 1 ? 'contrato' : 'contratos'}
-                        </span>
+                  <button
+                    key={name}
+                    onClick={() => setSelectedClientName(name)}
+                    className="relative w-full h-[52px] flex items-center gap-3 px-4 text-left"
+                  >
+                    <div className={cn("relative w-2 h-2 rounded-full flex-shrink-0 shrink-0", getClientStatusColor(cc))} />
+                    <div className="relative min-w-0 flex-1">
+                      <motion.p
+                        animate={{ scale: isSelected ? 1.15 : 1 }}
+                        transition={{ duration: 0.25 }}
+                        className={cn("font-semibold truncate leading-snug text-[13px] origin-left", isSelected ? "text-white" : "text-white/40")}
+                      >{name}</motion.p>
+                      <div className="relative h-[14px] mt-0.5">
+                        <AnimatePresence initial={false}>
+                          {isSelected ? (
+                            <motion.p
+                              key="mrr"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.25 }}
+                              className="absolute inset-0 text-[11px] text-white/50"
+                            >
+                              MRR: <span className="text-green-400 font-bold">{formatCurrency(cc.filter(c => c.status === 'active' || c.status === 'expiring').reduce((s, c) => s + c.monthlyValue, 0))}</span>
+                            </motion.p>
+                          ) : (
+                            <motion.p
+                              key="count"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="absolute inset-0 text-[10px] text-white/30"
+                            >
+                              {cc.length} {cc.length === 1 ? 'contrato' : 'contratos'}
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                    {/* Contratos do grupo */}
-                    {isExpanded && (
-                      <div className="px-2 sm:px-6 pb-4">
-                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
-                          {clientContracts.map((contract) => (
-              <div
-                key={contract.id}
-                className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-4 sm:px-6 py-4 hover:bg-white/[0.06] transition-all duration-300"
-              >
-              <div className="flex items-center gap-6 flex-1 min-w-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8 flex-1 items-start lg:items-center">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1 min-w-0">
-                      <h4 className="text-white font-bold text-lg tracking-tight truncate m-0" title={contract.client}>{contract.client}</h4>
-                      {contract.contract_url && (
-                        <motion.a
-                          href={contract.contract_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ scale: 1.15, color: '#6829c0' }}
-                          whileTap={{ scale: 0.9 }}
-                          className="text-white/20 hover:text-primary transition-all p-1 shrink-0 flex items-center justify-center mb-1"
-                          title="Abrir contrato"
-                        >
-                          <ExportSquare className="w-3.5 h-3.5" />
-                        </motion.a>
-                      )}
-                    </div>
-                    {getStatusBadge(contract.status)}
-                  </div>
-                  <div>
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Assinatura</p>
-                    <div className="flex items-center gap-2">
+          {/* Painel de contratos — a aba selecionada se funde a ele */}
+          <motion.div
+            className="flex-1 min-w-0 rounded-2xl overflow-hidden"
+            style={{
+              background: PANEL_BG,
+              borderTopLeftRadius: panelTopRadius,
+              borderBottomLeftRadius: panelBottomRadius,
+            }}
+          >
+            <div className="h-full overflow-y-auto scrollbar-hide p-4 space-y-3">
+              {selectedContracts.map((contract) => (
+                <div
+                  key={contract.id}
+                  className="bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors"
+                >
+                  {/* Info */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
+                      contract.status === 'active' && "bg-green-500/10",
+                      contract.status === 'expiring' && "bg-yellow-500/10",
+                      contract.status === 'concluded' && "bg-blue-500/10",
+                      contract.status === 'inactive' && "bg-white/5",
+                    )}>
                       <DollarCircle className={cn(
-                        "w-3.5 h-3.5 opacity-50",
+                        "w-4 h-4",
                         contract.status === 'active' && "text-green-500",
-                        contract.status === 'concluded' && "text-blue-500",
                         contract.status === 'expiring' && "text-yellow-500",
-                        contract.status === 'inactive' && "text-red-500"
+                        contract.status === 'concluded' && "text-blue-400",
+                        contract.status === 'inactive' && "text-white/20",
                       )} />
-                      <span className="text-white font-bold">{formatCurrency(contract.monthlyValue)}</span>
-                      <span className="text-white/20 text-xs">/mês</span>
+                    </div>
+
+                    <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6 items-center">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-white font-bold text-sm truncate">{contract.type}</p>
+                          {contract.contract_url && (
+                            <motion.a
+                              href={contract.contract_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="text-white/20 hover:text-primary transition-colors shrink-0"
+                              title="Abrir contrato"
+                            >
+                              <ExportSquare className="w-3 h-3" />
+                            </motion.a>
+                          )}
+                        </div>
+                        {getStatusBadge(contract.status)}
+                      </div>
+                      <div>
+                        <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Valor</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-white font-bold">{formatCurrency(contract.monthlyValue)}</span>
+                          <span className="text-white/20 text-xs">/mês</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
+                        <div className="flex items-center gap-1.5 text-white/50 text-xs">
+                          <Calendar className="w-3 h-3 opacity-40 shrink-0" />
+                          <span>{formatDate(contract.startDate)}</span>
+                          <span className="opacity-30">→</span>
+                          <span>{formatDate(contract.endDate)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
-                    <div className="flex items-center gap-2 text-white/70 font-medium flex-wrap">
-                      <Calendar className="w-3.5 h-3.5 opacity-30 shrink-0" />
-                      <span>{formatDate(contract.startDate)}</span>
-                      <span className="opacity-20">→</span>
-                      <span>{formatDate(contract.endDate)}</span>
-                    </div>
-                  </div>
-                  <div className="lg:text-right">
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Plano</p>
-                    <p className="text-white/70 font-medium truncate">{contract.type}</p>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <LiquidGlassButton onClick={() => setEditingContract(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
+                        Editar
+                      </LiquidGlassButton>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <LiquidGlassButton onClick={() => handleRenewClick(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
+                        {contract.status === 'active' ? 'Estender' : 'Renovar'}
+                      </LiquidGlassButton>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <LiquidGlassButton tint="danger" onClick={() => setDeletingContract(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
+                        Cancelar
+                      </LiquidGlassButton>
+                    </motion.div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap lg:ml-12 pr-2">
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="flex-1 lg:flex-none min-w-[calc(50%-6px)] lg:min-w-0"
-                >
-                  <LiquidGlassButton
-                    onClick={() => setEditingContract(contract)}
-                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
-                  >
-                    Editar
-                  </LiquidGlassButton>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="flex-1 lg:flex-none min-w-[calc(50%-6px)] lg:min-w-0"
-                >
-                  <LiquidGlassButton
-                    onClick={() => handleRenewClick(contract)}
-                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
-                  >
-                    {contract.status === 'active' ? 'Estender' : 'Renovar'}
-                  </LiquidGlassButton>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="w-full lg:w-auto"
-                >
-                  <LiquidGlassButton
-                    tint="danger"
-                    onClick={() => setDeletingContract(contract)}
-                    className="w-full lg:w-auto h-9 px-6 text-xs font-bold uppercase tracking-widest"
-                  >
-                    Cancelar
-                  </LiquidGlassButton>
-                </motion.div>
-              </div>
+              ))}
             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        )}
-      </Card>
+          </motion.div>
+        </div>
+      )}
       <EditContractModal
         isOpen={!!editingContract}
         contract={editingContract}
