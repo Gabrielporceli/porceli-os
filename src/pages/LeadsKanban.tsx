@@ -731,7 +731,7 @@ export default function LeadsKanban() {
                                         }
                                       >
                                         <div
-                                          className="px-4 py-3 space-y-2 cursor-pointer"
+                                          className="px-4 py-2.5 space-y-1.5 cursor-pointer"
                                           onClick={() => handleEditLead(lead)}
                                         >
                                           <h4 className="font-bold text-white text-sm tracking-tight leading-snug">
@@ -742,23 +742,6 @@ export default function LeadsKanban() {
                                             <p className="text-primary font-bold text-xs tabular-nums">
                                               R$ {lead.value.toLocaleString("pt-BR")}
                                             </p>
-                                          )}
-
-                                          {lead.tags && lead.tags.length > 0 && (
-                                            <div className="flex gap-1 flex-wrap">
-                                              {lead.tags.map(tagName => {
-                                                const tagObj = tags.find(t => t.name === tagName);
-                                                return (
-                                                  <span
-                                                    key={tagName}
-                                                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.08] text-white/60"
-                                                  >
-                                                    {tagObj && <span className={`w-1.5 h-1.5 rounded-full ${tagObj.color}`} />}
-                                                    {tagName}
-                                                  </span>
-                                                );
-                                              })}
-                                            </div>
                                           )}
 
                                           <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
