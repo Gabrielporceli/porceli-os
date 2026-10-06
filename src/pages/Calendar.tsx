@@ -6,16 +6,7 @@ import { FullScreenCalendar, CalendarEvent, CalendarData } from "@/components/ui
 import { GitHubCalendar } from "@/components/ui/git-hub-calendar";
 import { DeconstructedCard } from "@/components/ui/deconstructed-card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+
 import { Loader2, GripVertical, Save } from 'lucide-react';
 import { Add, ArrowLeft2, ArrowRight2, Book1, Calendar as CalendarIcon, Clock, Edit, ExportSquare, Lock, More2, Refresh, Repeat, Tag, TickCircle, Trash, Unlock, Warning2 } from 'iconsax-react';
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -1829,25 +1820,27 @@ export default function Calendar() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="surface-modal border-white/10 shadow-2xl text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2">
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent
+          className="text-white max-w-sm"
+          chip={
+            <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
               <Warning2 className="w-5 h-5 text-red-500" />
               Confirmar Exclusão
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
-              Tem certeza que deseja excluir esta {editingItem?.type === 'google' ? 'atividade' : 'tarefa'}? 
+            </DialogTitle>
+          }
+        >
+          <div className="p-6 space-y-6">
+            <DialogDescription className="text-white/70 text-sm leading-relaxed">
+              Tem certeza que deseja excluir esta {editingItem?.type === 'google' ? 'atividade' : 'tarefa'}?
               {editingItem?.type === 'google' ? ' Esta ação também removerá o evento do Google Calendar.' : ' Esta ação removerá permanentemente do Notion.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 pt-4">
-            <AlertDialogCancel asChild>
-              <LiquidGlassButton tint="danger" className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
-                Cancelar
-              </LiquidGlassButton>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
+            </DialogDescription>
+            <motion.div
+              className="flex justify-end"
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
               <LiquidGlassButton
                 tint="danger"
                 onClick={confirmDeleteActivity}
@@ -1855,10 +1848,10 @@ export default function Calendar() {
               >
                 Excluir
               </LiquidGlassButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </motion.div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
