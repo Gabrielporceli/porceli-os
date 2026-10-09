@@ -328,7 +328,7 @@ export default function Financial() {
 
       {/* Pagamentos em Atraso */}
       {overdueEntries.length > 0 && (
-        <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+        <Card className="surface-flat overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
@@ -435,7 +435,7 @@ export default function Financial() {
       )}
 
       {/* Lançamentos Financeiros */}
-      <Card className="liquid-glass border-white/5 dashboard-glow overflow-hidden">
+      <Card className="surface-flat overflow-hidden">
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Lançamentos Financeiros</h3>
@@ -521,7 +521,7 @@ export default function Financial() {
       </Card>
 
       {/* Despesas Section */}
-      <Card className="liquid-glass border-white/5 dashboard-glow overflow-hidden">
+      <Card className="surface-flat overflow-hidden">
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Despesas</h3>

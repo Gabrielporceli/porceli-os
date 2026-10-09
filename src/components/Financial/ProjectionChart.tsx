@@ -109,7 +109,7 @@ export function ProjectionChart({ contracts = [], activeContractsCount, financia
   ];
 
   return (
-    <Card className="liquid-glass border-white/[0.05] dashboard-glow w-full">
+    <Card className="surface-flat w-full">
       <CardHeader className="border-0 min-h-auto py-6">
         <CardTitle className="text-lg font-semibold text-white">Projeção de Faturamento Anual</CardTitle>
       </CardHeader>
