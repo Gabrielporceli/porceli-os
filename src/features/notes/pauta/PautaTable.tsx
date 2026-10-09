@@ -9,10 +9,13 @@
  * um diálogo pra trocar o formato de um gancho seria atrito puro.
  */
 import { useMemo, useState } from "react";
-import { Add, ExportSquare, SearchNormal1, Trash } from "iconsax-react";
+import { ExportSquare, SearchNormal1, Trash } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePauta, type Ideia } from "./usePauta";
+import { RoteiroModal } from "./RoteiroModal";
 
 interface Props {
   ideias: Ideia[];
@@ -62,28 +65,34 @@ function Filtro({
   contar: (o: string) => number;
 }) {
   if (opcoes.length === 0) return null;
+  // Radix não aceita value="" num item, então "todos" tem um valor próprio.
+  const TODOS = "__todos__";
   return (
-    <select
-      value={valor ?? ""}
-      onChange={(e) => onTrocar(e.target.value || null)}
-      className="rounded-full bg-white/[0.04] px-3 py-1.5 text-xs text-white/70 outline-none"
-    >
-      <option value="" className="bg-[#15151a]">{rotuloVazio}</option>
-      {opcoes.map((o) => (
-        <option key={o} value={o} className="bg-[#15151a]">
-          {o} ({contar(o)})
-        </option>
-      ))}
-    </select>
+    <Select value={valor ?? TODOS} onValueChange={(v) => onTrocar(v === TODOS ? null : v)}>
+      <SelectTrigger className="h-9 w-auto min-w-[10rem] gap-2 rounded-full border-0 bg-white/[0.06] px-3.5 py-0 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/10">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[12rem]">
+        <SelectItem value={TODOS} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+          {rotuloVazio}
+        </SelectItem>
+        {opcoes.map((o) => (
+          <SelectItem key={o} value={o} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+            {o} ({contar(o)})
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
 function Linha({
-  ideia, onAtualizar, onRemover,
+  ideia, onAtualizar, onRemover, onAbrir,
 }: {
   ideia: Ideia;
   onAtualizar: (id: string, p: Partial<Ideia>) => void;
   onRemover: (id: string) => void;
+  onAbrir: (id: string) => void;
 }) {
   return (
     <tr className={cn("group border-b border-white/[0.04]", ideia.feito && "opacity-45")}>
@@ -104,12 +113,24 @@ function Linha({
       </td>
 
       <td className="px-2 py-2 align-top">
-        <Celula
-          valor={ideia.gancho}
-          onMudar={(v) => onAtualizar(ideia.id, { gancho: v })}
-          placeholder="Qual é o gancho?"
-          className={cn("text-sm text-white/85", ideia.feito && "line-through")}
-        />
+        {/* Clicar no gancho abre o modal com o roteiro completo. */}
+        <button
+          type="button"
+          onClick={() => onAbrir(ideia.id)}
+          title="Abrir roteiro"
+          className={cn(
+            "block w-full rounded-lg px-1 py-0.5 text-left text-sm leading-snug text-white/85 transition-colors hover:bg-white/[0.06]",
+            ideia.feito && "line-through",
+            !ideia.gancho && "text-white/25"
+          )}
+        >
+          {ideia.gancho || "Qual é o gancho?"}
+          {ideia.roteiro && (
+            <span className="ml-2 rounded-full bg-white/[0.08] px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wider text-white/45 no-underline">
+              roteiro
+            </span>
+          )}
+        </button>
         {ideia.observacao && (
           <span className="mt-0.5 block text-[10px] uppercase tracking-wider text-white/25">
             {ideia.observacao}
@@ -127,22 +148,28 @@ function Linha({
       </td>
 
       <td className="px-2 py-2 align-top">
-        <select
-          value={ideia.formato}
-          onChange={(e) => onAtualizar(ideia.id, { formato: e.target.value })}
-          className={cn(
-            "w-full rounded-lg bg-transparent px-1 py-0.5 text-xs outline-none focus:bg-white/[0.06]",
-            ideia.formato ? "text-white/70" : "text-white/25"
-          )}
+        {/* Um formato fora da lista ainda precisa aparecer: sem isto ele
+            some do seletor em silencio e a linha parece nao ter formato. */}
+        <Select
+          value={ideia.formato || "__vazio__"}
+          onValueChange={(v) => onAtualizar(ideia.id, { formato: v === "__vazio__" ? "" : v })}
         >
-          {/* Um formato fora da lista ainda precisa aparecer: sem isto ele
-              some do seletor em silencio e a linha parece nao ter formato. */}
-          {(FORMATOS.includes(ideia.formato) ? FORMATOS : [...FORMATOS, ideia.formato]).map((f) => (
-            <option key={f} value={f} className="bg-[#15151a]">
-              {f || "sem formato"}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            className={cn(
+              "h-7 w-full gap-1 rounded-lg border-0 bg-transparent px-1 py-0 text-xs hover:bg-white/[0.06] focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/[0.06]",
+              ideia.formato ? "text-white/70" : "text-white/25"
+            )}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[12rem]">
+            {(FORMATOS.includes(ideia.formato) ? FORMATOS : [...FORMATOS, ideia.formato]).map((f) => (
+              <SelectItem key={f || "__vazio__"} value={f || "__vazio__"} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+                {f || "sem formato"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </td>
 
       <td className="px-2 py-2 text-center align-top">
@@ -182,6 +209,7 @@ export function PautaTable({ ideias, isLoading, criar, atualizar, remover }: Pro
   const [formato, setFormato] = useState<string | null>(null);
   const [verFeitos, setVerFeitos] = useState(false);
   const [busca, setBusca] = useState("");
+  const [abertaId, setAbertaId] = useState<string | null>(null);
 
   const categorias = useMemo(
     () => [...new Set(ideias.map((i) => i.categoria).filter(Boolean))].sort(),
@@ -211,7 +239,7 @@ export function PautaTable({ ideias, isLoading, criar, atualizar, remover }: Pro
 
   return (
     <div className="space-y-3">
-      <div className="liquid-glass flex flex-wrap items-center gap-2 rounded-3xl p-3.5">
+      <div className="surface-flat flex flex-wrap items-center gap-2 p-3.5">
         <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-full bg-white/[0.04] px-3 py-1.5">
           <Icon as={SearchNormal1} size={15} className="text-white/35" />
           <input
@@ -250,28 +278,23 @@ export function PautaTable({ ideias, isLoading, criar, atualizar, remover }: Pro
           {verFeitos ? "ocultar" : "mostrar"} {feitos} feito{feitos === 1 ? "" : "s"}
         </button>
 
-        <button
-          type="button"
+        <LiquidGlassButton
+          tint="primary"
           onClick={() => { void criar({ categoria: categoria ?? "", formato: formato ?? "" }); }}
-          /* Sem `.bg-primary`: a classe leva backdrop-filter, e um
-             backdrop-filter sob o header fixo é o gatilho da tarja de brilho
-             — ver CORRIGIR-TARJA-DE-BRILHO.md. */
-          style={{ backgroundColor: "hsl(var(--primary))" }}
-          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="h-9 px-5 text-xs font-bold uppercase tracking-widest"
         >
-          <Icon as={Add} size={15} />
           Novo gancho
-        </button>
+        </LiquidGlassButton>
       </div>
 
       {visiveis.length === 0 ? (
-        <section className="liquid-glass rounded-3xl p-5">
+        <section className="surface-flat p-5">
           <p className="py-12 text-center text-sm text-white/40">
             {ideias.length === 0 ? "A pauta está vazia." : "Nada com esse filtro."}
           </p>
         </section>
       ) : (
-        <section className="liquid-glass overflow-hidden rounded-3xl">
+        <section className="surface-flat overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
@@ -286,7 +309,7 @@ export function PautaTable({ ideias, isLoading, criar, atualizar, remover }: Pro
               </thead>
               <tbody>
                 {visiveis.map((i) => (
-                  <Linha key={i.id} ideia={i} onAtualizar={atualizar} onRemover={remover} />
+                  <Linha key={i.id} ideia={i} onAtualizar={atualizar} onRemover={remover} onAbrir={setAbertaId} />
                 ))}
               </tbody>
             </table>
@@ -295,8 +318,15 @@ export function PautaTable({ ideias, isLoading, criar, atualizar, remover }: Pro
       )}
 
       <p className="px-1 text-[11px] text-white/25">
-        {visiveis.length} de {ideias.length} · clique na célula pra editar
+        {visiveis.length} de {ideias.length} · clique no gancho pra abrir o roteiro
       </p>
+
+      <RoteiroModal
+        ideia={ideias.find((i) => i.id === abertaId) ?? null}
+        formatos={FORMATOS}
+        onAtualizar={atualizar}
+        onClose={() => setAbertaId(null)}
+      />
     </div>
   );
 }

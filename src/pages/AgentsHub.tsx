@@ -6,8 +6,10 @@
  * demais. Os dados vivem no navegador (features/agents/agentsStore) e não há
  * motor ligado: as mensagens ficam gravadas, mas ninguém responde sozinho.
  */
-import { useMemo, useState } from "react";
-import { Cpu, Flash } from "iconsax-react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Cpu } from "iconsax-react";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Icon } from "@/components/ui/icon";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
@@ -29,33 +31,46 @@ export default function AgentsHub() {
   // Mesma convenção das outras telas: quem desenha o "carregando" é a
   // transição do layout (overlay de blur + logo).
   const isReady = usePageReady();
+
+  // O bloco ocupa a mesma faixa da barra lateral (16px do topo e do fundo).
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ h?: number; shift: number }>({ shift: 0 });
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = boxRef.current;
+      if (!el) return;
+      if (window.innerWidth < 768) return setBox({ h: Math.max(520, window.innerHeight - 160), shift: 0 });
+      const top = el.getBoundingClientRect().top + window.scrollY - (Number(el.dataset.shift) || 0);
+      setBox({ h: window.innerHeight - 32, shift: 16 - top });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady]);
+
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black tracking-tight">Central de Agentes</h1>
-          <p className="text-sm text-white/45">
-            Crie agentes, converse com cada um e acompanhe como eles se falam.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setDialogo({ open: true })}
-          // Sem `btn-glass-primary` nem `.bg-primary`: as duas levam
-          // `backdrop-filter`, gatilho da "tarja de brilho" (ver
-          // CORRIGIR-TARJA-DE-BRILHO.md, seção 6). A cor vem do tema via style.
-          style={{ backgroundColor: "hsl(var(--primary))" }}
-          className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+    <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
+      <div className="absolute right-4 top-4 z-20">
+        <motion.div
+          whileHover={{ scale: 1.05, translateY: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          <Icon as={Flash} size={16} />
-          Criar agente
-        </button>
-      </header>
+          <LiquidGlassButton
+            tint="primary"
+            onClick={() => setDialogo({ open: true })}
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+          >
+            Criar agente
+          </LiquidGlassButton>
+        </motion.div>
+      </div>
 
       {agents.length === 0 ? (
-        <section className="surface-flat no-elevation rounded-3xl px-4 py-14 text-center">
+        <section className="surface-flat no-elevation flex h-full flex-col items-center justify-center rounded-3xl px-4 text-center">
           <Icon as={Cpu} size={28} className="mx-auto mb-3 text-white/25" />
           <p className="text-sm text-white/45">Nenhum agente ainda</p>
           <p className="mt-1 text-xs text-white/30">
@@ -64,6 +79,7 @@ export default function AgentsHub() {
         </section>
       ) : (
         <AgentsCanvas
+          fill
           agents={agents}
           selectedId={selecionado}
           onSelect={setSelecionado}

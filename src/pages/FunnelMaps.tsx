@@ -113,13 +113,23 @@ export default function FunnelMaps() {
   // deixar vão embaixo nem criar rolagem na página.
   const boxRef = useRef<HTMLDivElement>(null);
   const [boxHeight, setBoxHeight] = useState<number>();
+  const [boxShift, setBoxShift] = useState(0);
   const ready = isReady && !!activeMap;
   useLayoutEffect(() => {
     const measure = () => {
       const el = boxRef.current;
       if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      setBoxHeight(Math.max(420, window.innerHeight - top - 24));
+      // Já deslocado: mede de onde o bloco começaria sem o ajuste.
+      const top = el.getBoundingClientRect().top + window.scrollY - (Number(el.dataset.shift) || 0);
+      if (window.innerWidth >= 768) {
+        // Desktop: as colunas ocupam a mesma faixa da barra lateral (16px do topo,
+        // 16px do fundo), então a paleta fica do tamanho dela.
+        setBoxShift(16 - top);
+        setBoxHeight(Math.max(420, window.innerHeight - 16 - 16));
+      } else {
+        setBoxShift(0);
+        setBoxHeight(Math.max(420, window.innerHeight - top - 24));
+      }
     };
     measure();
     window.addEventListener('resize', measure);
@@ -129,7 +139,7 @@ export default function FunnelMaps() {
   if (!isReady || !activeMap) return <PageLoader />;
 
   return (
-    <div ref={boxRef} style={{ height: boxHeight ?? 'calc(100vh - 180px)' }}>
+    <div ref={boxRef} data-shift={boxShift} style={{ height: boxHeight ?? 'calc(100vh - 180px)', marginTop: boxShift }}>
       <FunnelCanvas
         key={activeMap.id}
         nodes={activeMap.nodes}

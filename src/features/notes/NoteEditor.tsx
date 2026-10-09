@@ -13,7 +13,7 @@
  * nota aberta, e não devem pesar no resto do sistema.
  */
 import { Suspense, lazy, useState } from "react";
-import { Code1, Folder2, InfoCircle, Tag } from "iconsax-react";
+import { Code1, Folder2, InfoCircle } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { caminhoNoCofre, extrairWikilinks } from "./markdown";
@@ -64,7 +64,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
         <button
           type="button"
           onClick={() => setMostrarFicha((v) => !v)}
-          title="Pasta, etiquetas e ligações"
+          title="Pasta e ligações"
           className={cn(
             "mt-1 shrink-0 rounded-lg p-1.5 transition-colors",
             mostrarFicha ? "bg-white/15 text-white" : "text-white/35 hover:bg-white/10 hover:text-white/75"
@@ -98,7 +98,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
 
       {mostrarFicha && (
         <div className="space-y-2.5 border-t border-white/[0.07] pt-3">
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2">
             <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-2.5 py-2">
               <Icon as={Folder2} size={14} className="shrink-0 text-white/30" />
               <input
@@ -111,15 +111,6 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
               <datalist id="pastas-existentes">
                 {pastasExistentes.map((f) => <option key={f} value={f} />)}
               </datalist>
-            </label>
-            <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-2.5 py-2">
-              <Icon as={Tag} size={14} className="shrink-0 text-white/30" />
-              <input
-                value={rascunho.tags}
-                onChange={(e) => onEditar({ tags: e.target.value })}
-                placeholder="copy, vendas"
-                className="min-w-0 flex-1 bg-transparent text-xs text-white placeholder:text-white/25 outline-none"
-              />
             </label>
           </div>
 

@@ -671,7 +671,7 @@ export const Header = () => {
   // esconder/mostrar ao rolar fazia sentido pra uma barra competindo por
   // espaço no topo, não pra uma lateral fina que já não cobre conteúdo.
   return (
-    <div className="fixed bottom-4 left-0 top-0 z-[60] flex items-stretch py-4 pl-4">
+    <div className="fixed bottom-0 left-0 top-0 z-[60] flex items-stretch py-4 pl-4">
       <div className="side-nav-shadow flex">
       <header
         ref={sideNavRef}

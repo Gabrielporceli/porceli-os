@@ -1,62 +1,68 @@
 /**
- * Pastas em árvore.
+ * Pastas, sem a árvore do Obsidian.
  *
  * O campo `folder` é um CAMINHO ("Áreas/Marketing/Tráfego Pago/Google Ads"),
- * não um nome. Desenhar um botão por caminho distinto dava 23 linhas de texto
- * truncado, cada uma repetindo o prefixo da anterior — o "paredão" que o
- * usuário reclamou. Aqui o caminho é quebrado em nós e só o nível aberto
- * aparece.
+ * porque é assim que o cofre organiza os arquivos. Mas a tela não precisa
+ * mostrar isso tudo:
  *
- * Contagem é do RAMO INTEIRO, não só das notas soltas naquele nível: uma
- * pasta que só contém subpastas mostraria "0" e pareceria vazia.
+ *   • "Áreas" é só a raiz do cofre — esconder.
+ *   • Aparece UMA lista de pastas (o primeiro nível) com o total de notas.
+ *   • A pasta selecionada abre as subpastas dela, um nível só; o que for mais
+ *     fundo fica dentro da subpasta (filtrar por ela traz o ramo inteiro).
+ *   • Nada de setinha de expandir/recolher.
+ *
+ * Contagem é do RAMO INTEIRO: uma pasta que só tem subpastas não pode
+ * mostrar "0" e parecer vazia.
  */
 import { useMemo, useState } from "react";
-import { Add, ArrowDown2, ArrowRight2, CloseCircle, Folder2, NoteText, Trash } from "iconsax-react";
+import { Add, CloseCircle, Folder2, Trash } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
-interface No {
+/** Raiz do cofre; não aparece na tela e é onde as pastas novas nascem. */
+const RAIZ = "Áreas";
+
+interface Pasta {
   nome: string;
   caminho: string;
-  filhos: No[];
-  /** Notas cujo `folder` é exatamente este caminho. */
-  proprias: number;
-  /** Próprias + tudo abaixo. */
   total: number;
+  filhas: { nome: string; caminho: string; total: number }[];
 }
 
-function montarArvore(pastas: string[], contagem: Map<string, number>): No[] {
-  const raiz: No = { nome: "", caminho: "", filhos: [], proprias: 0, total: 0 };
+function agrupar(pastas: string[], contagem: Map<string, number>): { lista: Pasta[]; semPasta: number } {
+  const topo = new Map<string, Pasta>();
+  let semPasta = contagem.get("") ?? 0;
 
   for (const caminho of pastas) {
     if (!caminho) continue;
-    let atual = raiz;
-    const partes = caminho.split("/").filter(Boolean);
-    partes.forEach((parte, i) => {
-      const parcial = partes.slice(0, i + 1).join("/");
-      let filho = atual.filhos.find((f) => f.nome === parte);
-      if (!filho) {
-        filho = { nome: parte, caminho: parcial, filhos: [], proprias: 0, total: 0 };
-        atual.filhos.push(filho);
+    const n = contagem.get(caminho) ?? 0;
+    const prefixo = caminho.startsWith(`${RAIZ}/`) ? `${RAIZ}/` : "";
+    const partes = caminho.slice(prefixo.length).split("/").filter(Boolean);
+    if (partes.length === 0) { semPasta += n; continue; }
+
+    const caminhoTopo = prefixo + partes[0];
+    let t = topo.get(caminhoTopo);
+    if (!t) {
+      t = { nome: partes[0], caminho: caminhoTopo, total: 0, filhas: [] };
+      topo.set(caminhoTopo, t);
+    }
+    t.total += n;
+
+    if (partes.length > 1) {
+      const caminhoFilha = `${caminhoTopo}/${partes[1]}`;
+      let f = t.filhas.find((x) => x.caminho === caminhoFilha);
+      if (!f) {
+        f = { nome: partes[1], caminho: caminhoFilha, total: 0 };
+        t.filhas.push(f);
       }
-      atual = filho;
-    });
-    atual.proprias = contagem.get(caminho) ?? 0;
+      f.total += n;
+    }
   }
 
-  // Totais de baixo pra cima, numa passada só.
-  const somar = (n: No): number => {
-    n.total = n.proprias + n.filhos.reduce((s, f) => s + somar(f), 0);
-    return n.total;
-  };
-  raiz.filhos.forEach(somar);
-
-  const ordenar = (ns: No[]) => {
-    ns.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-    ns.forEach((n) => ordenar(n.filhos));
-  };
-  ordenar(raiz.filhos);
-  return raiz.filhos;
+  const porNome = (a: { nome: string }, b: { nome: string }) => a.nome.localeCompare(b.nome, "pt-BR");
+  const lista = [...topo.values()].sort(porNome);
+  lista.forEach((p) => p.filhas.sort(porNome));
+  return { lista, semPasta };
 }
 
 interface Props {
@@ -69,7 +75,7 @@ interface Props {
    * Cria a pasta com uma nota dentro.
    *
    * Pasta aqui NAO e registro — e o caminho da nota. Uma pasta sem nenhuma
-   * nota nao existiria em lugar nenhum e sumiria da arvore no proximo
+   * nota nao existiria em lugar nenhum e sumiria da lista no proximo
    * carregamento. Entao criar pasta e criar a primeira nota dela.
    */
   onNovaPasta?: (caminho: string) => void;
@@ -77,116 +83,101 @@ interface Props {
   onExcluirPasta?: (caminho: string, total: number) => void;
 }
 
-function Ramo({
-  no, nivel, ativa, abertos, alternar, onSelecionar, onExcluirPasta,
+function Linha({
+  nome, total, selecionada, recuo, onClick, onExcluir,
 }: {
-  no: No; nivel: number; ativa: string | null;
-  abertos: Set<string>; alternar: (c: string) => void;
-  onSelecionar: (c: string | null) => void;
-  onExcluirPasta?: (caminho: string, total: number) => void;
+  nome: string; total: number; selecionada: boolean; recuo?: boolean;
+  onClick: () => void; onExcluir?: () => void;
 }) {
-  const aberto = abertos.has(no.caminho);
-  const temFilhos = no.filhos.length > 0;
-  const selecionado = ativa === no.caminho;
-
   return (
-    <li>
-      <div
-        className={cn(
-          "group flex items-center gap-0.5 rounded-xl transition-colors",
-          selecionado ? "bg-white/10" : "hover:bg-white/[0.06]"
-        )}
-        style={{ paddingLeft: nivel * 10 }}
-      >
-        {/* Abrir/fechar é separado de selecionar: clicar numa pasta pra ver
-            as notas dela não deveria obrigar a expandir o ramo. */}
-        <button
-          type="button"
-          onClick={() => temFilhos && alternar(no.caminho)}
-          className={cn(
-            "shrink-0 rounded-lg p-1 text-white/30 transition-colors",
-            temFilhos ? "hover:text-white/70" : "pointer-events-none opacity-0"
-          )}
-          aria-label={aberto ? "Recolher" : "Expandir"}
-        >
-          <Icon as={aberto ? ArrowDown2 : ArrowRight2} size={12} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onSelecionar(selecionado ? null : no.caminho)}
-          className="flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pr-2 text-left text-[13px]"
-        >
-          <Icon as={Folder2} size={13} className="shrink-0 text-white/35" />
-          <span className={cn("flex-1 truncate", selecionado ? "text-white" : "text-white/70")}>
-            {no.nome}
-          </span>
-          <span className={cn("shrink-0 text-[10px] text-white/25", onExcluirPasta && "group-hover:hidden")}>{no.total}</span>
-        </button>
-
-        {onExcluirPasta && (
-          <button
-            type="button"
-            onClick={() => onExcluirPasta(no.caminho, no.total)}
-            title={`Excluir pasta ${no.nome}`}
-            aria-label={`Excluir pasta ${no.nome}`}
-            className="mr-1 hidden shrink-0 rounded-lg p-1 text-white/30 transition-colors hover:bg-red-500/15 hover:text-red-400 group-hover:block"
-          >
-            <Icon as={Trash} size={13} />
-          </button>
-        )}
-      </div>
-
-      {aberto && temFilhos && (
-        <ul>
-          {no.filhos.map((f) => (
-            <Ramo
-              key={f.caminho} no={f} nivel={nivel + 1} ativa={ativa}
-              abertos={abertos} alternar={alternar} onSelecionar={onSelecionar}
-              onExcluirPasta={onExcluirPasta}
-            />
-          ))}
-        </ul>
+    <div
+      className={cn(
+        "group flex items-center rounded-xl transition-colors",
+        selecionada ? "bg-white/10" : "hover:bg-white/[0.06]",
+        recuo && "ml-5"
       )}
-    </li>
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-1.5 text-left text-[13px]"
+      >
+        <Icon as={Folder2} size={recuo ? 12 : 13} className="shrink-0 text-white/35" />
+        <span className={cn("flex-1 truncate", selecionada ? "text-white" : "text-white/70")}>{nome}</span>
+        <span className={cn("shrink-0 text-[10px] text-white/30", onExcluir && "group-hover:hidden")}>{total}</span>
+      </button>
+      {onExcluir && (
+        <button
+          type="button"
+          onClick={onExcluir}
+          title={`Excluir pasta ${nome}`}
+          aria-label={`Excluir pasta ${nome}`}
+          className="mr-1 hidden shrink-0 rounded-lg p-1 text-white/30 transition-colors hover:bg-red-500/15 hover:text-red-400 group-hover:block"
+        >
+          <Icon as={Trash} size={13} />
+        </button>
+      )}
+    </div>
   );
 }
 
 export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, onNovaPasta, onExcluirPasta }: Props) {
   const [criando, setCriando] = useState(false);
   const [nome, setNome] = useState("");
-  const arvore = useMemo(() => montarArvore(pastas, contagem), [pastas, contagem]);
-
-  // Começa com o primeiro nível aberto: fechado demais esconde que existe
-  // estrutura; aberto demais devolve o paredão.
-  const [abertos, setAbertos] = useState<Set<string>>(
-    () => new Set(arvore.map((n) => n.caminho))
-  );
-
-  const alternar = (c: string) =>
-    setAbertos((atual) => {
-      const novo = new Set(atual);
-      if (novo.has(c)) novo.delete(c); else novo.add(c);
-      return novo;
-    });
+  const { lista, semPasta } = useMemo(() => agrupar(pastas, contagem), [pastas, contagem]);
 
   const confirmar = () => {
     const limpo = nome.trim().replace(/^\/+|\/+$/g, "");
     setCriando(false);
     setNome("");
     if (!limpo || !onNovaPasta) return;
-    // Nasce DENTRO da pasta selecionada — e o que se espera ao clicar em "+"
-    // com uma pasta aberta. Sem pasta selecionada, vai pra raiz de Áreas.
-    const base = ativa ?? "Áreas";
-    const caminho = `${base}/${limpo}`;
-    setAbertos((a) => new Set([...a, ...caminho.split("/").map((_, i, ps) => ps.slice(0, i + 1).join("/"))]));
-    onNovaPasta(caminho);
+    // Com uma pasta selecionada, a nova nasce dentro dela; sem, no primeiro nível.
+    onNovaPasta(`${ativa || RAIZ}/${limpo}`);
   };
+
+  const alternar = (c: string) => onSelecionar(ativa === c ? null : c);
 
   return (
     <ul className="space-y-0.5">
-      {onNovaPasta && (
+      <li>
+        <Linha nome="Todas" total={totalGeral} selecionada={ativa === null} onClick={() => onSelecionar(null)} />
+      </li>
+
+      {lista.map((p) => {
+        // A pasta fica "aberta" quando ela ou algo dentro dela está selecionado.
+        const aberta = ativa === p.caminho || !!ativa?.startsWith(`${p.caminho}/`);
+        return (
+          <li key={p.caminho} className="space-y-0.5">
+            <Linha
+              nome={p.nome}
+              total={p.total}
+              selecionada={ativa === p.caminho}
+              onClick={() => alternar(p.caminho)}
+              onExcluir={onExcluirPasta ? () => onExcluirPasta(p.caminho, p.total) : undefined}
+            />
+            {aberta && p.filhas.map((f) => (
+              <Linha
+                key={f.caminho}
+                recuo
+                nome={f.nome}
+                total={f.total}
+                selecionada={ativa === f.caminho || !!ativa?.startsWith(`${f.caminho}/`)}
+                onClick={() => alternar(f.caminho)}
+                onExcluir={onExcluirPasta ? () => onExcluirPasta(f.caminho, f.total) : undefined}
+              />
+            ))}
+          </li>
+        );
+      })}
+
+      {semPasta > 0 && (
         <li>
+          <Linha nome="Sem pasta" total={semPasta} selecionada={ativa === ""} onClick={() => alternar("")} />
+        </li>
+      )}
+
+      {onNovaPasta && (
+        <li className="pt-1">
           {criando ? (
             <div className="flex items-center gap-1 rounded-xl bg-white/10 px-2 py-1">
               <Icon as={Folder2} size={13} className="shrink-0 text-white/40" />
@@ -215,8 +206,7 @@ export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, 
             <button
               type="button"
               onClick={() => setCriando(true)}
-              title={ativa ? `Nova pasta dentro de ${ativa}` : "Nova pasta"}
-              className="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-[13px] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[13px] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/80"
             >
               <Icon as={Add} size={13} className="shrink-0" />
               <span className="flex-1 truncate">
@@ -226,27 +216,6 @@ export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, 
           )}
         </li>
       )}
-      <li>
-        <button
-          type="button"
-          onClick={() => onSelecionar(null)}
-          className={cn(
-            "flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-[13px] transition-colors",
-            ativa === null ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/[0.06]"
-          )}
-        >
-          <Icon as={NoteText} size={13} className="shrink-0 text-white/35" />
-          <span className="flex-1">Todas</span>
-          <span className="text-[10px] text-white/25">{totalGeral}</span>
-        </button>
-      </li>
-      {arvore.map((n) => (
-        <Ramo
-          key={n.caminho} no={n} nivel={0} ativa={ativa}
-          abertos={abertos} alternar={alternar} onSelecionar={onSelecionar}
-          onExcluirPasta={onExcluirPasta}
-        />
-      ))}
     </ul>
   );
 }

@@ -10,7 +10,7 @@
  * card no meio e continua na coluna seguinte.
  */
 import { memo } from "react";
-import { Folder2, Tag } from "iconsax-react";
+import { Folder2 } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { corPostIt, resumo } from "./postit";
 import type { NoteComEstado } from "./useNotes";
@@ -34,7 +34,8 @@ const PostIt = memo(function PostIt({
       onClick={() => onAbrir(nota.id)}
       data-aberto={aberto ? "true" : undefined}
       style={{
-        background: cor.fundo,
+        // Tinta do papel POR CIMA do cinza sólido: sem transparência.
+        background: `linear-gradient(${cor.fundo}, ${cor.fundo}), #2F2D2E`,
         // A cor da fita vira variável pro CSS poder usá-la no anel de
         // "aberto" — mantém a cor do papel mandando, e não um roxo fixo.
         ["--fita" as string]: cor.fita,
@@ -71,7 +72,7 @@ const PostIt = memo(function PostIt({
         <p className="mt-1.5 text-xs italic text-white/25">vazia</p>
       )}
 
-      {(nota.folder || nota.tags.length > 0) && (
+      {nota.folder && (
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/[0.07] pt-2.5">
           {nota.folder && (
             <span className="flex min-w-0 items-center gap-1 text-[10px] font-black uppercase tracking-widest text-white/35">
@@ -80,15 +81,6 @@ const PostIt = memo(function PostIt({
                   interessa no card é onde ela está, não como se chega lá. */}
               <span className="truncate">{nota.folder.split("/").pop()}</span>
             </span>
-          )}
-          {nota.tags.slice(0, 2).map((t) => (
-            <span key={t} className="flex items-center gap-0.5 text-[10px] text-white/35">
-              <Icon as={Tag} size={10} />
-              {t}
-            </span>
-          ))}
-          {nota.tags.length > 2 && (
-            <span className="text-[10px] text-white/25">+{nota.tags.length - 2}</span>
           )}
         </div>
       )}

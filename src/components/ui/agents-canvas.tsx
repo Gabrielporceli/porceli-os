@@ -62,7 +62,7 @@ function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
         <Handle type="target" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
         <Handle type="source" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
         {a.principal && (
-          <span className="absolute -right-2 -top-1 z-10 rounded-full bg-amber-300 px-1.5 py-0.5 text-[9px] font-black uppercase text-black">
+          <span className="absolute -right-2 -top-1 z-10 rounded-full bg-[#4a4849] px-1.5 py-0.5 text-[9px] font-black uppercase text-white/85">
             Principal
           </span>
         )}
@@ -119,9 +119,11 @@ interface Props {
   /** Pares de agentes que já trocaram mensagens (ganham uma linha animada). */
   conversas?: [string, string][];
   className?: string;
+  /** Ocupa 100% da altura do contêiner (quem chama define a altura). */
+  fill?: boolean;
 }
 
-function Inner({ agents, selectedId, onSelect, panel, conversas = [], className }: Props) {
+function Inner({ agents, selectedId, onSelect, panel, conversas = [], className, fill }: Props) {
   const built = useMemo<Node<AgentNodeData>[]>(
     () =>
       agents.map((agent, i) => ({
@@ -158,7 +160,7 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className 
   // O fitView do ReactFlow roda antes dos nós serem medidos; enquadra de novo.
   const { fitView } = useReactFlow();
   useEffect(() => {
-    const t = setTimeout(() => fitView({ padding: 0.4, maxZoom: 1 }), 80);
+    const t = setTimeout(() => fitView({ padding: 0.4, maxZoom: 1.25 }), 80);
     return () => clearTimeout(t);
   }, [agents.length, fitView]);
 
@@ -167,12 +169,9 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className 
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    let fitted = el.clientWidth > 0;
+    // Reenquadra quando o canvas muda de tamanho (e ao ganhar o primeiro tamanho).
     const ro = new ResizeObserver(() => {
-      if (!fitted && el.clientWidth > 0) {
-        fitted = true;
-        fitView({ padding: 0.4, maxZoom: 1 });
-      }
+      if (el.clientWidth > 0) fitView({ padding: 0.4, maxZoom: 1.25 });
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -216,7 +215,7 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className 
   }, []);
 
   return (
-    <div ref={boxRef} className={cn("surface-flat no-elevation relative overflow-hidden rounded-3xl", className)} style={{ height: 620 }}>
+    <div ref={boxRef} className={cn("surface-flat no-elevation relative overflow-hidden rounded-3xl", className)} style={fill ? { height: "100%" } : { height: "max(560px, calc(100vh - 11rem))" }}>
       <div className="absolute inset-0">
       <ReactFlow
         nodes={nodes}
@@ -227,7 +226,7 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className 
         onNodeClick={(_, n) => onSelect?.(n.id)}
         onPaneClick={() => onSelect?.(null)}
         fitView
-        fitViewOptions={{ padding: 0.4, maxZoom: 1 }}
+        fitViewOptions={{ padding: 0.4, maxZoom: 1.25 }}
         minZoom={0.4}
         maxZoom={1.6}
         nodesConnectable={false}

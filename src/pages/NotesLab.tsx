@@ -18,7 +18,6 @@ import type { Ideia } from "@/features/notes/pauta/usePauta";
 import { PostItWindow, type PosicaoJanela } from "@/features/notes/PostItWindow";
 import { NoteEditor, type Rascunho } from "@/features/notes/NoteEditor";
 import { FolderTree } from "@/features/notes/FolderTree";
-import { TagPicker } from "@/features/notes/TagPicker";
 import { BoardCanvas } from "@/features/notes/boards/BoardCanvas";
 import type { ArestaQuadro, NoQuadro, TipoQuadro } from "@/features/notes/boards/types";
 import type { NoteComEstado } from "@/features/notes/useNotes";
@@ -84,10 +83,10 @@ export default function NotesLab() {
   const [mostrarIndices, setMostrarIndices] = useState(false);
   const [paraExcluir, setParaExcluir] = useState<string | null>(null);
   const [pauta, setPauta] = useState<Ideia[]>(() => [
-    { id: "p1", gancho: "A cada segundo que sua pagina demora pra carregar, voce perde 11% do trafego", categoria: "Trafego Pago", formato: "Video Narrado", referencia: "", observacao: "", feito: false, ordem: 10 },
-    { id: "p2", gancho: "Seu trafego esta valendo a pena?", categoria: "Trafego Pago", formato: "Conversa", referencia: "https://tiktok.com/@ads.comlucas/video/7490696973067029765", observacao: "", feito: false, ordem: 20 },
-    { id: "p3", gancho: "As pessoas compram com o emocional e justificam com o racional", categoria: "Marketing/Vendas", formato: "", referencia: "", observacao: "Copy", feito: false, ordem: 30 },
-    { id: "p4", gancho: "Decretar compromisso com a producao de conteudo", categoria: "Posicionamento", formato: "Conversa", referencia: "", observacao: "Posicionamento", feito: true, ordem: 40 },
+    { id: "p1", gancho: "A cada segundo que sua pagina demora pra carregar, voce perde 11% do trafego", categoria: "Trafego Pago", formato: "Video Narrado", referencia: "", roteiro: "", observacao: "", feito: false, ordem: 10 },
+    { id: "p2", gancho: "Seu trafego esta valendo a pena?", categoria: "Trafego Pago", formato: "Conversa", referencia: "https://tiktok.com/@ads.comlucas/video/7490696973067029765", roteiro: "", observacao: "", feito: false, ordem: 20 },
+    { id: "p3", gancho: "As pessoas compram com o emocional e justificam com o racional", categoria: "Marketing/Vendas", formato: "", referencia: "", roteiro: "", observacao: "Copy", feito: false, ordem: 30 },
+    { id: "p4", gancho: "Decretar compromisso com a producao de conteudo", categoria: "Posicionamento", formato: "Conversa", referencia: "", roteiro: "", observacao: "Posicionamento", feito: true, ordem: 40 },
   ]);
   const [janelas, setJanelas] = useState<{ id: string; pos: PosicaoJanela; z: number }[]>([]);
   const [rascunhos, setRascunhos] = useState<Record<string, Rascunho>>({});
@@ -137,7 +136,7 @@ export default function NotesLab() {
     <div className="min-h-screen bg-[#0a0a0c] p-6 text-white">
       <h1 className="mb-1 text-xl font-black">Laboratório — Notas</h1>
       <p className="mb-5 text-xs text-white/40">
-        {notas.length} notas falsas · {contagemPastas.size} pastas (até 4 níveis) · {contagemTags.size} etiquetas
+        {notas.length} notas falsas · {contagemPastas.size} pastas (até 4 níveis)
       </p>
 
       <div className="grid gap-4 lg:grid-cols-[236px_1fr]">
@@ -153,14 +152,6 @@ export default function NotesLab() {
               onNovaPasta={(c) => { setPasta(c); alert("criaria nota em: " + c); }}
             />
           </div>
-          <div className="border-t border-white/[0.06] pt-3.5">
-            <TagPicker
-              contagem={contagemTags}
-              ativas={tags}
-              onAlternar={(t) => setTags((a) => (a.includes(t) ? a.filter((x) => x !== t) : [...a, t]))}
-              onLimpar={() => setTags([])}
-            />
-          </div>
         </aside>
 
         <div className="min-w-0 space-y-5">
@@ -169,7 +160,7 @@ export default function NotesLab() {
             <PautaTable
               ideias={pauta}
               isLoading={false}
-              criar={() => setPauta((a) => [{ id: crypto.randomUUID(), gancho: "", categoria: "", formato: "", referencia: "", observacao: "", feito: false, ordem: 0 }, ...a])}
+              criar={() => setPauta((a) => [{ id: crypto.randomUUID(), gancho: "", categoria: "", formato: "", referencia: "", roteiro: "", observacao: "", feito: false, ordem: 0 }, ...a])}
               atualizar={(id, patch) => setPauta((a) => a.map((i) => (i.id === id ? { ...i, ...patch } : i)))}
               remover={(id) => setPauta((a) => a.filter((i) => i.id !== id))}
             />
@@ -211,6 +202,10 @@ export default function NotesLab() {
                 nodes={grafo.nodes}
                 edges={grafo.edges}
                 onChange={(nodes, edges) => setGrafo({ nodes, edges })}
+                title="Quadro de teste"
+                onTitle={() => {}}
+                onBack={() => {}}
+                onDelete={() => {}}
               />
             </div>
           </section>

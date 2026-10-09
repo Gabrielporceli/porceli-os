@@ -18,6 +18,8 @@ export interface Ideia {
   formato: string;
   referencia: string;
   observacao: string;
+  /** Roteiro completo do vídeo, escrito no modal da ideia. */
+  roteiro: string;
   feito: boolean;
   ordem: number;
 }
@@ -49,7 +51,7 @@ export function usePauta() {
     }
     setIdeias(((data ?? []) as unknown as Linha[]).map((l) => ({
       id: l.id, gancho: l.gancho, categoria: l.categoria, formato: l.formato,
-      referencia: l.referencia, observacao: l.observacao, feito: l.feito, ordem: l.ordem,
+      referencia: l.referencia, observacao: l.observacao, roteiro: l.roteiro ?? "", feito: l.feito, ordem: l.ordem,
     })));
     setIsLoading(false);
   }, []);
@@ -71,6 +73,7 @@ export function usePauta() {
         formato: parcial.formato ?? "",
         referencia: parcial.referencia ?? "",
         observacao: parcial.observacao ?? "",
+        roteiro: parcial.roteiro ?? "",
         ordem: menor - PASSO,
       } as never)
       .select()

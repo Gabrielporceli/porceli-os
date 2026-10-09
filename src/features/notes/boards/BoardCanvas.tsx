@@ -28,7 +28,7 @@ import {
   type Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Add, Trash } from "iconsax-react";
+import { Add, ArrowLeft2, Trash } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { QuadroNo } from "./nodes/QuadroNo";
@@ -55,9 +55,14 @@ interface Props {
   nodes: NoQuadro[];
   edges: ArestaQuadro[];
   onChange: (nodes: NoQuadro[], edges: ArestaQuadro[]) => void;
+  /** Cabeçalho flutuante (fora do canvas): nome, voltar e excluir. */
+  title: string;
+  onTitle: (t: string) => void;
+  onBack: () => void;
+  onDelete: () => void;
 }
 
-function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange }: Props) {
+function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, title, onTitle, onBack, onDelete }: Props) {
   const { screenToFlowPosition, getViewport } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState(iniciais as unknown as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(
@@ -152,29 +157,38 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange }: Pr
   );
 
   return (
-    <div className="relative h-full w-full">
-      <ReactFlow
-        nodes={nodes}
-        edges={arestasDesenhadas}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        nodeTypes={nodeTypes}
-        fitView
-        colorMode="dark"
-        proOptions={{ hideAttribution: true }}
-        connectionMode={ConnectionMode.Loose}
-        deleteKeyCode={["Delete", "Backspace"]}
-      >
-        <Controls showInteractive={false} />
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1.4} color="#2a2a30" />
-      </ReactFlow>
+    <div className="flex h-full w-full flex-col gap-3">
+      {/* Barra fora do canvas, em pílulas flutuantes como no mapa de funil. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="liquid-glass no-elevation flex items-center gap-3 rounded-full py-1.5 pl-3 pr-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-1 text-xs text-white/50 transition-colors hover:text-white/90"
+          >
+            <Icon as={ArrowLeft2} size={14} />
+            Voltar
+          </button>
+          <input
+            value={title}
+            onChange={(e) => onTitle(e.target.value)}
+            placeholder="Nome do quadro"
+            className="w-48 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
+          />
+          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/50">
+            {kind === "mapa" ? "mapa mental" : "fluxograma"}
+          </span>
+          <button
+            type="button"
+            onClick={onDelete}
+            title="Excluir quadro"
+            className="rounded-full p-1.5 text-white/40 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+          >
+            <Icon as={Trash} size={15} />
+          </button>
+        </div>
 
-      {/* Barra de criação. Flutua sobre o canvas em vez de ocupar coluna —
-          num mapa mental a tela inteira é área de trabalho. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
-        <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-full border border-white/10 bg-black/70 p-1.5 backdrop-blur-xl">
+        <div className="liquid-glass no-elevation flex flex-wrap items-center gap-1.5 rounded-full p-1.5">
           {PAPEIS_POR_TIPO[kind].map((papel) => {
             const cor = corDoNo(COR_PADRAO[papel]);
             return (
@@ -195,19 +209,19 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange }: Pr
             <>
               <span className="mx-1 h-5 w-px bg-white/10" />
               <span className="pl-1 text-[11px] uppercase tracking-wider text-white/40">seta</span>
-              {["sim", "não"].map((r) => (
+              {["sim", "não"].map((rot) => (
                 <button
-                  key={r}
+                  key={rot}
                   type="button"
-                  onClick={() => rotular(r)}
+                  onClick={() => rotular(rot)}
                   className={cn(
                     "rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors",
-                    arestaSelecionada.label === r
+                    arestaSelecionada.label === rot
                       ? "bg-white/90 text-black"
                       : "bg-white/[0.07] text-white/70 hover:bg-white/15"
                   )}
                 >
-                  {r}
+                  {rot}
                 </button>
               ))}
               <button
@@ -221,11 +235,32 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange }: Pr
             </>
           )}
         </div>
+
+        <p className="text-[11px] text-white/35">
+          duplo clique no card pra escrever · puxe a bolinha e solte no vazio pra criar ligado
+        </p>
       </div>
 
-      <p className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/40 backdrop-blur">
-        duplo clique no card pra escrever · puxe a bolinha e solte no vazio pra criar ligado
-      </p>
+      {/* Canvas isolado na própria caixa. */}
+      <div className="surface-flat no-elevation relative min-h-0 flex-1 overflow-hidden !rounded-2xl">
+        <ReactFlow
+          nodes={nodes}
+          edges={arestasDesenhadas}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          nodeTypes={nodeTypes}
+          fitView
+          colorMode="dark"
+          proOptions={{ hideAttribution: true }}
+          connectionMode={ConnectionMode.Loose}
+          deleteKeyCode={["Delete", "Backspace"]}
+        >
+          <Controls showInteractive={false} />
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1.4} color="#2a2a30" />
+        </ReactFlow>
+      </div>
     </div>
   );
 }

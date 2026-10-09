@@ -125,8 +125,9 @@ export function PostItWindow({
       // janela lê como o mesmo objeto que os StatsCard e os paineis, e não
       // mais como uma caixa à parte com fundo/sombra escritos na mão.
       className={cn(
-        "liquid-glass fixed flex flex-col overflow-hidden",
-        grande ? "rounded-3xl" : "rounded-none"
+        // `!fixed`/`!rounded-none`: .surface-flat força position e raio.
+        "surface-flat !fixed flex flex-col overflow-hidden",
+        grande ? "rounded-3xl" : "!rounded-none"
       )}
       style={{
         ...estilo,
