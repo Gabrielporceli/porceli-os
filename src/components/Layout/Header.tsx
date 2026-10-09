@@ -4,7 +4,6 @@ import {
   Calendar,
   Category,
   Clock,
-  Cpu,
   DocumentText,
   DollarCircle,
   Filter,
@@ -14,6 +13,7 @@ import {
   NoteText,
   Profile2User,
 } from 'iconsax-react';
+import { AgentIcon } from '@/components/icons/AgentIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -34,10 +34,10 @@ const menuItems = [
   { title: "Clientes", url: "/clients", icon: Profile2User },
   { title: "Contratos", url: "/contracts", icon: DocumentText },
   { title: "Financeiro", url: "/financial", icon: DollarCircle },
+  { title: "Notas", url: "/notes", icon: NoteText },
+  { title: "Agentes", url: "/agents", icon: AgentIcon },
   { title: "Automações",   url: "/automations",        icon: Flash },
   { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
-  { title: "Agentes", url: "/agents", icon: Cpu },
-  { title: "Notas", url: "/notes", icon: NoteText },
 ];
 
 /**
