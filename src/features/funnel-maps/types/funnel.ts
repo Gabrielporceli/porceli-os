@@ -5,14 +5,26 @@ import { FaXTwitter } from 'react-icons/fa6';
 import type { IconType } from 'react-icons';
 
 export type FunnelNodeCategory = 'traffic' | 'page' | 'action' | 'offline';
-export type CanvasNodeType = 'funnelNode' | 'pageNode' | 'noteNode' | 'imageNode' | 'forecastNode' | 'rateNode';
+export type CanvasNodeType = 'funnelNode' | 'pageNode' | 'noteNode' | 'imageNode' | 'forecastNode' | 'funnelChartNode' | 'rateNode';
 
 export interface FunnelNodeData {
   category: FunnelNodeCategory;
   variant: string;
   label: string;
-  /** Entry visitors per period. Only meaningful on `traffic` nodes. */
+  /** Entry visitors per period. Only meaningful on `traffic` nodes. Legado: vale
+   *  igual nos três cenários quando visitorsLow/High não existem. */
   visitors?: number;
+  /** Visitas no cenário pessimista e no otimista (o médio é a média). */
+  visitorsLow?: number;
+  visitorsHigh?: number;
+  /** Dados REAIS (cenário Real): visitas, investimento e ticket do que aconteceu. */
+  visitorsReal?: number;
+  costReal?: number;
+  avgTicketReal?: number;
+  /** Margem de lucro (%) deste passo de conversão; vazio = 100. */
+  margin?: number;
+  /** Marca este passo como o LEAD (mostra o custo por lead). Vazio = pelo tipo do card. */
+  isLead?: boolean;
   /** Live page URL, for `page` nodes. */
   url?: string;
   /** Spend in R$ associated with this touchpoint (ad spend, event cost, etc). */
@@ -49,12 +61,34 @@ export interface RateNodeData {
   [key: string]: unknown;
 }
 
+/** Uma conexão que chega num card: de quem vem, a taxa e quantas pessoas
+ *  chegam por ela. É o que o card mostra anexado a ele. */
+export interface FunnelIncoming {
+  edgeId: string;
+  sourceId: string;
+  /** Nome do card de origem, preenchido pelo canvas. */
+  sourceLabel?: string;
+  /** % das pessoas do card de origem que seguem por esta conexão (0-100). */
+  rate: number;
+  people: number;
+}
+
 export interface FunnelNodeComputed {
   /** People arriving at (traffic: originating from) this node. */
   people: number;
+  /** Conexões que chegam neste card (vazio em cards de tráfego). */
+  incoming?: FunnelIncoming[];
   revenue?: number;
   /** Cost divided by people passing through — custo por visita/lead. */
   costPerPerson?: number;
+  /** Tudo o que foi gasto nos cards que levam até este (e neste), contado uma vez cada. */
+  accumulatedCost?: number;
+  /** Gasto acumulado ÷ pessoas neste passo: o custo real por pessoa/lead/cliente. */
+  accumulatedPerPerson?: number;
+  /** Só em passos com ticket: receita × margem − gasto acumulado. */
+  profit?: number;
+  /** Só em passos com ticket: o máximo que se pode pagar por cliente (ticket × margem). */
+  maxCac?: number;
 }
 
 export interface FunnelMap {
@@ -79,6 +113,16 @@ export interface FunnelMapEdge {
   target: string;
   sourceHandle?: string | null;
   targetHandle?: string | null;
+  /** % das pessoas do card de origem que seguem por esta conexão (0-100): média
+   *  de rateLow e rateHigh. Também lido sozinho em mapas antigos. */
+  rate?: number;
+  /** Taxa nos cenários pessimista e otimista. */
+  rateLow?: number;
+  rateHigh?: number;
+  /** Taxa REAL (cenário Real). */
+  rateReal?: number;
+  curve?: 'bezier' | 'straight';
+  dashed?: boolean;
 }
 
 export interface ElementVariant {

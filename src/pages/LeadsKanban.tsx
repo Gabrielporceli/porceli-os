@@ -203,8 +203,20 @@ export default function LeadsKanban() {
         el.style.transform = `translate(${e.clientX - start.x}px, ${e.clientY - start.y}px)`;
       }
     };
+    // Soltou: o card para de seguir o mouse NA HORA. Sem isto ele continuava
+    // sendo arrastado pelo cursor durante a animação de encaixe da lib (que
+    // só termina com o onDragEnd) e parecia grudado por alguns segundos.
+    const onRelease = () => {
+      freeDragElRef.current = null;
+    };
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onRelease, true);
+    window.addEventListener("pointercancel", onRelease, true);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onRelease, true);
+      window.removeEventListener("pointercancel", onRelease, true);
+    };
   }, []);
 
   // ===== Drag-to-scroll (mouse/pen) =====
@@ -654,10 +666,15 @@ export default function LeadsKanban() {
                               <div
                                 ref={(el) => {
                                   provided.innerRef(el);
-                                  if (snapshot.isDragging) freeDragElRef.current = el;
+                                  // Durante o encaixe (isDropAnimating) a lib é quem move o card.
+                                  if (snapshot.isDragging && !snapshot.isDropAnimating) freeDragElRef.current = el;
                                 }}
                                 {...provided.draggableProps}
-                                style={provided.draggableProps.style}
+                                style={
+                                  snapshot.isDropAnimating
+                                    ? { ...provided.draggableProps.style, transitionDuration: "0.16s" }
+                                    : provided.draggableProps.style
+                                }
                                 className={snapshot.isDragging ? "scale-[1.02] opacity-90" : ""}
                               >
                                 <ContextMenu>

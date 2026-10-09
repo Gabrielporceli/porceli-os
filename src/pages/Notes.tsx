@@ -60,7 +60,7 @@ const PASSO = 30;
 const Z_BASE = 40;
 
 export default function Notes() {
-  const { notes, isLoading, criar, atualizar, remover, recarregar } = useNotes();
+  const { notes, isLoading, criar, atualizar, remover, removerPasta, recarregar } = useNotes();
   const { boards, criar: criarQuadro, atualizar: atualizarQuadro, salvarGrafo, remover: removerQuadro } = useBoards();
   const isReady = usePageReady(isLoading);
 
@@ -74,6 +74,7 @@ export default function Notes() {
   // Excluir nota nao pode ser um clique so: o botao mora ao lado do fechar,
   // no cabecalho da janela, e ja custou uma nota inteira.
   const [paraExcluir, setParaExcluir] = useState<string | null>(null);
+  const [pastaParaExcluir, setPastaParaExcluir] = useState<{ caminho: string; total: number } | null>(null);
 
   const [janelas, setJanelas] = useState<Janela[]>([]);
   const [rascunhos, setRascunhos] = useState<Record<string, Rascunho>>({});
@@ -269,6 +270,20 @@ export default function Notes() {
     toast.success("Enviada ao cofre", { description: r.path });
   };
 
+  const excluirPasta = async (caminho: string) => {
+    try {
+      const ids = await removerPasta(caminho);
+      ids.forEach((id) => { if (timers.current[id]) { clearTimeout(timers.current[id]); delete timers.current[id]; } });
+      const fora = new Set(ids);
+      setJanelas((js) => js.filter((j) => !fora.has(j.id)));
+      setRascunhos((rs) => Object.fromEntries(Object.entries(rs).filter(([id]) => !fora.has(id))));
+      setPastaAtiva((a) => (a && (a === caminho || a.startsWith(`${caminho}/`)) ? null : a));
+      toast.success("Pasta excluída", { description: `${ids.length} ${ids.length === 1 ? "nota removida" : "notas removidas"}` });
+    } catch {
+      toast.error("Não foi possível excluir a pasta");
+    }
+  };
+
   const excluir = async (id: string) => {
     try {
       if (timers.current[id]) { clearTimeout(timers.current[id]); delete timers.current[id]; }
@@ -438,6 +453,7 @@ export default function Notes() {
                 ativa={pastaAtiva}
                 onSelecionar={setPastaAtiva}
                 onNovaPasta={(c) => { void novaPasta(c); }}
+                onExcluirPasta={(caminho, total) => setPastaParaExcluir({ caminho, total })}
               />
             </div>
             <div className="border-t border-white/[0.06] pt-3.5">
@@ -590,6 +606,13 @@ export default function Notes() {
         titulo={paraExcluir ? (notes.find((n) => n.id === paraExcluir)?.title ?? "") : null}
         onCancelar={() => setParaExcluir(null)}
         onConfirmar={() => { if (paraExcluir) void excluir(paraExcluir); setParaExcluir(null); }}
+      />
+      <ConfirmarExclusao
+        rotulo="pasta"
+        titulo={pastaParaExcluir ? pastaParaExcluir.caminho.split("/").pop() ?? "" : null}
+        quantidade={pastaParaExcluir?.total ?? 0}
+        onCancelar={() => setPastaParaExcluir(null)}
+        onConfirmar={() => { if (pastaParaExcluir) void excluirPasta(pastaParaExcluir.caminho); setPastaParaExcluir(null); }}
       />
     </div>
   );

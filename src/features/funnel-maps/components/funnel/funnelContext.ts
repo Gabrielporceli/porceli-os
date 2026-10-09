@@ -1,12 +1,14 @@
 import { createContext, useContext } from 'react';
+import type { Scenario } from '../../lib/scenarios';
 
 interface FunnelActions {
   updateNodeData: (id: string, patch: Record<string, unknown>) => void;
   deleteNode: (id: string) => void;
+  /** Remove só a conexão (linha); os cards dos dois lados ficam. */
+  deleteConnection: (edgeId: string) => void;
   updateEdgeData: (id: string, patch: Record<string, unknown>) => void;
-  /** Applies a style patch (curve/dashed) to every edge touching this node —
-   *  used by RateNode so both line segments it connects stay in sync. */
-  updateEdgeStyleForNode: (nodeId: string, patch: Record<string, unknown>) => void;
+  /** Define a taxa de uma conexão no cenário ativo (ajusta o outro limite se preciso). */
+  setEdgeRate: (edgeId: string, scenario: Scenario, value: number) => void;
 }
 
 export const FunnelActionsContext = createContext<FunnelActions | null>(null);

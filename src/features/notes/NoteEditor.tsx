@@ -88,6 +88,7 @@ export function NoteEditor({ rascunho, nota, todas, onEditar, onAbrirTitulo, onA
               body={rascunho.body}
               chaveDaNota={nota.id}
               titulo={rascunho.title}
+              titulos={todas.filter((n) => n.id !== nota.id).map((n) => n.title)}
               onMudar={(markdown) => onEditar({ body: markdown })}
               onAbrirTitulo={onAbrirTitulo}
             />

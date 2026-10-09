@@ -11,7 +11,7 @@
  * pasta que só contém subpastas mostraria "0" e pareceria vazia.
  */
 import { useMemo, useState } from "react";
-import { Add, ArrowDown2, ArrowRight2, CloseCircle, Folder2, NoteText } from "iconsax-react";
+import { Add, ArrowDown2, ArrowRight2, CloseCircle, Folder2, NoteText, Trash } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
@@ -73,14 +73,17 @@ interface Props {
    * carregamento. Entao criar pasta e criar a primeira nota dela.
    */
   onNovaPasta?: (caminho: string) => void;
+  /** Pede a exclusão da pasta (e do que há dentro). A confirmação é de quem chama. */
+  onExcluirPasta?: (caminho: string, total: number) => void;
 }
 
 function Ramo({
-  no, nivel, ativa, abertos, alternar, onSelecionar,
+  no, nivel, ativa, abertos, alternar, onSelecionar, onExcluirPasta,
 }: {
   no: No; nivel: number; ativa: string | null;
   abertos: Set<string>; alternar: (c: string) => void;
   onSelecionar: (c: string | null) => void;
+  onExcluirPasta?: (caminho: string, total: number) => void;
 }) {
   const aberto = abertos.has(no.caminho);
   const temFilhos = no.filhos.length > 0;
@@ -90,7 +93,7 @@ function Ramo({
     <li>
       <div
         className={cn(
-          "flex items-center gap-0.5 rounded-xl transition-colors",
+          "group flex items-center gap-0.5 rounded-xl transition-colors",
           selecionado ? "bg-white/10" : "hover:bg-white/[0.06]"
         )}
         style={{ paddingLeft: nivel * 10 }}
@@ -118,8 +121,20 @@ function Ramo({
           <span className={cn("flex-1 truncate", selecionado ? "text-white" : "text-white/70")}>
             {no.nome}
           </span>
-          <span className="shrink-0 text-[10px] text-white/25">{no.total}</span>
+          <span className={cn("shrink-0 text-[10px] text-white/25", onExcluirPasta && "group-hover:hidden")}>{no.total}</span>
         </button>
+
+        {onExcluirPasta && (
+          <button
+            type="button"
+            onClick={() => onExcluirPasta(no.caminho, no.total)}
+            title={`Excluir pasta ${no.nome}`}
+            aria-label={`Excluir pasta ${no.nome}`}
+            className="mr-1 hidden shrink-0 rounded-lg p-1 text-white/30 transition-colors hover:bg-red-500/15 hover:text-red-400 group-hover:block"
+          >
+            <Icon as={Trash} size={13} />
+          </button>
+        )}
       </div>
 
       {aberto && temFilhos && (
@@ -128,6 +143,7 @@ function Ramo({
             <Ramo
               key={f.caminho} no={f} nivel={nivel + 1} ativa={ativa}
               abertos={abertos} alternar={alternar} onSelecionar={onSelecionar}
+              onExcluirPasta={onExcluirPasta}
             />
           ))}
         </ul>
@@ -136,7 +152,7 @@ function Ramo({
   );
 }
 
-export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, onNovaPasta }: Props) {
+export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, onNovaPasta, onExcluirPasta }: Props) {
   const [criando, setCriando] = useState(false);
   const [nome, setNome] = useState("");
   const arvore = useMemo(() => montarArvore(pastas, contagem), [pastas, contagem]);
@@ -228,6 +244,7 @@ export function FolderTree({ pastas, contagem, totalGeral, ativa, onSelecionar, 
         <Ramo
           key={n.caminho} no={n} nivel={0} ativa={ativa}
           abertos={abertos} alternar={alternar} onSelecionar={onSelecionar}
+          onExcluirPasta={onExcluirPasta}
         />
       ))}
     </ul>

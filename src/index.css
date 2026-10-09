@@ -592,25 +592,14 @@ button:focus-visible,
       drop-shadow(0 14px 36px rgba(0, 0, 0, 0.26));
   }
 
-  /* Kanban: margem esquerda responsiva que encosta na sidebar sem quebrar
-     em monitores largos onde max-w-[1600px] + mx-auto centralizam o
-     conteúdo (adicionando margem auto extra além do px-4/px-10 fixo).
-
-     Sidebar real = 88px (pl-4=16 + w-[72px]=72).
-     CRMLayout reserva md:pl-28 = 112px → gap fixo de 24px.
-     px-4 em md (768-1023px): precisa cancelar 16px + 24px = 40px.
-     px-10 em lg+ (≥1024px): cancela 40px + 24px = 64px, MAIS a margem
-     auto que surge quando 100vw > 112px (sidebar) + 1600px (max-w) = 1712px. */
+  /* Kanban: as colunas ocupam a largura toda, até as bordas da área de
+     conteúdo (o `pl-4`/`pr-4` do próprio scroller dá o respiro de 16px).
+     O CRMLayout já reserva só 16px ao lado da barra e ao lado da janela;
+     aqui cancelamos esses 16px nos dois lados. */
   @media (min-width: 768px) {
     .kanban-breakout-left {
-      margin-left: -40px;
+      margin-left: -16px;
       margin-right: -16px;
-    }
-  }
-  @media (min-width: 1024px) {
-    .kanban-breakout-left {
-      margin-left: calc(-64px - max(0px, (100vw - 1712px) / 2));
-      margin-right: calc(-40px - max(0px, (100vw - 1712px) / 2));
     }
   }
 
@@ -1485,4 +1474,27 @@ button:focus-visible,
     inset 0px 3px 4px -2px color-mix(in srgb, black 16%, transparent),
     0 4px 14px rgba(0, 0, 0, 0.3),
     0 20px 48px rgba(0, 0, 0, 0.36);
+}
+
+
+/* Mapa de funil: controles de zoom e minimapa no tom do resto do sistema. */
+.funnel-flow .react-flow__controls {
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(28, 28, 32, 0.9);
+}
+.funnel-flow .react-flow__controls-button {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d4d4d8;
+}
+.funnel-flow .react-flow__controls-button:hover { background: rgba(255, 255, 255, 0.08); }
+.funnel-flow .react-flow__controls-button svg { fill: currentColor; }
+.funnel-flow .react-flow__minimap {
+  background: rgba(22, 22, 26, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
 }

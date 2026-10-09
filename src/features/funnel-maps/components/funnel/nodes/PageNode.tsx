@@ -1,13 +1,19 @@
 import { memo, useCallback, useEffect, useState } from 'react';
-import type { NodeProps } from '@xyflow/react';
+import { NodeToolbar, Position, type NodeProps } from '@xyflow/react';
 import { Refresh } from 'iconsax-react';
 import { CATEGORY_DEFS, findVariant, type FunnelNodeData, type FunnelNodeComputed } from '../../../types/funnel';
 import { useFunnelActions } from '../funnelContext';
 import { NodeMetrics } from './NodeMetrics';
 import { SideHandles } from './SideHandles';
+import { NodeFields } from './NodeFields';
+import { NodeIncoming } from './NodeIncoming';
+import { cardSurface, POPOVER_SURFACE, SELECTED_OUTLINE, toneFor } from './nodeStyle';
+import type { Scenario } from '../../../lib/scenarios';
+import { EditableText } from './EditableText';
+import { isPreviewDisabled } from '../../../lib/pagePreview';
 
 type PageNodeProps = NodeProps & {
-  data: FunnelNodeData & { computed?: FunnelNodeComputed };
+  data: FunnelNodeData & { computed?: FunnelNodeComputed; warning?: string; showFields?: boolean; scenario?: Scenario; showCpl?: boolean };
 };
 
 function normalizeUrl(url: string): string {
@@ -17,8 +23,10 @@ function normalizeUrl(url: string): string {
 /** Live screenshot of the page via WordPress mShots (free, no key).
  *  Sends the URL to a third-party screenshot service; the first load may
  *  return a blank placeholder while the shot is generated. */
-function screenshotSrc(url: string): string {
-  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(normalizeUrl(url))}?w=600&h=400`;
+function screenshotSrc(url: string, attempt = 0): string {
+  // `_r` só muda o endereço pra o navegador pedir de novo: a primeira resposta
+  // do serviço é uma imagem de espera, e a captura real chega depois.
+  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(normalizeUrl(url))}?w=600&h=400${attempt ? `&_r=${attempt}` : ''}`;
 }
 
 type SiteStatus = 'idle' | 'checking' | 'up' | 'down';
@@ -58,35 +66,43 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
   const variant = findVariant('page', data.variant);
   const Icon = variant.icon;
   const computed = data.computed;
+  const tone = toneFor(data);
 
   const [imgError, setImgError] = useState(false);
   useEffect(() => setImgError(false), [data.url]);
-  const showScreenshot = !!data.url && !imgError;
+  const previewOff = isPreviewDisabled(data);
+  const showScreenshot = !!data.url && !imgError && !previewOff;
+
+  // Pede a imagem de novo algumas vezes: o serviço leva de segundos a minutos
+  // pra gerar a captura e devolve uma imagem de espera enquanto isso.
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => setAttempt(0), [data.url]);
+  useEffect(() => {
+    const delays = [6000, 12000, 24000, 48000];
+    if (!showScreenshot || attempt >= delays.length) return;
+    const t = setTimeout(() => setAttempt((a) => a + 1), delays[attempt]);
+    return () => clearTimeout(t);
+  }, [attempt, showScreenshot, data.url]);
 
   const { status: siteStatus, check: recheckSite } = useSiteStatus(data.url);
 
   return (
-    <div className="group flex w-40 flex-col items-center">
-      <input
-        value={data.label}
-        placeholder={variant.label}
-        onChange={(e) => updateNodeData(id, { label: e.target.value })}
-        className="nodrag mb-1 w-full truncate bg-transparent text-center text-[11px] font-semibold text-porceli-gray-300 outline-none placeholder:text-porceli-gray-500"
-      />
-
-      <div
-        className={`relative w-full overflow-hidden rounded-xl border bg-white shadow-lg transition-shadow ${
-          selected ? 'border-porceli-purpleLight ring-2 ring-porceli-purpleLight/40' : 'border-black/5'
-        }`}
-      >
-        <SideHandles color={def.color} selected={selected} />
+    <div className="group relative w-40">
+      {data.warning && (
+        <span
+          title={data.warning}
+          className="absolute -right-1.5 -top-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-white shadow"
+        >
+          !
+        </span>
+      )}
+      <SideHandles color={def.color} selected={selected} />
+      <div className={`relative w-full overflow-hidden ${cardSurface(tone)} ${selected ? SELECTED_OUTLINE : ''}`}>
+        <NodeIncoming incoming={computed?.incoming} tone={tone} scenario={data.scenario} className="px-3.5 py-1.5" />
 
         {/* Browser chrome */}
-        <div className="flex items-center gap-1 border-b border-porceli-gray-100 bg-porceli-gray-50 px-2 py-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-porceli-gray-300" />
-          <span className="h-1.5 w-1.5 rounded-full bg-porceli-gray-300" />
-          <span className="h-1.5 w-1.5 rounded-full bg-porceli-gray-300" />
-          <span className="ml-1 min-w-0 flex-1 truncate rounded bg-white px-1.5 py-0.5 text-[8px] text-porceli-gray-500">
+        <div className={`flex items-center gap-1.5 border-b px-3.5 py-1 ${tone.chrome}`}>
+          <span className={`min-w-0 flex-1 truncate text-[9px] ${tone.muted}`}>
             {data.url ? normalizeUrl(data.url).replace(/^https?:\/\//, '') : variant.label}
           </span>
           {data.url && (
@@ -94,10 +110,10 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
               <span
                 className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                   siteStatus === 'up'
-                    ? 'bg-emerald-500'
+                    ? 'bg-green-500'
                     : siteStatus === 'down'
                       ? 'bg-red-500'
-                      : 'animate-pulse bg-porceli-gray-300'
+                      : 'animate-pulse bg-black/25'
                 }`}
                 title={
                   siteStatus === 'up'
@@ -113,7 +129,7 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
                   e.stopPropagation();
                   recheckSite();
                 }}
-                className="nodrag shrink-0 text-porceli-gray-400 hover:text-porceli-gray-700"
+                className={`nodrag shrink-0 ${tone.caption}`}
                 title="Verificar novamente"
               >
                 <Refresh size={9} className={siteStatus === 'checking' ? 'animate-spin' : ''} />
@@ -125,19 +141,19 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
         {/* Screenshot or wireframe placeholder */}
         {showScreenshot ? (
           <img
-            src={screenshotSrc(data.url!)}
+            src={screenshotSrc(data.url!, attempt)}
             alt=""
-            className="h-24 w-full bg-porceli-gray-100 object-cover object-top"
+            className="h-20 w-full bg-black/5 object-cover object-top"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="flex h-24 flex-col justify-center gap-1.5 px-3" style={{ background: `${def.color}0d` }}>
+          <div className="flex h-20 flex-col justify-center gap-1.5 px-3.5">
             <div className="flex items-center gap-1.5">
               <Icon size={13} color={def.color} strokeWidth={2} className="shrink-0" />
-              <span className="h-1.5 flex-1 rounded-full bg-porceli-gray-200" />
+              <span className={`h-1.5 flex-1 rounded-full ${tone.sketch}`} />
             </div>
-            <span className="h-1.5 w-4/5 rounded-full bg-porceli-gray-200" />
-            <span className="h-1.5 w-3/5 rounded-full bg-porceli-gray-200" />
+            <span className={`h-1.5 w-4/5 rounded-full ${tone.sketch}`} />
+            <span className={`h-1.5 w-3/5 rounded-full ${tone.sketch}`} />
             <span
               className="mt-1 flex h-4 items-center justify-center rounded text-[7px] font-bold uppercase tracking-wide text-white"
               style={{ background: def.color }}
@@ -147,16 +163,37 @@ function PageNodeImpl({ id, data, selected }: PageNodeProps) {
           </div>
         )}
 
-        <NodeMetrics
-          people={computed?.people}
-          cost={data.cost}
-          revenue={computed?.revenue}
-          costPerPerson={computed?.costPerPerson}
-          showPeople={data.showPeople}
-          showCost={data.showCost}
-          showRevenue={data.showRevenue}
-        />
+        <div className="px-3.5 py-3">
+          <EditableText
+            value={data.label}
+            placeholder={variant.label}
+            onChange={(v) => updateNodeData(id, { label: v })}
+            className={`text-[12px] font-bold ${tone.text}`}
+            emptyClassName={tone.caption}
+          />
+          <NodeMetrics
+            tone={tone}
+            people={computed?.people}
+            cost={data.cost}
+            revenue={computed?.revenue}
+            costPerPerson={computed?.costPerPerson}
+          accumulatedCost={computed?.accumulatedCost}
+          accumulatedPerPerson={computed?.accumulatedPerPerson}
+          profit={computed?.profit}
+          maxCac={computed?.maxCac}
+          isTraffic={data.category === 'traffic'}
+          isLead={Boolean(data.showCpl)}
+            showPeople={data.showPeople}
+            showCost={data.showCost}
+            showRevenue={data.showRevenue}
+          />
+        </div>
       </div>
+      <NodeToolbar isVisible={Boolean(data.showFields)} position={Position.Right} align="start" offset={14} className="nodrag nopan">
+        <div className={`${POPOVER_SURFACE} w-60 p-3.5`}>
+          <NodeFields id={id} data={data} scenario={data.scenario ?? 'mid'} isPage={true} hasRevenue={computed?.revenue !== undefined} />
+        </div>
+      </NodeToolbar>
     </div>
   );
 }

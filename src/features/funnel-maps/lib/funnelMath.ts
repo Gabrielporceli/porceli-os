@@ -1,7 +1,7 @@
-import type { FunnelMapEdge, FunnelMapNode, FunnelNodeComputed, FunnelNodeData, RateNodeData } from '../types/funnel';
+import type { FunnelIncoming, FunnelMapEdge, FunnelMapNode, FunnelNodeComputed, FunnelNodeData } from '../types/funnel';
 
-function isFlowNode(node: FunnelMapNode): node is FunnelMapNode & { data: FunnelNodeData | RateNodeData } {
-  return node.type === 'funnelNode' || node.type === 'pageNode' || node.type === 'rateNode';
+function isFlowNode(node: FunnelMapNode): node is FunnelMapNode & { data: FunnelNodeData } {
+  return node.type === 'funnelNode' || node.type === 'pageNode';
 }
 
 export type FunnelComputedResult = Map<string, FunnelNodeComputed>;
@@ -9,13 +9,12 @@ export type FunnelComputedResult = Map<string, FunnelNodeComputed>;
 /**
  * Simulates people/revenue flow through the funnel graph.
  *
- * Model: conversion rate lives on the `rateNode` — the Taxa/Pessoas card the
- * user drags between two funnel cards — not on the edge or on the funnel
- * node itself. Regular edges just forward 100% of the source's `people`
- * unchanged; a `rateNode` is the only place that multiplies by a rate. This
- * mirrors the reference product's "connector card" and, since a rateNode can
- * branch into multiple targets or a funnel node can have several incoming
- * rateNodes, naturally supports fan-out/fan-in funnels.
+ * Model: a conversion rate lives on each connection (edge). The people that
+ * arrive at a card are the sum, over its incoming connections, of the
+ * source's people times that connection's rate. A card can branch into
+ * several targets (each connection with its own rate) and receive from
+ * several sources. Each card lists its incoming connections in `incoming`.
+ * Traffic cards originate people (`visitors`) and ignore incoming ones.
  * Note/Image/Forecast nodes are annotations only and excluded from the flow.
  */
 export function computeFunnelMetrics(nodes: FunnelMapNode[], edges: FunnelMapEdge[]): FunnelComputedResult {
@@ -68,29 +67,63 @@ export function computeFunnelMetrics(nodes: FunnelMapNode[], edges: FunnelMapEdg
     const node = nodesById.get(id);
     if (!node) continue;
 
-    const incoming = (incomingEdges.get(id) ?? []).reduce((sum, edge) => sum + (result.get(edge.source)?.people ?? 0), 0);
+    const incoming: FunnelIncoming[] = (incomingEdges.get(id) ?? []).map((edge) => {
+      const rate = clampRate(edge.rate ?? 100);
+      return {
+        edgeId: edge.id,
+        sourceId: edge.source,
+        rate,
+        people: Math.round((result.get(edge.source)?.people ?? 0) * (rate / 100)),
+      };
+    });
+    const incomingPeople = incoming.reduce((sum, i) => sum + i.people, 0);
 
     let people: number;
     const computed: FunnelNodeComputed = { people: 0 };
 
-    if (node.type === 'rateNode') {
-      const rate = clampRate((node.data as RateNodeData).rate ?? 100);
-      people = Math.round(incoming * (rate / 100));
-    } else if ((node.data as FunnelNodeData).category === 'traffic') {
+    if ((node.data as FunnelNodeData).category === 'traffic') {
       people = Math.max(0, Math.round((node.data as FunnelNodeData).visitors ?? 0));
     } else {
-      people = incoming;
+      computed.incoming = incoming;
+      people = incomingPeople;
       const avgTicket = (node.data as FunnelNodeData).avgTicket ?? 0;
       if (avgTicket > 0) computed.revenue = people * avgTicket;
     }
 
     computed.people = people;
-    if (node.type !== 'rateNode') {
-      const cost = (node.data as FunnelNodeData).cost ?? 0;
-      // Custo por visita (traffic) / custo por lead (conversion steps).
-      if (cost > 0 && people > 0) computed.costPerPerson = cost / people;
-    }
+    const cost = (node.data as FunnelNodeData).cost ?? 0;
+    // Custo por visita (traffic) / custo por lead (conversion steps).
+    if (cost > 0 && people > 0) computed.costPerPerson = cost / people;
     result.set(id, computed);
+  }
+
+  // Custo acumulado: o gasto de todos os cards que levam até cada passo (cada
+  // um contado uma vez, mesmo com caminhos que se cruzam). É o custo real de
+  // chegar ali — o CPL/CAC de verdade, e não só o gasto do próprio card.
+  for (const node of flowNodes) {
+    const seen = new Set<string>();
+    const stack = [node.id];
+    let total = 0;
+    while (stack.length) {
+      const cur = stack.pop()!;
+      if (seen.has(cur)) continue;
+      seen.add(cur);
+      total += (nodesById.get(cur)?.data as FunnelNodeData | undefined)?.cost ?? 0;
+      for (const edge of incomingEdges.get(cur) ?? []) stack.push(edge.source);
+    }
+
+    const computed = result.get(node.id);
+    if (!computed) continue;
+    computed.accumulatedCost = total;
+    if (total > 0 && computed.people > 0) computed.accumulatedPerPerson = total / computed.people;
+
+    const data = node.data as FunnelNodeData;
+    const ticket = data.avgTicket ?? 0;
+    if (ticket > 0 && computed.revenue !== undefined) {
+      const margin = (data.margin ?? 100) / 100;
+      computed.profit = computed.revenue * margin - total;
+      computed.maxCac = ticket * margin;
+    }
   }
 
   return result;
@@ -118,19 +151,22 @@ export function computeForecastSummary(nodes: FunnelMapNode[], result: FunnelCom
   let people = 0;
   let leads = 0;
   let revenue = 0;
+  let grossProfit = 0;
   let expenses = 0;
 
   for (const node of nodes) {
-    if (node.type === 'rateNode' || node.type === 'noteNode' || node.type === 'imageNode' || node.type === 'forecastNode') continue;
+    if (node.type !== 'funnelNode' && node.type !== 'pageNode') continue;
     const data = node.data as FunnelNodeData;
     const computed = result.get(node.id);
     if (data.category === 'traffic') people += computed?.people ?? 0;
     if ((data.avgTicket ?? 0) > 0) leads += computed?.people ?? 0;
     revenue += computed?.revenue ?? 0;
+    // Lucro bruto considera a margem de cada passo de conversão (vazia = 100%).
+    grossProfit += (computed?.revenue ?? 0) * ((data.margin ?? 100) / 100);
     expenses += data.cost ?? 0;
   }
 
-  const profit = revenue - expenses;
+  const profit = grossProfit - expenses;
   const cpl = expenses > 0 && leads > 0 ? expenses / leads : null;
   const roi = expenses > 0 ? revenue / expenses : null;
   return { people, leads, revenue, expenses, profit, cpl, roi };

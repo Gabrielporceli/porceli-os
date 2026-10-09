@@ -53,8 +53,8 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-52 p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl overflow-hidden pointer-events-auto"
-        align="start"
+        className="surface-modal w-52 p-0 z-[9999999] overflow-hidden pointer-events-auto"
+        align="center"
         onWheel={(e) => e.stopPropagation()}
       >
         <div className="flex h-72 divide-x divide-white/[0.05]">
@@ -69,8 +69,8 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
                   key={hour}
                   variant="ghost"
                   className={cn(
-                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/70 transition-all rounded-lg",
-                    selectedHour === hour && "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(104,41,192,0.2)]"
+                    "h-10 px-2 text-sm font-medium hover:bg-[#6829c0]/20 text-white/70 hover:text-white transition-all rounded-[10px]",
+                    selectedHour === hour && "rounded-[10px] bg-[#6829c0] font-semibold text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-[#6829c0] hover:text-white"
                   )}
                   onClick={() => handleHourSelect(hour)}
                 >
@@ -90,8 +90,8 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
                   key={minute}
                   variant="ghost"
                   className={cn(
-                    "h-10 px-2 text-sm font-medium hover:bg-white/5 text-white/70 transition-all rounded-lg",
-                    selectedMinute === minute && "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(104,41,192,0.2)]"
+                    "h-10 px-2 text-sm font-medium hover:bg-[#6829c0]/20 text-white/70 hover:text-white transition-all rounded-[10px]",
+                    selectedMinute === minute && "rounded-[10px] bg-[#6829c0] font-semibold text-white shadow-[0_0_15px_rgba(104,41,192,0.4)] hover:bg-[#6829c0] hover:text-white"
                   )}
                   onClick={() => handleMinuteSelect(minute)}
                 >

@@ -138,18 +138,31 @@ Deno.serve(async (req) => {
     // O SHA do blob é obrigatório para SOBRESCREVER um arquivo existente.
     // Guardamos o da última sincronização; se o arquivo nunca foi enviado,
     // vai sem sha e a API cria.
-    const put = await githubPUT(token, repo, caminho, {
+    const corpoPut = {
       message: `notas: ${nota.title}`,
       content: paraBase64(conteudo),
       branch: branch,
+    };
+    let put = await githubPUT(token, repo, caminho, {
+      ...corpoPut,
       ...(nota.git_sha ? { sha: nota.git_sha } : {}),
     });
 
+    // Política: o CRM vence. SHA velho (409/422) significa que o arquivo mudou
+    // no cofre depois do último envio; em vez de recusar, lê o SHA atual e
+    // sobrescreve. Uma tentativa só — se falhar de novo, o erro é outro.
+    if (!put.ok && (put.status === 409 || put.status === 422)) {
+      const atual = await fetch(
+        `${GITHUB}/repos/${repo}/contents/${encodeURI(caminho)}?ref=${branch}`,
+        { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+      );
+      if (atual.ok) {
+        const { sha } = await atual.json();
+        put = await githubPUT(token, repo, caminho, { ...corpoPut, sha });
+      }
+    }
+
     if (!put.ok) {
-      // 409 aqui quase sempre significa que o arquivo mudou no repositório
-      // desde a última sincronização — ou seja, foi editado no Obsidian.
-      // Enquanto a sincronização é só de ida, reportamos em vez de
-      // sobrescrever às cegas.
       const conflito = put.status === 409;
       const msg = conflito
         ? "conflito: o arquivo mudou no cofre desde a última sincronização"

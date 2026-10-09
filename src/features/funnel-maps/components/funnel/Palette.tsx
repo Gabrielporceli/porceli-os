@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from 'react';
-import { Add, Chart, Image as ImageIcon, SearchNormal1, SidebarLeft, SidebarRight, Stickynote } from 'iconsax-react';
+import { Add, Chart, Filter, Image as ImageIcon, SearchNormal1, SidebarLeft, SidebarRight, Stickynote } from 'iconsax-react';
 import { ElementIcon } from './ElementIcon';
 import {
   ELEMENT_LIBRARY,
@@ -13,7 +13,8 @@ export type DragPayload =
   | { type: 'funnelNode' | 'pageNode'; category: FunnelNodeCategory; variantId: string }
   | { type: 'noteNode' }
   | { type: 'imageNode' }
-  | { type: 'forecastNode' };
+  | { type: 'forecastNode' }
+  | { type: 'funnelChartNode' };
 
 const TABS: { id: FunnelNodeCategory; label: string }[] = [
   { id: 'traffic', label: 'Fontes' },
@@ -35,7 +36,8 @@ interface PaletteProps {
  *  icon grid, with a dashed "Personalizado" tile on every tab that drops a
  *  fully editable card (all metrics available) onto the canvas. */
 export function Palette({ onDragStart }: PaletteProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  // Em telas estreitas a coluna já abre recolhida, pra o mapa ter espaço.
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1100);
   const [tab, setTab] = useState<FunnelNodeCategory>('traffic');
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
@@ -62,7 +64,7 @@ export function Palette({ onDragStart }: PaletteProps) {
         type="button"
         onClick={() => setCollapsed(false)}
         title="Mostrar elementos"
-        className="flex w-9 shrink-0 flex-col items-center border-r border-white/5 pt-3 text-white/40 hover:text-white"
+        className="surface-flat no-elevation flex w-10 shrink-0 flex-col items-center rounded-3xl pt-4 text-white/40 hover:text-white"
       >
         <SidebarRight size={16} />
       </button>
@@ -70,7 +72,7 @@ export function Palette({ onDragStart }: PaletteProps) {
   }
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-r border-white/5 text-white">
+    <aside className="surface-flat no-elevation flex w-60 shrink-0 flex-col overflow-hidden rounded-3xl text-white xl:w-72">
       {/* SearchNormal1 + collapse */}
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
@@ -145,6 +147,7 @@ export function Palette({ onDragStart }: PaletteProps) {
               <ToolChip icon={Stickynote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
               <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
               <ToolChip icon={Chart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
+              <ToolChip icon={Filter} label="Funil" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'funnelChartNode' })} />
             </div>
           </Section>
         </div>

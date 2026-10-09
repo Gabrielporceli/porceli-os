@@ -10,6 +10,7 @@ import { ClientsHeader } from "@/components/Clients/ClientsHeader";
 import { ClientsSearch } from "@/components/Clients/ClientsSearch";
 import { ClientsKPIs } from "@/components/Clients/ClientsKPIs";
 import { ClientsList } from "@/components/Clients/ClientsList";
+import { useClientRevenue } from "@/hooks/useClientRevenue";
 import { ClientMap } from "@/components/Clients/ClientMap";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -56,10 +57,10 @@ export default function Clients() {
   const createClientMutation = useCreateClient();
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
+  const { data: revenueByClient } = useClientRevenue();
 
   const queryClient = useQueryClient();
 
-  const [expandedClients, setExpandedClients] = useState<string[]>([]);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -76,12 +77,6 @@ export default function Clients() {
 
   const isReady = usePageReady(isLoading);
   if (!isReady) return <PageLoader />;
-
-  const toggleClientExpanded = (clientId: string) => {
-    setExpandedClients((prev) =>
-      prev.includes(clientId) ? prev.filter((id) => id !== clientId) : [...prev, clientId]
-    );
-  };
 
   const handleEditClient = async (clientData: ClientData) => {
     if (editingClient) {
@@ -245,7 +240,7 @@ export default function Clients() {
 
       <ClientsKPIs clients={clientsForKPIs} />
 
-      <div className="liquid-glass dashboard-glow border border-white/5 rounded-2xl p-4">
+      <div className="surface-flat p-5">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-white font-semibold text-sm">Mapa de Clientes</span>
           <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
@@ -261,8 +256,7 @@ export default function Clients() {
 
       <ClientsList 
         clients={filteredClients}
-        expandedClients={expandedClients}
-        onToggleExpanded={toggleClientExpanded}
+        revenueByClient={revenueByClient}
         onEditClient={(client) => {
           const supabaseClient = clients.find(c => c.id === client.id);
           if (supabaseClient) {

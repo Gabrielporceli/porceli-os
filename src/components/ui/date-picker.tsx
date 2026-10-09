@@ -41,14 +41,14 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                     {date && isValid(date) ? format(date, "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 liquid-glass border-white/[0.1] z-[9999999] shadow-2xl backdrop-blur-3xl pointer-events-auto" align="start" side="bottom">
+            <PopoverContent className="surface-modal w-auto p-0 z-[9999999] pointer-events-auto" align="center" side="bottom">
                 <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
                     initialFocus
                     locale={ptBR}
-                    className="bg-Porceli-gray-800 text-white rounded-xl w-full flex justify-center"
+                    className="text-white rounded-xl w-full flex justify-center"
                 />
             </PopoverContent>
         </Popover>

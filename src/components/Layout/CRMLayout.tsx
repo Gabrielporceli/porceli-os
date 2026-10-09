@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Header } from "./Header";
+import { WhatsappBanner } from "./WhatsappBanner";
 import { PageTransitionProvider } from "@/components/ui/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { appBackgroundStyle } from "@/lib/appBackground";
@@ -42,10 +43,14 @@ export function CRMLayout({ children }: CRMLayoutProps) {
                 o pb-28 que precisa dar espaço pra ele no fim do conteúdo, e o
                 pt-6 do topo pode ser só o respiro normal da página. A partir
                 de md o Header vira barra lateral esquerda: pb-6 (sem nada
-                fixo embaixo) e pl-28 dá espaço pra ele (72px de largura +
-                respiro), no lugar do pt-32 que reservava o topo antes. */}
-            <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-28">
-              <div className="max-w-[1600px] mx-auto w-full px-4 lg:px-10">
+                fixo embaixo) e pl-[104px] dá espaço pra ele: a barra termina em 88px
+                (16 de recuo + 72 de largura), mais 16px de respiro. A MESMA margem
+                vale pra todas as páginas — era a que o Kanban de Leads já
+                tinha. Sem largura máxima nem centralização: elas faziam o
+                conteúdo se afastar da barra em monitores largos. */}
+            <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-[104px]">
+              <div className="w-full px-4">
+                <WhatsappBanner />
                 {children}
               </div>
             </main>

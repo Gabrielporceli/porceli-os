@@ -170,9 +170,31 @@ export function useNotes() {
     setNotes((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
+  /**
+   * Exclui a pasta e tudo abaixo dela. Pasta não é registro — é o caminho das
+   * notas —, então "excluir pasta" é excluir as notas. Os ids são resolvidos
+   * aqui, e não por filtro `like` no banco: nome de pasta pode ter vírgula ou
+   * parêntese, que quebram a sintaxe do `.or()` do PostgREST.
+   */
+  const removerPasta = useCallback(
+    async (caminho: string): Promise<string[]> => {
+      const ids = notes
+        .filter((n) => n.folder === caminho || n.folder.startsWith(`${caminho}/`))
+        .map((n) => n.id);
+      for (let i = 0; i < ids.length; i += 100) {
+        const { error } = await supabase.from("notes").delete().in("id", ids.slice(i, i + 100));
+        if (error) throw error;
+      }
+      const fora = new Set(ids);
+      setNotes((prev) => prev.filter((n) => !fora.has(n.id)));
+      return ids;
+    },
+    [notes]
+  );
+
   /** Pastas existentes, derivadas dos caminhos — não há tabela de pastas. */
   const pastas = Array.from(new Set(notes.map((n) => n.folder).filter(Boolean))).sort();
   const etiquetas = Array.from(new Set(notes.flatMap((n) => n.tags))).sort();
 
-  return { notes, pastas, etiquetas, isLoading, criar, atualizar, remover, recarregar: carregar };
+  return { notes, pastas, etiquetas, isLoading, criar, atualizar, remover, removerPasta, recarregar: carregar };
 }

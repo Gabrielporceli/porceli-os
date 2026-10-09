@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { usePageReady } from '@/hooks/usePageReady';
 import { FunnelCanvas } from '@/features/funnel-maps/components/funnel/FunnelCanvas';
@@ -108,24 +108,47 @@ export default function FunnelMaps() {
   // animação simplesmente não acontecia ao entrar nela.
   // O `!activeMap` também serve pro TypeScript: é ele que estreita o tipo
   // pro Toolbar/FunnelCanvas abaixo, que exigem um mapa de verdade.
+  // Altura = espaço que sobra da janela abaixo do topo da página, em vez de um
+  // valor fixo: as colunas ocupam a tela inteira em qualquer tamanho, sem
+  // deixar vão embaixo nem criar rolagem na página.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [boxHeight, setBoxHeight] = useState<number>();
+  const ready = isReady && !!activeMap;
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = boxRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      setBoxHeight(Math.max(420, window.innerHeight - top - 24));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [ready]);
+
   if (!isReady || !activeMap) return <PageLoader />;
 
   return (
-    <div className="liquid-glass no-elevation flex h-[calc(100vh-180px)] flex-col overflow-hidden rounded-2xl">
-      <Toolbar
-        map={activeMap}
-        maps={maps}
-        saved={saved}
-        onRename={handleRename}
-        onSwitch={handleSwitch}
-        onNew={handleNew}
-        onDelete={handleDelete}
-        onExport={handleExport}
-        onImport={handleImport}
+    <div ref={boxRef} style={{ height: boxHeight ?? 'calc(100vh - 180px)' }}>
+      <FunnelCanvas
+        key={activeMap.id}
+        nodes={activeMap.nodes}
+        edges={activeMap.edges}
+        onChange={handleCanvasChange}
+        header={
+          <Toolbar
+            map={activeMap}
+            maps={maps}
+            saved={saved}
+            onRename={handleRename}
+            onSwitch={handleSwitch}
+            onNew={handleNew}
+            onDelete={handleDelete}
+            onExport={handleExport}
+            onImport={handleImport}
+          />
+        }
       />
-      <div className="min-h-0 flex-1">
-        <FunnelCanvas key={activeMap.id} nodes={activeMap.nodes} edges={activeMap.edges} onChange={handleCanvasChange} />
-      </div>
     </div>
   );
 }

@@ -23,22 +23,38 @@ import {
 interface Props {
   /** Título da nota em questão. `null` mantém o diálogo fechado. */
   titulo: string | null;
+  /** O que está sendo excluído; muda o título e o texto do diálogo. */
+  rotulo?: "nota" | "pasta";
+  /** Só pra pasta: quantas notas vão junto. */
+  quantidade?: number;
   onCancelar: () => void;
   onConfirmar: () => void;
 }
 
-export function ConfirmarExclusao({ titulo, onCancelar, onConfirmar }: Props) {
+export function ConfirmarExclusao({ titulo, rotulo = "nota", quantidade = 0, onCancelar, onConfirmar }: Props) {
   return (
     <AlertDialog open={titulo !== null} onOpenChange={(aberto) => { if (!aberto) onCancelar(); }}>
       <AlertDialogContent className="surface-modal border-white/10 text-white shadow-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <Icon as={Trash} size={20} className="text-red-400" />
-            Excluir nota
+            Excluir {rotulo}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-white/70">
-            Excluir <b className="text-white">{titulo || "esta nota"}</b>? O texto
-            sai do sistema e não há desfazer.
+            {rotulo === "pasta" ? (
+              <>
+                Excluir a pasta <b className="text-white">{titulo}</b>
+                {quantidade > 0
+                  ? <> e as <b className="text-white">{quantidade} {quantidade === 1 ? "nota" : "notas"}</b> dentro dela (inclusive nas subpastas)</>
+                  : null}
+                ? Não há desfazer.
+              </>
+            ) : (
+              <>
+                Excluir <b className="text-white">{titulo || "esta nota"}</b>? O texto
+                sai do sistema e não há desfazer.
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 pt-4">

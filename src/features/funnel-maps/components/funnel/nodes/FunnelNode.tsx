@@ -1,12 +1,17 @@
 import { memo } from 'react';
-import type { NodeProps } from '@xyflow/react';
+import { NodeToolbar, Position, type NodeProps } from '@xyflow/react';
 import { CATEGORY_DEFS, findVariant, type FunnelNodeData, type FunnelNodeComputed } from '../../../types/funnel';
 import { useFunnelActions } from '../funnelContext';
 import { NodeMetrics } from './NodeMetrics';
 import { SideHandles } from './SideHandles';
+import { NodeFields } from './NodeFields';
+import { NodeIncoming } from './NodeIncoming';
+import { EditableText } from './EditableText';
+import { cardSurface, POPOVER_SURFACE, SELECTED_OUTLINE, toneFor } from './nodeStyle';
+import type { Scenario } from '../../../lib/scenarios';
 
 type FunnelNodeProps = NodeProps & {
-  data: FunnelNodeData & { computed?: FunnelNodeComputed };
+  data: FunnelNodeData & { computed?: FunnelNodeComputed; warning?: string; showFields?: boolean; scenario?: Scenario; showCpl?: boolean };
 };
 
 function FunnelNodeImpl({ id, data, selected }: FunnelNodeProps) {
@@ -15,52 +20,64 @@ function FunnelNodeImpl({ id, data, selected }: FunnelNodeProps) {
   const variant = findVariant(data.category, data.variant);
   const Icon = variant.icon;
   const computed = data.computed;
-  const isDiamond = data.category === 'action';
+  const tone = toneFor(data);
 
   return (
-    <div className="group flex w-32 flex-col items-center">
-      <input
-        value={data.label}
-        placeholder={variant.label}
-        onChange={(e) => updateNodeData(id, { label: e.target.value })}
-        className="nodrag mb-1 w-full truncate bg-transparent text-center text-[11px] font-semibold text-porceli-gray-300 outline-none placeholder:text-porceli-gray-500"
-      />
+    <div className="group relative w-40">
+      {data.warning && (
+        <span
+          title={data.warning}
+          className="absolute -right-1.5 -top-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-white shadow"
+        >
+          !
+        </span>
+      )}
+      <SideHandles color={def.color} selected={selected} />
 
-      {/* Card — handles sit on the rectangle edge, so the diamond/circle shape
-          inside never distorts the connection point. */}
-      <div
-        className={`relative w-full rounded-xl border bg-white shadow-lg transition-shadow ${
-          selected ? 'border-porceli-purpleLight ring-2 ring-porceli-purpleLight/40' : 'border-black/5'
-        }`}
-      >
-        <SideHandles color={def.color} selected={selected} />
+      <div className={`relative overflow-hidden px-3.5 py-3 ${cardSurface(tone)} ${selected ? SELECTED_OUTLINE : ''}`}>
+        <NodeIncoming incoming={computed?.incoming} tone={tone} scenario={data.scenario} className="-mx-3.5 -mt-3 mb-2.5 px-3.5 py-1.5" />
 
-        <div className="flex justify-center pt-3">
-          <div className="relative">
-            <div
-              className={`flex h-12 w-12 items-center justify-center shadow-md ${isDiamond ? 'rotate-45 rounded-lg' : 'rounded-full'}`}
-              style={{ background: variant.color ?? def.color }}
-            >
-              <Icon size={20} color="white" strokeWidth={2} className={isDiamond ? '-rotate-45' : ''} />
-            </div>
-            {variant.paid && (
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-[9px] font-bold text-white">
-                $
-              </span>
-            )}
+        <div className="flex items-center gap-2">
+          <span
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+            style={{ background: variant.color ?? def.color }}
+          >
+            <Icon size={12} color="white" strokeWidth={2} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <EditableText
+              value={data.label}
+              placeholder={variant.label}
+              onChange={(v) => updateNodeData(id, { label: v })}
+              className={`text-[12px] font-bold ${tone.text}`}
+              emptyClassName={tone.caption}
+            />
           </div>
         </div>
 
         <NodeMetrics
+          tone={tone}
           people={computed?.people}
           cost={data.cost}
           revenue={computed?.revenue}
           costPerPerson={computed?.costPerPerson}
+          accumulatedCost={computed?.accumulatedCost}
+          accumulatedPerPerson={computed?.accumulatedPerPerson}
+          profit={computed?.profit}
+          maxCac={computed?.maxCac}
+          isTraffic={data.category === 'traffic'}
+          isLead={Boolean(data.showCpl)}
           showPeople={data.showPeople}
           showCost={data.showCost}
           showRevenue={data.showRevenue}
         />
       </div>
+
+      <NodeToolbar isVisible={Boolean(data.showFields)} position={Position.Right} align="start" offset={14} className="nodrag nopan">
+        <div className={`${POPOVER_SURFACE} w-60 p-3.5`}>
+          <NodeFields id={id} data={data} scenario={data.scenario ?? 'mid'} isPage={false} hasRevenue={computed?.revenue !== undefined} />
+        </div>
+      </NodeToolbar>
     </div>
   );
 }

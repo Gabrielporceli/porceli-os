@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { useState } from "react";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { cn } from "@/lib/utils";
@@ -15,10 +15,9 @@ import { NewContractModal } from "@/components/Contracts/NewContractModal";
 import { useUpdateClient } from "@/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { MasterDetail, NAME_FADE } from "@/components/ui/MasterDetail";
 
-const PANEL_BG = 'rgba(255,255,255,0.07)';
-const CLIENT_ROW_H = 52;
 
 interface Contract {
   id: string;
@@ -47,61 +46,10 @@ export default function Contracts() {
   const [renewingContract, setRenewingContract] = useState<Contract | null>(null);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [selectedClientName, setSelectedClientName] = useState<string | null>(null);
-  const clientListRef = useRef<HTMLDivElement>(null);
-  const [clientListFade, setClientListFade] = useState({ top: false, bottom: false });
-  // A aba do cliente selecionado fica FORA do container com máscara de fade,
-  // senão o fade apaga a aba e ela descola do painel. Posição = índice − scroll.
-  const tabScroll = useMotionValue(0);
-  const tabOffset = useSpring(0, { stiffness: 420, damping: 38 });
-  const tabTargetRef = useRef<number | null>(null);
-  const tabY = useTransform(() => tabOffset.get() - tabScroll.get());
-  const panelTopRadius = useTransform(() => {
-    const y = tabY.get();
-    if (y + CLIENT_ROW_H <= 0) return 16;
-    return y <= 0 ? 0 : Math.min(16, y);
-  });
-  const panelBottomRadius = useTransform(() => {
-    const h = clientListRef.current?.clientHeight ?? Infinity;
-    const gap = h - (tabY.get() + CLIENT_ROW_H);
-    if (tabY.get() >= h) return 16;
-    return gap <= 0 ? 0 : Math.min(16, gap);
-  });
-  const updateClientListFade = useCallback(() => {
-    const el = clientListRef.current;
-    if (!el) return;
-    tabScroll.set(el.scrollTop);
-    setClientListFade({
-      top: el.scrollTop > 0,
-      bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 1,
-    });
-  }, [tabScroll]);
-  useEffect(() => {
-    const raf = requestAnimationFrame(updateClientListFade);
-    return () => cancelAnimationFrame(raf);
-  }, [updateClientListFade]);
-  const clientFadeStyle = (fade: { top: boolean; bottom: boolean }) => ({
-    maskImage: `linear-gradient(to bottom, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`,
-    WebkitMaskImage: `linear-gradient(to bottom, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`,
-  });
   const createContractMutation = useCreateContract();
 
   const isReady = usePageReady(isLoading);
 
-  // Altura = espaço que sobra até o fim da janela, pra página nunca ganhar scroll
-  // (o alerta de vencimento acima muda de tamanho conforme os dados).
-  const masterRef = useRef<HTMLDivElement>(null);
-  const [masterHeight, setMasterHeight] = useState<number>();
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = masterRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      setMasterHeight(Math.max(280, window.innerHeight - top - 32));
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [isReady, contractsData]);
 
   if (!isReady) return <PageLoader />;
 
@@ -354,12 +302,6 @@ export default function Contracts() {
 
   const effectiveClient = selectedClientName ?? clientNames[0] ?? null;
 
-  const tabTarget = Math.max(0, clientNames.indexOf(effectiveClient ?? '')) * CLIENT_ROW_H;
-  if (tabTargetRef.current !== tabTarget) {
-    if (tabTargetRef.current === null) tabOffset.jump(tabTarget);
-    else tabOffset.set(tabTarget);
-    tabTargetRef.current = tabTarget;
-  }
 
   const getClientStatusColor = (clientContracts: typeof contracts) => {
     if (clientContracts.some(c => c.status === 'expiring')) return 'bg-yellow-500';
@@ -470,78 +412,57 @@ export default function Contracts() {
           <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
         </div>
       ) : (
-        <div ref={masterRef} className="surface-flat no-elevation rounded-3xl p-3.5 flex" style={{ height: masterHeight ?? 'calc(100vh - 320px)' }}>
-          {/* Coluna de clientes */}
-          <div className="relative w-[220px] shrink-0 overflow-hidden">
-            <motion.div
-              className="absolute left-0 right-0 top-0 h-[52px] rounded-l-2xl pointer-events-none"
-              style={{ y: tabY, background: PANEL_BG }}
-            >
-              {/* Cantos côncavos que fundem a aba ao painel */}
-              <span className="absolute right-0 -top-4 w-4 h-4" style={{ background: `radial-gradient(circle at top left, transparent 15.5px, ${PANEL_BG} 16px)` }} />
-              <span className="absolute right-0 -bottom-4 w-4 h-4" style={{ background: `radial-gradient(circle at bottom left, transparent 15.5px, ${PANEL_BG} 16px)` }} />
-            </motion.div>
-            <div ref={clientListRef} onScroll={updateClientListFade} className="relative h-full overflow-y-auto scrollbar-hide" style={clientFadeStyle(clientListFade)}>
-              {clientNames.map((name) => {
-                const cc = clientGroups[name];
-                const isSelected = effectiveClient === name;
-                return (
-                  <button
-                    key={name}
-                    onClick={() => setSelectedClientName(name)}
-                    className="relative w-full h-[52px] flex items-center gap-3 px-4 text-left"
-                  >
-                    <div className={cn("relative w-2 h-2 rounded-full flex-shrink-0 shrink-0", getClientStatusColor(cc))} />
-                    <div className="relative min-w-0 flex-1">
-                      <motion.p
-                        animate={{ scale: isSelected ? 1.15 : 1 }}
-                        transition={{ duration: 0.25 }}
-                        className={cn("font-semibold truncate leading-snug text-[13px] origin-left", isSelected ? "text-white" : "text-white/40")}
-                      >{name}</motion.p>
-                      <div className="relative h-[14px] mt-0.5">
-                        <AnimatePresence initial={false}>
-                          {isSelected ? (
-                            <motion.p
-                              key="mrr"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.25 }}
-                              className="absolute inset-0 text-[11px] text-white/50"
-                            >
-                              MRR: <span className="text-green-400 font-bold">{formatCurrency(cc.filter(c => c.status === 'active' || c.status === 'expiring').reduce((s, c) => s + c.monthlyValue, 0))}</span>
-                            </motion.p>
-                          ) : (
-                            <motion.p
-                              key="count"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="absolute inset-0 text-[10px] text-white/30"
-                            >
-                              {cc.length} {cc.length === 1 ? 'contrato' : 'contratos'}
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Painel de contratos — a aba selecionada se funde a ele */}
-          <motion.div
-            className="flex-1 min-w-0 rounded-2xl overflow-hidden"
-            style={{
-              background: PANEL_BG,
-              borderTopLeftRadius: panelTopRadius,
-              borderBottomLeftRadius: panelBottomRadius,
-            }}
-          >
-            <div className="h-full overflow-y-auto scrollbar-hide p-4 space-y-3">
+        <MasterDetail
+          items={clientNames}
+          getKey={(name) => name}
+          selectedKey={effectiveClient}
+          onSelect={setSelectedClientName}
+          measureKey={expiringContracts.length}
+          renderRow={(name, isSelected) => {
+            const cc = clientGroups[name];
+            return (
+              <>
+                <div className={cn("relative w-2 h-2 rounded-full flex-shrink-0 shrink-0", getClientStatusColor(cc))} />
+                <div className="relative min-w-0 flex-1">
+                  <div className="overflow-hidden" style={NAME_FADE}>
+                    <motion.p
+                      animate={{ scale: isSelected ? 1.15 : 1 }}
+                      transition={{ duration: 0.25 }}
+                      className={cn("font-semibold whitespace-nowrap leading-snug text-[13px] origin-left", isSelected ? "text-white" : "text-white/40")}
+                    >{name}</motion.p>
+                  </div>
+                  <div className="relative h-[14px] mt-0.5">
+                    <AnimatePresence initial={false}>
+                      {isSelected ? (
+                        <motion.p
+                          key="mrr"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="absolute inset-0 text-[11px] text-white/50"
+                        >
+                          MRR: <span className="text-green-400 font-bold">{formatCurrency(cc.filter(c => c.status === 'active' || c.status === 'expiring').reduce((s, c) => s + c.monthlyValue, 0))}</span>
+                        </motion.p>
+                      ) : (
+                        <motion.p
+                          key="count"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 text-[10px] text-white/30"
+                        >
+                          {cc.length} {cc.length === 1 ? 'contrato' : 'contratos'}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </>
+            );
+          }}
+        >
               {selectedContracts.map((contract) => (
                 <div
                   key={contract.id}
@@ -624,9 +545,7 @@ export default function Contracts() {
                   </div>
                 </div>
               ))}
-            </div>
-          </motion.div>
-        </div>
+        </MasterDetail>
       )}
       <EditContractModal
         isOpen={!!editingContract}

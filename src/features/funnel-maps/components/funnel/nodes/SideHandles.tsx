@@ -1,32 +1,25 @@
 import { Handle, Position } from '@xyflow/react';
 
-const SIDES = [
-  { id: 'top', position: Position.Top },
-  { id: 'right', position: Position.Right },
-  { id: 'bottom', position: Position.Bottom },
-  { id: 'left', position: Position.Left },
-] as const;
-
-/** Four connection points, one per card side. With ConnectionMode.Loose each
- *  can act as source or target, so the arrow direction (not the handle type)
- *  decides the flow. Hidden by default; they appear on node hover or when the
- *  card is selected — matching the reference, where you just hover to move the
- *  card and click to reveal the connectors. */
+/** Entrada à esquerda, saída à direita, ambas no meio da lateral. A linha
+ *  sempre nasce da saída e termina na entrada.
+ *
+ *  Visual: uma barrinha fina colada na borda, só visível ao passar o mouse ou
+ *  com o card selecionado. A área clicável do ponto é maior que a barra, pra
+ *  não exigir pontaria. */
 export function SideHandles({ color, selected }: { color: string; selected?: boolean }) {
+  const barra = `pointer-events-none absolute left-1/2 top-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity group-hover:opacity-100 ${
+    selected ? 'opacity-100' : 'opacity-0'
+  }`;
+  const area = '!h-7 !w-3 !min-w-0 !rounded-none !border-0 !bg-transparent';
+
   return (
     <>
-      {SIDES.map(({ id, position }) => (
-        <Handle
-          key={id}
-          id={id}
-          type="source"
-          position={position}
-          className={`!h-3 !w-3 !border-2 !border-white !transition-opacity group-hover:!opacity-100 ${
-            selected ? '!opacity-100' : '!opacity-0'
-          }`}
-          style={{ background: color }}
-        />
-      ))}
+      <Handle id="in" type="target" position={Position.Left} title="Entrada" className={area}>
+        <span className={barra} style={{ background: 'rgba(255,255,255,0.55)' }} />
+      </Handle>
+      <Handle id="out" type="source" position={Position.Right} title="Saída" className={area}>
+        <span className={barra} style={{ background: '#8B5CF6' }} />
+      </Handle>
     </>
   );
 }

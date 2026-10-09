@@ -27,6 +27,7 @@ const PillLab = lazy(() => import("./pages/PillLab"))
 const IconLab = lazy(() => import("./pages/IconLab"))
 const NotesLab = lazy(() => import("./pages/NotesLab"))
 const RoundTripLab = lazy(() => import("./pages/RoundTripLab"))
+const OrbLab = lazy(() => import("./pages/OrbLab"))
 const ModalTest = lazy(() => import("./pages/ModalTest"))
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -63,6 +64,8 @@ function App() {
                   <Route path="/dev/pill" element={<PillLab />} />
                   {/* Exemplo dos ícones do iconsax — pública, sem layout. */}
                   <Route path="/dev/icons" element={<IconLab />} />
+                  {/* Catálogo dos orbes dos agentes (cores, formas, tamanhos). Pública, sem layout. */}
+                  <Route path="/dev/orbs" element={<OrbLab />} />
                   {/* Mural, janelas e quadros das Notas com dados falsos —
                       a tela real fica atrás do login. Pública, sem layout. */}
                   <Route path="/dev/notas" element={<NotesLab />} />
