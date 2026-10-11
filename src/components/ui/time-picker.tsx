@@ -53,7 +53,7 @@ export function TimePicker({ value, onChange, className, placeholder = "00:00" }
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="surface-modal w-52 p-0 z-[9999999] overflow-hidden pointer-events-auto"
+        className="surface-modal !bg-[#2F2D2E] w-52 p-0 z-[9999999] overflow-hidden pointer-events-auto"
         align="center"
         onWheel={(e) => e.stopPropagation()}
       >

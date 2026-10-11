@@ -72,12 +72,12 @@ function Filtro({
       <SelectTrigger className="h-9 w-auto min-w-[10rem] gap-2 rounded-full border-0 bg-white/[0.06] px-3.5 py-0 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/10">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="min-w-[12rem]">
-        <SelectItem value={TODOS} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+      <SelectContent>
+        <SelectItem value={TODOS} className="text-xs">
           {rotuloVazio}
         </SelectItem>
         {opcoes.map((o) => (
-          <SelectItem key={o} value={o} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+          <SelectItem key={o} value={o} className="text-xs">
             {o} ({contar(o)})
           </SelectItem>
         ))}
@@ -162,9 +162,9 @@ function Linha({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="min-w-[12rem]">
+          <SelectContent>
             {(FORMATOS.includes(ideia.formato) ? FORMATOS : [...FORMATOS, ideia.formato]).map((f) => (
-              <SelectItem key={f || "__vazio__"} value={f || "__vazio__"} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+              <SelectItem key={f || "__vazio__"} value={f || "__vazio__"} className="text-xs">
                 {f || "sem formato"}
               </SelectItem>
             ))}

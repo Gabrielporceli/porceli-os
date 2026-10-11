@@ -51,11 +51,9 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
         <SelectTrigger className="h-8 w-auto min-w-[9rem] max-w-[14rem] gap-2 rounded-lg border-0 bg-white/[0.06] px-3 py-0 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/10">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent
-          className="min-w-[12rem]"
-        >
+        <SelectContent>
           {maps.map((m) => (
-            <SelectItem key={m.id} value={m.id} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+            <SelectItem key={m.id} value={m.id} className="text-xs">
               {m.name || 'Sem nome'}
             </SelectItem>
           ))}

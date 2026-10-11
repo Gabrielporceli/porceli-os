@@ -1490,7 +1490,7 @@ export default function Calendar() {
                     <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/80 h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                    <SelectContent>
                       <SelectItem value="none">Nunca</SelectItem>
                       <SelectItem value="daily">Diária</SelectItem>
                       <SelectItem value="weekly">Semanal</SelectItem>
@@ -1592,7 +1592,7 @@ export default function Calendar() {
                  <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-9">
                    <SelectValue placeholder="Selecione a recorrência" />
                  </SelectTrigger>
-                 <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                 <SelectContent>
                    <SelectItem value="none">Nunca</SelectItem>
                    <SelectItem value="daily">Diária</SelectItem>
                    <SelectItem value="weekly">Semanal</SelectItem>
@@ -1715,7 +1715,7 @@ export default function Calendar() {
                     <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] text-white/70 h-10 text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                    <SelectContent>
                       <SelectItem value="none">Nunca</SelectItem>
                       <SelectItem value="daily">Diária</SelectItem>
                       <SelectItem value="weekly">Semanal</SelectItem>

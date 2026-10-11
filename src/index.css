@@ -1062,7 +1062,10 @@ button:focus-visible,
 }
 
 .SelectItem,
-[role="option"],
+/* Itens do Select do sistema (Radix) ficam de fora: o visual deles vem do
+   próprio componente (select.tsx) — esta regra antiga impunha borda, blur,
+   sombra e scale(1.02) no hover/seleção. */
+[role="option"]:not([data-radix-collection-item]),
 [data-radix-dropdown-menu-item],
 .dropdown-menu-item,
 .select-item {
@@ -1084,8 +1087,8 @@ button:focus-visible,
 .SelectItem:hover,
 .SelectItem:focus,
 .SelectItem[data-state="checked"],
-[role="option"]:hover,
-[role="option"]:focus,
+[role="option"]:not([data-radix-collection-item]):hover,
+[role="option"]:not([data-radix-collection-item]):focus,
 [data-radix-dropdown-menu-item]:hover,
 [data-radix-dropdown-menu-item]:focus,
 .dropdown-menu-item:hover,

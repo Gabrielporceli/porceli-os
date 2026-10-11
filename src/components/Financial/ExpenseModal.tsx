@@ -144,7 +144,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
                   {formData.category && <span className="text-white/70">{formData.category}</span>}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10 text-white rounded-xl">
+              <SelectContent>
                 <SelectItem value="Infraestrutura">Infraestrutura</SelectItem>
                 <SelectItem value="Tecnologia">Tecnologia</SelectItem>
                 <SelectItem value="Marketing">Marketing</SelectItem>
@@ -193,7 +193,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
                     )}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1a1a]/95 backdrop-blur-xl border-white/10 text-white rounded-xl">
+                <SelectContent>
                   <SelectItem value="weekly">Semanal</SelectItem>
                   <SelectItem value="monthly">Mensal</SelectItem>
                   <SelectItem value="quarterly">Trimestral</SelectItem>

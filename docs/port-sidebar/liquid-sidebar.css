@@ -1,0 +1,54 @@
+/* Barra lateral de vidro líquido — copiado de src/index.css (linhas 352–400 e .lqg-text). */
+.side-nav {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 1.5rem;
+}
+.side-nav::before {
+  content: "";
+  position: absolute;
+  /* folga pro blur não esmaecer a borda — o overflow corta */
+  inset: -40px;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(28, 28, 34, 0.28), rgba(28, 28, 34, 0.28)),
+    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+    url("/app-bg.webp") /* TROQUE pelo wallpaper do seu sistema (o mesmo do fundo da página) */;
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%, var(--sn-w, cover) var(--sn-h, auto);
+  background-position: 0 0, 0 0, var(--sn-x, 0px) var(--sn-y, 0px);
+  filter: blur(20px) saturate(180%) brightness(1.12);
+}
+.side-nav::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 1.8px 3px 2px -2px color-mix(in srgb, white 80%, transparent),
+    inset -2px -2px 2px -2px color-mix(in srgb, white 65%, transparent),
+    inset -3px -8px 2px -6px color-mix(in srgb, white 50%, transparent),
+    inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+    inset -1.5px 2.5px 3px -2px color-mix(in srgb, black 16%, transparent),
+    inset 0px 3px 4px -2px color-mix(in srgb, black 16%, transparent),
+    inset 2px -6.5px 2px -4px color-mix(in srgb, black 10%, transparent);
+}
+/* Elevação por fora num wrapper sem overflow — dentro da .side-nav o
+   overflow:hidden cortaria a sombra externa. */
+.side-nav-shadow {
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 14px 36px rgba(0, 0, 0, 0.26);
+}
+
+
+.lqg-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: color 400ms cubic-bezier(1, 0, 0.4, 1);
+}

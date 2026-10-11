@@ -87,9 +87,9 @@ export function RoteiroModal({ ideia, formatos, onAtualizar, onClose }: Props) {
                   <SelectTrigger className={cn(field, "h-11 border px-3 text-sm")}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="min-w-[12rem]">
+                  <SelectContent>
                     {lista.map((f) => (
-                      <SelectItem key={f || VAZIO} value={f || VAZIO} className="rounded-lg text-xs font-medium focus:bg-[#6829C0] focus:text-white">
+                      <SelectItem key={f || VAZIO} value={f || VAZIO} className="text-xs">
                         {f || "sem formato"}
                       </SelectItem>
                     ))}

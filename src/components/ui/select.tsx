@@ -70,18 +70,19 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", align = "center", ...props }, ref) => (
+>(({ className, children, position = "popper", align = "center", sideOffset = 10, ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "surface-modal relative z-50 max-h-96 min-w-[8rem] overflow-hidden text-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "surface-modal !bg-[#2F2D2E] relative z-50 max-h-96 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-w-[var(--radix-select-trigger-width)] overflow-hidden text-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className,
       )}
       position={position}
       align={align}
+      sideOffset={sideOffset}
       {...props}
     >
       {/* Sem as setinhas de rolagem (SelectScrollUp/DownButton): elas só andavam
@@ -90,7 +91,7 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Viewport
         onWheel={(e) => e.stopPropagation()}
         className={cn(
-          "scrollbar-hide max-h-[min(20rem,var(--radix-select-content-available-height))] overflow-y-auto overscroll-contain p-1",
+          "scrollbar-hide focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[min(20rem,var(--radix-select-content-available-height))] overflow-y-auto overscroll-contain p-1",
           position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
       >
@@ -120,7 +121,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm text-white/70 outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus:bg-white/[0.08] focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl py-2.5 pl-3.5 pr-9 text-sm font-medium text-white/65 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus:bg-white/[0.06] focus:text-white data-[state=checked]:bg-white/[0.09] data-[state=checked]:font-bold data-[state=checked]:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}
