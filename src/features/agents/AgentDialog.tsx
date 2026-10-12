@@ -119,16 +119,14 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 border-t border-white/[0.05] p-6">
+          <div className="flex items-center justify-end shrink-0 items-center gap-6 border-t border-white/[0.05] p-6">
             {agent && (
               <LiquidGlassButton type="button" tint="danger" onClick={remove} className="h-10 px-5 text-xs font-bold uppercase tracking-widest">
                 Excluir
               </LiquidGlassButton>
             )}
             <div className="flex-1" />
-            <LiquidGlassButton type="button" onClick={onClose} className="h-10 px-5 text-xs font-bold uppercase tracking-widest">
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
             <LiquidGlassButton type="submit" tint="primary" disabled={!nome.trim()} className="h-10 px-5 text-xs font-bold uppercase tracking-widest">
               {agent ? "Salvar" : "Criar agente"}
             </LiquidGlassButton>

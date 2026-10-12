@@ -67,7 +67,7 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
               value={stageName}
               onChange={(e) => setStageName(e.target.value)}
               placeholder="Ex: Negociação, Fechamento..."
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
               required
             />
           </div>
@@ -96,24 +96,11 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
           <div className="flex gap-3 pt-2">
             <motion.div
               className="flex-1"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <LiquidGlassButton
-                tint="danger"
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
+              <button type="button" onClick={() => onOpenChange(false)} className="acao-texto">Cancelar</button>
             </motion.div>
             <motion.div
               className="flex-1"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <LiquidGlassButton
                 tint="primary"

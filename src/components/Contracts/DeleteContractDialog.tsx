@@ -153,7 +153,7 @@ export function DeleteContractDialog({
                     min="0"
                     value={fineAmount}
                     onChange={e => setFineAmount(e.target.value)}
-                    className="h-12 bg-white/[0.03] border-white/10 text-white rounded-2xl placeholder:text-white/20 focus:border-primary focus:ring-0 font-bold text-lg"
+                    className="h-12 bg-white/[0.03] border-white/10 text-white rounded-2xl placeholder:text-white/20 focus:border-white/40 focus:ring-0 font-bold text-lg"
                     placeholder="0.00"
                   />
                   <p className="text-white/20 text-xs">
@@ -169,7 +169,7 @@ export function DeleteContractDialog({
                     type="date"
                     value={fineDueDate}
                     onChange={e => setFineDueDate(e.target.value)}
-                    className="h-12 bg-white/[0.03] border-white/10 text-white rounded-2xl focus:border-primary focus:ring-0 font-medium"
+                    className="h-12 bg-white/[0.03] border-white/10 text-white rounded-2xl focus:border-white/40 focus:ring-0 font-medium"
                   />
                 </div>
               </div>
@@ -183,7 +183,7 @@ export function DeleteContractDialog({
           {/* Footer — Step: confirm */}
           {step === 'confirm' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
-              <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <motion.div>
                 <LiquidGlassButton
                   tint="danger"
                   type="button"
@@ -194,7 +194,7 @@ export function DeleteContractDialog({
                 </LiquidGlassButton>
               </motion.div>
 
-              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <motion.div className="flex-1">
                 <LiquidGlassButton
                   tint="danger"
                   type="button"
@@ -206,7 +206,7 @@ export function DeleteContractDialog({
               </motion.div>
 
               {!isExpired && (
-                <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                <motion.div className="flex-1">
                   <LiquidGlassButton
                     tint="danger"
                     type="button"
@@ -223,7 +223,7 @@ export function DeleteContractDialog({
           {/* Footer — Step: fine-form */}
           {step === 'fine-form' && (
             <div className="flex gap-3 p-6 border-t border-white/[0.05]">
-              <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <motion.div>
                 <LiquidGlassButton
                   tint="danger"
                   type="button"
@@ -234,7 +234,7 @@ export function DeleteContractDialog({
                 </LiquidGlassButton>
               </motion.div>
 
-              <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+              <motion.div className="flex-1">
                 <LiquidGlassButton
                   tint="danger"
                   type="button"

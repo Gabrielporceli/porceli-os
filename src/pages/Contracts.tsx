@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Danger, DocumentText, DollarCircle, ExportSquare } from 'iconsax-react';
+import { Calendar, Danger, DocumentText, DollarCircle, ExportSquare, Edit2, Refresh, Trash} from 'iconsax-react';
 import { ContractsHeader } from "@/components/Contracts/ContractsHeader";
 import { EditContractModal } from "@/components/Contracts/EditContractModal";
 import { DeleteContractDialog } from "@/components/Contracts/DeleteContractDialog";
@@ -386,7 +386,7 @@ export default function Contracts() {
                     <p className="text-[10px] text-yellow-500/60 font-black uppercase tracking-widest">Restam</p>
                     <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
-                  <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                  <motion.div>
                     <LiquidGlassButton
                       tint="danger"
                       onClick={() => handleRenewClick(contract)}
@@ -495,8 +495,6 @@ export default function Contracts() {
                               href={contract.contract_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              whileHover={{ scale: 1.15 }}
-                              whileTap={{ scale: 0.9 }}
                               className="text-white/20 hover:text-primary transition-colors shrink-0"
                               title="Abrir contrato"
                             >
@@ -527,20 +525,14 @@ export default function Contracts() {
 
                   {/* Ações */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                      <LiquidGlassButton onClick={() => setEditingContract(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
-                        Editar
-                      </LiquidGlassButton>
+                    <motion.div>
+                      <button type="button" onClick={() => setEditingContract(contract)} title="Editar" aria-label="Editar" className="acao-vidro so-icone"><Edit2 size={14} /></button>
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                      <LiquidGlassButton onClick={() => handleRenewClick(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
-                        {contract.status === 'active' ? 'Estender' : 'Renovar'}
-                      </LiquidGlassButton>
+                    <motion.div>
+                      <button type="button" onClick={() => handleRenewClick(contract)} title="Estender ou renovar" aria-label="Estender ou renovar" className="acao-vidro so-icone"><Refresh size={14} /></button>
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                      <LiquidGlassButton tint="danger" onClick={() => setDeletingContract(contract)} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
-                        Cancelar
-                      </LiquidGlassButton>
+                    <motion.div>
+                      <button type="button" onClick={() => setDeletingContract(contract)} title="Cancelar contrato" aria-label="Cancelar contrato" className="acao-vidro so-icone perigo"><Trash size={14} /></button>
                     </motion.div>
                   </div>
                 </div>

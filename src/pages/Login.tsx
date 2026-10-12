@@ -141,7 +141,7 @@ const Login = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedInput("email")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/[0.03] border-white/5 focus:border-porceli-purple/50 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-3 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
+                        className="w-full bg-white/[0.03] border-white/5 focus:border-white/40 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-3 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
                         required
                       />
                     </div>
@@ -167,7 +167,7 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         onFocus={() => setFocusedInput("password")}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/[0.03] border-white/5 focus:border-porceli-purple/50 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-12 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
+                        className="w-full bg-white/[0.03] border-white/5 focus:border-white/40 focus:bg-white/[0.07] text-white placeholder:text-white/20 h-12 rounded-2xl transition-all duration-300 pl-10 pr-12 focus:shadow-[0_0_20px_rgba(104,41,192,0.1)] outline-none"
                         required
                       />
                       <button
@@ -210,9 +210,6 @@ const Login = () => {
 
                 {/* Sign in button */}
                 <motion.button
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   type="submit"
                   disabled={isLoading}
                   className="w-full relative group/button mt-5"

@@ -252,7 +252,7 @@ export function NewClientModal({
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Ex: Tech Solutions LTDA"
                     required
                   />
@@ -264,7 +264,7 @@ export function NewClientModal({
                     id="cnpj"
                     value={formData.cnpj}
                     onChange={(e) => handleChange("cnpj", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="00.000.000/0000-00"
                     required
                   />
@@ -276,7 +276,7 @@ export function NewClientModal({
                     id="responsible"
                     value={formData.responsible}
                     onChange={(e) => handleChange("responsible", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="Nome do responsável"
                     required
                   />
@@ -288,7 +288,7 @@ export function NewClientModal({
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="(11) 99999-9999"
                     required
                   />
@@ -301,7 +301,7 @@ export function NewClientModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="cliente@empresa.com"
                     required
                   />
@@ -314,7 +314,7 @@ export function NewClientModal({
                     type="text"
                     value={formData.grupo_id}
                     onChange={(e) => handleChange("grupo_id", e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     placeholder="ID do grupo"
                   />
                 </div>
@@ -333,7 +333,7 @@ export function NewClientModal({
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 rounded-xl transition-all resize-none min-h-[100px]"
+                  className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 rounded-xl transition-all resize-none min-h-[100px]"
                   placeholder="Endereço completo do cliente"
                 />
               </div>
@@ -347,14 +347,12 @@ export function NewClientModal({
         </div>
 
         {/* Footer fixo */}
-        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
-          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-            <LiquidGlassButton tint="danger" type="button" onClick={onClose} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
-              Cancelar
-            </LiquidGlassButton>
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div>
+            <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
           </motion.div>
-          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-            <LiquidGlassButton tint="primary" type="submit" form="new-client-form" className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+          <motion.div>
+            <LiquidGlassButton tint="primary" type="submit" form="new-client-form" className="h-11 px-8 text-xs font-bold uppercase tracking-widest">
               Salvar Cliente
             </LiquidGlassButton>
           </motion.div>

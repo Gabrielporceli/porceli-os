@@ -199,7 +199,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                       className={cn(
                         "relative h-full rounded-2xl border flex flex-col cursor-pointer transition-all overflow-hidden hover:brightness-125 group",
                         selected ? "border-white/60 ring-1 ring-white/25"
-                          : today ? "border-primary/70"
+                          : today ? "border-white/35"
                           : "border-white/[0.06]"
                       )}
                       style={{ background: bg }}

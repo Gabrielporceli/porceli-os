@@ -183,7 +183,7 @@ export function EditLeadModal({
                   className="group relative block rounded-[22px] p-1 text-white cursor-pointer
                     transition-transform duration-300 ease-out
                     active:scale-[0.97]
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
                 >
                   {/* radius 0: módulos retos. Com contraste já no limite, a
                       quina cheia é o que dá mais área de módulo pro leitor. */}
@@ -216,7 +216,7 @@ export function EditLeadModal({
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="Nome do lead"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -226,7 +226,7 @@ export function EditLeadModal({
               value={formData.company}
               onChange={(e) => handleInputChange("company", e.target.value)}
               placeholder="Nome da empresa"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -236,7 +236,7 @@ export function EditLeadModal({
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
               placeholder="(11) 99999-9999"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -265,7 +265,7 @@ export function EditLeadModal({
               value={formData.email || ""}
               onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="email@exemplo.com"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -275,7 +275,7 @@ export function EditLeadModal({
               value={formData.value || ""}
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder="R$ 0,00"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
               inputMode="decimal"
             />
           </div>
@@ -286,7 +286,7 @@ export function EditLeadModal({
               value={formData.notes || ""}
               onChange={(e) => handleInputChange("notes", e.target.value)}
               placeholder="Observações sobre o lead"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -345,37 +345,21 @@ export function EditLeadModal({
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton
-              tint="danger"
-              onClick={() => onOpenChange(false)}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={() => onOpenChange(false)} className="acao-texto">Cancelar</button>
           </motion.div>
           <motion.div
             className="flex-[2]"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton tint="primary" onClick={handleSave} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+            <LiquidGlassButton tint="primary" onClick={handleSave} className="h-11 px-8 text-xs font-bold uppercase tracking-widest">
               <Save className="w-4 h-4 mr-2" />
               Salvar
             </LiquidGlassButton>
           </motion.div>
           {onDeleteLead && (
             <motion.div
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <LiquidGlassButton
                 tint="danger"

@@ -159,7 +159,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                     id="client"
                     value={formData.client}
                     onChange={(e) => handleInputChange('client', e.target.value)}
-                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-white/40 transition-all text-sm"
                     required
                   />
                 </div>
@@ -170,7 +170,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                     id="type"
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value)}
-                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-white/40 transition-all text-sm"
                     required
                   />
                 </div>
@@ -187,7 +187,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                       value={formData.monthlyValue}
                       onChange={handleMonthlyValueChange}
                       onBlur={handleMonthlyValueBlur}
-                      className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 pl-9 focus:border-primary/50 transition-all text-sm font-bold"
+                      className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 pl-9 focus:border-white/40 transition-all text-sm font-bold"
                       placeholder="0,00"
                       required
                     />
@@ -208,7 +208,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                       else if (val < 1 && e.target.value !== "") handleInputChange('payment_day', "1");
                       else handleInputChange('payment_day', e.target.value);
                     }}
-                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-white/40 transition-all text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -222,7 +222,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                   placeholder="https://..."
                   value={formData.contract_url}
                   onChange={(e) => handleInputChange('contract_url', e.target.value)}
-                  className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-primary/50 transition-all text-sm"
+                  className="bg-white/[0.02] border-white/[0.05] text-white rounded-xl h-10 focus:border-white/40 transition-all text-sm"
                 />
               </div>
 
@@ -281,23 +281,16 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
           </div>
 
           {/* Footer fixo */}
-          <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <LiquidGlassButton
-                tint="danger"
-                type="button"
-                onClick={onClose}
-                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
+          <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+            <motion.div>
+              <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
             </motion.div>
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div>
               <LiquidGlassButton
                 tint="primary"
                 type="submit"
                 form="edit-contract-form"
-                className="w-full h-10 text-[10px] font-bold uppercase tracking-widest"
+                className="h-11 px-8 text-[10px] font-bold uppercase tracking-widest"
               >
                 Salvar Alterações
               </LiquidGlassButton>

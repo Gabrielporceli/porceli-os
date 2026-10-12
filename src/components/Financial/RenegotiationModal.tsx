@@ -361,7 +361,7 @@ export function RenegotiationModal({
                 </p>
                 <button
                   onClick={toggleAll}
-                  className="text-white/40 hover:text-primary text-xs transition-colors"
+                  className="text-white/40 hover:text-white text-xs transition-colors"
                 >
                   {selectedIds.size === overdueEntries.length ? "Desmarcar todas" : "Selecionar todas"}
                 </button>
@@ -440,8 +440,6 @@ export function RenegotiationModal({
                         </span>
                         {customPayments.length > 1 && (
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                             onClick={() => removeCustomPayment(p.id)}
                             className="text-white/20 hover:text-red-500 transition-colors text-[10px] font-bold uppercase tracking-wider"
                           >
@@ -461,7 +459,7 @@ export function RenegotiationModal({
                               value={formatCustomAmount(p.amountStr)}
                               onChange={(e) => updateCustomPayment(p.id, "amountStr", e.target.value.replace(/\D/g, ""))}
                               placeholder="R$ 0,00"
-                              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white font-semibold text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white font-semibold text-sm focus:outline-none focus:border-white/40 transition-colors"
                             />
                           </div>
                           <div className="space-y-1">
@@ -483,7 +481,7 @@ export function RenegotiationModal({
                               className={cn(
                                 "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border text-xs font-bold transition-all",
                                 p.billingType === value
-                                  ? "btn-primary-glass text-white border-primary/40"
+                                  ? "vidro-roxo text-white"
                                   : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                               )}
                             >
@@ -496,14 +494,7 @@ export function RenegotiationModal({
                     </div>
                   ))}
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={addCustomPayment}
-                    className="w-full h-10 rounded-xl border border-dashed border-white/10 text-white/40 hover:border-primary/30 hover:text-primary text-xs font-bold uppercase tracking-widest transition-all"
-                  >
-                    + Adicionar Pagamento
-                  </motion.button>
+                  <button type="button" onClick={addCustomPayment} className="acao-texto">Adicionar Pagamento</button>
 
                   {/* Total vs alvo */}
                   <div className={cn(
@@ -526,7 +517,7 @@ export function RenegotiationModal({
                   value={formattedAmount}
                   onChange={handleAmountChange}
                   placeholder="R$ 0,00"
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-white/40 transition-colors"
                 />
               </div>
 
@@ -558,7 +549,7 @@ export function RenegotiationModal({
                         value={formattedEntrada}
                         onChange={(e) => setEntradaStr(e.target.value.replace(/\D/g, ""))}
                         placeholder="R$ 0,00"
-                        className="w-full h-11 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                        className="w-full h-11 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-white/40 transition-colors"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -587,7 +578,7 @@ export function RenegotiationModal({
                     value={String(installments)}
                     onValueChange={(v) => setInstallments(Number(v))}
                   >
-                    <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl h-11 focus:border-primary/40">
+                    <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl h-11 focus:border-white/40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[99999]">
@@ -622,7 +613,7 @@ export function RenegotiationModal({
                       className={cn(
                         "flex flex-col items-center gap-2 py-3 px-2 rounded-xl border text-xs font-medium transition-all",
                         billingType === value
-                          ? "btn-primary-glass text-white border-primary/40"
+                          ? "vidro-roxo text-white"
                           : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                       )}
                     >
@@ -727,23 +718,16 @@ export function RenegotiationModal({
         </div>
 
         {/* Footer fixo */}
-        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
-          <motion.div className="flex-1" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <LiquidGlassButton
-              tint="danger"
-              onClick={onClose}
-              disabled={isLoading}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div>
+            <button type="button" onClick={onClose} disabled={isLoading} className="acao-texto">Cancelar</button>
           </motion.div>
-          <motion.div className="flex-[2]" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <motion.div className="flex-[2]">
             <LiquidGlassButton
               tint="primary"
               onClick={handleConfirm}
               disabled={isLoading || selectedIds.size === 0 || (mode === "parcelamento" ? parsedAmount <= 0 : customPayments.length === 0)}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+              className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
             >
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>

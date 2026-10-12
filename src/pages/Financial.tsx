@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Badge } from "@/components/ui/badge";
-import { Add as Plus, ArrowDown2, ArrowRight2, DollarCircle, TrendDown, TrendUp, Warning2 } from 'iconsax-react';
+import { Add as Plus, ArrowDown2, ArrowRight2, DollarCircle, TrendDown, TrendUp, Warning2, Trash} from 'iconsax-react';
 import { FinancialKPIs } from "@/components/Financial/FinancialKPIs";
 import { FinancialHeader } from "@/components/Financial/FinancialHeader";
 import { ExpenseModal } from "@/components/Financial/ExpenseModal";
@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { motion } from "framer-motion";
+import { PillTabs } from "@/components/ui/pill-tabs";
 
 export default function Financial() {
   const { data: clients = [] } = useClients();
@@ -371,18 +372,8 @@ export default function Financial() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between sm:flex-col sm:items-end gap-1 pl-8 sm:pl-0">
-                        <motion.div whileHover={{ scale: 1.05, translateY: -1 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                          <LiquidGlassButton
-                            tint="danger"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const clientId = entries[0]?.client_id ?? "";
-                              setRenegotiating({ clientName, clientId, entries });
-                            }}
-                            className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                          >
-                            Renegociar
-                          </LiquidGlassButton>
+                        <motion.div>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); const clientId = entries[0]?.client_id ?? ""; setRenegotiating({ clientName, clientId, entries }); }} className="acao-vidro">Renegociar</button>
                         </motion.div>
                         <span className="text-red-500 font-bold text-sm">{formatCurrency(totalAmount)}</span>
                       </div>
@@ -411,15 +402,8 @@ export default function Financial() {
                                   <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                                 </div>
                               </div>
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-                                <LiquidGlassButton
-                                  tint="success"
-                                  onClick={() => handleMarkAsPaid(entry.id)}
-                                  disabled={isMarkingAsPaid}
-                                  className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                                >
-                                  Confirmar
-                                </LiquidGlassButton>
+                              <motion.div>
+                                <button type="button" onClick={() => handleMarkAsPaid(entry.id)} disabled={isMarkingAsPaid} className="acao-vidro">Confirmar</button>
                               </motion.div>
                             </div>
                           ))}
@@ -442,33 +426,21 @@ export default function Financial() {
             <p className="text-white/40 text-sm mt-1">Todos os lançamentos do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Filter buttons */}
-            {[
-              { id: 'all', label: 'Todos' },
-              { id: 'pending', label: 'Em Aberto' },
-              { id: 'paid', label: 'Pagos' },
-              { id: 'currentMonth', label: 'Mês Atual' }
-            ].map((btn) => (
-              <motion.div
-                key={btn.id}
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <LiquidGlassButton
-                  tint={statusFilter === btn.id ? "primary" : "neutral"}
-                  onClick={() => setStatusFilter(btn.id as any)}
-                  className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                >
-                  {btn.label}
-                </LiquidGlassButton>
-              </motion.div>
-            ))}
+            <PillTabs
+              items={[
+                { value: 'all', label: 'Todos' },
+                { value: 'pending', label: 'Em Aberto' },
+                { value: 'paid', label: 'Pagos' },
+                { value: 'currentMonth', label: 'Mês Atual' },
+              ]}
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as any)}
+            />
           </div>
         </div>
           {financialEntriesLoading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <img src="/logo.png" alt="Carregando" className="logo-respirando mx-auto mb-4 h-12 w-12 object-contain" />
               <p className="text-white/50">Carregando lançamentos...</p>
             </div>
           ) : normalEntries.length === 0 ? (
@@ -499,15 +471,8 @@ export default function Financial() {
                     </div>
                     <div className="flex gap-2">
                       {entry.status === 'pending' ? (
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="w-full sm:w-auto">
-                          <LiquidGlassButton
-                            tint="success"
-                            onClick={() => handleMarkAsPaid(entry.id)}
-                            disabled={isMarkingAsPaid}
-                            className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                          >
-                            Confirmar
-                          </LiquidGlassButton>
+                        <motion.div className="w-full sm:w-auto">
+                          <button type="button" onClick={() => handleMarkAsPaid(entry.id)} disabled={isMarkingAsPaid} className="acao-vidro">Confirmar</button>
                         </motion.div>
                       ) : (
                         <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
@@ -528,31 +493,19 @@ export default function Financial() {
             <p className="text-white/40 text-sm mt-1">Todas as despesas do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Filter buttons */}
-            {[
-              { id: 'all', label: 'Todos' },
-              { id: 'currentMonth', label: 'Mês Atual' }
-            ].map((btn) => (
-              <motion.div
-                key={btn.id}
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <LiquidGlassButton
-                  tint={expenseFilter === btn.id ? "primary" : "neutral"}
-                  onClick={() => setExpenseFilter(btn.id as any)}
-                  className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                >
-                  {btn.label}
-                </LiquidGlassButton>
-              </motion.div>
-            ))}
+            <PillTabs
+              items={[
+                { value: 'all', label: 'Todos' },
+                { value: 'currentMonth', label: 'Mês Atual' },
+              ]}
+              value={expenseFilter}
+              onChange={(v) => setExpenseFilter(v as any)}
+            />
           </div>
         </div>
           {expensesLoading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-Porceli-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <img src="/logo.png" alt="Carregando" className="logo-respirando mx-auto mb-4 h-12 w-12 object-contain" />
               <p className="text-white/50">Carregando despesas...</p>
             </div>
           ) : (() => {
@@ -608,28 +561,14 @@ export default function Financial() {
                     </div>
                     <div className="flex gap-2">
                       {expense.status === 'pending' ? (
-                        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
-                          <LiquidGlassButton
-                            tint="success"
-                            onClick={() => handlePayExpense(expense.id)}
-                            disabled={isPaying}
-                            className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                          >
-                            Pagar
-                          </LiquidGlassButton>
+                        <motion.div className="flex-1 sm:flex-none">
+                          <button type="button" onClick={() => handlePayExpense(expense.id)} disabled={isPaying} className="acao-vidro">Pagar</button>
                         </motion.div>
                       ) : (
                         <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
                       )}
-                      <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-1 sm:flex-none">
-                        <LiquidGlassButton
-                          tint="danger"
-                          onClick={() => handleDeleteExpense(expense.id, expense.description)}
-                          disabled={isDeleting}
-                          className="w-full sm:w-auto h-9 px-4 text-xs font-bold uppercase tracking-widest"
-                        >
-                          Excluir
-                        </LiquidGlassButton>
+                      <motion.div className="flex-1 sm:flex-none">
+                        <button type="button" onClick={() => handleDeleteExpense(expense.id, expense.description)} disabled={isDeleting} title="Excluir" aria-label="Excluir" className="acao-vidro so-icone perigo"><Trash size={14} /></button>
                       </motion.div>
                     </div>
                   </div>

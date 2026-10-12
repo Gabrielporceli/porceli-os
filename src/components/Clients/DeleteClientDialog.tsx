@@ -131,31 +131,18 @@ export function DeleteClientDialog({
           </div>
 
           {/* Footer */}
-          <div className="flex gap-4 p-6 border-t border-white/[0.05]">
+          <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05]">
             <motion.div
-              className="flex-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
-              <LiquidGlassButton
-                tint="danger"
-                onClick={onClose}
-                disabled={isDeleting}
-                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
+              <button type="button" onClick={onClose} disabled={isDeleting} className="acao-texto">Cancelar</button>
             </motion.div>
             <motion.div
-              className="flex-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               <LiquidGlassButton
                 tint="danger"
                 onClick={handleConfirm}
                 disabled={isDeleting}
-                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
               >
                 {isDeleting ? "Processando..." : "Confirmar Exclusão"}
               </LiquidGlassButton>

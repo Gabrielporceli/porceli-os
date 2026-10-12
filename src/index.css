@@ -758,13 +758,10 @@ button:focus-visible,
     transition: color 400ms cubic-bezier(1, 0, 0.4, 1);
   }
 
-  @media (hover: hover) {
-    .lqg-btn:not(:disabled):hover {
-      transform: scale(1.03);
-    }
-  }
+  /* PADRÕES-UI §6: hover só CLAREIA (nada cresce nem sobe); clique afunda. */
+  .lqg-btn { transition: transform 150ms ease; }
   .lqg-btn:not(:disabled):active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
 
   .sidebar-glass {
@@ -869,7 +866,7 @@ button:focus-visible,
   }
 
   *:focus-visible {
-    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+    @apply ring-2 ring-white/40 ring-offset-0;
   }
 
   /* Hide scrollbar for kanban horizontal scroll */
@@ -1145,21 +1142,19 @@ button:focus-visible,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #6829c0;
-  /* Roxo porceli */
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7C3AED;
-  /* Roxo mais claro ao hover */
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
   /* "auto" ou "thin" */
-  scrollbar-color: #6829c0 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
   /* thumb, track */
 }
 
@@ -1288,8 +1283,8 @@ button:focus-visible,
 
 .rdp-nav_button:focus,
 .rdp-nav_button:focus-visible {
-  box-shadow: 0 0 0 2px rgba(104, 41, 192, 0.4) !important;
-  border-color: #6829c0 !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
 }
 /* ───────────────────────────────────────────────────────────────────────
    Editor de notas (Tiptap)
@@ -1501,3 +1496,85 @@ button:focus-visible,
   border-radius: 12px;
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PADRÕES DE UI (PADROES-UI-PORCELI.md)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Vidro colorido: escolha marcada, interruptor ligado ── */
+.vidro-roxo, .vidro-azul, .vidro-indigo, .vidro-verde, .vidro-vermelho {
+  --vidro-cor: 104, 41, 192;
+  position: relative;
+  background-color: rgba(var(--vidro-cor), 0.55) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+    inset 0 10px 14px -8px rgba(255, 255, 255, 0.22),
+    inset 1.8px 3px 0 -2px rgba(255, 255, 255, 0.55),
+    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.45),
+    inset -3px -8px 1px -6px rgba(255, 255, 255, 0.30),
+    inset -0.3px -1px 4px 0 rgba(0, 0, 0, 0.14),
+    inset 0 3px 4px -2px rgba(0, 0, 0, 0.20),
+    0 2px 8px rgba(var(--vidro-cor), 0.35),
+    0 6px 16px rgba(0, 0, 0, 0.25) !important;
+  transition: background-color 350ms ease, box-shadow 350ms ease, color 350ms ease;
+}
+.vidro-azul     { --vidro-cor: 37, 99, 235; }
+.vidro-indigo   { --vidro-cor: 79, 70, 229; }
+.vidro-verde    { --vidro-cor: 16, 160, 110; }
+.vidro-vermelho { --vidro-cor: 210, 45, 45; }
+button.vidro-roxo:hover:not(:disabled), button.vidro-azul:hover:not(:disabled),
+button.vidro-indigo:hover:not(:disabled), button.vidro-verde:hover:not(:disabled),
+button.vidro-vermelho:hover:not(:disabled) {
+  background-color: rgba(var(--vidro-cor), 0.68) !important;
+}
+
+/* ── Ação secundária: pílula pequena de vidro; só-ícone: círculo de 32px ── */
+.acao-vidro {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: .375rem;
+  height: 2rem; padding: 0 .875rem; border-radius: 9999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .08),
+    inset 1.8px 3px 0 -2px rgba(255, 255, 255, .45),
+    inset -2px -2px 0 -2px rgba(255, 255, 255, .35),
+    inset 0 3px 4px -2px rgba(0, 0, 0, .18),
+    0 2px 6px rgba(0, 0, 0, .18);
+  white-space: nowrap;
+  transition: background-color 200ms ease, color 200ms ease, transform 150ms ease;
+}
+.acao-vidro.so-icone { width: 2rem; padding: 0; color: rgba(255, 255, 255, .65); }
+.acao-vidro:hover:not(:disabled) { background: rgba(255, 255, 255, .11); color: #fff; }
+.acao-vidro.perigo:hover:not(:disabled) { color: rgb(253, 164, 175); background: rgba(244, 63, 94, .14); }
+.acao-vidro:active:not(:disabled) { transform: scale(.97); }
+.acao-vidro:disabled { opacity: .4; cursor: default; }
+
+/* ── Ação terciária: só texto ── */
+.acao-texto {
+  display: inline-flex; align-items: center; gap: .375rem;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+  white-space: nowrap;
+  transition: color 200ms ease, transform 150ms ease;
+}
+.acao-texto:hover:not(:disabled) { color: #fff; }
+.acao-texto.perigo:hover:not(:disabled) { color: rgb(253, 164, 175); }
+.acao-texto:active:not(:disabled) { transform: scale(.97); }
+.acao-texto:disabled { opacity: .4; cursor: default; }
+
+/* ── Hover do botão grande neutro: clareia a lente ── */
+.lqg-btn:hover:not(:disabled) .lqg-lens:not(.lqg-lens--primary):not(.lqg-lens--success):not(.lqg-lens--danger) {
+  background-color: rgba(255, 255, 255, .11);
+}
+
+/* ── Logo de carregamento "respirando" ── */
+.logo-respirando { animation: respirar-logo 1.8s ease-in-out .8s infinite; }
+@keyframes respirar-logo {
+  0%, 100% { filter: brightness(1); scale: 1; }
+  50%      { filter: brightness(1.25); scale: .96; }
+}
+@media (prefers-reduced-motion: reduce) { .logo-respirando { animation: none; } }

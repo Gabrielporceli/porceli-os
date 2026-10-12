@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import { motion } from 'framer-motion';
-import { Building, Calendar, Call, Hashtag, Sms } from 'iconsax-react';
+import { Building, Calendar, Call, Hashtag, Sms, Edit2, Trash} from 'iconsax-react';
 import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import { Badge } from '@/components/ui/badge';
 import { usePlansContext } from '@/contexts/PlansContext';
@@ -53,9 +53,9 @@ const formatDate = (iso?: string) => {
 
 const getTagColor = (tag: string) => {
   switch (tag.toLowerCase()) {
-    case 'ativo': return 'bg-green-600 text-white hover:bg-green-700';
-    case 'a vencer': return 'bg-yellow-600 text-white hover:bg-yellow-700';
-    case 'vencido': return 'bg-red-600 text-white hover:bg-red-700';
+    case 'ativo': return 'bg-green-500/20 text-white/90 hover:bg-green-500/20';
+    case 'a vencer': return 'bg-yellow-500/20 text-white/90 hover:bg-yellow-500/20';
+    case 'vencido': return 'bg-red-500/20 text-white/90 hover:bg-red-500/20';
     default: return 'bg-Porceli-gray-600 text-white hover:bg-Porceli-gray-700';
   }
 };
@@ -120,15 +120,11 @@ export function ClientDetailPanel({ client, planColors = {}, onEdit, onDelete }:
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={spring}>
-            <LiquidGlassButton onClick={onEdit} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
-              Editar
-            </LiquidGlassButton>
+          <motion.div>
+            <button type="button" onClick={onEdit} title="Editar" aria-label="Editar" className="acao-vidro so-icone"><Edit2 size={14} /></button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={spring}>
-            <LiquidGlassButton tint="danger" onClick={onDelete} className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest">
-              Excluir
-            </LiquidGlassButton>
+          <motion.div>
+            <button type="button" onClick={onDelete} title="Excluir" aria-label="Excluir" className="acao-vidro so-icone perigo"><Trash size={14} /></button>
           </motion.div>
         </div>
       </div>

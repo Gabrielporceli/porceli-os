@@ -57,11 +57,9 @@ export function ConfirmarExclusao({ titulo, rotulo = "nota", quantidade = 0, onC
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2 pt-4">
+        <AlertDialogFooter className="items-center gap-6 pt-4">
           <AlertDialogCancel asChild>
-            <LiquidGlassButton className="h-11 px-6 text-xs font-bold uppercase tracking-widest">
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" className="acao-texto">Cancelar</button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
             <LiquidGlassButton

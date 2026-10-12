@@ -90,34 +90,19 @@ export function DeleteLeadDialog({
           )}
         </div>
 
-        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton
-              tint="danger"
-              onClick={onClose}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-              disabled={isDeleting}
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={onClose} disabled={isDeleting} className="acao-texto">Cancelar</button>
           </motion.div>
 
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <LiquidGlassButton
               tint="danger"
               onClick={handleConfirm}
               disabled={isDeleting}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
+              className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">

@@ -34,22 +34,22 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; badge: strin
   financeiro: {
     bg: 'rgba(34,197,94,0.08)',
     border: 'rgba(34,197,94,0.2)',
-    badge: 'bg-green-500/15 text-green-400 border-green-500/20',
-    icon: 'text-green-400',
+    badge: 'bg-green-500/20 text-white/90',
+    icon: 'text-white/70',
     dot: 'bg-green-400',
   },
   atividades: {
     bg: 'rgba(104,41,192,0.12)',
     border: 'rgba(104,41,192,0.25)',
-    badge: 'bg-primary/15 text-primary border-primary/20',
-    icon: 'text-primary',
+    badge: 'bg-primary/20 text-white/90',
+    icon: 'text-white/70',
     dot: 'bg-primary',
   },
   sistema: {
     bg: 'rgba(148,163,184,0.06)',
     border: 'rgba(148,163,184,0.15)',
-    badge: 'bg-white/10 text-white/50 border-white/10',
-    icon: 'text-white/40',
+    badge: 'bg-white/10 text-white/80',
+    icon: 'text-white/70',
     dot: 'bg-white/30',
   },
 };
@@ -136,7 +136,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-white/40 transition-colors"
                 style={{ colorScheme: 'dark' }}
               />
             )}
@@ -149,17 +149,11 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
         </div>
 
         {/* Footer fixo */}
-        <div className="flex gap-2 p-6 border-t border-white/[0.05] shrink-0">
-          <LiquidGlassButton
-            tint="danger"
-            className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
-            onClick={onClose}
-          >
-            Cancelar
-          </LiquidGlassButton>
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+          <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
           <LiquidGlassButton
             tint="primary"
-            className="flex-1 h-10 text-xs font-bold uppercase tracking-widest"
+            className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
             onClick={handleSave}
             disabled={updateSchedule.isPending || isEveryMinute || isWebhook}
           >
@@ -243,38 +237,37 @@ function AutomationRow({
       {/* Ações */}
       <div className="flex items-center gap-2 flex-shrink-0 pl-2">
         {automation.trigger_type !== 'webhook' ? (
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+          <button
+            type="button"
             onClick={() => onEdit(automation)}
             title="Editar automação"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-all"
+            aria-label="Editar automação"
+            className="acao-vidro so-icone"
           >
             <Edit2 className="w-3.5 h-3.5" />
-          </motion.button>
+          </button>
         ) : (
-          <div className="w-9 h-9 flex-shrink-0" />
+          <div className="h-8 w-8 flex-shrink-0" />
         )}
 
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
+        <button
+          type="button"
           onClick={() => trigger.mutate(automation.id)}
           disabled={isRunning}
           title="Executar agora"
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-green-400 hover:bg-green-400/[0.08] border border-transparent hover:border-green-400/20 transition-all disabled:opacity-50"
+          aria-label="Executar agora"
+          className="acao-vidro so-icone"
         >
           {isRunning
             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
             : <Play className="w-3.5 h-3.5" />
           }
-        </motion.button>
+        </button>
 
         <Switch
           checked={automation.enabled}
           onCheckedChange={(checked) => toggle.mutate({ id: automation.id, enabled: checked })}
           disabled={toggle.isPending}
-          className="data-[state=checked]:bg-primary"
         />
       </div>
     </motion.div>
@@ -308,9 +301,10 @@ export default function Automations() {
         <div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-          <div className={cn("w-2 h-2 rounded-full", enabledCount > 0 ? 'bg-green-400 animate-pulse' : 'bg-white/20')} />
-          <span className="text-white/50 text-xs">{enabledCount} ativa{enabledCount !== 1 ? 's' : ''}</span>
+        {/* Pílula plana: só informa — fundo tingido, texto branco, sem borda. */}
+        <div className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1.5", enabledCount > 0 ? 'bg-green-500/20' : 'bg-white/10')}>
+          <div className={cn("w-2 h-2 rounded-full", enabledCount > 0 ? 'bg-green-300 animate-pulse' : 'bg-white/30')} />
+          <span className="text-xs font-medium text-white/90">{enabledCount} ativa{enabledCount !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -318,7 +312,7 @@ export default function Automations() {
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <img src="/logo.png" alt="Carregando" className="logo-respirando h-12 w-12 object-contain" />
             <span className="text-white/40 text-sm">Carregando automações...</span>
           </div>
         </div>
@@ -331,7 +325,7 @@ export default function Automations() {
               const items = grouped[category];
 
               return (
-                <Card key={category} className="liquid-glass border-white/5 dashboard-glow overflow-hidden">
+                <Card key={category} className="surface-flat overflow-hidden">
                   {/* Card header */}
                   <div className="p-6 border-b border-white/5 flex items-center justify-between">
                     <div>
@@ -342,9 +336,9 @@ export default function Automations() {
                         {items.length} automação{items.length !== 1 ? 'ões' : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1", colors.badge)}>
                       <div className={cn("w-2 h-2 rounded-full", colors.dot)} />
-                      <span className={cn("text-xs font-semibold uppercase tracking-wider", colors.icon)}>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
                         {items.filter(a => a.enabled).length}/{items.length} ativas
                       </span>
                     </div>

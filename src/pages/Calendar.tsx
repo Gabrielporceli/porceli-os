@@ -65,11 +65,11 @@ interface NotionTask {
 }
 
 const TASK_COLORS: Record<string, string> = {
-  purple: "bg-primary/20 text-purple-300 border-primary/30",
-  blue:   "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  green:  "bg-green-500/20 text-green-300 border-green-500/30",
-  orange: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  pink:   "bg-pink-500/20 text-pink-300 border-pink-500/30",
+  purple: "bg-primary/20 text-white/90",
+  blue:   "bg-blue-500/20 text-white/90",
+  green:  "bg-green-500/20 text-white/90",
+  orange: "bg-orange-500/20 text-white/90",
+  pink:   "bg-pink-500/20 text-white/90",
 };
 
 const RECURRENCE_LABELS: Record<"daily" | "weekly" | "biweekly" | "monthly", string> = {
@@ -92,14 +92,14 @@ const toDateKey = (y: number, m: number, d: number) =>
   `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 const EVENT_COLORS: Record<string, string> = {
-  "1": "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  "2": "bg-green-500/20 text-green-300 border-green-500/30",
-  "3": "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  "4": "bg-pink-500/20 text-pink-300 border-pink-500/30",
-  "5": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  "6": "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  "7": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-  default: "bg-primary/20 text-purple-300 border-primary/30",
+  "1": "bg-blue-500/20 text-white/90",
+  "2": "bg-green-500/20 text-white/90",
+  "3": "bg-purple-500/20 text-white/90",
+  "4": "bg-pink-500/20 text-white/90",
+  "5": "bg-yellow-500/20 text-white/90",
+  "6": "bg-orange-500/20 text-white/90",
+  "7": "bg-cyan-500/20 text-white/90",
+  default: "bg-primary/20 text-white/90",
 };
 
 const MONTHS = [
@@ -302,7 +302,7 @@ export default function Calendar() {
     }
   }, [editingItem]);
 
-  const CARD = "liquid-glass dashboard-glow border-white/[0.05]";
+  const CARD = "surface-flat";
 
   // Verificar params de retorno do OAuth (Google e Notion)
   useEffect(() => {
@@ -1138,7 +1138,7 @@ export default function Calendar() {
                     {st !== 'pending' && (
                       <span className={cn(
                         "shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
-                        st === 'done' ? "bg-green-500/15 text-green-400" : "bg-blue-500/15 text-blue-400"
+                        st === 'done' ? "bg-green-500/20 text-white/90" : "bg-blue-500/20 text-white/90"
                       )}>
                         {st === 'done' ? 'Concluído' : 'Andamento'}
                       </span>
@@ -1394,8 +1394,6 @@ export default function Calendar() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
                           title="Abrir reunião"
                           className="text-white/50 hover:text-white transition-colors flex-shrink-0 flex items-center"
                         >
@@ -1467,7 +1465,7 @@ export default function Calendar() {
                 <input
                   type="text"
                   placeholder="Título da atividade"
-                  className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/40 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
@@ -1478,7 +1476,7 @@ export default function Calendar() {
                 <input
                   type="text"
                   placeholder="Cliente (opcional)"
-                  className="w-full bg-white/[0.03] border border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
+                  className="w-full bg-white/[0.03] border border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/35 h-10 rounded-xl px-3 transition-all outline-none text-sm"
                   value={newEventClient}
                   onChange={(e) => setNewEventClient(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateActivity(false)}
@@ -1509,8 +1507,6 @@ export default function Calendar() {
                 </div>
 
                 <motion.div
-                  whileHover={!creatingEvent && newEventTitle.trim() ? { scale: 1.02 } : {}}
-                  whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.97 } : {}}
                 >
                   <LiquidGlassButton
                     tint="primary"
@@ -1548,7 +1544,7 @@ export default function Calendar() {
                 placeholder="Ex: Reunião com Cliente"
                 value={newEventTitle}
                 onChange={(e) => setNewEventTitle(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/40 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
@@ -1559,7 +1555,7 @@ export default function Calendar() {
                 placeholder="Nome do cliente"
                 value={newEventClient}
                 onChange={(e) => setNewEventClient(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/40 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
@@ -1615,32 +1611,20 @@ export default function Calendar() {
               />
             </div>
 
-            <div className="flex gap-3 pt-4 mt-4 border-t border-white/[0.05]">
+            <div className="flex items-center justify-end gap-6 pt-4 mt-4 border-t border-white/[0.05]">
               <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <LiquidGlassButton
-                  tint="danger"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
-                >
-                  Cancelar
-                </LiquidGlassButton>
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="acao-texto">Cancelar</button>
               </motion.div>
               <motion.div
                 className="flex-[2]"
-                whileHover={!creatingEvent && newEventTitle.trim() && newEventDate ? { scale: 1.05, translateY: -2 } : {}}
-                whileTap={!creatingEvent && newEventTitle.trim() ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <LiquidGlassButton
                   tint="primary"
                   disabled={creatingEvent || !newEventTitle.trim() || !newEventDate || (createMeetLink && !newEventTime)}
                   onClick={() => handleCreateActivity(true)}
-                  className="w-full h-10 text-xs font-bold uppercase tracking-widest"
+                  className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
                 >
                    {creatingEvent ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                      <>
@@ -1676,7 +1660,7 @@ export default function Calendar() {
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
+                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/40 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
               />
             </div>
 
@@ -1706,7 +1690,7 @@ export default function Calendar() {
                     value={editClient}
                     onChange={(e) => setEditClient(e.target.value)}
                     placeholder="Nome do cliente"
-                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-primary/50 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/40 text-white placeholder:text-white/20 h-10 rounded-xl px-4 transition-all outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1732,9 +1716,6 @@ export default function Calendar() {
                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Status da Atividade</label>
                  <div className="grid grid-cols-2 gap-3 w-full">
                    <motion.div
-                     whileHover={{ scale: 1.05, translateY: -2 }}
-                     whileTap={{ scale: 0.95 }}
-                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                      className="w-full"
                    >
                      <button 
@@ -1752,9 +1733,6 @@ export default function Calendar() {
                    </motion.div>
                    
                    <motion.div
-                     whileHover={{ scale: 1.05, translateY: -2 }}
-                     whileTap={{ scale: 0.95 }}
-                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                      className="w-full"
                    >
                      <button 
@@ -1774,36 +1752,20 @@ export default function Calendar() {
                </div>
             )}
 
-            <div className="flex gap-3 pt-4 mt-4 border-t border-white/[0.05]">
+            <div className="flex items-center justify-end gap-6 pt-4 mt-4 border-t border-white/[0.05]">
               <motion.div 
-                className="flex-1" 
-                whileHover={{ scale: 1.05, translateY: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <LiquidGlassButton
-                  tint="danger"
-                  onClick={() => setIsEditActivityModalOpen(false)}
-                  className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-                >
-                  Cancelar
-                </LiquidGlassButton>
+                <button type="button" onClick={() => setIsEditActivityModalOpen(false)} className="acao-texto">Cancelar</button>
               </motion.div>
               <motion.div
                 className="flex-[2]"
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
+                <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="h-11 px-8 text-xs font-bold uppercase tracking-widest">
                   <Save className="w-4 h-4" />
                   Salvar
                 </LiquidGlassButton>
               </motion.div>
               <motion.div
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <LiquidGlassButton
                   tint="danger"
@@ -1837,9 +1799,6 @@ export default function Calendar() {
             </DialogDescription>
             <motion.div
               className="flex justify-end"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <LiquidGlassButton
                 tint="danger"

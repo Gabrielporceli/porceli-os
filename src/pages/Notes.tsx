@@ -43,6 +43,7 @@ import { useSidebarBand } from "@/hooks/useSidebarBand";
 import { useBoards } from "@/features/notes/boards/useBoards";
 import { BoardCanvas } from "@/features/notes/boards/BoardCanvas";
 import type { TipoQuadro } from "@/features/notes/boards/types";
+import { PillTabs } from "@/components/ui/pill-tabs";
 
 type Aba = "notas" | "pauta" | "quadros";
 
@@ -350,21 +351,16 @@ export default function Notes() {
 
           <div className="min-w-0 space-y-4">
             <div className="surface-flat flex flex-wrap items-center gap-3 p-3.5">
-              <div className="flex items-center gap-1 rounded-full bg-white/[0.04] p-1">
-                {(["notas", "pauta", "quadros"] as const).map((a) => (
-                  <button
-                    key={a}
-                    type="button"
-                    onClick={() => setAba(a)}
-                    className={cn(
-                      "rounded-full px-4 py-1.5 text-sm capitalize transition-colors",
-                      aba === a ? "bg-white/90 font-bold text-black" : "text-white/55 hover:text-white/80"
-                    )}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
+              <PillTabs
+                size="md"
+                items={[
+                  { value: "notas", label: "Notas" },
+                  { value: "pauta", label: "Pauta" },
+                  { value: "quadros", label: "Quadros" },
+                ]}
+                value={aba}
+                onChange={(v) => setAba(v as Aba)}
+              />
 
               {aba === "notas" && (
                 <>
@@ -382,9 +378,6 @@ export default function Notes() {
         <div className="ml-auto flex items-center gap-2">
           {aba === "pauta" ? null : aba === "notas" ? (
             <motion.div
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <LiquidGlassButton
                 tint="primary"

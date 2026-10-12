@@ -29,7 +29,8 @@ export const MOBILE_VISIBLE = 5;
 /** largura da janela = 5 slots + 4 vãos = 216px */
 export const MOBILE_WINDOW = MOBILE_VISIBLE * MOBILE_SLOT + (MOBILE_VISIBLE - 1) * MOBILE_GAP;
 
-export type Ball = { x: number; s: number };
+/** `w` só existe nas pílulas LARGAS (abas com texto): bolha em forma de cápsula de largura `w`. */
+export type Ball = { x: number; s: number; w?: number };
 export type Neck = { x: number; w: number; h: number };
 export type PillGeom = { back: Ball; front: Ball; neck: Neck };
 
@@ -146,5 +147,41 @@ export function transferPillGeom(
     back: { x: ax, s: sBack },
     front: { x: nx, s: sFront },
     neck: { x: neckStart, w: neckW, h: neckH },
+  };
+}
+
+/** Geometria "parada" de uma pílula LARGA (cápsula de largura `w`). */
+export function idleWidePillGeom(x: number, w: number): PillGeom {
+  return {
+    back: { x, s: 1, w },
+    front: { x, s: 0, w },
+    neck: { x: x + w / 2, w: 0, h: 0 },
+  };
+}
+
+/**
+ * Transferência para abas LARGAS (texto): a pílula NÃO estica um pescoço entre
+ * abas — numa cápsula larga o pescoço fica feio. Aqui vale o estilo do "salto
+ * longo" do menu lateral: a cápsula de origem encolhe enquanto a do destino
+ * cresce AO MESMO TEMPO ("some em um enquanto aparece no outro"), com o mesmo
+ * material e os mesmos marcos (PILL_DEFAULTS). Em p = SWITCH_AT só existe a do
+ * destino, cheia — idêntica à geometria parada, então a troca de âncora não dá
+ * salto.
+ */
+export function transferWidePillGeom(
+  ax: number,
+  aw: number,
+  nx: number,
+  nw: number,
+  slot: number,
+  p: number,
+  t: PillTuning = PILL_DEFAULTS
+): PillGeom {
+  void slot;
+  const e = easeInOut(clamp01(p / t.SWITCH_AT));
+  return {
+    back: { x: ax, s: 1 - e, w: aw },
+    front: { x: nx, s: e, w: nw },
+    neck: { x: nx + nw / 2, w: 0, h: 0 },
   };
 }

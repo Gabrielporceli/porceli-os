@@ -89,7 +89,7 @@ export function EditStageModal({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                 placeholder="Digite o nome da etapa"
                 disabled={stage.is_default}
               />
@@ -119,32 +119,18 @@ export function EditStageModal({
               </Select>
             </div>
 
-          <div className="flex gap-3 pt-6 mt-6 border-t border-white/[0.05]">
+          <div className="flex items-center justify-end gap-6 pt-6 mt-6 border-t border-white/[0.05]">
             <motion.div 
-              className="flex-1" 
-              whileHover={{ scale: 1.05, translateY: -2 }} 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <LiquidGlassButton
-                tint="danger"
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-              >
-                Cancelar
-              </LiquidGlassButton>
+              <button type="button" onClick={() => onOpenChange(false)} className="acao-texto">Cancelar</button>
             </motion.div>
             <motion.div
               className="flex-[2]"
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <LiquidGlassButton
                 tint="primary"
                 type="submit"
-                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
               >
                 <Save className="w-4 h-4 mr-2" />
                 Salvar
@@ -152,9 +138,6 @@ export function EditStageModal({
             </motion.div>
             {!stage.is_default && (
               <motion.div
-                whileHover={{ scale: 1.05, translateY: -2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 <LiquidGlassButton
                   tint="danger"

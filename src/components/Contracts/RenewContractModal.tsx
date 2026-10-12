@@ -289,25 +289,17 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
                     </div>
 
                     {/* Footer fixo */}
-                    <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
-                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <LiquidGlassButton
-                                tint="danger"
-                                type="button"
-                                onClick={onClose}
-                                disabled={isPending}
-                                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-                            >
-                                Cancelar
-                            </LiquidGlassButton>
+                    <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+                        <motion.div>
+                            <button type="button" onClick={onClose} disabled={isPending} className="acao-texto">Cancelar</button>
                         </motion.div>
-                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <motion.div>
                             <LiquidGlassButton
                                 tint="primary"
                                 type="submit"
                                 form="renew-contract-form"
                                 disabled={isPending}
-                                className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                                className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
                             >
                                 {isPending ? 'Processando...' : 'Confirmar Renovação'}
                             </LiquidGlassButton>

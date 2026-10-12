@@ -1,6 +1,7 @@
 import { useMemo, useState, type DragEvent } from 'react';
 import { Add, Chart, Filter, Image as ImageIcon, SearchNormal1, SidebarLeft, SidebarRight, Stickynote } from 'iconsax-react';
 import { ElementIcon } from './ElementIcon';
+import { PillTabs } from '@/components/ui/pill-tabs';
 import {
   ELEMENT_LIBRARY,
   TRAFFIC_GROUPS,
@@ -95,19 +96,14 @@ export function Palette({ onDragStart }: PaletteProps) {
       </div>
 
       {/* Pill-segmented tabs */}
-      <div className="flex gap-1 border-b border-white/5 p-2">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`flex-1 rounded-full px-1 py-1.5 text-xs font-semibold transition-colors ${
-              tab === t.id ? 'bg-white/10 text-white' : 'text-white/40 hover:bg-white/5 hover:text-white/70'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="border-b border-white/5 p-2">
+        <PillTabs
+          fill
+          items={TABS.map((x) => ({ value: x.id, label: x.label }))}
+          value={tab}
+          onChange={(v) => setTab(v as FunnelNodeCategory)}
+          className="[&>button]:!px-1 [&>button]:!text-[10px]"
+        />
       </div>
 
       {/* Grid — the scroll area itself is capped short of the panel's full
@@ -146,8 +142,8 @@ export function Palette({ onDragStart }: PaletteProps) {
             <div className="flex flex-wrap gap-1.5">
               <ToolChip icon={Stickynote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
               <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
-              <ToolChip icon={Chart} label="Forecast" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
-              <ToolChip icon={Filter} label="Funil" className="border-porceli-purpleLight/30 bg-porceli-purple/10 text-porceli-purpleLight" onDragStart={(e) => onDragStart(e, { type: 'funnelChartNode' })} />
+              <ToolChip icon={Chart} label="Forecast" className="border-transparent bg-primary/20 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
+              <ToolChip icon={Filter} label="Funil" className="border-transparent bg-primary/20 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'funnelChartNode' })} />
             </div>
           </Section>
         </div>

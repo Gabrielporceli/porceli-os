@@ -196,7 +196,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="Ex: Gestão de Tráfego"
                     value={formData.type}
                     onChange={(e) => handleChange('type', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                     required
                   />
                 </div>
@@ -232,7 +232,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                             handleChange('monthly_value', "");
                           }
                         }}
-                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl pl-10 transition-all font-bold"
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl pl-10 transition-all font-bold"
                         placeholder="0,00"
                         required
                       />
@@ -258,7 +258,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                             handleChange('payment_day', e.target.value);
                           }
                         }}
-                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="Ex: 10"
                         required
                       />
@@ -274,7 +274,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     placeholder="https://..."
                     value={formData.contract_url}
                     onChange={(e) => handleChange('contract_url', e.target.value)}
-                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-primary/50 placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] text-white focus:border-white/40 placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
 
@@ -362,7 +362,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     onClick={() => setBillingType(value)}
                     className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
                       billingType === value
-                        ? "btn-primary-glass text-white border-primary/40"
+                        ? "vidro-roxo text-white"
                         : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     }`}
                   >
@@ -377,34 +377,19 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
         </div>
 
         {/* Footer fixo */}
-        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton
-              tint="danger"
-              type="button"
-              onClick={onClose}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
           </motion.div>
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <LiquidGlassButton
               tint="primary"
               type="submit"
               form="new-contract-form"
               disabled={isPending || !formData.client_id}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+              className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
             >
               {isPending ? 'Criando...' : 'Criar Contrato'}
             </LiquidGlassButton>

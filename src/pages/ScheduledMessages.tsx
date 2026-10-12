@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from 'lucide-react';
-import { Call, Clock, Forbidden, MessageSquare, Profile2User, Send2, TickCircle, Warning2 } from 'iconsax-react';
+import { Call, Clock, Forbidden, MessageSquare, Profile2User, Send2, TickCircle, Warning2, Trash} from 'iconsax-react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -31,6 +31,7 @@ import {
   type ScheduledMessage,
 } from "@/hooks/useScheduledMessages";
 import { useClients } from "@/hooks/useClients";
+import { PillTabs } from "@/components/ui/pill-tabs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -57,10 +58,10 @@ function formatDateTimeBRT(iso: string): string {
 }
 
 const STATUS_CONFIG: Record<MessageStatus, { label: string; icon: React.ElementType; className: string }> = {
-  pending:   { label: "Agendada",  icon: Clock,         className: "bg-amber-500/15 text-amber-400 border-amber-500/20" },
-  sent:      { label: "Enviada",   icon: TickCircle,  className: "bg-green-500/15 text-green-400 border-green-500/20" },
-  failed:    { label: "Falhou",    icon: Warning2,   className: "bg-red-500/15 text-red-400 border-red-500/20" },
-  cancelled: { label: "Cancelada", icon: Forbidden,           className: "bg-white/10 text-white/40 border-white/10" },
+  pending:   { label: "Agendada",  icon: Clock,         className: "bg-amber-500/20 text-white/90 border-transparent" },
+  sent:      { label: "Enviada",   icon: TickCircle,  className: "bg-green-500/20 text-white/90 border-transparent" },
+  failed:    { label: "Falhou",    icon: Warning2,   className: "bg-red-500/20 text-white/90 border-transparent" },
+  cancelled: { label: "Cancelada", icon: Forbidden,           className: "bg-white/10 text-white/80 border-transparent" },
 };
 
 const RECIPIENT_LABELS: Record<RecipientType, string> = {
@@ -190,7 +191,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                     className={cn(
                       "py-2 px-3 rounded-xl text-xs font-medium border transition-all",
                       recipientType === type
-                        ? "btn-primary-glass text-white border-primary/40"
+                        ? "vidro-roxo text-white"
                         : "liquid-glass text-white/70 border-white/[0.06] hover:text-white"
                     )}
                   >
@@ -208,7 +209,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                   value={customPhone}
                   onChange={e => setCustomPhone(e.target.value)}
                   placeholder="Ex: 65981099630"
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-primary/40"
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-white/40"
                 />
               ) : (
                 <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
@@ -232,7 +233,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
                 onChange={e => setMessage(e.target.value)}
                 rows={4}
                 placeholder="Digite a mensagem que será enviada..."
-                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-primary/40 resize-none"
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-white/30 outline-none focus:border-white/40 resize-none"
               />
               <p className="text-white/20 text-xs text-right">{message.length} caracteres</p>
             </div>
@@ -257,23 +258,16 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
         </div>
 
         {/* Footer fixo */}
-        <div className="flex gap-4 p-6 border-t border-white/[0.05] shrink-0">
-          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
-            <LiquidGlassButton
-              tint="danger"
-              type="button"
-              onClick={onClose}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
+          <motion.div>
+            <button type="button" onClick={onClose} className="acao-texto">Cancelar</button>
           </motion.div>
-          <motion.div className="flex-1" whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <motion.div>
             <LiquidGlassButton
               tint="primary"
               onClick={handleSubmit}
               disabled={!canSubmit || isCreating}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+              className="h-11 px-8 text-xs font-bold uppercase tracking-widest"
             >
               {isCreating
                 ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -341,7 +335,7 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
             <button
               onClick={() => onCancel(msg.id)}
               disabled={isCancelling}
-              className="text-white/20 hover:text-amber-400 text-xs transition-colors"
+              className="acao-texto"
             >
               Cancelar
             </button>
@@ -349,15 +343,8 @@ function MessageRow({ msg, index, onCancel, isCancelling, onDelete, isDeleting }
         </div>
 
         {/* Excluir */}
-        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }} className="flex-shrink-0">
-          <LiquidGlassButton
-            tint="danger"
-            onClick={() => onDelete(msg.id)}
-            disabled={isDeleting}
-            className="h-9 px-4 text-xs font-bold uppercase tracking-widest"
-          >
-            Excluir
-          </LiquidGlassButton>
+        <motion.div className="flex-shrink-0">
+          <button type="button" onClick={() => onDelete(msg.id)} disabled={isDeleting} title="Excluir" aria-label="Excluir" className="acao-vidro so-icone perigo"><Trash size={14} /></button>
         </motion.div>
       </div>
     </motion.div>
@@ -405,26 +392,12 @@ export default function ScheduledMessages() {
 
       {/* Filtros e Ação */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-2 flex-wrap">
-          {FILTER_TABS.map(tab => (
-            <button
-              key={tab.value}
-              onClick={() => setFilter(tab.value)}
-              className={cn(
-                "h-9 px-4 rounded-xl text-xs font-medium border transition-all",
-                filter === tab.value
-                  ? "bg-primary/20 border-primary/40 text-primary"
-                  : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.06] hover:text-white/70"
-              )}
-            >
-              {tab.label}
-              {counts[tab.value] > 0 && (
-                <span className="ml-1.5 opacity-60">{counts[tab.value]}</span>
-              )}
-            </button>
-          ))}
-        </div>
-        <motion.div whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+        <PillTabs
+          items={FILTER_TABS.map((t) => ({ value: t.value, label: t.label, count: counts[t.value] }))}
+          value={filter}
+          onChange={(v) => setFilter(v as MessageStatus | "all")}
+        />
+        <motion.div>
           <LiquidGlassButton
             tint="primary"
             onClick={() => setIsModalOpen(true)}
@@ -436,7 +409,7 @@ export default function ScheduledMessages() {
       </div>
 
       {/* Lista */}
-      <Card className="liquid-glass dashboard-glow border border-white/5 overflow-hidden">
+      <Card className="surface-flat overflow-hidden">
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">Mensagens</h3>
@@ -456,7 +429,7 @@ export default function ScheduledMessages() {
               <Button
                 variant="ghost"
                 onClick={() => setIsModalOpen(true)}
-                className="text-primary hover:text-primary/80 text-sm"
+                className="acao-texto"
               >
                 Agendar primeira mensagem
               </Button>

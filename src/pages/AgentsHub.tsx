@@ -55,9 +55,6 @@ export default function AgentsHub() {
     <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
       <div className="absolute right-4 top-4 z-20">
         <motion.div
-          whileHover={{ scale: 1.05, translateY: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <LiquidGlassButton
             tint="primary"

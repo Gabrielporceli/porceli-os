@@ -319,7 +319,7 @@ function PageTransitionOverlay({
         src="/logo.png"
         alt=""
         draggable={false}
-        className="w-12 h-12 object-contain select-none"
+        className={`w-16 h-16 object-contain select-none ${saindo ? "" : "logo-respirando"}`}
         initial={{ y: "-130%", opacity: 0 }}
         animate={saindo ? { y: 0, opacity: 0 } : { y: 0, opacity: 1 }}
         transition={

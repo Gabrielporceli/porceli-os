@@ -34,7 +34,7 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
   const alertsToShow = typeof limit === 'number' ? alerts.slice(0, limit) : alerts;
 
   return (
-    <Card className={cn("liquid-glass dashboard-glow border border-white/5 overflow-hidden h-full animate-premium-in shadow-2xl", className)}>
+    <Card className={cn("surface-flat overflow-hidden h-full animate-premium-in shadow-2xl", className)}>
       <div className="p-6 border-b border-white/5">
         <h3 className="text-xl font-bold text-white tracking-tight">Alertas & Notificações</h3>
       </div>

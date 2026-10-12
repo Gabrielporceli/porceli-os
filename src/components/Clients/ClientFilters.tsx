@@ -159,7 +159,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                     placeholder="Buscar por nome..."
                     value={localFilters.location}
                     onChange={(e) => setLocalFilters(prev => ({ ...prev, location: e.target.value }))}
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
               </div>
@@ -176,7 +176,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                       className={cn(
                         "flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer",
                         localFilters.status.includes(status)
-                          ? "liquid-glass border-primary/30"
+                          ? "vidro-roxo text-white"
                           : "liquid-glass border-white/[0.05] hover:border-white/10"
                       )}
                       onClick={() => handleStatusChange(status, !localFilters.status.includes(status))}
@@ -213,7 +213,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                         className={cn(
                           "flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer",
                           localFilters.plan.includes(plan)
-                            ? "liquid-glass border-primary/30"
+                            ? "vidro-roxo text-white"
                             : "liquid-glass border-white/[0.05] hover:border-white/10"
                         )}
                         onClick={() => handlePlanChange(plan, !localFilters.plan.includes(plan))}
@@ -278,7 +278,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
           {/* Botões */}
           <div className="p-6 border-t border-white/[0.05]">
             <div className="flex gap-4">
-              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div className="flex-1">
                 <Button
                   onClick={handleApplyFilters}
                   className="bg-primary hover:bg-primary/90 text-white w-full h-12 rounded-xl shadow-[0_0_20px_rgba(104,41,192,0.3)] font-bold transition-all text-sm uppercase tracking-widest"
@@ -286,7 +286,7 @@ export function ClientFilters({ isOpen, onClose, filters, onFiltersChange }: Cli
                   Filtrar
                 </Button>
               </motion.div>
-              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div className="flex-1">
                 <Button
                   onClick={handleClearFilters}
                   variant="ghost"

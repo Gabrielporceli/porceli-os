@@ -116,7 +116,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-primary/50 focus:ring-0 focus:ring-offset-0 transition-all shadow-inner"
+              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-white/40 focus:ring-0 focus:ring-offset-0 transition-all shadow-inner"
               placeholder="Ex: Aluguel escritório"
               required
             />
@@ -129,7 +129,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
               type="text"
               value={formData.value}
               onChange={handleValueChange}
-              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner"
+              className="bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 h-12 rounded-xl focus:border-white/40 transition-all shadow-inner"
               placeholder="R$ 0,00"
               inputMode="decimal"
               required
@@ -139,7 +139,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
           <div className="space-y-2">
             <Label htmlFor="category" className="text-white/70 text-sm font-medium ml-1">Categoria *</Label>
             <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner">
+              <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-white/40 transition-all shadow-inner">
                 <SelectValue placeholder={<span className="text-white/40">Selecione uma categoria</span>}>
                   {formData.category && <span className="text-white/70">{formData.category}</span>}
                 </SelectValue>
@@ -181,7 +181,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
             <div className="space-y-2 animate-fade-in">
               <Label htmlFor="recurrence" className="text-white/70 text-sm font-medium ml-1">Recorrência</Label>
               <Select value={formData.recurrence} onValueChange={(value) => setFormData({ ...formData, recurrence: value })}>
-                <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-primary/50 transition-all shadow-inner">
+                <SelectTrigger className="bg-white/[0.03] border-white/[0.05] h-12 rounded-xl focus:border-white/40 transition-all shadow-inner">
                   <SelectValue placeholder={<span className="text-white/40">Selecione a recorrência</span>}>
                     {formData.recurrence && (
                       <span className="text-white/70">
@@ -208,24 +208,11 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
         <div className="grid grid-cols-2 gap-3 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
             className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton
-              tint="danger"
-              type="button"
-              onClick={() => setOpen(false)}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={() => setOpen(false)} className="acao-texto">Cancelar</button>
           </motion.div>
           <motion.div
             className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <LiquidGlassButton
               tint="primary"

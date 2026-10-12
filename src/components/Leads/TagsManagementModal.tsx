@@ -102,10 +102,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-white">Nova Tag</h4>
               {!isCreating && (
-                <motion.div 
-                  whileHover={{ scale: 1.05, translateY: -2 }} 
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                <motion.div
                 >
                   <Button
                     size="sm"
@@ -125,7 +122,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                     value={newTagName}
                     onChange={(e) => setNewTagName(e.target.value)}
                     placeholder="Ex: Cliente VIP"
-                    className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+                    className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
                   />
                 </div>
                 <div className="space-y-2">
@@ -146,10 +143,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                 </div>
                 <div className="flex gap-3 pt-2">
                   <motion.div 
-                    className="flex-1" 
-                    whileHover={{ scale: 1.05, translateY: -2 }} 
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="flex-1"
                   >
                     <LiquidGlassButton
                       tint="danger"
@@ -166,9 +160,6 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                   </motion.div>
                   <motion.div
                     className="flex-1"
-                    whileHover={{ scale: 1.05, translateY: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
                     <LiquidGlassButton tint="primary" onClick={handleCreateTag} className="w-full h-11 text-xs font-bold uppercase tracking-widest">
                       <Save className="w-4 h-4 mr-2" />
@@ -215,10 +206,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                           ))}
                         </div>
                         <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
-                          <motion.div 
-                            whileHover={{ scale: 1.05, translateY: -2 }} 
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          <motion.div
                           >
                             <LiquidGlassButton
                               tint="danger"
@@ -229,9 +217,6 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             </LiquidGlassButton>
                           </motion.div>
                           <motion.div
-                            whileHover={{ scale: 1.05, translateY: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
                             <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="h-9 px-4 text-xs font-bold uppercase tracking-widest">
                               <Save className="w-4 h-4 mr-2" />
@@ -248,9 +233,6 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                         </div>
                         <div className="flex gap-2 transition-opacity">
                           <motion.div 
-                            whileHover={{ scale: 1.1, translateY: -2 }} 
-                            whileTap={{ scale: 0.9 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
                             <Button
                               onClick={() => handleEditTag(tag)}
@@ -263,9 +245,6 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
                             </Button>
                           </motion.div>
                           <motion.div 
-                            whileHover={{ scale: 1.1, translateY: -2 }} 
-                            whileTap={{ scale: 0.9 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                           >
                             <Button
                               onClick={() => handleDeleteTag(tag.id)}

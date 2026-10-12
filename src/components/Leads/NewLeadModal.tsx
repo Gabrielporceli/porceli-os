@@ -145,7 +145,7 @@ export function NewLeadModal({
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="Nome do lead"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -155,7 +155,7 @@ export function NewLeadModal({
               value={formData.company}
               onChange={(e) => handleInputChange("company", e.target.value)}
               placeholder="Nome da empresa"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -165,7 +165,7 @@ export function NewLeadModal({
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
               placeholder="(11) 99999-9999"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -194,7 +194,7 @@ export function NewLeadModal({
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="email@exemplo.com"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
             />
           </div>
 
@@ -204,7 +204,7 @@ export function NewLeadModal({
               value={formData.value}
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder="R$ 0,00"
-              className="bg-white/[0.03] border-white/[0.05] focus:border-primary/50 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
+              className="bg-white/[0.03] border-white/[0.05] focus:border-white/40 text-white placeholder:text-white/20 h-11 rounded-xl transition-all"
               inputMode="decimal"
             />
           </div>
@@ -264,28 +264,14 @@ export function NewLeadModal({
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 border-t border-white/[0.05] shrink-0">
+        <div className="flex items-center justify-end gap-6 p-6 border-t border-white/[0.05] shrink-0">
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton
-              tint="danger"
-              onClick={() => onOpenChange(false)}
-              className="w-full h-12 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={() => onOpenChange(false)} className="acao-texto">Cancelar</button>
           </motion.div>
           <motion.div
-            className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <LiquidGlassButton tint="primary" onClick={handleSubmit} className="w-full h-12 text-xs font-bold uppercase tracking-widest">
+            <LiquidGlassButton tint="primary" onClick={handleSubmit} className="h-11 px-8 text-xs font-bold uppercase tracking-widest">
               <Add className="w-5 h-5 mr-2" />
               Criar Lead
             </LiquidGlassButton>

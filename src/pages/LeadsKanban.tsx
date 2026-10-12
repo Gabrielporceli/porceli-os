@@ -563,9 +563,6 @@ export default function LeadsKanban() {
         style={{ pointerEvents: isDraggingCard ? "none" : "auto" }}
       >
         <motion.div
-          whileHover={{ scale: 1.05, translateY: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <LiquidGlassButton
             onClick={() => setIsAddStageModalOpen(true)}
@@ -576,9 +573,6 @@ export default function LeadsKanban() {
         </motion.div>
 
         <motion.div
-          whileHover={{ scale: 1.05, translateY: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <LiquidGlassButton
             tint="primary"
@@ -682,7 +676,7 @@ export default function LeadsKanban() {
                                     <div
                                       className={cn(
                                         "transition-all duration-200 hover:-translate-y-0.5",
-                                        snapshot.isDragging && "ring-2 ring-primary/40 rounded-[20px]"
+                                        snapshot.isDragging && "ring-2 ring-white/30 rounded-[20px]"
                                       )}
                                     >
                                       <DeconstructedCard
@@ -725,7 +719,7 @@ export default function LeadsKanban() {
                                           </h4>
 
                                           {lead.value != null && (
-                                            <p className="text-primary font-bold text-xs tabular-nums">
+                                            <p className="text-white/70 font-bold text-xs tabular-nums">
                                               R$ {lead.value.toLocaleString("pt-BR")}
                                             </p>
                                           )}
@@ -737,7 +731,7 @@ export default function LeadsKanban() {
                                               })}
                                             </span>
                                             {lead.meeting_date && !lead.reuniao_realizada && (
-                                              <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                                              <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-white/90">
                                                 {new Date(lead.meeting_date).toLocaleString('pt-BR', {
                                                   day: '2-digit', month: '2-digit',
                                                   hour: '2-digit', minute: '2-digit'

@@ -22,7 +22,7 @@ const Index = () => {
   // Mostrar loading enquanto verifica autenticação
   return (
     <div className="min-h-screen bg-porceli-dark flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-porceli-purple border-t-transparent rounded-full animate-spin" />
+      <img src="/logo.png" alt="Carregando" className="logo-respirando h-16 w-16 object-contain" />
     </div>
   );
 };

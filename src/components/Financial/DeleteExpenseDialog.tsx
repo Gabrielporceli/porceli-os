@@ -28,24 +28,12 @@ export function DeleteExpenseDialog({
         </p>
         <div className="grid grid-cols-2 gap-3 p-6 pt-4 border-t border-white/[0.05] shrink-0">
           <motion.div 
-            className="flex-1" 
-            whileHover={{ scale: 1.05, translateY: -2 }} 
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            className="flex-1"
           >
-            <LiquidGlassButton
-              tint="danger"
-              onClick={() => onOpenChange(false)}
-              className="w-full h-11 text-xs font-bold uppercase tracking-widest"
-            >
-              Cancelar
-            </LiquidGlassButton>
+            <button type="button" onClick={() => onOpenChange(false)} className="acao-texto">Cancelar</button>
           </motion.div>
           <motion.div
             className="flex-1"
-            whileHover={{ scale: 1.05, translateY: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             <LiquidGlassButton
               tint="danger"

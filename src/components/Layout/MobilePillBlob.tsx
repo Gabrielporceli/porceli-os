@@ -108,6 +108,8 @@ export function MobilePillBlob({
    *  SVG recebe a posição `x` de cada peça. */
   vertical?: boolean;
 }) {
+  const wide = geom.back.w !== undefined;
+  const pad = wide && !vertical ? 14 : 0;
   const image = useMemo(() => {
     const t = tuning;
     const r = slot / 2;
@@ -119,14 +121,22 @@ export function MobilePillBlob({
     // vira X.
     const pt = (main: number, crossV: number) => (vertical ? { x: crossV, y: main } : { x: main, y: crossV });
     const shapes: string[] = [];
-    if (back.s > 0.001) {
-      const p = pt(back.x + r, cross);
-      shapes.push(`<circle cx='${f2(p.x)}' cy='${f2(p.y)}' r='${f2(back.s * r)}'/>`);
-    }
-    if (front.s > 0.001) {
-      const p = pt(front.x + r, cross);
-      shapes.push(`<circle cx='${f2(p.x)}' cy='${f2(p.y)}' r='${f2(front.s * r)}'/>`);
-    }
+    // Bolha: círculo (ícone) ou, se tem largura `w`, cápsula (aba de texto).
+    const ball = (b: { x: number; s: number; w?: number }) => {
+      if (b.s <= 0.001) return;
+      if (b.w !== undefined && !vertical) {
+        const w = b.w * b.s;
+        const h = slot * b.s;
+        shapes.push(
+          `<rect x='${f2(b.x + (b.w - w) / 2)}' y='${f2(cross - h / 2)}' width='${f2(w)}' height='${f2(h)}' rx='${f2(h / 2)}'/>`
+        );
+        return;
+      }
+      const p = pt(b.x + r, cross);
+      shapes.push(`<circle cx='${f2(p.x)}' cy='${f2(p.y)}' r='${f2(b.s * r)}'/>`);
+    };
+    ball(back);
+    ball(front);
     if (neck.w > 0.5 && neck.h > 0.5) {
       const nx = neck.x;
       const ny = cross - neck.h / 2;
@@ -217,14 +227,17 @@ export function MobilePillBlob({
       `<feMerge>${mergeNodes}</feMerge>` +
       `</filter>`;
 
-    const svgW = vertical ? slot : windowW;
-    const svgH = vertical ? windowW : slot;
+    // Cápsulas largas (abas) encostam nas bordas do SVG; sem folga o blur do
+    // gooey enxerga "nada" fora dele e corta/encolhe a borda reta. A folga
+    // `pad` dá espaço pra ele respirar (o <div> é deslocado de volta).
+    const svgW = vertical ? slot : windowW + 2 * pad;
+    const svgH = vertical ? windowW : slot + 2 * pad;
     const svg =
       `<svg xmlns='http://www.w3.org/2000/svg' width='${svgW}' height='${svgH}' viewBox='0 0 ${svgW} ${svgH}'>` +
       `<defs>${filter}</defs>` +
-      `<g filter='url(#m)' fill='#fff'>${shapes.join("")}</g></svg>`;
+      `<g filter='url(#m)' fill='#fff'><g transform='translate(${pad} ${pad})'>${shapes.join("")}</g></g></svg>`;
     return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
-  }, [geom, windowW, slot, tuning, vertical]);
+  }, [geom, windowW, slot, tuning, vertical, pad]);
 
   return (
     <div
@@ -234,8 +247,9 @@ export function MobilePillBlob({
         vertical ? "left-1/2 top-0 -translate-x-1/2" : "left-0 top-1/2 -translate-y-1/2"
       )}
       style={{
-        width: vertical ? slot : windowW,
-        height: vertical ? windowW : slot,
+        width: vertical ? slot : windowW + 2 * pad,
+        height: vertical ? windowW : slot + 2 * pad,
+        marginLeft: pad ? -pad : undefined,
         backgroundImage: image,
         backgroundSize: "100% 100%",
         backgroundRepeat: "no-repeat",
