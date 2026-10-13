@@ -1725,10 +1725,10 @@ export default function Calendar() {
                          }
                          setIsEditActivityModalOpen(false);
                        }}
-                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-10 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                       className="acao-vidro !h-10 w-full justify-center"
                      >
-                       <TickCircle className="w-4 h-4 text-white/40 group-hover:text-green-500 transition-colors" />
-                       <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Realizado</span>
+                       <TickCircle className="w-4 h-4 text-emerald-300" />
+                       Realizado
                      </button>
                    </motion.div>
                    
@@ -1742,41 +1742,33 @@ export default function Calendar() {
                          }
                          setIsEditActivityModalOpen(false);
                        }}
-                       className="w-full liquid-glass hover:bg-white/10 text-white/70 border-white/5 h-10 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                       className="acao-vidro !h-10 w-full justify-center"
                      >
-                       <Clock className="w-4 h-4 text-white/40 group-hover:text-blue-500 transition-colors" />
-                       <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-white transition-colors">Andamento</span>
+                       <Clock className="w-4 h-4 text-blue-300" />
+                       Andamento
                      </button>
                    </motion.div>
                  </div>
                </div>
             )}
 
-            <div className="flex items-center justify-end gap-6 pt-4 mt-4 border-t border-white/[0.05]">
-              <motion.div 
+            <div className="flex items-center justify-between gap-6 pt-4 mt-4 border-t border-white/[0.05]">
+              <button
+                type="button"
+                onClick={handleDeleteActivity}
+                title="Excluir Atividade"
+                aria-label="Excluir Atividade"
+                className="acao-vidro so-icone perigo"
               >
+                <Trash className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-6">
                 <button type="button" onClick={() => setIsEditActivityModalOpen(false)} className="acao-texto">Cancelar</button>
-              </motion.div>
-              <motion.div
-                className="flex-[2]"
-              >
                 <LiquidGlassButton tint="primary" onClick={handleSaveEdit} className="h-11 px-8 text-xs font-bold uppercase tracking-widest">
                   <Save className="w-4 h-4" />
                   Salvar
                 </LiquidGlassButton>
-              </motion.div>
-              <motion.div
-              >
-                <LiquidGlassButton
-                  tint="danger"
-                  type="button"
-                  onClick={handleDeleteActivity}
-                  className="h-11 w-11"
-                  title="Excluir Atividade"
-                >
-                  <Trash className="w-5 h-5" />
-                </LiquidGlassButton>
-              </motion.div>
+              </div>
             </div>
         </div>
         </DialogContent>

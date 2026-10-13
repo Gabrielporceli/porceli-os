@@ -91,11 +91,19 @@ export default function Notes() {
     [atualizar]
   );
 
-  /** Dispara agora o que estava agendado pra este id. */
+  /**
+   * Dispara agora o que estava agendado pra este id.
+   *
+   * SÓ grava se havia edição pendente (ou se `r` foi passado). Gravar sempre
+   * o rascunho aberto sobrescrevia a nota com um texto ANTIGO: abrir a janela,
+   * a nota ser alterada por fora (outra aba, banco, cofre) e fechar/sincronizar
+   * devolvia o conteúdo velho. Sem edição do usuário, não há nada a gravar.
+   */
   const descarregar = useCallback(
     (id: string, r?: Rascunho) => {
       const pendente = timers.current[id];
       if (pendente) { clearTimeout(pendente); delete timers.current[id]; }
+      if (!pendente && !r) return;
       const rascunho = r ?? rascunhos[id];
       if (!rascunho) return;
       gravar(id, rascunho).catch((e) => {
