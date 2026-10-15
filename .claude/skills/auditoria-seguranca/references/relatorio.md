@@ -1,0 +1,72 @@
+# Formato obrigatório do relatório
+
+## 0. Resumo de reconhecimento
+
+- Stack: linguagens, frameworks, banco/BaaS, auth, hospedagem
+- Superfície: N endpoints/funções, N tabelas, N buckets, N webhooks, N crons
+- Escopo coberto: estático / verificação em staging / leitura do banco
+- Fora do escopo ou não verificado: …
+
+## Fase 1: Visão do atacante (red team)
+
+Ordene por severidade (CRÍTICA primeiro). Um bloco por achado:
+
+```
+🔴 VULN-[N]: [Nome curto]
+├─ Severidade: CRÍTICA | ALTA | MÉDIA | BAIXA
+├─ Localização: arquivo:linha | tabela/policy | função
+├─ Tipo: [OWASP] | [CWE-ID] | [Anti-padrão A1–A12]
+├─ Cenário: como alguém abusaria disso, em linguagem clara
+├─ Impacto: o que é obtido (dados, dinheiro, escalação, custo)
+└─ Evidência: trecho de código, resultado da query read-only ou teste que comprova
+```
+
+Depois disso, uma seção **Suspeitas a confirmar**, com hipóteses sem evidência suficiente e o que falta para confirmar cada uma.
+
+## Fase 2: Código blindado (blue team)
+
+- Reescreva só o que estiver vulnerável. Use a stack e as convenções do projeto.
+- Comente o motivo de cada proteção: `// 🔒 SEGURANÇA [VULN-N]: <por quê> (CWE-XXX)`
+- Se a correção exigir mudança de arquitetura (migration, nova env var, novo middleware), explique isso antes do código.
+- Quando houver várias correções no mesmo arquivo, mostre o arquivo corrigido inteiro uma única vez.
+- SQL vai em uma migration nova, nunca editando uma migration já aplicada.
+
+## Fase 3: Testes de segurança
+
+Escreva um teste por vulnerabilidade, no framework do projeto. Para RLS, use SQL ou pgTAP; se o projeto não tiver framework, use Vitest. Dê nomes descritivos:
+
+```
+test("VULN-1: usuário B não lê registros do usuário A (RLS/IDOR)")
+test("VULN-2: função recusa requisição sem JWT")
+test("VULN-3: payload com campo 'role' é rejeitado (mass assignment)")
+```
+
+## Checklist de prontidão
+
+| # | Item | Status | Evidência |
+|---|------|--------|-----------|
+| 1 | RLS ativado em todas as tabelas | ✅/❌/⚠️ | … |
+| 2 | Policies impõem propriedade | | |
+| 3 | Nenhuma chave secreta no navegador | | |
+| 4 | Permissão e pagamento checados no servidor | | |
+| 5 | Chamadas pagas passam por função de servidor | | |
+| 6 | Rate limit em login, cadastro, formulários e chamadas pagas | | |
+| 7 | Secret scanning ativo e chaves antigas rotacionadas | | |
+| 8 | Dependências revisadas | | |
+| 9 | Input renderizado como texto | | |
+| 10 | Falhas logadas e alguém é alertado | | |
+
+## Scorecard
+
+```
+📊 SCORECARD DE SEGURANÇA
+├─ CRÍTICAS: X | ALTAS: X | MÉDIAS: X | BAIXAS: X
+├─ Anti-padrões detectados: [A1, A4, …]
+├─ Nota: [A–F]  (A = pronto para produção, F = risco crítico imediato)
+└─ Top 3 ações:
+   1. …
+   2. …
+   3. …
+```
+
+Critério da nota: qualquer CRÍTICA dá F. Uma ou mais ALTAS dão D. Só MÉDIAS dão C ou B, conforme a quantidade. Só BAIXAS dão A.
