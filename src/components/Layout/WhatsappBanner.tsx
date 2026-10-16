@@ -9,8 +9,10 @@
  * Também avisa se o próprio monitor parou de atualizar (estado velho).
  */
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Danger } from "iconsax-react";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Icon } from "@/components/ui/icon";
 
@@ -38,6 +40,8 @@ function formatar(iso: string) {
 export function WhatsappBanner() {
   const queryClient = useQueryClient();
   const [verificando, setVerificando] = useState(false);
+  // Fechar esconde só o aviso atual — se o estado mudar, ele volta.
+  const [fechadoEm, setFechadoEm] = useState<string | null>(null);
   const { data } = useQuery({
     queryKey: ["whatsapp-status"],
     queryFn: async () => {
@@ -58,6 +62,7 @@ export function WhatsappBanner() {
   const caiu = data.state === "down";
   const monitorParado = !caiu && minutosSemChecar > MONITOR_PARADO_MIN;
   if (!caiu && !monitorParado) return null;
+  const chave = caiu ? `down-${data.since}` : `parado-${data.checked_at}`;
 
   // Roda a checagem na hora (em vez de esperar o cron de 2 min) e relê o estado.
   const verificar = async () => {
@@ -70,14 +75,18 @@ export function WhatsappBanner() {
     }
   };
 
-  return (
+  if (fechadoEm === chave) return null;
+
+  // Notificação flutuante no canto inferior direito (não empurra o conteúdo).
+  return createPortal(
     <div
       role="alert"
       className={
-        "sticky top-3 z-40 mb-4 flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-xl " +
+        "fixed bottom-24 right-4 md:bottom-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl " +
+        "animate-in fade-in slide-in-from-bottom-4 duration-300 " +
         (caiu
-          ? "border-red-500/40 bg-[#2b1115] text-red-100"
-          : "border-yellow-500/40 bg-[#2a2310] text-yellow-100")
+          ? "border-red-500/40 bg-[#2b1115]/95 text-red-100"
+          : "border-yellow-500/40 bg-[#2a2310]/95 text-yellow-100")
       }
     >
       <Icon as={Danger} size={20} className={caiu ? "mt-0.5 shrink-0 text-red-400" : "mt-0.5 shrink-0 text-yellow-400"} />
@@ -86,7 +95,7 @@ export function WhatsappBanner() {
           <>
             <p className="font-bold">WhatsApp desconectado desde {formatar(data.since)}</p>
             <p className="text-red-100/80">
-              Os relatórios diários, os alertas financeiros e as cobranças aos clientes não estão sendo enviados.
+              Relatórios, alertas financeiros e cobranças não estão sendo enviados.
               Reconecte a instância <b>agencia03</b> lendo o QR code.
             </p>
             {data.detail && <p className="mt-0.5 text-xs text-red-100/50">{data.detail}</p>}
@@ -99,15 +108,24 @@ export function WhatsappBanner() {
             </p>
           </>
         )}
+        <button
+          type="button"
+          onClick={verificar}
+          disabled={verificando}
+          className="acao-texto mt-2 disabled:opacity-50"
+        >
+          {verificando ? "Verificando..." : "Verificar novamente"}
+        </button>
       </div>
       <button
         type="button"
-        onClick={verificar}
-        disabled={verificando}
-        className="acao-texto shrink-0 self-center disabled:opacity-50"
+        title="Fechar"
+        onClick={() => setFechadoEm(chave)}
+        className="shrink-0 rounded-full p-1 text-white/50 transition-colors hover:text-white"
       >
-        {verificando ? "Verificando..." : "Verificar novamente"}
+        <X className="h-4 w-4" />
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
