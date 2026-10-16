@@ -47,6 +47,10 @@ async function lerConexao(): Promise<{ aberta: boolean; detalhe: string }> {
       })
       const lista = await i.json()
       const inst = (Array.isArray(lista) ? lista[0] : lista)?.instance ?? (Array.isArray(lista) ? lista[0] : lista)
+      // Depois de reler o QR code, o connectionState da Evolution pode ficar
+      // preso em "connecting" enquanto a instância já está conectada — o
+      // fetchInstances (o mesmo que o painel da Evolution mostra) é o confiável.
+      if (inst?.connectionStatus === "open") return { aberta: true, detalhe: "open" }
       const tipo = inst?.disconnectionObject
         ? (() => { try { return JSON.parse(inst.disconnectionObject)?.error?.data?.attrs?.type } catch { return null } })()
         : null
