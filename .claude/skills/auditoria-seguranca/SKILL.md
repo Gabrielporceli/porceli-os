@@ -1,6 +1,6 @@
 ---
 name: auditoria-seguranca
-description: Auditoria de segurança zero-trust de ponta a ponta (código, banco, infra e verificação autorizada em staging) para qualquer sistema web/mobile/API, com foco nas falhas típicas de código gerado por IA ("vibe coding"). Use quando o usuário pedir auditoria de segurança, pentest, teste de segurança, revisão de segurança, checar RLS, checar vazamento de chaves, rate limiting, IDOR/BOLA, acesso cruzado entre usuários (cross-user data access), validação de inputs, "está seguro pra produção?", "checklist de segurança antes do deploy", ou mencionar /auditoria-seguranca.
+description: Auditoria de segurança zero-trust de ponta a ponta (código, banco, infra e verificação autorizada em staging) para qualquer sistema web/mobile/API, com foco nas falhas típicas de código gerado por IA ("vibe coding"). Use quando o usuário pedir auditoria de segurança, pentest, teste de segurança, revisão de segurança, checar RLS, checar vazamento de chaves, rate limiting, IDOR/BOLA, acesso cruzado entre usuários (cross-user data access), validação de inputs, "está seguro pra produção?", "checklist de segurança antes do deploy", ou mencionar /auditoria-seguranca. Entrega diagnóstico em PDF, plano prático priorizado e prompt pronto para corrigir os problemas.
 ---
 
 # Auditoria de Segurança Zero-Trust
@@ -81,6 +81,13 @@ Mapeie e registre no relatório:
 - **Superfície de ataque:** liste toda rota de API, Edge/Serverless Function, server action, webhook, cron, bucket de storage, RPC/função SQL exposta, tabela acessível via API.
 - Arquivos críticos: middleware, config de auth, `.env*`, `config.toml`, migrations, policies, `vercel.json`/headers, CI.
 
+**Fontes ao vivo (somente leitura), se os conectores estiverem disponíveis**, porque o estado real pode diferir das migrations:
+- Supabase MCP: `list_tables`, `get_advisors` (type `security`), `execute_sql` só com `SELECT` (consultas de `references/stacks.md`), `list_edge_functions`/`get_edge_function` (o código implantado pode diferir do repositório).
+- Vercel MCP: configuração do projeto e **nomes** das variáveis de ambiente (nunca os valores), headers de resposta.
+- GitHub: estado do secret scanning, alertas de Dependabot e proteção de branch.
+
+Nunca use essas ferramentas para escrever durante a auditoria.
+
 Rode o scanner rápido incluso (heurístico, só aponta onde olhar):
 
 ```bash
@@ -131,13 +138,21 @@ Siga **exatamente** o formato de `references/relatorio.md`:
 
 Mapeie cada achado para as referências de mercado quando couber: OWASP Top 10 (2025), OWASP API Security Top 10 (2023), OWASP Top 10 para LLM (2025), requisito do OWASP ASVS 5.0 e CWE.
 
-Se o relatório for longo, salve-o em `docs/seguranca/auditoria-AAAA-MM-DD.md` (sem valores de segredos) e mostre o resumo no chat.
+Salve o relatório completo em `docs/seguranca/AAAA-MM-DD/relatorio.md` (sem valores de segredos), na mesma pasta dos entregáveis do Passo 5, e mostre o resumo no chat.
 
-### Passo 5 — Correção (só após o relatório)
+### Passo 5 — Entregáveis: diagnóstico em PDF + plano prático + prompt de correção
+
+Siga `references/entregaveis.md`: grave `docs/seguranca/AAAA-MM-DD/achados.json` no schema definido e rode `scripts/gerar_entregaveis.py`. Ele gera:
+- **`diagnostico.pdf`**: nota, placar, resumo executivo para não técnicos, modelo de ameaças, checklist, **plano prático** em fases (Agora / Esta semana / 30 dias / Backlog), com esforço, horas estimadas e critério de "pronto", ações manuais destacadas, achados detalhados e, no apêndice, o prompt.
+- **`prompt-correcao.md`**: prompt autossuficiente para colar numa sessão nova e corrigir tudo em ordem, um commit por item, com teste antes e depois.
+
+Confira o PDF antes de entregar. Na resposta final, mostre a nota, as top 3 ações, as ações manuais e os caminhos dos arquivos.
+
+### Passo 6 — Correção (só se o usuário pedir nesta sessão)
 
 Se houver **segredo vazado**, siga primeiro `references/resposta-incidente.md` (rotacionar → revogar → checar uso indevido → só então limpar o código). Remover o segredo do código sem rotacionar não resolve nada.
 
-Pergunte quais achados corrigir. Aplique na ordem de severidade, rode lint/typecheck/testes após cada grupo, e re-execute o teste de segurança correspondente para provar que fechou. Nunca aplique migration em banco remoto sem confirmação explícita.
+Pergunte quais achados corrigir (ou siga o `prompt-correcao.md`). Aplique na ordem de severidade, rode lint/typecheck/testes após cada grupo, e re-execute o teste de segurança correspondente para provar que fechou. Nunca aplique migration em banco remoto sem confirmação explícita.
 
 ## Severidade
 

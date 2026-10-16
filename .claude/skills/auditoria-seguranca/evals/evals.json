@@ -1,0 +1,44 @@
+{
+  "skill_name": "auditoria-seguranca",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Faz uma auditoria de segurança completa desse projeto antes de eu colocar em produção.",
+      "files": ["evals/fixtures/app-vulneravel"],
+      "expected_output": "PDF + prompt de correção gerados em docs/seguranca/<data>/, encontrando as falhas plantadas e sem falsos positivos.",
+      "expectations": [
+        "Encontra a policy USING (true) em public.orders como CRÍTICA",
+        "Encontra a chave service_role hardcoded e a classifica como CRÍTICA, sem imprimir o valor",
+        "Não classifica a anon key do client como vulnerabilidade",
+        "Encontra a Edge Function que usa body.user_id em vez do JWT (IDOR)",
+        "Encontra o webhook sem validação de assinatura",
+        "Gera achados.json válido, diagnostico.pdf e prompt-correcao.md",
+        "Inclui a rotação de chave em acoes_manuais",
+        "Não altera nenhum arquivo fora de docs/seguranca/"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Checa só o RLS do banco.",
+      "files": ["evals/fixtures/app-vulneravel"],
+      "expected_output": "Relatório no modo foco, cobrindo apenas tabelas, policies, views, SECURITY DEFINER e storage.",
+      "expectations": [
+        "Usa o modo foco",
+        "Lista cada tabela com o status de RLS",
+        "Aponta a view sem security_invoker",
+        "Não reporta achados fora de banco e RLS"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Revisa a segurança do meu último commit.",
+      "files": ["evals/fixtures/app-vulneravel"],
+      "expected_output": "Relatório curto no modo diff, focado nos arquivos alterados.",
+      "expectations": [
+        "Usa o modo diff",
+        "Analisa só os arquivos alterados e o que eles tocam",
+        "Não gera PDF, a não ser que o usuário peça"
+      ]
+    }
+  ]
+}

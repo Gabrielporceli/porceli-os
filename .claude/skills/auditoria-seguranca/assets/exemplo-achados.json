@@ -1,0 +1,95 @@
+{
+  "projeto": "Agenda Pro (exemplo fictício)",
+  "data": "2026-10-16",
+  "modo": "completo",
+  "escopo": "Código do repositório, migrations e configuração de deploy. Sem testes contra ambiente rodando.",
+  "stack": ["React + Vite", "Supabase (Postgres, Auth, Edge Functions)", "Vercel"],
+  "resumo_executivo": "O sistema tem duas falhas críticas que permitem a qualquer pessoa ler dados de todos os clientes: uma chave administrativa do banco foi salva no código, e uma tabela de agendamentos aceita leitura de qualquer usuário logado. Também não há limite de tentativas no login. A prioridade é trocar a chave hoje e fechar o acesso à tabela; o restante cabe numa semana de trabalho.",
+  "modelo_ameacas": {
+    "ativos": ["Dados pessoais e telefone dos pacientes (tabela `appointments`)", "Chave administrativa do banco", "Cobranças (integração de pagamento)"],
+    "fronteiras": ["Navegador → PostgREST com anon key", "Provedor de pagamento → webhook `payment-webhook`"],
+    "fluxos": ["Agendamento: formulário → insert em `appointments`", "Pagamento: cobrança → webhook → status pago", "Login e reset de senha"]
+  },
+  "acoes_manuais": [
+    "Gerar nova secret key no Supabase (Project Settings → API), atualizar nos secrets das Edge Functions e desativar a antiga",
+    "Revisar os logs de API do Supabase dos últimos 90 dias em busca de uso da chave antiga",
+    "Ativar secret scanning e push protection no GitHub (Settings → Code security)"
+  ],
+  "achados": [
+    {
+      "id": "VULN-1",
+      "titulo": "Chave service_role commitada em migration",
+      "severidade": "CRÍTICA",
+      "confianca": "Confirmado",
+      "local": "supabase/migrations/20260101000000_cron.sql:12",
+      "tipo": "OWASP A04:2025 | CWE-798 | A3",
+      "cenario": "Qualquer pessoa com acesso ao repositório ou ao histórico copia a chave e acessa o banco ignorando todo o RLS.",
+      "impacto": "Leitura, alteração e exclusão de todos os dados de todos os clientes.",
+      "evidencia": "Header `Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9xxxxxxxx` com role service_role.",
+      "correcao": "Depois da rotação manual da chave: criar migration nova que recria o job do pg_cron lendo a credencial do Supabase Vault (`vault.decrypted_secrets`) em vez do literal.",
+      "teste": "Scanner de segredos (gitleaks) sem achados no working tree; o job do cron continua executando com sucesso.",
+      "criterio_aceite": "Nenhum JWT com role service_role no working tree; chave antiga revogada.",
+      "esforco": "M"
+    },
+    {
+      "id": "VULN-2",
+      "titulo": "Policy USING (true) expõe agendamentos de todos os clientes",
+      "severidade": "CRÍTICA",
+      "confianca": "Confirmado",
+      "local": "supabase/migrations/20260201000000_appointments.sql:20",
+      "tipo": "OWASP A01:2025 | API1:2023 | CWE-639 | A4",
+      "cenario": "Um usuário qualquer cria conta gratuita e consulta `/rest/v1/appointments` com o próprio JWT, recebendo os registros de todas as clínicas.",
+      "impacto": "Vazamento de dados pessoais (LGPD).",
+      "evidencia": "`create policy \"read\" on appointments for select to authenticated using (true);`",
+      "correcao": "Migration nova: remover a policy e criar policies de SELECT/INSERT/UPDATE/DELETE com `clinic_id in (select clinic_id from members where user_id = auth.uid())`, incluindo WITH CHECK.",
+      "teste": "Teste SQL com dois usuários de clínicas diferentes: o usuário B recebe 0 linhas da clínica A.",
+      "criterio_aceite": "Teste de isolamento passando; `get_advisors` sem alerta para a tabela.",
+      "esforco": "M"
+    },
+    {
+      "id": "VULN-3",
+      "titulo": "Sem rate limit no login e no reset de senha",
+      "severidade": "ALTA",
+      "confianca": "Provável",
+      "local": "src/pages/Login.tsx:40; supabase/config.toml [auth.rate_limit]",
+      "tipo": "OWASP A07:2025 | CWE-307",
+      "cenario": "Tentativas automatizadas de senha contra contas conhecidas.",
+      "impacto": "Tomada de conta.",
+      "evidencia": "`[auth.rate_limit]` ausente; nenhum captcha configurado.",
+      "correcao": "Configurar rate limits de auth no Supabase e habilitar captcha (Turnstile) no login e no reset.",
+      "teste": "Configuração versionada em `config.toml`; checklist manual no painel.",
+      "criterio_aceite": "Limites e captcha ativos no projeto de produção.",
+      "esforco": "P"
+    },
+    {
+      "id": "VULN-4",
+      "titulo": "Sem headers de segurança (CSP, HSTS, frame-ancestors)",
+      "severidade": "MÉDIA",
+      "confianca": "Confirmado",
+      "local": "vercel.json",
+      "tipo": "OWASP A02:2025 | CWE-693",
+      "cenario": "Clickjacking e maior impacto de qualquer XSS futuro.",
+      "impacto": "Defesa em profundidade ausente.",
+      "evidencia": "`vercel.json` só define rewrites.",
+      "correcao": "Adicionar bloco `headers` no vercel.json com HSTS, nosniff, Referrer-Policy, frame-ancestors 'none' e uma CSP inicial em modo report-only.",
+      "teste": "Teste que lê o vercel.json e verifica a presença dos headers.",
+      "criterio_aceite": "Headers presentes na resposta do preview.",
+      "esforco": "P"
+    }
+  ],
+  "suspeitas": [
+    { "titulo": "Webhook de pagamento talvez não valide o token do provedor", "o_que_falta": "Ler a função `payment-webhook` em produção; o código local parece desatualizado." }
+  ],
+  "checklist": [
+    { "item": "RLS ativado em todas as tabelas", "status": "ok", "evidencia": "12/12 tabelas com RLS" },
+    { "item": "Policies impõem propriedade", "status": "falha", "evidencia": "VULN-2" },
+    { "item": "Nenhuma chave secreta no navegador ou no histórico", "status": "falha", "evidencia": "VULN-1" },
+    { "item": "Permissão e pagamento checados no servidor", "status": "parcial", "evidencia": "Ver suspeita do webhook" },
+    { "item": "Chamadas pagas passam por função de servidor", "status": "ok", "evidencia": "Somente via Edge Functions" },
+    { "item": "Rate limit em login, cadastro, formulários e chamadas pagas", "status": "falha", "evidencia": "VULN-3" },
+    { "item": "Secret scanning ativo e chaves rotacionadas", "status": "falha", "evidencia": "Ação manual pendente" },
+    { "item": "Dependências revisadas", "status": "parcial", "evidencia": "npm audit: 3 high em dev deps" },
+    { "item": "Input renderizado como texto", "status": "ok", "evidencia": "Sem sinks de XSS" },
+    { "item": "Falhas logadas e alguém é alertado", "status": "falha", "evidencia": "Sem alertas configurados" }
+  ]
+}
