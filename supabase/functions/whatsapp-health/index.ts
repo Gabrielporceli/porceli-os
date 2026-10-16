@@ -47,10 +47,10 @@ async function lerConexao(): Promise<{ aberta: boolean; detalhe: string }> {
       })
       const lista = await i.json()
       const inst = (Array.isArray(lista) ? lista[0] : lista)?.instance ?? (Array.isArray(lista) ? lista[0] : lista)
-      // Depois de reler o QR code, o connectionState da Evolution pode ficar
-      // preso em "connecting" enquanto a instância já está conectada — o
-      // fetchInstances (o mesmo que o painel da Evolution mostra) é o confiável.
-      if (inst?.connectionStatus === "open") return { aberta: true, detalhe: "open" }
+      // NÃO confiar no connectionStatus do fetchInstances (o que o painel da
+      // Evolution mostra): em 16/10/2026 ele dizia "open" enquanto o
+      // connectionState dizia "connecting" — e o envio falhava com
+      // "Connection Closed". Quem manda é o connectionState.
       const tipo = inst?.disconnectionObject
         ? (() => { try { return JSON.parse(inst.disconnectionObject)?.error?.data?.attrs?.type } catch { return null } })()
         : null

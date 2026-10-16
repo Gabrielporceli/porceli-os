@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Header } from "./Header";
-import { WhatsappBanner } from "./WhatsappBanner";
+import { SystemAlerts } from "./SystemAlerts";
 import { PageTransitionProvider } from "@/components/ui/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { appBackgroundStyle } from "@/lib/appBackground";
@@ -50,7 +50,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
                 conteúdo se afastar da barra em monitores largos. */}
             <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-[104px]">
               <div className="w-full px-4">
-                <WhatsappBanner />
+                <SystemAlerts />
                 {children}
               </div>
             </main>

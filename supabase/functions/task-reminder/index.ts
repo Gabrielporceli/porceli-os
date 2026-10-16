@@ -10,15 +10,47 @@ const GROUP_JID          = Deno.env.get('ASAAS_ADMIN_GROUP_JID') || "12036316216
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
+const FONTE = "task-reminder"
+
+// ── Fila única de WhatsApp ─────────────────────────────────────────────────
+// Esta função NÃO fala com a Evolution: só coloca a mensagem em
+// whatsapp_outbox, e o worker whatsapp-outbox envia (com intervalo, retentativa
+// e segurando enquanto o WhatsApp estiver desconectado). A dedupe_key padrão —
+// origem + número + texto + dia — faz uma retentativa do cron (ou uma chamada
+// repetida) nunca duplicar a mesma mensagem.
+const outboxDb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+
+async function hashCurto(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(b)).slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join("")
+}
+
+async function enfileirarWhatsApp(
+  number: string,
+  text: string,
+  opts: { dedupe?: string; refTable?: string; refId?: string; expiresAt?: string } = {},
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const dedupe = opts.dedupe ?? `${FONTE}:${number}:${await hashCurto(text)}:${new Date().toISOString().slice(0, 10)}`
+  const { data, error } = await outboxDb
+    .from("whatsapp_outbox")
+    .upsert(
+      { number, text, source: FONTE, dedupe_key: dedupe, ref_table: opts.refTable ?? null, ref_id: opts.refId ?? null, expires_at: opts.expiresAt ?? null },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle()
+  if (error) return { ok: false, error: `fila: ${error.message}` }
+  return { ok: true, id: (data as { id?: string } | null)?.id }
+}
+
 serve(async (req) => {
   try {
-    // 1. Calcular a janela de 10 minutos a partir de agora
+    // 1. Janela de 9 a 11 minutos a partir de agora. Cada evento cai em duas
+    // execuções seguidas (de propósito: se uma rodada for pulada, a outra
+    // pega) — a dedupe_key por evento garante um lembrete só.
     const now = new Date()
-    const targetTime = new Date(now.getTime() + 10 * 60000) // Agora + 10 min
-    
-    // Criamos uma janela de 1 minuto para garantir o disparo
-    const startTimeStr = targetTime.toISOString()
-    const endTimeStr = new Date(targetTime.getTime() + 60000).toISOString()
+    const startTimeStr = new Date(now.getTime() + 9 * 60000).toISOString()
+    const endTimeStr = new Date(now.getTime() + 11 * 60000).toISOString()
 
     console.log(`Verificando tarefas entre ${startTimeStr} e ${endTimeStr}...`)
 
@@ -53,8 +85,12 @@ serve(async (req) => {
         }
 
         const text = `*LEMBRETE (Calendario)*\n\nSua reuniao: *${event.title}*\nComeca em *10 minutos!*`
-        await sendWhatsApp(text)
-        notificationsSent++
+        const fila = await enfileirarWhatsApp(GROUP_JID, text, {
+          dedupe: `lembrete:cal:${event.title}:${event.start_time}`,
+          expiresAt: event.start_time, // se não sair até a reunião começar, não serve mais
+        })
+        if (!fila.ok) throw new Error(fila.error)
+        if (fila.id) notificationsSent++
       }
     }
 
@@ -71,8 +107,12 @@ serve(async (req) => {
         }
 
         const text = `*LEMBRETE (Notion)*\n\nSua tarefa: *${task.title}*\nO prazo comeca em *10 minutos!*`
-        await sendWhatsApp(text)
-        notificationsSent++
+        const fila = await enfileirarWhatsApp(GROUP_JID, text, {
+          dedupe: `lembrete:notion:${task.title}:${task.due_date}`,
+          expiresAt: task.due_date,
+        })
+        if (!fila.ok) throw new Error(fila.error)
+        if (fila.id) notificationsSent++
       }
     }
 
@@ -94,10 +134,3 @@ serve(async (req) => {
   }
 })
 
-async function sendWhatsApp(text: string) {
-  return fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "apikey": EVOLUTION_API_KEY },
-    body: JSON.stringify({ number: GROUP_JID, text: text })
-  })
-}

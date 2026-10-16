@@ -13,6 +13,39 @@ const ASAAS_URL        = "https://api.asaas.com/v3";
 const EVO_URL          = Deno.env.get("EVOLUTION_API_URL") ?? "https://api.gabrielporceli.com.br";
 const EVO_INSTANCE     = "agencia03";
 const EVO_KEY          = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
+
+const FONTE = "asaas-new-client"
+
+// ── Fila única de WhatsApp ─────────────────────────────────────────────────
+// Esta função NÃO fala com a Evolution: só coloca a mensagem em
+// whatsapp_outbox, e o worker whatsapp-outbox envia (com intervalo, retentativa
+// e segurando enquanto o WhatsApp estiver desconectado). A dedupe_key padrão —
+// origem + número + texto + dia — faz uma retentativa do cron (ou uma chamada
+// repetida) nunca duplicar a mesma mensagem.
+const outboxDb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+
+async function hashCurto(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(b)).slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join("")
+}
+
+async function enfileirarWhatsApp(
+  number: string,
+  text: string,
+  opts: { dedupe?: string; refTable?: string; refId?: string; expiresAt?: string } = {},
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const dedupe = opts.dedupe ?? `${FONTE}:${number}:${await hashCurto(text)}:${new Date().toISOString().slice(0, 10)}`
+  const { data, error } = await outboxDb
+    .from("whatsapp_outbox")
+    .upsert(
+      { number, text, source: FONTE, dedupe_key: dedupe, ref_table: opts.refTable ?? null, ref_id: opts.refId ?? null, expires_at: opts.expiresAt ?? null },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle()
+  if (error) return { ok: false, error: `fila: ${error.message}` }
+  return { ok: true, id: (data as { id?: string } | null)?.id }
+}
 const ADMIN_GROUP      = Deno.env.get("ASAAS_ADMIN_GROUP_JID") ?? "120363162167738258@g.us";
 
 // ── Feriados nacionais brasileiros ─────────────────────────────────────────
@@ -138,21 +171,8 @@ function toAsaasLocalPhone(phone: string): string {
 // exatamente esse ponto cego que fez um cliente não ser avisado de um
 // boleto (Mayke Arruda, parcela de R$1000) enquanto o sistema "achava"
 // que tinha dado certo.
-async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: EVO_KEY },
-      body: JSON.stringify({ number, text }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      return { ok: false, error: `Evolution API ${r.status}: ${txt.slice(0, 300)}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
-  }
+async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean; id?: string; error?: string }> {
+  return enfileirarWhatsApp(number, text);
 }
 
 // ── Supabase log ───────────────────────────────────────────────────────────

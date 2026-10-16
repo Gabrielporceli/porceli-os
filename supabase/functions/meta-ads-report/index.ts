@@ -9,6 +9,39 @@ const corsHeaders = {
 const EVOLUTION_URL = (Deno.env.get('EVOLUTION_URL') || 'https://api.gabrielporceli.com.br').trim()
 const EVOLUTION_API_KEY = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
 const EVOLUTION_INSTANCE = "agencia03"
+
+const FONTE = "meta-ads-report"
+
+// ── Fila única de WhatsApp ─────────────────────────────────────────────────
+// Esta função NÃO fala com a Evolution: só coloca a mensagem em
+// whatsapp_outbox, e o worker whatsapp-outbox envia (com intervalo, retentativa
+// e segurando enquanto o WhatsApp estiver desconectado). A dedupe_key padrão —
+// origem + número + texto + dia — faz uma retentativa do cron (ou uma chamada
+// repetida) nunca duplicar a mesma mensagem.
+const outboxDb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+
+async function hashCurto(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(b)).slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join("")
+}
+
+async function enfileirarWhatsApp(
+  number: string,
+  text: string,
+  opts: { dedupe?: string; refTable?: string; refId?: string; expiresAt?: string } = {},
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const dedupe = opts.dedupe ?? `${FONTE}:${number}:${await hashCurto(text)}:${new Date().toISOString().slice(0, 10)}`
+  const { data, error } = await outboxDb
+    .from("whatsapp_outbox")
+    .upsert(
+      { number, text, source: FONTE, dedupe_key: dedupe, ref_table: opts.refTable ?? null, ref_id: opts.refId ?? null, expires_at: opts.expiresAt ?? null },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle()
+  if (error) return { ok: false, error: `fila: ${error.message}` }
+  return { ok: true, id: (data as { id?: string } | null)?.id }
+}
 const META_GRAPH_VERSION = 'v24.0'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -259,17 +292,9 @@ async function fetchMetaPixel(pixelId: string, token: string, startISO: string, 
 
 async function sendWhatsApp(recipient: string, text: string) {
   const target = recipient.includes('@') ? recipient : recipient.replace(/[^0-9]/g, '')
-  const endpoint = `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: EVOLUTION_API_KEY },
-    body: JSON.stringify({ number: target, text, delay: 1200 }),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Evolution API error ${res.status}: ${err.substring(0, 200)}`)
-  }
-  return res.json()
+  const fila = await enfileirarWhatsApp(target, text)
+  if (!fila.ok) throw new Error(fila.error)
+  return fila
 }
 
 // ─── Processar um config ───────────────────────────────────────────────────────

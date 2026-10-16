@@ -17,6 +17,39 @@ const EVO_INSTANCE = "agencia03";
 // recebeu 2 avisos seguidos por causa disso).
 const EVO_KEY       = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 
+const FONTE = "asaas-payment-alerts"
+
+// ── Fila única de WhatsApp ─────────────────────────────────────────────────
+// Esta função NÃO fala com a Evolution: só coloca a mensagem em
+// whatsapp_outbox, e o worker whatsapp-outbox envia (com intervalo, retentativa
+// e segurando enquanto o WhatsApp estiver desconectado). A dedupe_key padrão —
+// origem + número + texto + dia — faz uma retentativa do cron (ou uma chamada
+// repetida) nunca duplicar a mesma mensagem.
+const outboxDb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+
+async function hashCurto(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(b)).slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join("")
+}
+
+async function enfileirarWhatsApp(
+  number: string,
+  text: string,
+  opts: { dedupe?: string; refTable?: string; refId?: string; expiresAt?: string } = {},
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const dedupe = opts.dedupe ?? `${FONTE}:${number}:${await hashCurto(text)}:${new Date().toISOString().slice(0, 10)}`
+  const { data, error } = await outboxDb
+    .from("whatsapp_outbox")
+    .upsert(
+      { number, text, source: FONTE, dedupe_key: dedupe, ref_table: opts.refTable ?? null, ref_id: opts.refId ?? null, expires_at: opts.expiresAt ?? null },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle()
+  if (error) return { ok: false, error: `fila: ${error.message}` }
+  return { ok: true, id: (data as { id?: string } | null)?.id }
+}
+
 // ── Feriados ───────────────────────────────────────────────────────────────────
 
 function getEaster(year: number): Date {
@@ -107,22 +140,6 @@ async function asaasGetAll(path: string): Promise<unknown[]> {
 // "sent". Foi exatamente esse ponto cego que fez um cliente não ser avisado
 // de um boleto (Mayke Arruda, parcela de R$1000) enquanto o sistema "achava"
 // que tinha dado certo.
-async function sendWhatsApp(number: string, text: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: EVO_KEY },
-      body: JSON.stringify({ number, text }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      return { ok: false, error: `Evolution API ${r.status}: ${txt.slice(0, 300)}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
-  }
-}
 
 // ── Deduplicação ───────────────────────────────────────────────────────────────
 
@@ -236,15 +253,16 @@ serve(async (req) => {
         const effISO   = effDue.toISOString().slice(0, 10);
         const msg      = msgPending(cust.name, p.description ?? "", effISO, fmtBRL(p.value), p.invoiceUrl ?? "", daysLeft);
 
-        let clientSend: { ok: boolean; error?: string } = { ok: true };
-        if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        let clientSend: { ok: boolean; id?: string; error?: string } = { ok: true };
+        if (cust.phone) clientSend = await enfileirarWhatsApp(formatPhoneBR(cust.phone), msg, { dedupe: `alerta:${p.id}:${type}:${todayISO}` });
 
+        // "sent" = entrou na fila; se o envio falhar de vez, o worker muda para "failed" (via outbox_id)
         await logNotif(supabase, {
           asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
           asaas_payment_id: p.id,
           status: clientSend.ok ? "sent" : "failed",
           error_message: clientSend.ok ? undefined : clientSend.error,
-          metadata: { daysLeft, effISO },
+          metadata: { daysLeft, effISO, outbox_id: clientSend.id },
         });
         results.pending++;
       } catch (e) { console.error("pending:", (e as Error).message); results.errors++; }
@@ -267,15 +285,15 @@ serve(async (req) => {
 
         const msg = msgOverdue(cust.name, p.description ?? "", p.dueDate, fmtBRL(p.value), p.invoiceUrl ?? "", urgency);
 
-        let clientSend: { ok: boolean; error?: string } = { ok: true };
-        if (cust.phone) clientSend = await sendWhatsApp(formatPhoneBR(cust.phone), msg);
+        let clientSend: { ok: boolean; id?: string; error?: string } = { ok: true };
+        if (cust.phone) clientSend = await enfileirarWhatsApp(formatPhoneBR(cust.phone), msg, { dedupe: `alerta:${p.id}:${type}:${todayISO}` });
 
         await logNotif(supabase, {
           asaas_customer_id: p.customer, client_name: cust.name, type, channel: "whatsapp",
           asaas_payment_id: p.id, days_overdue: daysLate,
           status: clientSend.ok ? "sent" : "failed",
           error_message: clientSend.ok ? undefined : clientSend.error,
-          metadata: { urgency },
+          metadata: { urgency, outbox_id: clientSend.id },
         });
         results.overdue++;
       } catch (e) { console.error("overdue:", (e as Error).message); results.errors++; }

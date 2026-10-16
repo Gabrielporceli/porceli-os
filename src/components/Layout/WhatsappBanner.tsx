@@ -9,7 +9,6 @@
  * Também avisa se o próprio monitor parou de atualizar (estado velho).
  */
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Danger } from "iconsax-react";
 import { X } from "lucide-react";
@@ -24,6 +23,11 @@ interface Status {
 }
 
 const MONITOR_PARADO_MIN = 10;
+
+/** Visual comum dos cards de aviso do canto inferior direito. */
+export const ALERTA_BASE =
+  "pointer-events-auto flex w-full items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl " +
+  "animate-in fade-in slide-in-from-bottom-4 duration-300 ";
 
 const db = supabase as unknown as {
   from: (t: string) => {
@@ -77,13 +81,12 @@ export function WhatsappBanner() {
 
   if (fechadoEm === chave) return null;
 
-  // Notificação flutuante no canto inferior direito (não empurra o conteúdo).
-  return createPortal(
+  // Card da pilha de avisos do canto inferior direito (ver SystemAlerts).
+  return (
     <div
       role="alert"
       className={
-        "fixed bottom-24 right-4 md:bottom-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl " +
-        "animate-in fade-in slide-in-from-bottom-4 duration-300 " +
+        ALERTA_BASE +
         (caiu
           ? "border-red-500/40 bg-[#2b1115]/95 text-red-100"
           : "border-yellow-500/40 bg-[#2a2310]/95 text-yellow-100")
@@ -95,7 +98,7 @@ export function WhatsappBanner() {
           <>
             <p className="font-bold">WhatsApp desconectado desde {formatar(data.since)}</p>
             <p className="text-red-100/80">
-              Relatórios, alertas financeiros e cobranças não estão sendo enviados.
+              Relatórios, alertas e cobranças ficam na fila e saem quando reconectar.
               Reconecte a instância <b>agencia03</b> lendo o QR code.
             </p>
             {data.detail && <p className="mt-0.5 text-xs text-red-100/50">{data.detail}</p>}
@@ -125,7 +128,6 @@ export function WhatsappBanner() {
       >
         <X className="h-4 w-4" />
       </button>
-    </div>,
-    document.body
+    </div>
   );
 }

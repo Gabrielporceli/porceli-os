@@ -35,6 +35,39 @@ const EVO_INSTANCE = "agencia03";
 // projeto tem outro valor e devolve 401 — ver asaas-payment-alerts).
 const EVO_KEY = "E42F543C93BB-4A59-B3A1-8AA2E506DC00";
 
+const FONTE = "renegotiation-notice"
+
+// ── Fila única de WhatsApp ─────────────────────────────────────────────────
+// Esta função NÃO fala com a Evolution: só coloca a mensagem em
+// whatsapp_outbox, e o worker whatsapp-outbox envia (com intervalo, retentativa
+// e segurando enquanto o WhatsApp estiver desconectado). A dedupe_key padrão —
+// origem + número + texto + dia — faz uma retentativa do cron (ou uma chamada
+// repetida) nunca duplicar a mesma mensagem.
+const outboxDb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")
+
+async function hashCurto(s: string): Promise<string> {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(b)).slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join("")
+}
+
+async function enfileirarWhatsApp(
+  number: string,
+  text: string,
+  opts: { dedupe?: string; refTable?: string; refId?: string; expiresAt?: string } = {},
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const dedupe = opts.dedupe ?? `${FONTE}:${number}:${await hashCurto(text)}:${new Date().toISOString().slice(0, 10)}`
+  const { data, error } = await outboxDb
+    .from("whatsapp_outbox")
+    .upsert(
+      { number, text, source: FONTE, dedupe_key: dedupe, ref_table: opts.refTable ?? null, ref_id: opts.refId ?? null, expires_at: opts.expiresAt ?? null },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle()
+  if (error) return { ok: false, error: `fila: ${error.message}` }
+  return { ok: true, id: (data as { id?: string } | null)?.id }
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -145,14 +178,11 @@ serve(async (req) => {
 
     if (dry_run) return json({ success: true, dry_run: true, mensagem, pagamentos: pagamentos.length });
 
-    // Envio (Evolution API) — confere a resposta, para não "achar" que enviou.
-    const r = await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: EVO_KEY },
-      body: JSON.stringify({ number: formatPhoneBR(client.phone), text: mensagem }),
-    });
-    const ok = r.ok;
-    const erro = ok ? undefined : `Evolution API ${r.status}: ${(await r.text().catch(() => "")).slice(0, 300)}`;
+    // Vai para a fila única (o worker whatsapp-outbox envia e, se falhar de
+    // vez, marca o notification_logs como "failed" pelo outbox_id).
+    const fila = await enfileirarWhatsApp(formatPhoneBR(client.phone), mensagem);
+    const ok = fila.ok;
+    const erro = fila.error;
 
     // Registro (best effort — não derruba o envio se a tabela recusar)
     try {
@@ -164,14 +194,14 @@ serve(async (req) => {
         asaas_payment_id: pagamentos[0].id,
         status: ok ? "sent" : "failed",
         error_message: erro,
-        metadata: { pagamentos: pagamentos.map((p) => p.id), correcao: !!correcao },
+        metadata: { pagamentos: pagamentos.map((p) => p.id), correcao: !!correcao, outbox_id: fila.id },
       });
     } catch (e) {
       console.warn("notification_logs:", (e as Error).message);
     }
 
     if (!ok) return json({ success: false, error: erro }, 502);
-    return json({ success: true, enviado_para: formatPhoneBR(client.phone), pagamentos: pagamentos.length });
+    return json({ success: true, enfileirado_para: formatPhoneBR(client.phone), pagamentos: pagamentos.length });
   } catch (err: unknown) {
     const e = err as Error;
     console.error("renegotiation-notice error:", e.message);

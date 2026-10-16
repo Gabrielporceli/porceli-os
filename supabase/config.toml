@@ -82,3 +82,44 @@ verify_jwt = true
 
 [functions.notion-callback]
 verify_jwt = false
+# Chamadas pelo pg_cron, por webhook ou internamente — NÃO exigem JWT de usuário.
+# (o padrão do deploy é verify_jwt = true; publicar sem isso derruba o cron com
+# 401 silencioso — aconteceu com o whatsapp-health em 16/10/2026)
+[functions.whatsapp-health]
+verify_jwt = false
+
+[functions.whatsapp-outbox]
+verify_jwt = false
+
+[functions.daily-summary]
+verify_jwt = false
+
+[functions.financial-alert]
+verify_jwt = false
+
+[functions.task-reminder]
+verify_jwt = false
+
+[functions.send-scheduled-messages]
+verify_jwt = false
+
+[functions.asaas-payment-alerts]
+verify_jwt = false
+
+[functions.asaas-payment-reconciliation]
+verify_jwt = false
+
+[functions.asaas-new-client]
+verify_jwt = false
+
+[functions.asaas-renegotiation]
+verify_jwt = false
+
+[functions.meta-ads-report]
+verify_jwt = false
+
+[functions.manage-automations]
+verify_jwt = false
+
+[functions.renegotiation-notice]
+verify_jwt = true

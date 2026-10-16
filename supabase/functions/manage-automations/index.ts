@@ -9,8 +9,14 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-function buildCronCommand(functionName: string): string {
-  return `SELECT net.http_post(url := '${SUPABASE_URL}/functions/v1/${functionName}', headers := '{"Content-Type": "application/json", "Authorization": "Bearer ${SERVICE_ROLE_KEY}"}'::jsonb) as request_id;`
+// O cron chama public.cron_call(): registra cada execução em cron_runs (com o
+// resultado HTTP real), trava sobreposição e — nos jobs diários — refaz até 2x
+// se falhar. A chave fica no Vault, não no texto do cron.
+function buildCronCommand(jobname: string, functionName: string, schedule: string): string {
+  const frequente = /^\*(\/\d+)?\s/.test(schedule.trim()) // a cada N minutos: a próxima rodada já é a "retentativa"
+  const retries = frequente ? 0 : 2
+  const q = (v: string) => v.replace(/'/g, "''")
+  return `SELECT public.cron_call('${q(jobname)}', '${q(functionName)}', '{}'::jsonb, ${retries});`
 }
 
 function cronToHumanBRT(cron: string): string {
@@ -81,7 +87,7 @@ serve(async (req) => {
         if (automation.trigger_type !== 'webhook') {
           if (enabled) {
             // Reagendar cron
-            const command = buildCronCommand(automation.function_name)
+            const command = buildCronCommand(automation.jobname, automation.function_name, automation.schedule)
             await supabase.rpc('manage_automation_cron', {
               p_action: 'schedule',
               p_jobname: automation.jobname,
@@ -120,7 +126,7 @@ serve(async (req) => {
 
         // Atualizar cron se habilitado
         if (automation.enabled) {
-          const command = buildCronCommand(automation.function_name)
+          const command = buildCronCommand(automation.jobname, automation.function_name, schedule)
           await supabase.rpc('manage_automation_cron', {
             p_action: 'schedule',
             p_jobname: automation.jobname,
