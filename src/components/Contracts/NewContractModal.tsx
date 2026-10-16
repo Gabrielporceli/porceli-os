@@ -82,6 +82,13 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
         toast.error("Preencha valor e vencimento em todos os pagamentos.");
         return;
       }
+      // O Asaas recusa cobrança com vencimento no passado — antes isso criava
+      // o contrato com um pagamento sem cobrança (e sem aviso ao cliente).
+      const hoje = format(new Date(), "yyyy-MM-dd");
+      if (payments.some((p) => p.dueDate < hoje)) {
+        toast.error("Há pagamento com vencimento no passado. Ajuste a data — o Asaas não aceita.");
+        return;
+      }
       const saved = toSaved(payments);
       onSave({
         client_id: formData.client_id,
@@ -166,7 +173,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
+        className="text-white max-w-3xl h-[85dvh] max-h-[85dvh] !overflow-hidden"
         chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Contrato</DialogTitle>}
       >
         {/* Content with Custom Scrollbar */}
@@ -420,7 +427,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
             </div>
 
 {/* Forma de pagamento do modo padrão (no personalizado é por pagamento) */}
-            {!custom && (
+            {!custom && (
             <div className="space-y-2 pt-2">
               <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Forma de Pagamento</Label>
               <div className="grid grid-cols-3 gap-2">

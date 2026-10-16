@@ -2,11 +2,14 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * Avisa o cliente, por WhatsApp, das novas cobranças geradas numa renegociação:
- * valor e vencimento de cada parcela + o link de pagamento do Asaas.
+ * Avisa o cliente, por WhatsApp, das cobranças novas geradas no sistema —
+ * numa RENEGOCIAÇÃO ou num CONTRATO com pagamentos personalizados: valor e
+ * vencimento de cada cobrança + o link de pagamento do Asaas.
  *
- * Entrada: { client_id, since?, dry_run?, correcao? }
- *   • client_id — cliente renegociado (de onde saem telefone, CNPJ e nome)
+ * Entrada: { client_id, tipo?, servico?, since?, dry_run?, correcao? }
+ *   • client_id — cliente (de onde saem telefone, CNPJ e nome)
+ *   • tipo      — "renegociacao" (padrão) ou "contrato"
+ *   • servico   — nome do serviço do contrato (só no tipo "contrato")
  *   • since     — ISO; só entram cobranças do Asaas criadas a partir desta data
  *                 (padrão: as últimas 24h)
  *   • dry_run   — true = só monta a mensagem e devolve, sem enviar
@@ -55,8 +58,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { client_id, since, dry_run, correcao } = await req.json();
+    const { client_id, tipo = "renegociacao", servico, since, dry_run, correcao } = await req.json();
     if (!client_id) return json({ success: false, error: "client_id obrigatório" }, 400);
+    const contrato = tipo === "contrato";
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: client, error: cErr } = await supabase
@@ -68,21 +72,30 @@ serve(async (req) => {
     if (!client.cnpj) return json({ success: false, error: "Cliente sem CNPJ — não dá para achar as cobranças no Asaas" }, 422);
     if (!client.phone) return json({ success: false, error: "Cliente sem telefone" }, 422);
 
-    // Cobranças do Asaas criadas na renegociação
     const cnpj = String(client.cnpj).replace(/\D/g, "");
     const customers = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
     if (!customers.totalCount) return json({ success: false, error: "Cliente não encontrado no Asaas" }, 404);
     const customerId = customers.data[0].id as string;
 
+    // Cobranças abertas (a vencer ou já vencidas — um contrato pode ter
+    // pagamento com data passada) criadas a partir de `since`.
     const desde = (since ? new Date(since) : new Date(Date.now() - 24 * 3600 * 1000)).toISOString().slice(0, 10);
-    const lista = await asaasGet(`/payments?customer=${customerId}&status=PENDING&limit=100`);
     type Pay = { id: string; value: number; dueDate: string; description?: string; dateCreated: string; invoiceUrl?: string; billingType?: string; installment?: string | null };
-    const pagamentos = ((lista.data ?? []) as Pay[])
-      .filter((p) => (p.description ?? "").toLowerCase().includes("renegocia") && p.dateCreated >= desde)
+    const abertas: Pay[] = [];
+    for (const status of ["PENDING", "OVERDUE"]) {
+      const lista = await asaasGet(`/payments?customer=${customerId}&status=${status}&limit=100`);
+      abertas.push(...((lista.data ?? []) as Pay[]));
+    }
+    const pertence = (p: Pay) => {
+      const d = (p.description ?? "").toLowerCase();
+      return contrato ? d.includes("— pagamento ") : d.includes("renegocia");
+    };
+    const pagamentos = abertas
+      .filter((p) => pertence(p) && p.dateCreated >= desde)
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
     if (pagamentos.length === 0) {
-      return json({ success: false, error: "Nenhuma cobrança de renegociação recente encontrada no Asaas" }, 404);
+      return json({ success: false, error: `Nenhuma cobrança ${contrato ? "do contrato" : "de renegociação"} recente encontrada no Asaas` }, 404);
     }
 
     const nome = (client.responsible ?? "").trim().split(" ")[0] || "";
@@ -117,13 +130,16 @@ serve(async (req) => {
 
     const saudacao = `Olá${nome ? `, ${nome}` : ""}!`;
     const abertura = correcao
-      ? `${saudacao} Só um ajuste na mensagem anterior 😊\n\nSeguem as condições corretas da renegociação:\n\n`
-      : `${saudacao} 😊\n\nConforme combinado, a renegociação dos seus pagamentos foi concluída. Seguem as novas condições:\n\n`;
+      ? `${saudacao} Só um ajuste na mensagem anterior 😊\n\nSeguem as condições corretas:\n\n`
+      : contrato
+        ? `${saudacao} 😊\n\nSeu contrato com a *Porceli Company* foi registrado. Seguem as cobranças:\n\n`
+        : `${saudacao} 😊\n\nConforme combinado, a renegociação dos seus pagamentos foi concluída. Seguem as novas condições:\n\n`;
 
     const mensagem =
       abertura +
       `*Cliente:* ${client.company}\n` +
-      (blocosFinais.length > 1 ? `*Total renegociado:* ${fmtBRL(total)}\n` : "") +
+      (contrato && servico ? `*Serviço:* ${servico}\n` : "") +
+      (blocosFinais.length > 1 ? `*Total${contrato ? "" : " renegociado"}:* ${fmtBRL(total)}\n` : "") +
       `\n${blocosFinais.join("\n\n")}\n\n` +
       `Qualquer dúvida é só responder por aqui. Obrigado! 🙏`;
 
@@ -143,7 +159,7 @@ serve(async (req) => {
       await supabase.from("notification_logs").insert({
         asaas_customer_id: customerId,
         client_name: client.company,
-        type: "renegotiation",
+        type: contrato ? "contract_custom" : "renegotiation",
         channel: "whatsapp",
         asaas_payment_id: pagamentos[0].id,
         status: ok ? "sent" : "failed",

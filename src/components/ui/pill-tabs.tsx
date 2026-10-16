@@ -42,19 +42,20 @@ export function PillTabs({ items, value, onChange, className, size = "sm", fill 
   const [pill, setPill] = useState<{ geom: PillGeom; w: number; slot: number } | null>(null);
   const { SWITCH_AT } = PILL_DEFAULTS;
 
-  // Coordenadas relativas ao wrapper, medidas ao vivo (resize/fonte acompanham).
+  // Coordenadas relativas ao wrapper pelo LAYOUT (offsetLeft/offsetWidth), não
+  // por getBoundingClientRect: dentro de um modal, as abas montam enquanto ele
+  // ainda está crescendo (transform: scale), e o rect vinha encolhido — a
+  // pílula nascia torta/minúscula e só se acertava no primeiro clique.
   const measure = (fromV: string | null, toV: string, p: number) => {
     const wrap = wrapRef.current;
     const toEl = tabRefs.current.get(toV);
     if (!wrap || !toEl) return null;
-    const wr = wrap.getBoundingClientRect();
-    const tr = toEl.getBoundingClientRect();
-    const slot = tr.height;
-    const nx = tr.left - wr.left;
+    const slot = toEl.offsetHeight;
+    const nx = toEl.offsetLeft;
+    const w = wrap.clientWidth;
     const fromEl = fromV && fromV !== toV ? tabRefs.current.get(fromV) : null;
-    if (!fromEl || p >= SWITCH_AT) return { geom: idleWidePillGeom(nx, tr.width), w: wr.width, slot };
-    const fr = fromEl.getBoundingClientRect();
-    return { geom: transferWidePillGeom(fr.left - wr.left, fr.width, nx, tr.width, slot, p), w: wr.width, slot };
+    if (!fromEl || p >= SWITCH_AT) return { geom: idleWidePillGeom(nx, toEl.offsetWidth), w, slot };
+    return { geom: transferWidePillGeom(fromEl.offsetLeft, fromEl.offsetWidth, nx, toEl.offsetWidth, slot, p), w, slot };
   };
 
   // Anima a transferência quando a aba ativa muda.

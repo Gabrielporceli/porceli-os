@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -428,25 +429,15 @@ export function RenegotiationModal({
             {/* Termos da renegociação */}
             <div className="space-y-4">
               {/* Abas de modo */}
-              <div className="flex gap-2 p-1 bg-white/[0.03] rounded-xl border border-white/[0.06]">
-                {([
-                  { value: "parcelamento",  label: "Parcelamento" },
+              <PillTabs
+                fill
+                items={[
+                  { value: "parcelamento", label: "Parcelamento" },
                   { value: "personalizado", label: "Personalizado" },
-                ] as const).map(({ value, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => setMode(value)}
-                    className={cn(
-                      "flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
-                      mode === value
-                        ? "bg-primary text-white shadow-[0_0_15px_rgba(104,41,192,0.3)]"
-                        : "text-white/40 hover:text-white/70"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+                ]}
+                value={mode}
+                onChange={(v) => setMode(v as "parcelamento" | "personalizado")}
+              />
 
               {mode === "personalizado" ? (
                 /* ── UI Modo Personalizado ─────────────────────────────────── */

@@ -128,6 +128,7 @@ export const useCreateContract = () => {
             toast.warning('CNPJ do cliente não encontrado — as cobranças no Asaas foram ignoradas. Os lançamentos locais foram criados.');
           } else {
             let falhas = 0;
+            const inicio = new Date(Date.now() - 60_000).toISOString();
             for (const [i, pay] of customList.entries()) {
               const { data: res, error: fnErr } = await supabase.functions.invoke('asaas-renegotiation', {
                 body: {
@@ -147,7 +148,15 @@ export const useCreateContract = () => {
                 console.warn(`Asaas pagamento ${i + 1}:`, res?.error || fnErr?.message);
               }
             }
-            if (falhas > 0) toast.warning(`${falhas} de ${customList.length} cobranças não foram criadas no Asaas. Confira no Asaas.`);
+            if (falhas > 0) toast.warning(`${falhas} de ${customList.length} cobranças não foram criadas no Asaas (vencimento no passado?). Confira no Asaas.`);
+            // Avisa o cliente por WhatsApp com valor, vencimento e link de cada cobrança.
+            if (falhas < customList.length) {
+              const { data: aviso, error: avisoErr } = await supabase.functions.invoke('renegotiation-notice', {
+                body: { client_id: data.client_id, tipo: 'contrato', servico: data.type, since: inicio },
+              });
+              if (avisoErr || !aviso?.success) toast.warning('Contrato criado, mas o aviso por WhatsApp não foi enviado.');
+              else toast.success('Cliente avisado por WhatsApp.');
+            }
           }
           return data;
         }
