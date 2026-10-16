@@ -17,6 +17,10 @@ const EVOLUTION_URL = Deno.env.get("EVOLUTION_API_URL") || "https://api.gabrielp
 // Mesma chave das funções de envio (daily-summary, financial-alert): o segredo EVOLUTION_API_KEY do projeto tem outro valor e devolve 401.
 const EVOLUTION_API_KEY = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
 const FALHAS_PARA_ALERTAR = 2
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+}
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") || "",
@@ -56,7 +60,9 @@ async function lerConexao(): Promise<{ aberta: boolean; detalhe: string }> {
   }
 }
 
-serve(async () => {
+serve(async (req) => {
+  // Chamada também pelo botão "Verificar novamente" do banner no CRM.
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
   try {
     const { aberta, detalhe } = await lerConexao()
     const agora = new Date().toISOString()
@@ -93,11 +99,11 @@ serve(async () => {
     })
 
     return new Response(JSON.stringify({ state, fail_count, detalhe }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     })
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
       status: 500,
     })
   }

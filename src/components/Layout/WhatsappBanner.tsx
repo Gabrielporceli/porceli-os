@@ -8,7 +8,8 @@
  *
  * Também avisa se o próprio monitor parou de atualizar (estado velho).
  */
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Danger } from "iconsax-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Icon } from "@/components/ui/icon";
@@ -35,6 +36,8 @@ function formatar(iso: string) {
 }
 
 export function WhatsappBanner() {
+  const queryClient = useQueryClient();
+  const [verificando, setVerificando] = useState(false);
   const { data } = useQuery({
     queryKey: ["whatsapp-status"],
     queryFn: async () => {
@@ -56,6 +59,17 @@ export function WhatsappBanner() {
   const monitorParado = !caiu && minutosSemChecar > MONITOR_PARADO_MIN;
   if (!caiu && !monitorParado) return null;
 
+  // Roda a checagem na hora (em vez de esperar o cron de 2 min) e relê o estado.
+  const verificar = async () => {
+    setVerificando(true);
+    try {
+      await supabase.functions.invoke("whatsapp-health");
+    } finally {
+      await queryClient.invalidateQueries({ queryKey: ["whatsapp-status"] });
+      setVerificando(false);
+    }
+  };
+
   return (
     <div
       role="alert"
@@ -67,7 +81,7 @@ export function WhatsappBanner() {
       }
     >
       <Icon as={Danger} size={20} className={caiu ? "mt-0.5 shrink-0 text-red-400" : "mt-0.5 shrink-0 text-yellow-400"} />
-      <div className="min-w-0 text-sm">
+      <div className="min-w-0 flex-1 text-sm">
         {caiu ? (
           <>
             <p className="font-bold">WhatsApp desconectado desde {formatar(data.since)}</p>
@@ -86,6 +100,14 @@ export function WhatsappBanner() {
           </>
         )}
       </div>
+      <button
+        type="button"
+        onClick={verificar}
+        disabled={verificando}
+        className="acao-texto shrink-0 self-center disabled:opacity-50"
+      >
+        {verificando ? "Verificando..." : "Verificar novamente"}
+      </button>
     </div>
   );
 }
