@@ -102,6 +102,8 @@ export function RenegotiationModal({
   const [installments, setInstallments] = useState(1);
   const [billingType, setBillingType]   = useState<BillingType>("BOLETO");
   const [passFeesToClient, setPassFees] = useState(true);
+  // Ao concluir, manda ao cliente (WhatsApp) as novas parcelas com o link de pagamento.
+  const [notifyClient, setNotifyClient] = useState(true);
   const [isLoading, setIsLoading]       = useState(false);
 
   // Entrada
@@ -256,6 +258,8 @@ export function RenegotiationModal({
     }
 
     setIsLoading(true);
+    // Margem de 1 min: o aviso só considera cobranças do Asaas criadas a partir daqui.
+    const startedAt = new Date(Date.now() - 60_000).toISOString();
     try {
       // 1. Busca CNPJ e dados do cliente
       const { data: clientRow, error: clientErr } = await supabase
@@ -328,6 +332,22 @@ export function RenegotiationModal({
       if (insErr) throw new Error("Erro ao criar novas cobranças: " + insErr.message);
 
       toast.success("Renegociação concluída com sucesso!");
+
+      // Aviso ao cliente: valor, vencimento e link de cada nova cobrança.
+      if (notifyClient) {
+        if (!hasCnpj) {
+          toast.warning("CNPJ não encontrado — o aviso por WhatsApp não foi enviado.");
+        } else {
+          const { data: aviso, error: avisoErr } = await supabase.functions.invoke("renegotiation-notice", {
+            body: { client_id: clientId, since: startedAt },
+          });
+          if (avisoErr || !aviso?.success) {
+            toast.warning(`Não foi possível avisar o cliente por WhatsApp: ${aviso?.error || avisoErr?.message || "erro desconhecido"}`);
+          } else {
+            toast.success("Cliente avisado por WhatsApp com as novas cobranças.");
+          }
+        }
+      }
       onSuccess();
       onClose();
 
@@ -714,6 +734,21 @@ export function RenegotiationModal({
                   </div>
                 </div>
               )}
+
+              {/* Aviso ao cliente */}
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-white/[0.05] bg-white/[0.03] p-3">
+                <div className="space-y-0.5">
+                  <Label className="cursor-pointer font-medium text-white" onClick={() => setNotifyClient((v) => !v)}>
+                    Avisar o cliente por WhatsApp
+                  </Label>
+                  <p className="text-xs text-white/40">
+                    {notifyClient
+                      ? "Ao concluir, ele recebe as novas parcelas com valor, vencimento e link de pagamento."
+                      : "Nenhuma mensagem será enviada ao cliente."}
+                  </p>
+                </div>
+                <Switch checked={notifyClient} onCheckedChange={setNotifyClient} />
+              </div>
             </div>
         </div>
 
