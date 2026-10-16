@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { generateFinancialEntriesForClient } from './useGenerateFinancialEntries';
+import type { CustomPaymentSaved } from '@/components/Contracts/CustomPaymentsEditor';
 
 type Contract = Tables<'contracts'>;
 type ContractInsert = TablesInsert<'contracts'>;
@@ -113,6 +114,42 @@ export const useCreateContract = () => {
           await generateFinancialEntriesForClient(data.client_id, user.id);
         } catch (err) {
           console.error('Error generating financial entries:', err);
+        }
+
+        // Cobranças personalizadas: uma cobrança no Asaas POR PAGAMENTO (igual à
+        // renegociação). Não dispara o webhook de contrato — ele criaria uma
+        // cobrança/assinatura pelo valor mensal, que aqui é só o total.
+        const customList = Array.isArray((data as any).custom_payments)
+          ? ((data as any).custom_payments as CustomPaymentSaved[])
+          : null;
+        if (customList && customList.length > 0) {
+          const c = data.client as any;
+          if (!c?.cnpj) {
+            toast.warning('CNPJ do cliente não encontrado — as cobranças no Asaas foram ignoradas. Os lançamentos locais foram criados.');
+          } else {
+            let falhas = 0;
+            for (const [i, pay] of customList.entries()) {
+              const { data: res, error: fnErr } = await supabase.functions.invoke('asaas-renegotiation', {
+                body: {
+                  cnpj: c.cnpj,
+                  company_name: c.company,
+                  email: c.email,
+                  phone: c.phone,
+                  billing_type: pay.billingType,
+                  total_amount: pay.amount,
+                  due_date: pay.dueDate,
+                  installments: 1,
+                  description: `${data.type} — Pagamento ${i + 1}/${customList.length} — ${c.company}`,
+                },
+              });
+              if (fnErr || !res?.success) {
+                falhas++;
+                console.warn(`Asaas pagamento ${i + 1}:`, res?.error || fnErr?.message);
+              }
+            }
+            if (falhas > 0) toast.warning(`${falhas} de ${customList.length} cobranças não foram criadas no Asaas. Confira no Asaas.`);
+          }
+          return data;
         }
 
         // Trigger webhook

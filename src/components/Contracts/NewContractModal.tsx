@@ -17,6 +17,16 @@ import ReactDOM from "react-dom";
 import { Bank, Card as CreditCard, DocumentText, DollarCircle, Scan } from 'iconsax-react';
 import { useClients } from "@/hooks/useClients";
 import { ContractBillingPreview } from "./ContractBillingPreview";
+import { PillTabs } from "@/components/ui/pill-tabs";
+import { toast } from "sonner";
+import {
+  CustomPaymentsEditor,
+  novoPagamento,
+  paymentsAreValid,
+  paymentsTotal,
+  toSaved,
+  type CustomPaymentDraft,
+} from "./CustomPaymentsEditor";
 
 interface NewContractModalProps {
   isOpen: boolean;
@@ -42,6 +52,11 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   const [billingType, setBillingType] = useState<"BOLETO" | "PIX" | "CREDIT_CARD">("BOLETO");
   const [singlePayment, setSinglePayment] = useState(false);
+  // Cobrança "personalizada": cada pagamento com valor, data e forma próprios
+  // (como no modo Personalizado da renegociação), em vez de uma mensalidade fixa.
+  const [modo, setModo] = useState<"padrao" | "personalizada">("padrao");
+  const custom = modo === "personalizada";
+  const [payments, setPayments] = useState<CustomPaymentDraft[]>(() => [novoPagamento(format(new Date(), "yyyy-MM-dd"))]);
   // Recorrente entra no MRR e no churn do Dashboard; pontual e rescisão não.
   const [category, setCategory] = useState<"recorrente" | "pontual" | "rescisao">("recorrente");
   const [formData, setFormData] = useState({
@@ -61,7 +76,32 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (custom) {
+      if (!paymentsAreValid(payments)) {
+        toast.error("Preencha valor e vencimento em todos os pagamentos.");
+        return;
+      }
+      const saved = toSaved(payments);
+      onSave({
+        client_id: formData.client_id,
+        type: formData.type,
+        // O contrato guarda o TOTAL; as cobranças saem da lista personalizada.
+        monthly_value: paymentsTotal(payments),
+        start_date: saved[0].dueDate,
+        end_date: saved[saved.length - 1].dueDate,
+        payment_day: Math.min(28, parseInt(saved[0].dueDate.slice(8, 10), 10) || 1),
+        status: formData.status,
+        contract_url: formData.contract_url,
+        // Não é mensalidade: não entra no MRR (o banco também garante isso).
+        single_payment: true,
+        category: category === 'recorrente' ? 'pontual' : category,
+        billing_type: saved[0].billingType,
+        custom_payments: saved,
+      } as any);
+      return;
+    }
+
     // Convert monthly_value from Brazilian format to number
     const monthlyValueNumber = parseFloat(formData.monthly_value.replace('.', '').replace(',', '.')) || 0;
 
@@ -201,6 +241,34 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Cobrança</Label>
+                  <div>
+                    <PillTabs
+                      items={[
+                        { value: "padrao", label: "Padrão" },
+                        { value: "personalizada", label: "Personalizada" },
+                      ]}
+                      value={modo}
+                      onChange={(v) => setModo(v as "padrao" | "personalizada")}
+                    />
+                  </div>
+                  {custom && (
+                    <p className="text-white/40 text-xs ml-1">
+                      Defina cada pagamento com valor, vencimento e forma própria, em vez de uma mensalidade fixa.
+                    </p>
+                  )}
+                </div>
+
+                {custom && (
+                  <CustomPaymentsEditor
+                    payments={payments}
+                    onChange={setPayments}
+                    defaultDate={format(new Date(), "yyyy-MM-dd")}
+                  />
+                )}
+
+{!custom && (
                 <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                   <div className="space-y-0.5">
                     <Label className="text-white font-medium">Pagamento Único</Label>
@@ -213,7 +281,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     onCheckedChange={setSinglePayment}
                   />
                 </div>
-
+)}
+{!custom && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="monthly_value" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
@@ -265,7 +334,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                     </div>
                   )}
                 </div>
-
+)}
                 <div className="space-y-2">
                   <Label htmlFor="contract_url" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Link do Contrato</Label>
                   <Input
@@ -278,6 +347,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                   />
                 </div>
 
+{!custom && (
+<>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">
@@ -315,7 +386,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                   value={monthlyValueNumber}
                   singlePayment={singlePayment}
                 />
-
+</>
+)}
                 <div className="space-y-2">
                   <Label htmlFor="status" className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Status</Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
@@ -347,7 +419,8 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
               </div>
             </div>
 
-            {/* Forma de Pagamento */}
+{/* Forma de pagamento do modo padrão (no personalizado é por pagamento) */}
+            {!custom && (
             <div className="space-y-2 pt-2">
               <Label className="text-white/70 text-xs font-bold uppercase tracking-widest ml-1">Forma de Pagamento</Label>
               <div className="grid grid-cols-3 gap-2">
@@ -372,7 +445,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
                 ))}
               </div>
             </div>
-
+)}
           </form>
         </div>
 

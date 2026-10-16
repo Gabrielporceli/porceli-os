@@ -32,7 +32,7 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
     // 2. Buscar contratos ativos do cliente
     const { data: activeContracts } = await supabase
       .from('contracts')
-      .select('id, monthly_value, start_date, end_date, type, single_payment, status')
+      .select('id, monthly_value, start_date, end_date, type, single_payment, status, custom_payments')
       .eq('client_id', clientId)
       .eq('user_id', userId)
       .in('status', ['active', 'expiring']);
@@ -70,6 +70,29 @@ export const generateFinancialEntriesForClient = async (clientId: string, userId
     const desiredByKey: Record<string, Entry[]> = {};
 
     for (const contract of activeContracts) {
+      // Contrato com cobranças PERSONALIZADAS: os lançamentos saem da lista
+      // gravada no contrato (valor e vencimento de cada pagamento), não da
+      // mensalidade.
+      const custom = Array.isArray(contract.custom_payments)
+        ? (contract.custom_payments as unknown as { dueDate: string; amount: number }[])
+        : null;
+      if (custom && custom.length > 0) {
+        custom.forEach((pay, i) => {
+          const amount = Number(pay.amount);
+          if (!amount || !pay.dueDate) return;
+          (desiredByKey[`${pay.dueDate}_${amount}`] ||= []).push({
+            client_id: clientId,
+            user_id: userId,
+            name: client.company,
+            amount,
+            due_date: pay.dueDate,
+            reference: `${contract.type} — Pagamento ${i + 1}/${custom.length}`,
+            status: 'pending',
+          });
+        });
+        continue;
+      }
+
       const monthlyValue = Number(contract.monthly_value);
       if (!monthlyValue || !contract.start_date) continue;
       if (!contract.single_payment && !contract.end_date) continue;

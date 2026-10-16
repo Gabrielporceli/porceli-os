@@ -207,6 +207,7 @@ export type Database = {
           category: string
           client_id: string
           contract_url: string | null
+          custom_payments: Json | null
           created_at: string | null
           end_date: string
           id: string
@@ -223,6 +224,7 @@ export type Database = {
           category?: string
           client_id: string
           contract_url?: string | null
+          custom_payments?: Json | null
           created_at?: string | null
           end_date: string
           id?: string
@@ -239,6 +241,7 @@ export type Database = {
           category?: string
           client_id?: string
           contract_url?: string | null
+          custom_payments?: Json | null
           created_at?: string | null
           end_date?: string
           id?: string
