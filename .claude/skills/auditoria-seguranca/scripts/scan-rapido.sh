@@ -72,4 +72,33 @@ done
 sec "Source maps em produção"
 grep -rnIE "${EXC[@]}" 'sourcemap *: *true|productionBrowserSourceMaps *: *true' "$ROOT" 2>/dev/null || echo "(nenhum explícito)"
 
+sec "Segredos no HISTÓRICO do git (inclui arquivos já apagados)"
+if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  [ "$(git -C "$ROOT" rev-parse --is-shallow-repository)" = "true" ] && echo "⚠️  clone raso: histórico incompleto. Rode 'git fetch --unshallow' para varrer tudo."
+  git -C "$ROOT" log --all -p --no-color -G 'sk_(live|test)_[A-Za-z0-9]{10,}|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|postgres(ql)?://[^ "]+:[^ "]+@' 2>/dev/null \
+    | awk '/^commit /{c=substr($2,1,8)} /^\+\+\+ b\//{f=substr($2,3)} /^\+[^+]/ && /sk_(live|test)_|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|PRIVATE KEY|postgres(ql)?:\/\// {print c" "f}' \
+    | sort -u | head -30
+  # Classifica JWTs Supabase pelo campo "role" (anon é pública; service_role é crítica)
+  git -C "$ROOT" log --all -p --no-color 2>/dev/null | grep -oE 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' | sort -u | while read -r t; do
+    p=$(printf '%s' "$t" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done
+    r=$(printf '%s' "$p" | base64 -d 2>/dev/null | grep -oE '"role":"[a-z_]+"')
+    [ -n "$r" ] && printf '%s… %s\n' "${t:0:6}" "$r"
+  done | sort | uniq -c
+else
+  echo "(não é um repositório git)"
+fi
+
+sec "Ferramentas profissionais (usadas se instaladas)"
+if command -v gitleaks >/dev/null; then
+  gitleaks detect --source "$ROOT" --redact --no-banner 2>&1 | tail -5
+else echo "gitleaks: não instalado (recomendado para varrer segredos no histórico)"; fi
+if command -v semgrep >/dev/null; then
+  semgrep scan --config p/owasp-top-ten --config p/secrets --quiet --metrics=off "$ROOT" 2>/dev/null | tail -40
+else echo "semgrep: não instalado (recomendado para SAST)"; fi
+if command -v osv-scanner >/dev/null; then
+  osv-scanner scan -r "$ROOT" 2>/dev/null | tail -30
+elif [ -f "$ROOT/package-lock.json" ] && command -v npm >/dev/null; then
+  (cd "$ROOT" && npm audit --omit=dev --audit-level=high 2>/dev/null | tail -25)
+else echo "osv-scanner/npm audit: indisponível"; fi
+
 echo; echo "Fim. Lembre: o scanner é heurístico. Confirme cada item lendo o código."

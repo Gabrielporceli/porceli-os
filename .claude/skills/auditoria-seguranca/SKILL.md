@@ -55,6 +55,17 @@ Se uma lei não se aplica ao sistema, registre explicitamente "N/A — motivo".
 | A11 | Webhook sem assinatura | endpoint de webhook (pagamento, WhatsApp etc.) aceita POST sem validar assinatura/secret/timestamp |
 | A12 | Cron/função interna pública | função agendada invocável por qualquer pessoa via URL, sem segredo compartilhado |
 
+## Modos de execução
+
+Identifique o modo pelo pedido do usuário (padrão: **completo**):
+
+| Modo | Quando | O que muda |
+|------|--------|------------|
+| **completo** | "audita o sistema", antes de ir para produção | Todos os passos, superfície inteira |
+| **diff** | "revisa este PR/branch/mudança" | Só arquivos alterados (`git diff <base>...HEAD`) + o que eles tocam (policies, rotas, chamadores). Relatório curto |
+| **foco** | "checa só RLS", "só segredos", "só pagamentos" | Só a área pedida, com a mesma exigência de evidência |
+| **re-auditoria** | já existe relatório em `docs/seguranca/` | Reverifica cada VULN anterior (corrigida / aberta / regrediu) e audita só o que mudou desde a data do relatório |
+
 ## Processo
 
 Use uma lista de tarefas (TaskCreate) para acompanhar as fases. Em repositórios grandes, distribua o Passo 2 entre subagentes **somente se o usuário pedir**; caso contrário faça você mesmo.
@@ -76,6 +87,10 @@ Rode o scanner rápido incluso (heurístico, só aponta onde olhar):
 bash .claude/skills/auditoria-seguranca/scripts/scan-rapido.sh .
 ```
 
+### Passo 1.5 — Modelagem de ameaças
+
+Antes de caçar bugs, entenda **o que vale a pena atacar**. Siga `references/modelagem-ameacas.md`: ativos (dados pessoais, dinheiro, credenciais, reputação), atores (anônimo, usuário comum, usuário de outro tenant, admin, integração externa, insider), fronteiras de confiança e os 5 fluxos mais sensíveis. Use isso para priorizar o Passo 2: um bug num fluxo de dinheiro vale mais que o mesmo bug numa tela de preferências.
+
 ### Passo 2 — Análise por prioridade de risco
 
 Siga esta ordem. Para cada item, abra o código de verdade — não conclua a partir de nomes de arquivo.
@@ -89,6 +104,17 @@ Siga esta ordem. Para cada item, abra o código de verdade — não conclua a pa
 7. **Config e deploy** (Leis 4, 15): headers de segurança, CORS (`Access-Control-Allow-Origin: *` com credenciais?), source maps, modo debug.
 8. **Dependências** (Lei 13): `npm audit --omit=dev` (ou equivalente), pacotes inexistentes/typosquatting, versões abandonadas, uso inseguro (`jwt.decode` sem verify etc.).
 9. **Observabilidade** (Lei 14; A6): falhas de auth/pagamento são logadas? Há alerta para alguém? Erros vazam detalhes para o cliente?
+10. **Áreas avançadas** — ver `references/areas-avancadas.md`, aplicando só as que existem no sistema: fluxos de autenticação (reset de senha, OAuth, magic link, sessão, MFA), lógica de negócio e dinheiro, funcionalidades de IA/LLM (prompt injection, ferramentas, custo), CI/CD e GitHub Actions, privacidade e LGPD, backup e recuperação.
+
+### Passo 2.5 — Verificação adversarial dos achados
+
+Antes de reportar, tente **derrubar** cada achado como um revisor cético:
+- Existe outra camada que já bloqueia (RLS, policy, middleware, grant revogado, validação no banco)? Leia-a.
+- O caminho é alcançável a partir de um chamador real? Rastreie da entrada (rota, tabela exposta, função) até o ponto vulnerável.
+- A migration que cria o problema foi sobrescrita por uma posterior? Considere o **estado final** do schema, não uma migration isolada (prefira consultar o banco em modo leitura quando houver acesso).
+- O "segredo" é de fato secreto? (anon key e publishable key são públicas por design; `service_role`, `sk_live`, tokens de API não são).
+
+Classifique a confiança: **Confirmado** (evidência direta), **Provável** (caminho rastreado, falta prova em execução) ou **Suspeita** (vai para "Suspeitas a confirmar"). Achado derrubado é descartado, não reportado.
 
 ### Passo 3 — Verificação em ambiente de teste (somente com autorização)
 
@@ -99,13 +125,17 @@ Quando o usuário autorizar um ambiente local ou de staging com contas de teste 
 Siga **exatamente** o formato de `references/relatorio.md`:
 - **Fase 1 — Visão do atacante:** achados ordenados por severidade, cada um com local, classificação (OWASP/CWE/anti-padrão), exploit, impacto e PoC.
 - **Fase 2 — Código blindado:** correção mínima de cada achado, na stack e convenções do projeto, com comentário `// 🔒 SEGURANÇA [VULN-N]: por quê`. Migrations SQL como arquivo novo, nunca editando migration antiga.
-- **Fase 3 — Testes de segurança:** um teste automatizado por vulnerabilidade, no framework do projeto (ou SQL/pgTAP para RLS, ou script `curl` quando não houver framework).
+- **Fase 3 — Testes de segurança:** um teste automatizado por vulnerabilidade, no framework do projeto (ou SQL/pgTAP para RLS).
 - **Checklist de prontidão** (os 10 itens) com ✅/❌/⚠️ e evidência.
 - **Scorecard** com nota A–F e top 3 ações.
+
+Mapeie cada achado para as referências de mercado quando couber: OWASP Top 10 (2025), OWASP API Security Top 10 (2023), OWASP Top 10 para LLM (2025), requisito do OWASP ASVS 5.0 e CWE.
 
 Se o relatório for longo, salve-o em `docs/seguranca/auditoria-AAAA-MM-DD.md` (sem valores de segredos) e mostre o resumo no chat.
 
 ### Passo 5 — Correção (só após o relatório)
+
+Se houver **segredo vazado**, siga primeiro `references/resposta-incidente.md` (rotacionar → revogar → checar uso indevido → só então limpar o código). Remover o segredo do código sem rotacionar não resolve nada.
 
 Pergunte quais achados corrigir. Aplique na ordem de severidade, rode lint/typecheck/testes após cada grupo, e re-execute o teste de segurança correspondente para provar que fechou. Nunca aplique migration em banco remoto sem confirmação explícita.
 
@@ -117,6 +147,8 @@ Pergunte quais achados corrigir. Aplique na ordem de severidade, rode lint/typec
 | ALTA | Exige conta válida e afeta dados/recursos de outros; ou bypass de pagamento/permissão; ou ausência de rate limit em login/chamada paga |
 | MÉDIA | Exposição de dados não sensíveis, falta de defesa em profundidade com outra camada ainda protegendo, headers ausentes relevantes, DoS de custo moderado |
 | BAIXA | Hardening, higiene, informação útil ao atacante sem impacto direto |
+
+Ajuste pela **probabilidade**: exige só a anon key do bundle ou uma conta gratuita → mantém ou sobe; exige acesso privilegiado, condição rara ou interação da vítima → desce um nível. Quando o achado for CRÍTICA ou ALTA, inclua opcionalmente o vetor CVSS 4.0 para justificar a nota.
 
 ## Checklist de prontidão para produção (sempre no final)
 

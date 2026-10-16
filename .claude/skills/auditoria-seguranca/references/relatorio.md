@@ -7,15 +7,20 @@
 - Escopo coberto: estático / verificação em staging / leitura do banco
 - Fora do escopo ou não verificado: …
 
+## 0.5 Modelo de ameaças
+
+Ativos críticos, fronteiras sem proteção e top 5 fluxos por risco (ver `modelagem-ameacas.md`).
+
 ## Fase 1: Visão do atacante (red team)
 
 Ordene por severidade (CRÍTICA primeiro). Um bloco por achado:
 
 ```
 🔴 VULN-[N]: [Nome curto]
-├─ Severidade: CRÍTICA | ALTA | MÉDIA | BAIXA
+├─ Severidade: CRÍTICA | ALTA | MÉDIA | BAIXA   (CVSS 4.0 opcional p/ CRÍTICA/ALTA)
+├─ Confiança: Confirmado | Provável
 ├─ Localização: arquivo:linha | tabela/policy | função
-├─ Tipo: [OWASP] | [CWE-ID] | [Anti-padrão A1–A12]
+├─ Tipo: [OWASP Top 10 2025 / API Top 10 2023 / LLM Top 10 2025] | [ASVS 5.0 req.] | [CWE-ID] | [A1–A12]
 ├─ Cenário: como alguém abusaria disso, em linguagem clara
 ├─ Impacto: o que é obtido (dados, dinheiro, escalação, custo)
 └─ Evidência: trecho de código, resultado da query read-only ou teste que comprova
@@ -56,11 +61,18 @@ test("VULN-3: payload com campo 'role' é rejeitado (mass assignment)")
 | 9 | Input renderizado como texto | | |
 | 10 | Falhas logadas e alguém é alertado | | |
 
+## Re-auditoria (somente no modo re-auditoria)
+
+| VULN anterior | Status | Evidência |
+|---------------|--------|-----------|
+| VULN-1 … | Corrigida / Aberta / Regrediu | … |
+
 ## Scorecard
 
 ```
 📊 SCORECARD DE SEGURANÇA
 ├─ CRÍTICAS: X | ALTAS: X | MÉDIAS: X | BAIXAS: X
+├─ Confiança: X confirmados | X prováveis | X suspeitas
 ├─ Anti-padrões detectados: [A1, A4, …]
 ├─ Nota: [A–F]  (A = pronto para produção, F = risco crítico imediato)
 └─ Top 3 ações:
