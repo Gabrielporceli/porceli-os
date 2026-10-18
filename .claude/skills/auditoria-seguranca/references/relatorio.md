@@ -7,6 +7,13 @@
 - Escopo coberto: estático / verificação em staging / leitura do banco
 - Fora do escopo ou não verificado: …
 
+| Camada | Coberta? | Como | Acesso usado e revogação |
+|--------|----------|------|--------------------------|
+| Código e banco | | | |
+| Infraestrutura | | coleta A / acesso B / tela C / não | |
+| Contas e identidade | | | |
+| Detecção e resposta | | | |
+
 ## 0.5 Modelo de ameaças
 
 Ativos críticos, fronteiras sem proteção e top 5 fluxos por risco (ver `modelagem-ameacas.md`).
@@ -60,6 +67,12 @@ test("VULN-3: payload com campo 'role' é rejeitado (mass assignment)")
 | 8 | Dependências revisadas | | |
 | 9 | Input renderizado como texto | | |
 | 10 | Falhas logadas e alguém é alertado | | |
+| 11 | 2FA obrigatório para admins do sistema | | |
+| 12 | 2FA nas contas externas críticas | | |
+| 13 | Servidor atualizado, SSH só com chave, firewall fechado | | |
+| 14 | Backup fora do servidor, cifrado, restauração testada | | |
+| 15 | Plano de resposta a incidentes (LGPD) | | |
+| 16 | Acessos de quem saiu revogados | | |
 
 ## Re-auditoria (somente no modo re-auditoria)
 

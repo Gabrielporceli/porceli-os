@@ -33,7 +33,7 @@ PRAZO_NOME = {
     "backlog": "Backlog de hardening",
 }
 ESFORCO_NOME = {"P": "Pequeno (< 1 h)", "M": "Médio (1–4 h)", "G": "Grande (> 4 h)"}
-STATUS_ICONE = {"ok": "✅", "falha": "❌", "parcial": "⚠️", "na": "—"}
+STATUS_ICONE = {"ok": "✅", "falha": "❌", "parcial": "⚠️", "na": "N/A"}
 
 # Defesa em profundidade: mascara qualquer coisa com cara de segredo que tenha
 # escapado para o JSON, para que nunca chegue ao PDF nem ao prompt.
@@ -169,6 +169,15 @@ def montar_html(d, prompt_md):
     if top:
         partes.append("<h3>Top 3 ações</h3><ol>" + "".join(f"<li>{bloco(t)}</li>" for t in top[:3]) + "</ol>")
 
+    cob = d.get("cobertura") or {}
+    if cob:
+        nomes = {"codigo": "Código e banco", "infraestrutura": "Infraestrutura", "contas": "Contas e identidade", "deteccao": "Detecção e resposta"}
+        partes.append("<h2>Cobertura da auditoria</h2><table><thead><tr><th>Camada</th><th>Situação</th></tr></thead><tbody>")
+        for chave, nome in nomes.items():
+            if chave in cob:
+                partes.append(f"<tr><td style='width:30%'><b>{nome}</b></td><td>{bloco(cob[chave])}</td></tr>")
+        partes.append("</tbody></table>")
+
     ma = d.get("modelo_ameacas") or {}
     if ma:
         partes.append("<h2>Modelo de ameaças</h2><table><tbody>")
@@ -199,7 +208,7 @@ def montar_html(d, prompt_md):
         for a in itens:
             partes.append(f"<li>{pilula(a['severidade'])} <b>{e(a['id'])}</b> {bloco(a.get('titulo'))}"
                           f" <span class='meta'>· esforço {e(ESFORCO_NOME.get(a.get('esforco', 'M'), a.get('esforco')))}</span>"
-                          f"<br><span class='meta'>Pronto quando: {bloco(a.get('criterio_aceite', '—'))}</span></li>")
+                          f"<br><span class='meta'>Pronto quando: {bloco(a.get('criterio_aceite', 'a definir'))}</span></li>")
         partes.append("</ol></div>")
 
     # Achados detalhados
@@ -207,7 +216,7 @@ def montar_html(d, prompt_md):
     for a in d["achados"]:
         cor = SEV_COR.get(a["severidade"], "#475467")
         partes.append(f'<div class="card" style="border-left-color:{cor}"><h3>{pilula(a["severidade"])} {e(a["id"])} · {e(a.get("titulo"))}</h3>')
-        for rotulo, chave in (("Confiança", "confianca"), ("Onde", "local"), ("Classificação", "tipo"),
+        for rotulo, chave in (("Camada", "camada"), ("Confiança", "confianca"), ("Onde", "local"), ("Classificação", "tipo"),
                               ("Cenário de ataque", "cenario"), ("Impacto", "impacto"), ("Evidência", "evidencia"),
                               ("Correção", "correcao"), ("Teste que prova a correção", "teste"),
                               ("Critério de aceite", "criterio_aceite")):

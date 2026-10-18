@@ -23,6 +23,12 @@ Ao final de toda auditoria (exceto no modo **diff**, em que basta o relatório n
   "modo": "completo | foco | re-auditoria | diff",
   "escopo": "O que foi coberto e o que ficou de fora",
   "stack": ["React + Vite", "Supabase (Postgres, Auth, Edge Functions)", "Vercel"],
+  "cobertura": {                           // as 4 camadas: o que foi coberto e o que ficou de fora, com o motivo
+    "codigo": "Coberta: todo o repositório",
+    "infraestrutura": "Coberta pela coleta somente leitura de 18/10 (modalidade A) e verificação externa passiva",
+    "contas": "Parcial: código e GitHub conferidos; Google e hospedagem confirmados pelo usuário; domínio sem resposta",
+    "deteccao": "Coberta; plano de incidentes gerado como rascunho"
+  },
   "resumo_executivo": "3 a 6 frases para quem não é técnico: o risco principal, o que pode acontecer e o que fazer primeiro.",
   "nota": "A | B | C | D | F",            // opcional: se omitido, é calculado pelas contagens
   "top_acoes": ["…", "…", "…"],           // opcional: padrão = os 3 achados mais graves
@@ -40,6 +46,7 @@ Ao final de toda auditoria (exceto no modo **diff**, em que basta o relatório n
       "titulo": "Curto e específico",
       "severidade": "CRÍTICA | ALTA | MÉDIA | BAIXA",
       "confianca": "Confirmado | Provável",
+      "camada": "codigo | infraestrutura | contas | deteccao",
       "local": "arquivo:linha, tabela/policy ou função",
       "tipo": "OWASP A01:2025 | API1:2023 | ASVS 5.0 V8.x | CWE-639 | A4",
       "cenario": "Como alguém abusaria disso, em linguagem clara",
@@ -55,7 +62,7 @@ Ao final de toda auditoria (exceto no modo **diff**, em que basta o relatório n
   "suspeitas": [ { "titulo": "…", "o_que_falta": "…" } ],
   "checklist": [
     { "item": "RLS ativado em todas as tabelas", "status": "ok | falha | parcial | na", "evidencia": "…" }
-    // os 10 itens do checklist de prontidão, na ordem
+    // os 16 itens do checklist de prontidão, na ordem (camada não coberta = "parcial" com "não verificado")
   ],
   "reauditoria": [ { "id": "VULN-1 (2026-09-01)", "status": "Corrigida | Aberta | Regrediu", "evidencia": "…" } ]
 }

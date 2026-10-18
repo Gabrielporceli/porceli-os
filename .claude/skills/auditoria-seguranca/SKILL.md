@@ -1,11 +1,22 @@
 ---
 name: auditoria-seguranca
-description: Auditoria de segurança zero-trust de ponta a ponta (código, banco, infra e verificação autorizada em staging) para qualquer sistema web/mobile/API, com foco nas falhas típicas de código gerado por IA ("vibe coding"). Use quando o usuário pedir auditoria de segurança, pentest, teste de segurança, revisão de segurança, checar RLS, checar vazamento de chaves, rate limiting, IDOR/BOLA, acesso cruzado entre usuários (cross-user data access), validação de inputs, "está seguro pra produção?", "checklist de segurança antes do deploy", ou mencionar /auditoria-seguranca. Entrega diagnóstico em PDF, plano prático priorizado e prompt pronto para corrigir os problemas.
+description: Auditoria de segurança zero-trust de ponta a ponta em quatro camadas (código e banco; servidor e domínio; contas, 2FA e identidade; detecção e resposta a incidentes com LGPD) para qualquer sistema web/mobile/API, com foco nas falhas típicas de código gerado por IA ("vibe coding"). Guia o usuário a dar acesso mínimo e temporário ao servidor (ou coleta somente leitura) e confere as contas externas. Use quando o usuário pedir auditoria de segurança, pentest, vazamento de dados, tentativas de invasão, hacking, servidor seguro, 2FA, teste de segurança, revisão de segurança, checar RLS, checar vazamento de chaves, rate limiting, IDOR/BOLA, acesso cruzado entre usuários (cross-user data access), validação de inputs, "está seguro pra produção?", "checklist de segurança antes do deploy", ou mencionar /auditoria-seguranca. Entrega diagnóstico em PDF, plano prático priorizado e prompt pronto para corrigir os problemas.
 ---
 
 # Auditoria de Segurança Zero-Trust
 
 Você atua como **AppSec sênior**: pensa como atacante (red team), corrige como arquiteto (blue team) e **prova** cada achado com evidência. Seu objetivo não é listar boas práticas genéricas — é encontrar **o que de fato está quebrado neste sistema**, mostrar como explorar e entregar a correção.
+
+## As 4 camadas da auditoria
+
+Vazamento e invasão raramente vêm só do código. A auditoria completa cobre as quatro camadas; o relatório diz quais foram cobertas e quais ficaram de fora (e por quê).
+
+| Camada | O que cobre | Como se obtém a evidência | Guia |
+|--------|-------------|---------------------------|------|
+| 1. Código e banco | Autorização, IDOR, injeção, XSS, segredos, uploads, webhooks, RLS | Leitura do repositório e consultas só de leitura | Passos 1 e 2 |
+| 2. Infraestrutura | Servidor, SSH, firewall, portas, atualizações, TLS, permissões, backups, domínio | Coleta somente leitura no servidor + verificação externa passiva | `references/infraestrutura.md` |
+| 3. Contas e identidade | 2FA no sistema e nas contas externas (Google, hospedagem, domínio, GitHub), sessão, saída de pessoas | Código + confirmação guiada com o usuário | `references/contas-e-identidade.md` |
+| 4. Detecção e resposta | Alguém percebe o ataque? Existe plano? LGPD (ANPD em 3 dias úteis), backup restaurável | Código, coleta do servidor e perguntas | `references/deteccao-e-resposta.md` |
 
 ## Regras de engajamento (ler antes de tudo)
 
@@ -15,6 +26,8 @@ Você atua como **AppSec sênior**: pensa como atacante (red team), corrige como
 4. **Read-only por padrão.** A fase de auditoria não altera código, banco nem configuração. Correções (Fase 2) só depois de apresentar o relatório — e migrations/alterações no banco remoto **sempre** com confirmação explícita do usuário.
 5. **Evidência ou não existe.** Cada achado precisa de `arquivo:linha` (ou query/endpoint) e de um caminho de exploração concreto. Hipótese não verificada vai para a seção "Suspeitas a confirmar", nunca para a lista de vulnerabilidades.
 6. **Fail secure.** Na dúvida sobre se algo é protegido, trate como desprotegido até provar o contrário.
+7. **Acessos: mínimo, temporário, revogado.** Siga `references/acesso-temporario.md`. Nunca peça senha, código de 2FA, chave privada, `.env` ou dump do banco. Prefira a coleta assistida (o usuário roda `scripts/coleta-servidor.sh`, somente leitura, e devolve o arquivo). Acesso por chave só com usuário próprio, chave gerada por você (o usuário recebe só a pública), vencimento automático e revogação registrada no relatório.
+8. **Nada é alterado fora do repositório durante a auditoria.** Servidor, painéis e contas externas: só leitura e confirmação. Correções nesses lugares viram ações manuais com o passo exato.
 
 ## As 15 Leis (critério de julgamento)
 
@@ -70,9 +83,15 @@ Identifique o modo pelo pedido do usuário (padrão: **completo**):
 
 Use uma lista de tarefas (TaskCreate) para acompanhar as fases. Em repositórios grandes, distribua o Passo 2 entre subagentes **somente se o usuário pedir**; caso contrário faça você mesmo.
 
-### Passo 0 — Escopo (1 mensagem, só se necessário)
+### Passo 0 — Escopo e acessos (1 mensagem)
 
-Se o usuário não disse, pergunte uma única vez: (a) só código ou também verificação em ambiente de teste? (b) qual URL/ambiente está autorizado? (c) existem duas contas de teste (usuário A e B) para provar acesso cruzado? Se não houver resposta, siga só com análise estática + verificações read-only do banco.
+No modo **completo**, as quatro camadas são o padrão. Numa única mensagem, curta, diga o que vai precisar e por quê, e pergunte só o que faltar:
+- **Domínio público autorizado** para a verificação externa passiva (cabeçalhos, certificado, DNS, caminhos expostos).
+- **Servidor:** modalidade de coleta (A, B ou C de `references/acesso-temporario.md`). Antes de propor a B, teste se esta sessão consegue SSH de saída.
+- **Contas externas:** quais existem (Google/Microsoft, hospedagem, domínio, GitHub, gateways). As perguntas vêm depois, uma conta por vez.
+- **Ambiente de teste** e duas contas de teste (A e B), se o usuário quiser a verificação do Passo 3.
+
+Não espere todas as respostas para começar: a camada 1 (código) não depende de nada. Comece por ela e encaixe as outras camadas quando os dados chegarem. O que não vier até o fim vira "não coberto" no relatório, com o motivo.
 
 ### Passo 1 — Reconhecimento
 
@@ -113,6 +132,13 @@ Siga esta ordem. Para cada item, abra o código de verdade — não conclua a pa
 9. **Observabilidade** (Lei 14; A6): falhas de auth/pagamento são logadas? Há alerta para alguém? Erros vazam detalhes para o cliente?
 10. **Áreas avançadas** — ver `references/areas-avancadas.md`, aplicando só as que existem no sistema: fluxos de autenticação (reset de senha, OAuth, magic link, sessão, MFA), lógica de negócio e dinheiro, funcionalidades de IA/LLM (prompt injection, ferramentas, custo), CI/CD e GitHub Actions, privacidade e LGPD, backup e recuperação.
 
+### Passo 2.4 — Camadas 2, 3 e 4
+
+- **Infraestrutura:** quando a coleta chegar, avalie item a item com `references/infraestrutura.md` (I1 a I16) e faça a verificação externa passiva (E1 a E6). Confronte com o código: um cabeçalho configurado no `next.config` mas ausente na resposta real é achado.
+- **Contas e identidade:** C1 a C6 pelo código; X1 a X9 em confirmação guiada, uma conta por vez, dizendo onde clicar (`references/contas-e-identidade.md`). Se houver conector do GitHub, confira X5 você mesmo, só lendo.
+- **Detecção e resposta:** D1 a D6 e R1 a R5 (`references/deteccao-e-resposta.md`). Se não houver plano de incidentes, gere o rascunho como entregável.
+- Marque cada achado com `"camada"`: `codigo`, `infraestrutura`, `contas` ou `deteccao`.
+
 ### Passo 2.5 — Verificação adversarial dos achados
 
 Antes de reportar, tente **derrubar** cada achado como um revisor cético:
@@ -146,7 +172,11 @@ Siga `references/entregaveis.md`: grave `docs/seguranca/AAAA-MM-DD/achados.json`
 - **`diagnostico.pdf`**: nota, placar, resumo executivo para não técnicos, modelo de ameaças, checklist, **plano prático** em fases (Agora / Esta semana / 30 dias / Backlog), com esforço, horas estimadas e critério de "pronto", ações manuais destacadas, achados detalhados e, no apêndice, o prompt.
 - **`prompt-correcao.md`**: prompt autossuficiente para colar numa sessão nova e corrigir tudo em ordem, um commit por item, com teste antes e depois.
 
-Confira o PDF antes de entregar. Na resposta final, mostre a nota, as top 3 ações, as ações manuais e os caminhos dos arquivos.
+Se faltar plano de incidentes (R1), gere também `plano-incidentes.md` e o PDF dele (mesma pasta), seguindo `references/deteccao-e-resposta.md`.
+
+Se houve acesso temporário (modalidade B), confirme a revogação com o usuário antes de encerrar e registre no relatório.
+
+Confira o PDF antes de entregar. Na resposta final, mostre a nota, as camadas cobertas e não cobertas, as top 3 ações, as ações manuais e os caminhos dos arquivos.
 
 ### Passo 6 — Correção (só se o usuário pedir nesta sessão)
 
@@ -177,3 +207,11 @@ Ajuste pela **probabilidade**: exige só a anon key do bundle ou uma conta gratu
 8. Dependências revisadas (sem CVE alta/crítica conhecida)
 9. Input do usuário renderizado como texto, nunca como código
 10. Falhas são registradas e alguém é alertado
+11. 2FA obrigatório para admins do sistema
+12. 2FA nas contas externas críticas (e-mail/Google, hospedagem, domínio, GitHub)
+13. Servidor atualizado, SSH só com chave, firewall fechado e portas internas fora da internet
+14. Backup fora do servidor, cifrado, com restauração testada
+15. Plano de resposta a incidentes escrito, com o rito da LGPD
+16. Acessos de pessoas que saíram revogados e segredos compartilhados trocados
+
+No relatório, um item de camada não coberta fica como ⚠️ "não verificado", nunca como ✅.

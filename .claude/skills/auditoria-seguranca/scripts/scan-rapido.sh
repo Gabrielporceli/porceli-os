@@ -27,6 +27,8 @@ grep -rhoIE "${EXC[@]}" '(VITE|NEXT_PUBLIC|EXPO_PUBLIC)_[A-Z0-9_]+' "$ROOT" 2>/d
 sec "Arquivos .env versionados"
 git -C "$ROOT" ls-files 2>/dev/null | grep -E '(^|/)\.env' | grep -vE '\.example$|\.sample$' || echo "(nenhum)"
 
+# RLS só existe em Postgres/Supabase: em SQLite, MySQL ou Mongo o isolamento é na aplicação
+if grep -rqlIiE "${EXC[@]}" --include='*.sql' --include='*.toml' --include='*.prisma' -e 'supabase' -e 'provider *= *"postgresql"' -e 'create policy' "$ROOT" 2>/dev/null; then
 sec "RLS desligado ou policies permissivas (A4)"
 grep -rnIiE "${EXC[@]}" --include='*.sql' \
   -e 'disable row level security' -e 'using \(true\)' -e 'with check \(true\)' -e 'to anon' -e 'grant all' \
@@ -36,6 +38,10 @@ sec "Tabelas criadas x RLS habilitado (contagem nos .sql)"
 printf 'create table: %s | enable row level security: %s\n' \
   "$(grep -rIiE "${EXC[@]}" --include='*.sql' 'create table' "$ROOT" 2>/dev/null | wc -l)" \
   "$(grep -rIiE "${EXC[@]}" --include='*.sql' 'enable row level security' "$ROOT" 2>/dev/null | wc -l)"
+else
+sec "RLS"
+echo "N/A: banco sem RLS (não é Postgres/Supabase). Confira o isolamento na aplicação: filtros por dono/tenant em toda consulta."
+fi
 
 sec "SECURITY DEFINER (conferir search_path e checagem de auth.uid())"
 grep -rnIiE "${EXC[@]}" --include='*.sql' 'security definer' "$ROOT" 2>/dev/null | head -30
@@ -62,7 +68,11 @@ sec "select('*') / listagens sem limite (A10): conferir paginação"
 grep -rnIE "${EXC[@]}" --include='*.ts' --include='*.tsx' "\.select\(['\"]\*['\"]\)" "$ROOT" 2>/dev/null | wc -l | xargs printf 'ocorrências: %s\n'
 
 sec "Rate limiting presente?"
-grep -rlIiE "${EXC[@]}" -e 'rate.?limit' -e 'ratelimit' -e 'throttle' "$ROOT" 2>/dev/null | head -20 || true
+grep -rlIiE "${EXC[@]}" --include='*.ts' --include='*.js' --include='*.py' --include='*.go' --include='*.conf' --include='*.sh' -e 'rate.?limit' -e 'ratelimit' -e 'throttle' -e 'limit_req' -e 'limite' -e 'tentativas' -e 'bloqueio' "$ROOT" 2>/dev/null | head -20 || true
+
+sec "Segundo fator (2FA/MFA) no sistema"
+grep -rlIiE "${EXC[@]}" --include='*.ts' --include='*.tsx' --include='*.js' --include='*.py' -e 'totp' -e 'webauthn' -e 'passkey' -e 'authenticator' -e '\bmfa\b' -e '\b2fa\b' -e 'segundo fator' -e 'duas etapas' "$ROOT" 2>/dev/null | head -10 || true
+echo "(sem resultado = provavelmente o sistema não tem 2FA: item C1 de contas-e-identidade.md)"
 
 sec "Headers de segurança configurados?"
 for f in vercel.json netlify.toml next.config.js next.config.mjs next.config.ts _headers; do
