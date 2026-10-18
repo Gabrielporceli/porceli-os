@@ -9,12 +9,15 @@
 #   bash coleta-servidor.sh                 # como usuário comum: coleta o que der
 #   sudo bash coleta-servidor.sh            # recomendado: coleta firewall, SSH efetivo, logs de acesso
 #   PASTAS_APP="/srv/360" bash coleta-servidor.sh   # pastas da aplicação para conferir permissões
+#   bash coleta-servidor.sh --stdout        # resultado na tela (para coleta pela conexão SSH)
 #
 # Saída: coleta-servidor-<host>-<data>.txt na pasta atual. Revise antes de enviar.
 set -u
 export LC_ALL=C
 HOST=$(hostname 2>/dev/null || echo servidor)
 SAIDA="coleta-servidor-${HOST}-$(date +%Y%m%d-%H%M).txt"
+# --stdout: escreve na tela em vez de arquivo (usado pelo acesso-auditoria.sh, pela conexão SSH)
+NA_TELA=0; [ "${1:-}" = "--stdout" ] && { NA_TELA=1; SAIDA=/dev/stdout; }
 PASTAS_APP="${PASTAS_APP:-/srv /var/www /opt /home}"
 ROOT=0; [ "$(id -u)" = "0" ] && ROOT=1
 
@@ -127,5 +130,7 @@ roda "free -h"
 echo; echo "Fim da coleta. Nada foi alterado no servidor."
 } > "$SAIDA" 2>&1
 
-echo "Coleta salva em: $SAIDA"
-echo "Revise o arquivo antes de enviar. Ele não contém senhas nem chaves, mas tem nomes de usuários, portas e caminhos."
+if [ $NA_TELA = 0 ]; then
+  echo "Coleta salva em: $SAIDA"
+  echo "Revise o arquivo antes de enviar. Ele não contém senhas nem chaves, mas tem nomes de usuários, portas e caminhos."
+fi

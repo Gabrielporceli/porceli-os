@@ -8,7 +8,7 @@ Fonte dos dados: o arquivo de `scripts/coleta-servidor.sh` (ver `acesso-temporar
 |---|------|-----------|-----------|
 | I1 | Atualizações de segurança | 0 pacotes `-security` pendentes e `unattended-upgrades` ativo; sem reinício pendente há mais de 7 dias | ALTA se houver kernel/openssh/nginx com atualização de segurança pendente |
 | I2 | Login SSH | `permitrootlogin no`, `passwordauthentication no`, `kbdinteractiveauthentication no`, `maxauthtries` ≤ 4 | ALTA (senha ou root liberados) |
-| I3 | Chaves autorizadas | Só chaves de pessoas atuais, cada uma identificada pelo comentário; nenhuma de ex-colaborador; preferir `ed25519` | MÉDIA (chave órfã = acesso de quem saiu) |
+| I3 | Chaves autorizadas | Só chaves de pessoas atuais, cada uma identificada pelo comentário; nenhuma de ex-colaborador nem de acesso temporário antigo (outro agente de IA, técnico); preferir `ed25519` | MÉDIA (chave órfã = acesso de quem saiu); ALTA se a chave órfã tiver sudo |
 | I4 | Sudo | Só os usuários necessários; `NOPASSWD: ALL` só se justificado | MÉDIA |
 | I5 | Firewall | Ativo, negando por padrão, só as portas necessárias (ex.: 22, 80, 443) | ALTA se banco, painel ou app (porta interna) estiver aberto para a internet |
 | I6 | Portas escutando | Banco, Redis, app Node, painéis em `127.0.0.1`, não em `0.0.0.0` | ALTA |

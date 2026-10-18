@@ -29,34 +29,35 @@ Guie assim, um passo por vez:
 4. Pedir que ele traga o arquivo de volta (`scp <usuario>@<servidor>:~/coleta-servidor-*.txt .`), revise e anexe na conversa.
 5. Ao final: `rm /tmp/coleta-servidor.sh ~/coleta-servidor-*.txt` no servidor.
 
-### Modalidade B: acesso temporário por chave (quando a skill roda na máquina do usuário)
+### Modalidade B: acesso temporário automatizado (quando a sessão consegue SSH)
 
-Só quando a sessão consegue fazer SSH e o usuário prefere não rodar nada sozinho.
+Use `scripts/acesso-auditoria.sh`. Ele funciona no Linux, no macOS e no Git Bash do Windows (o Claude Code no Windows usa o Git Bash). O usuário só cola **um bloco**, uma vez, no terminal do servidor (o do navegador da Hostinger serve).
 
-1. **Gere o par de chaves do seu lado** e mostre ao usuário **apenas a chave pública**. A privada nunca sai da sessão:
-   ```bash
-   ssh-keygen -t ed25519 -N "" -C "auditoria-$(date +%F)" -f ./chave-auditoria
-   cat ./chave-auditoria.pub
-   ```
-2. Peça que ele crie um usuário próprio, sem senha, com sudo **só para os comandos de leitura**, e com a chave **vencendo sozinha** (OpenSSH 8.2+):
-   ```bash
-   sudo adduser --disabled-password --gecos "" auditoria
-   sudo install -d -m 700 -o auditoria -g auditoria /home/auditoria/.ssh
-   # Troque AAAAMMDDHHMM pela data e hora de vencimento (ex.: amanhã) e cole a chave pública no lugar de <CHAVE_PUBLICA>
-   echo 'expiry-time="AAAAMMDDHHMM",no-port-forwarding,no-agent-forwarding,no-X11-forwarding <CHAVE_PUBLICA>' | sudo tee /home/auditoria/.ssh/authorized_keys
-   sudo chown auditoria:auditoria /home/auditoria/.ssh/authorized_keys && sudo chmod 600 /home/auditoria/.ssh/authorized_keys
-   # sudo só para rodar o script de coleta, nada mais
-   sudo install -m 755 coleta-servidor.sh /usr/local/sbin/coleta-servidor.sh
-   echo 'auditoria ALL=(root) NOPASSWD: /usr/local/sbin/coleta-servidor.sh' | sudo tee /etc/sudoers.d/auditoria
-   sudo chmod 440 /etc/sudoers.d/auditoria && sudo visudo -c
-   ```
-   Se o `AllowUsers` do SSH estiver ligado, ele precisa incluir `auditoria` temporariamente.
-3. Rode só `sudo /usr/local/sbin/coleta-servidor.sh` e comandos de leitura. Nada de editar, instalar ou reiniciar.
-4. **Revogação (sempre, no fim, com o usuário):**
-   ```bash
-   sudo deluser --remove-home auditoria && sudo rm /etc/sudoers.d/auditoria /usr/local/sbin/coleta-servidor.sh
-   ```
-   E apague a chave do seu lado: `rm ./chave-auditoria ./chave-auditoria.pub`. Registre a revogação no relatório.
+```bash
+bash scripts/acesso-auditoria.sh preparar <host> --horas 4 --pastas "/srv/<app>"   # gera a chave e imprime o bloco para colar
+bash scripts/acesso-auditoria.sh coletar  <host>                                  # entra e traz a coleta
+bash scripts/acesso-auditoria.sh revogar  <host>                                  # apaga o acesso e confirma
+bash scripts/acesso-auditoria.sh situacao <host>                                  # registro e se o acesso ainda funciona
+```
+
+O que o bloco cria no servidor (testado de ponta a ponta):
+- usuário `auditoria`, sem senha, só com a chave gerada na sessão (a privada nunca sai da máquina de quem audita);
+- chave com `expiry-time` (1 a 72 horas) e sem túnel, sem repasse e sem terminal interativo;
+- sudo **só** para dois comandos fixos e sem argumentos: `coleta-auditoria` (a coleta somente leitura) e `revogar-auditoria`. `sudo bash`, `sudo cat /etc/shadow` ou argumentos extras são recusados;
+- o script de coleta vai embutido no bloco, conferido por SHA-256 e com dono root: o usuário `auditoria` não consegue trocá-lo.
+
+Fluxo da skill:
+1. Antes, teste se a sessão abre SSH (`command -v ssh` e `timeout 6 bash -c '</dev/tcp/<host>/22'`). Se não abrir (sessão na nuvem), use a modalidade A.
+2. `preparar` e mostre o bloco ao usuário, explicando em 3 linhas o que ele cria e quando vence.
+3. Peça que ele cole e responda com a última linha ("PRONTO" e a impressão digital do servidor).
+4. `coletar`; compare a impressão digital mostrada com a que o bloco imprimiu. Se forem diferentes, pare: pode não ser o servidor certo.
+5. Avalie a coleta (`infraestrutura.md`).
+6. `revogar` **sempre**, mesmo se algo deu errado antes. Se a revogação automática não confirmar, o script imprime o bloco de limpeza manual: entregue ao usuário e só encerre quando ele responder "LIMPO".
+7. Copie o `registro.txt` (preparado, coleta, revogação, com data e hora) para a seção de cobertura do relatório.
+
+Este acesso é **só para auditar**. Corrigir algo no servidor é outra etapa, com aprovação do usuário para cada mudança e um acesso separado.
+
+Na avaliação, procure também **acessos que outras ferramentas deixaram para trás** (outro agente de IA, um técnico que já saiu): chaves em `authorized_keys` sem dono conhecido, usuários extras, arquivos em `/etc/sudoers.d/` e tarefas no cron que ninguém reconhece. Pergunte ao usuário quem é cada chave.
 
 ### Modalidade C: tela compartilhada
 
