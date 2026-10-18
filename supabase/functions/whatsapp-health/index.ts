@@ -2,7 +2,7 @@
  * whatsapp-health — checa a conexão da instância do WhatsApp (Evolution) e
  * grava o estado em `whatsapp_status`, que o CRM mostra como banner.
  *
- * Roda a cada 2 minutos (pg_cron). Só marca "down" depois de 5 checagens
+ * Roda a cada 5 minutos (pg_cron). Só marca "down" depois de 2 checagens
  * seguidas falhando (~10 min fora do ar): oscilação rápida do número não vira
  * aviso. Voltou → o aviso some sozinho.
  *
@@ -17,7 +17,7 @@ const INSTANCE = "agencia03"
 const EVOLUTION_URL = Deno.env.get("EVOLUTION_API_URL") || "https://api.gabrielporceli.com.br"
 // Mesma chave das funções de envio (daily-summary, financial-alert): o segredo EVOLUTION_API_KEY do projeto tem outro valor e devolve 401.
 const EVOLUTION_API_KEY = "E42F543C93BB-4A59-B3A1-8AA2E506DC00"
-const FALHAS_PARA_ALERTAR = 5
+const FALHAS_PARA_ALERTAR = 2
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
