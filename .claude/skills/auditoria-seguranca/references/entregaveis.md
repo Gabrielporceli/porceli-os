@@ -56,6 +56,7 @@ Ao final de toda auditoria (exceto no modo **diff**, em que basta o relatório n
       "teste": "Teste automatizado que falha antes e passa depois",
       "criterio_aceite": "Condição verificável de 'pronto'",
       "esforco": "P | M | G",
+      "manual": false,                     // true = se resolve fora do código (DNS, painel, conta): vai para as ações manuais do prompt, não vira tarefa do agente
       "prazo": "hoje | 7d | 30d | backlog"   // opcional: padrão por severidade (CRÍTICA→hoje, ALTA→7d, MÉDIA→30d, BAIXA→backlog)
     }
   ],

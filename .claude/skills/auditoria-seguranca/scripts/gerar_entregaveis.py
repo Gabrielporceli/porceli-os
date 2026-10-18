@@ -206,7 +206,7 @@ def montar_html(d, prompt_md):
         total = sum(horas.get(a.get("esforco", "M"), 2.5) for a in itens)
         partes.append(f'<div class="fase"><h3>{PRAZO_NOME[prazo]} · {len(itens)} item(ns) · ~{total:g} h</h3><ol>')
         for a in itens:
-            partes.append(f"<li>{pilula(a['severidade'])} <b>{e(a['id'])}</b> {bloco(a.get('titulo'))}"
+            partes.append(f"<li>{pilula(a['severidade'])} <b>{e(a['id'])}</b> {bloco(a.get('titulo'))}{' <span class=\'meta\'>(ação manual)</span>' if a.get('manual') else ''}"
                           f" <span class='meta'>· esforço {e(ESFORCO_NOME.get(a.get('esforco', 'M'), a.get('esforco')))}</span>"
                           f"<br><span class='meta'>Pronto quando: {bloco(a.get('criterio_aceite', 'a definir'))}</span></li>")
         partes.append("</ol></div>")
@@ -296,7 +296,10 @@ def montar_prompt(d):
     L.append("6. Não amplie o escopo: nada de refatorações não relacionadas.")
     L.append("7. No final, mostre uma tabela `ID | status (corrigido / já estava corrigido / bloqueado) | commit | teste` e me lembre das ações manuais pendentes.\n")
 
-    manuais = d.get("acoes_manuais") or []
+    manuais = list(d.get("acoes_manuais") or [])
+    # Achados que se resolvem fora do código (DNS, painel, contas) não viram tarefa do agente
+    fora = [a for a in d["achados"] if a.get("manual")]
+    manuais += [f"{a['id']} ({a.get('titulo', '')}): {a.get('correcao', '')}" for a in fora if not any(a["id"] in m for m in manuais)]
     if manuais:
         L.append("## Ações manuais (eu faço; você só me lembra e adapta o código a elas)\n")
         L += [f"- [ ] {m}" for m in manuais]
@@ -304,7 +307,7 @@ def montar_prompt(d):
 
     L.append("## Itens, em ordem de prioridade\n")
     for prazo in ("hoje", "7d", "30d", "backlog"):
-        itens = [a for a in d["achados"] if a.get("prazo") == prazo]
+        itens = [a for a in d["achados"] if a.get("prazo") == prazo and not a.get("manual")]
         if not itens:
             continue
         L.append(f"### {PRAZO_NOME[prazo]}\n")
