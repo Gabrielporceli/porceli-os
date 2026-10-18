@@ -6,7 +6,7 @@
  * financeiros e cobranças a clientes não saem — e as funções de envio
  * respondem "sucesso" mesmo assim, então sem isto ninguém percebe.
  *
- * Também avisa se o próprio monitor parou de atualizar (estado velho).
+ * Só aparece com a queda confirmada (~10 min seguidos); oscilação rápida não avisa.
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,6 @@ interface Status {
   detail: string | null;
 }
 
-const MONITOR_PARADO_MIN = 10;
 
 /** Visual comum dos cards de aviso do canto inferior direito. */
 export const ALERTA_BASE =
@@ -62,11 +61,10 @@ export function WhatsappBanner() {
 
   if (!data) return null;
 
-  const minutosSemChecar = (Date.now() - new Date(data.checked_at).getTime()) / 60_000;
-  const caiu = data.state === "down";
-  const monitorParado = !caiu && minutosSemChecar > MONITOR_PARADO_MIN;
-  if (!caiu && !monitorParado) return null;
-  const chave = caiu ? `down-${data.since}` : `parado-${data.checked_at}`;
+  // Só a queda confirmada (~10 min seguidos, ver whatsapp-health). Monitor
+  // parado = os crons pararam, e isso é mostrado pelo aviso de automações.
+  if (data.state !== "down") return null;
+  const chave = `down-${data.since}`;
 
   // Roda a checagem na hora (em vez de esperar o cron de 2 min) e relê o estado.
   const verificar = async () => {
@@ -87,30 +85,17 @@ export function WhatsappBanner() {
       role="alert"
       className={
         ALERTA_BASE +
-        (caiu
-          ? "border-red-500/40 bg-[#2b1115]/95 text-red-100"
-          : "border-yellow-500/40 bg-[#2a2310]/95 text-yellow-100")
+        "border-red-500/40 bg-[#2b1115]/95 text-red-100"
       }
     >
-      <Icon as={Danger} size={20} className={caiu ? "mt-0.5 shrink-0 text-red-400" : "mt-0.5 shrink-0 text-yellow-400"} />
+      <Icon as={Danger} size={20} className="mt-0.5 shrink-0 text-red-400" />
       <div className="min-w-0 flex-1 text-sm">
-        {caiu ? (
-          <>
-            <p className="font-bold">WhatsApp desconectado desde {formatar(data.since)}</p>
-            <p className="text-red-100/80">
-              Relatórios, alertas e cobranças ficam na fila e saem quando reconectar.
-              Reconecte a instância <b>agencia03</b> lendo o QR code.
-            </p>
-            {data.detail && <p className="mt-0.5 text-xs text-red-100/50">{data.detail}</p>}
-          </>
-        ) : (
-          <>
-            <p className="font-bold">O monitor do WhatsApp parou de atualizar</p>
-            <p className="text-yellow-100/80">
-              Última checagem em {formatar(data.checked_at)}. Não dá para garantir que o WhatsApp está conectado.
-            </p>
-          </>
-        )}
+        <p className="font-bold">WhatsApp desconectado desde {formatar(data.since)}</p>
+        <p className="text-red-100/80">
+          Relatórios, alertas e cobranças ficam na fila e saem quando reconectar.
+          Reconecte a instância <b>agencia03</b> lendo o QR code.
+        </p>
+        {data.detail && <p className="mt-0.5 text-xs text-red-100/50">{data.detail}</p>}
         <button
           type="button"
           onClick={verificar}

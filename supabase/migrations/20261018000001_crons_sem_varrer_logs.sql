@@ -72,7 +72,7 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.cron_collect() FROM PUBLIC, anon, authenticated;
 
--- Faxina 1x por dia (04:00 BRT).
+-- Faxina 1x por dia às 03:30 BRT (06:30 UTC).
 CREATE OR REPLACE FUNCTION public.cron_faxina()
 RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
@@ -83,5 +83,5 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.cron_faxina() FROM PUBLIC, anon, authenticated;
 
-SELECT cron.schedule('faxina-logs', '0 7 * * *',
+SELECT cron.schedule('faxina-logs', '30 6 * * *',
   $$SELECT public.cron_run_sql('faxina-logs', 'SELECT public.cron_faxina()');$$);
