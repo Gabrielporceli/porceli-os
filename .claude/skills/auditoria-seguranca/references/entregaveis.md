@@ -45,7 +45,7 @@ Ao final de toda auditoria (exceto no modo **diff**, em que basta o relatório n
       "id": "VULN-1",
       "titulo": "Curto e específico",
       "severidade": "CRÍTICA | ALTA | MÉDIA | BAIXA",
-      "confianca": "Confirmado | Provável",
+      "confianca": "Confirmado por exploração | Confirmado | Provável",
       "camada": "codigo | infraestrutura | contas | deteccao",
       "local": "arquivo:linha, tabela/policy ou função",
       "tipo": "OWASP A01:2025 | API1:2023 | ASVS 5.0 V8.x | CWE-639 | A4",

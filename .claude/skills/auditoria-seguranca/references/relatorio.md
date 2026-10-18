@@ -25,7 +25,7 @@ Ordene por severidade (CRÍTICA primeiro). Um bloco por achado:
 ```
 🔴 VULN-[N]: [Nome curto]
 ├─ Severidade: CRÍTICA | ALTA | MÉDIA | BAIXA   (CVSS 4.0 opcional p/ CRÍTICA/ALTA)
-├─ Confiança: Confirmado | Provável
+├─ Confiança: Confirmado por exploração | Confirmado | Provável
 ├─ Localização: arquivo:linha | tabela/policy | função
 ├─ Tipo: [OWASP Top 10 2025 / API Top 10 2023 / LLM Top 10 2025] | [ASVS 5.0 req.] | [CWE-ID] | [A1–A12]
 ├─ Cenário: como alguém abusaria disso, em linguagem clara
@@ -85,7 +85,7 @@ test("VULN-3: payload com campo 'role' é rejeitado (mass assignment)")
 ```
 📊 SCORECARD DE SEGURANÇA
 ├─ CRÍTICAS: X | ALTAS: X | MÉDIAS: X | BAIXAS: X
-├─ Confiança: X confirmados | X prováveis | X suspeitas
+├─ Confiança: X explorados | X confirmados | X prováveis | X suspeitas
 ├─ Anti-padrões detectados: [A1, A4, …]
 ├─ Nota: [A–F]  (A = pronto para produção, F = risco crítico imediato)
 └─ Top 3 ações:

@@ -149,16 +149,18 @@ Antes de reportar, tente **derrubar** cada achado como um revisor cético:
 
 Classifique a confiança: **Confirmado** (evidência direta), **Provável** (caminho rastreado, falta prova em execução) ou **Suspeita** (vai para "Suspeitas a confirmar"). Achado derrubado é descartado, não reportado.
 
-### Passo 3 — Verificação em ambiente de teste (somente com autorização)
+### Passo 3 — Teste de penetração defensivo (padrão no modo completo)
 
-Quando o usuário autorizar um ambiente local ou de staging com contas de teste próprias, confirme os achados da análise estática da forma menos invasiva possível, preferindo os testes automatizados da Fase 3 (por exemplo, testes de RLS com dois usuários de teste, ou checar os headers de resposta da própria aplicação). Registre um resumo do que foi verificado como evidência. Não faça varredura, brute force nem testes de carga.
+Confirme na prática os achados exploráveis, seguindo `references/pentest-defensivo.md`: suba uma cópia do sistema em ambiente isolado (nunca produção), com dados fictícios e contas de teste, e explore cada achado com as mesmas requisições que um atacante faria (IDOR, autorização de ação, webhook sem token, formulário, upload, sessão). Separe o que resistiu do que caiu, transforme cada exploração em teste de regressão, destrua o ambiente no fim e escreva `docs/seguranca/<data>/pentest.md`. Um achado explorado vira "Confirmado por exploração".
+
+Limites: só em ambiente isolado e com dados fictícios; nada destrutivo (sem DoS, flood real ou brute force pesado); sem atacar serviços de terceiros; sem roteiro de exploração ofensiva genérico. Se não der para subir uma cópia, o achado fica "Confirmado por leitura" e registra-se o motivo. Para um **laudo formal de pentest** (certificação, exigência contratual), oriente o usuário a contratar profissional ou empresa com escopo e autorização assinados: a skill faz a verificação defensiva, não substitui o laudo.
 
 ### Passo 4 — Relatório
 
 Siga **exatamente** o formato de `references/relatorio.md`:
 - **Fase 1 — Visão do atacante:** achados ordenados por severidade, cada um com local, classificação (OWASP/CWE/anti-padrão), exploit, impacto e PoC.
 - **Fase 2 — Código blindado:** correção mínima de cada achado, na stack e convenções do projeto, com comentário `// 🔒 SEGURANÇA [VULN-N]: por quê`. Migrations SQL como arquivo novo, nunca editando migration antiga.
-- **Fase 3 — Testes de segurança:** um teste automatizado por vulnerabilidade, no framework do projeto (ou SQL/pgTAP para RLS).
+- **Fase 3 — Testes de segurança:** um teste automatizado por vulnerabilidade, no framework do projeto (ou SQL/pgTAP para RLS). Cada achado explorado no Passo 3 vira um destes testes de regressão.
 - **Checklist de prontidão** (os 10 itens) com ✅/❌/⚠️ e evidência.
 - **Scorecard** com nota A–F e top 3 ações.
 
