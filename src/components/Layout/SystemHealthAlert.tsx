@@ -28,7 +28,6 @@ interface Saude {
 const NOMES: Record<string, string> = {
   "send-scheduled-messages": "Mensagens agendadas",
   "vigilante-tarefas-10min": "Lembrete de tarefas",
-  "sync-whatsapp-lote": "Sincronização do WhatsApp",
   "whatsapp-health-check": "Monitor do WhatsApp",
   "asaas-alertas-pagamento": "Alertas de pagamento",
   "alerta-financeiro-diario": "Relatório financeiro",
