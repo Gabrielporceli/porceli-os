@@ -57,6 +57,25 @@ function referenceMonth(dateStr: string): string {
   return `${MESES[d.getMonth()]}/${d.getFullYear()}`
 }
 
+// Linha de um boleto em aberto: O QUE é (mês de referência — a cobrança é
+// adiantada, então a mensalidade de outubro vence no fim de setembro) + QUANDO
+// venceu (mede o atraso). Ex.: "Outubro/2026 (venceu 30/09)".
+// Sem mês de referência (renegociação, multa, pagamento único…), usa o nome
+// do lançamento.
+function descreverBoleto(reference: string | null | undefined, dueDate: string): string {
+  const venceu = dueDate.split('-').reverse().slice(0, 2).join('/')
+  const m = (reference ?? '').trim().match(/^(\p{L}+) de (\d{4})$/u)
+  let oque: string
+  if (m) {
+    const nome = m[1].toLowerCase()
+    const idx = MESES.findIndex((x) => x.toLowerCase() === nome)
+    oque = idx >= 0 ? `${MESES[idx]}/${m[2]}` : `${m[1]}/${m[2]}`
+  } else {
+    oque = (reference ?? '').trim() || referenceMonth(dueDate)
+  }
+  return `${oque} (venceu ${venceu})`
+}
+
 serve(async (req) => {
   try {
     // dry_run: monta o relatório e devolve o texto, sem enviar (para conferência)
@@ -121,7 +140,7 @@ serve(async (req) => {
     let message = `*Relatorio Financeiro - ${dateLabel}*\n\n`
 
     if (hasOverdue) {
-      const byClient: Record<string, { company: string; responsible: string; entries: { amount: number; date: string }[] }> = {}
+      const byClient: Record<string, { company: string; responsible: string; entries: { amount: number; date: string; reference: string | null }[] }> = {}
 
       for (const f of overdueFinances!) {
         const client = (f as any).clients
@@ -133,7 +152,7 @@ serve(async (req) => {
             entries: []
           }
         }
-        byClient[key].entries.push({ amount: Number(f.amount), date: f.due_date })
+        byClient[key].entries.push({ amount: Number(f.amount), date: f.due_date, reference: f.reference ?? null })
       }
 
       const totalInadimplentes = Object.values(byClient)
@@ -149,7 +168,7 @@ serve(async (req) => {
         if (responsible) message += ` (${responsible})`
         message += `\n`
         for (const e of entries) {
-          message += `  - ${referenceMonth(e.date)}: *${formatMoney(e.amount)}*\n`
+          message += `  - ${descreverBoleto(e.reference, e.date)}: *${formatMoney(e.amount)}*\n`
         }
         if (entries.length > 1) {
           message += `  Total: *${formatMoney(total)}*\n`
