@@ -10,6 +10,8 @@ import { useUpdateClient } from '@/hooks/useClients';
 import { DatePicker } from "@/components/ui/date-picker";
 import { parseISO, format } from "date-fns";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { DollarCircle } from 'iconsax-react';
 import {
   Dialog,
@@ -35,8 +37,21 @@ interface EditContractModalProps {
   isOpen: boolean;
   contract: Contract | null;
   onClose: () => void;
-  onSave: (contractData: Omit<Contract, 'id'>) => void;
+  onSave: (contractData: Omit<Contract, 'id'> & { asaas_remove_ids?: string[] }) => void;
 }
+
+/** Boleto do parcelamento anterior, conferido no servidor (asaas-renegotiation). */
+interface BoletoAntigo {
+  payment_id: string;
+  value: number;
+  dueDate: string;
+  description: string | null;
+  ok: boolean;
+  motivo?: string;
+}
+
+const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const dataBR = (iso: string) => iso.split('-').reverse().join('/');
 
 export function EditContractModal({ isOpen, contract, onClose, onSave }: EditContractModalProps) {
   useScrollLock(isOpen);
@@ -53,6 +68,12 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     category: 'recorrente' as NonNullable<Contract['category']>,
   });
   const updateClient = useUpdateClient();
+  // Revisão dos boletos do parcelamento anterior (só quando valor, datas ou
+  // dia de pagamento mudam — aí o sistema cria um parcelamento novo no Asaas).
+  // null = ainda não revisado; { boletos, semCodigo } = revisado.
+  const [revisao, setRevisao] = useState<{ boletos: BoletoAntigo[]; semCodigo: boolean } | null>(null);
+  const [conferindo, setConferindo] = useState(false);
+  useEffect(() => { setRevisao(null); }, [formData.monthlyValue, formData.startDate, formData.endDate, formData.payment_day, formData.status]);
 
   useEffect(() => {
     if (contract) {
@@ -82,10 +103,36 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
 
     const monthlyValueNumber = parseFloat(formData.monthlyValue.replace('.', '').replace(',', '.')) || 0;
 
+    // Mudou o que gera cobrança? Então o Asaas vai ganhar um parcelamento novo:
+    // primeiro mostra os boletos futuros do parcelamento anterior pra aprovação.
+    const mudouCobranca = !!contract && formData.status !== 'inactive' && (
+      Math.abs(monthlyValueNumber - Number(contract.monthlyValue)) > 0.001 ||
+      formData.startDate !== contract.startDate ||
+      formData.endDate !== contract.endDate ||
+      (parseInt(formData.payment_day) || 1) !== (contract.payment_day || 1)
+    );
+    if (mudouCobranca && revisao === null) {
+      setConferindo(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('asaas-renegotiation', {
+          body: { action: 'preview_contract_removal', contract_id: contract!.id },
+        });
+        if (error || !data?.success) {
+          toast.error(`Não consegui conferir os boletos no Asaas: ${data?.error || error?.message || 'erro'}. Tente de novo.`);
+          return;
+        }
+        setRevisao({ boletos: (data.boletos ?? []) as BoletoAntigo[], semCodigo: !!data.sem_codigo });
+      } finally {
+        setConferindo(false);
+      }
+      return;
+    }
+
     onSave({
       ...formData,
       monthlyValue: monthlyValueNumber,
-      payment_day: parseInt(formData.payment_day) || 1
+      payment_day: parseInt(formData.payment_day) || 1,
+      asaas_remove_ids: revisao?.boletos.filter((b) => b.ok).map((b) => b.payment_id),
     });
   };
 
@@ -277,6 +324,36 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 </Select>
               </div>
 
+              {revisao !== null && (
+                <div className="space-y-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                    Parcelamento anterior no Asaas
+                  </p>
+                  <p className="text-[11px] text-white/45">
+                    Ao salvar, o sistema cria um parcelamento novo no Asaas. Os boletos futuros do anterior saem para não ficar duplicado.
+                  </p>
+                  {revisao.semCodigo ? (
+                    <p className="text-xs text-amber-300/90">
+                      Este contrato é anterior ao controle por código — o sistema não consegue identificar com segurança os boletos dele.
+                      Nada será removido: depois de salvar, confira no Asaas e remova manualmente o parcelamento antigo.
+                    </p>
+                  ) : (
+                    revisao.boletos.map((b) => (
+                      <div key={b.payment_id} className="flex items-start justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                          <p className={b.ok ? "text-white/80" : "text-white/50"}>{brl(Number(b.value))} · venc. {dataBR(b.dueDate)}</p>
+                          {b.description && <p className="truncate text-white/35">{b.description}</p>}
+                          {!b.ok && b.motivo && <p className="text-amber-300/80">{b.motivo}</p>}
+                        </div>
+                        <span className={b.ok ? "shrink-0 font-bold text-red-400" : "shrink-0 font-bold text-white/40"}>
+                          {b.ok ? "Será removido" : "Fica no Asaas"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  <p className="pt-1 text-[11px] text-white/40">Confira e clique em Salvar para concluir.</p>
+                </div>
+              )}
             </form>
           </div>
 
@@ -292,7 +369,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
                 form="edit-contract-form"
                 className="h-11 px-8 text-[10px] font-bold uppercase tracking-widest"
               >
-                Salvar Alterações
+                {conferindo ? 'Conferindo...' : revisao === null ? 'Salvar Alterações' : 'Confirmar e Salvar'}
               </LiquidGlassButton>
             </motion.div>
           </div>

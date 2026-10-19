@@ -115,7 +115,7 @@ export default function Contracts() {
     setRenewingContract(contract);
   };
 
-  const handleEditContract = async (contractData: Omit<Contract, 'id'>) => {
+  const handleEditContract = async (contractData: Omit<Contract, 'id'> & { asaas_remove_ids?: string[] }) => {
     if (editingContract) {
       try {
         await updateContractMutation.mutateAsync({
@@ -128,6 +128,7 @@ export default function Contracts() {
           payment_day: contractData.payment_day,
           contract_url: contractData.contract_url,
           category: contractData.category,
+          asaas_remove_ids: contractData.asaas_remove_ids,
         } as any);
         setEditingContract(null);
       } catch (error) {

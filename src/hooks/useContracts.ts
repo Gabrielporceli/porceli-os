@@ -231,7 +231,7 @@ export const useUpdateContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, payment_day, ...updates }: ContractUpdate & { id: string, payment_day?: number }) => {
+    mutationFn: async ({ id, payment_day, asaas_remove_ids, ...updates }: ContractUpdate & { id: string, payment_day?: number, asaas_remove_ids?: string[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -323,7 +323,7 @@ export const useUpdateContract = () => {
           try {
             const finalPaymentDay = payment_day !== undefined ? payment_day : (data.client?.payment_day || 1);
 
-            await supabase.functions.invoke('send-client-webhook', {
+            const { data: novo, error: novoErr } = await supabase.functions.invoke('send-client-webhook', {
               body: {
                 ...data.client,
                 plan: data.type,
@@ -336,6 +336,26 @@ export const useUpdateContract = () => {
                 updated_at: new Date().toISOString()
               }
             });
+
+            // Boletos futuros do parcelamento ANTERIOR (aprovados na revisão do
+            // modal): só remove depois que o novo parcelamento foi criado — o
+            // cliente nunca fica sem boleto. O servidor confere tudo de novo.
+            if (asaas_remove_ids && asaas_remove_ids.length > 0) {
+              if (novoErr || !novo?.success) {
+                toast.warning('O novo parcelamento não foi criado no Asaas — os boletos antigos foram MANTIDOS. Confira no Asaas.');
+              } else {
+                const { data: rem, error: remErr } = await supabase.functions.invoke('asaas-renegotiation', {
+                  body: { action: 'cancel_contract_payments', contract_id: data.id, payment_ids: asaas_remove_ids },
+                });
+                const res = (rem?.resultados ?? []) as { removido: boolean }[];
+                const removidos = res.filter((x) => x.removido).length;
+                if (remErr || !rem) toast.warning('Não foi possível remover os boletos antigos no Asaas — confira manualmente.');
+                else {
+                  if (removidos > 0) toast.success(`${removidos} boleto(s) do parcelamento anterior removido(s) no Asaas.`);
+                  if (removidos < asaas_remove_ids.length) toast.warning(`${asaas_remove_ids.length - removidos} boleto(s) antigo(s) não foram removidos — confira no Asaas.`);
+                }
+              }
+            }
           } catch (webhookErr) {
             console.error('Erro ao enviar webhook de atualização:', webhookErr);
           }

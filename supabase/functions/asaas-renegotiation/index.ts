@@ -27,6 +27,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *     POST /payments/{id}/restore).
  *     Antes, os boletos antigos ficavam abertos e o cliente seguia recebendo
  *     aviso de atraso de dívida já renegociada.
+ *   • "preview_contract_removal" / "cancel_contract_payments" — EDIÇÃO de
+ *     contrato: o CRM cria um parcelamento novo no Asaas; os boletos FUTUROS
+ *     do parcelamento anterior precisam sair, senão ficam duplicados. Acha os
+ *     boletos pelo código do contrato (externalReference porceli:contrato:<id>)
+ *     e só remove se: mesmo cliente, código do contrato, PENDENTE com
+ *     vencimento de hoje em diante, não pago/removido e NÃO ligado a nenhum
+ *     lançamento (os boletos novos já nascem ligados — nunca são removidos).
+ *     Remove só os ids aprovados na revisão. Contrato antigo (sem código):
+ *     nada é encontrado e nada é removido — a tela pede conferência manual.
  *   • "status" — só consulta `payment_ids` (não altera nada).
  *
  * Exige usuário logado: a função mexe em cobranças reais.
@@ -219,7 +228,8 @@ serve(async (req) => {
     if (!quem) return json({ success: false, error: "Não autorizado" }, 401);
 
     const body = await req.json();
-    const action = (body?.action ?? "create") as "create" | "preview_removal" | "cancel" | "status";
+    const action = (body?.action ?? "create") as
+      "create" | "preview_removal" | "cancel" | "status" | "preview_contract_removal" | "cancel_contract_payments";
 
     // ── Só consulta ───────────────────────────────────────────────────────
     if (action === "status") {
@@ -231,6 +241,63 @@ serve(async (req) => {
         catch (e) { resultados.push({ id, error: (e as Error).message }); }
       }
       return json({ success: true, resultados });
+    }
+
+    // ── Edição de contrato: boletos futuros do parcelamento anterior ─────────
+    if (action === "preview_contract_removal" || action === "cancel_contract_payments") {
+      const contractId = typeof body?.contract_id === "string" ? body.contract_id : "";
+      if (!contractId) return json({ success: false, error: "contract_id obrigatório" }, 400);
+
+      let cq = db.from("contracts").select("id, client_id, user_id, clients(cnpj)").eq("id", contractId);
+      if (quem !== "service") cq = cq.eq("user_id", quem);
+      const { data: ct } = await cq.maybeSingle();
+      if (!ct) return json({ success: false, error: "contrato não encontrado" }, 404);
+      const cnpj = (((ct as unknown as { clients: { cnpj: string | null } | null }).clients?.cnpj) ?? "").replace(/\D/g, "");
+      if (!cnpj) return json({ success: true, boletos: [], aviso: "cliente sem CNPJ" });
+      const cust = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
+      const customerId = cust.totalCount > 0 ? cust.data[0].id as string : null;
+      const ref = `porceli:contrato:${contractId}`;
+      const hoje = hojeBRT();
+
+      const avaliar = async (p: Pay) => {
+        const det = { payment_id: p.id, value: p.value, dueDate: p.dueDate, description: p.description ?? null };
+        if (p.externalReference !== ref) return { ...det, ok: false, motivo: "não é deste contrato" };
+        if (!customerId || p.customer !== customerId) return { ...det, ok: false, motivo: "o boleto é de OUTRO cliente no Asaas" };
+        if (p.deleted) return { ...det, ok: false, motivo: "já removido no Asaas" };
+        if (p.status !== "PENDING") return { ...det, ok: false, motivo: p.status === "OVERDUE" ? "vencido — continua em aberto (dívida)" : `situação ${p.status}` };
+        if (p.dueDate < hoje) return { ...det, ok: false, motivo: "vencimento já passou" };
+        const { count } = await db.from("financial_entries").select("id", { count: "exact", head: true }).eq("asaas_payment_id", p.id);
+        if ((count ?? 0) > 0) return { ...det, ok: false, motivo: "ligado a um lançamento atual do sistema" };
+        return { ...det, ok: true };
+      };
+
+      if (action === "preview_contract_removal") {
+        const lista = await asaasGet(`/payments?externalReference=${encodeURIComponent(ref)}&limit=100`);
+        const boletos = [];
+        for (const p of ((lista.data ?? []) as Pay[]).sort((a, b) => a.dueDate.localeCompare(b.dueDate))) {
+          boletos.push(await avaliar(p));
+        }
+        return json({ success: true, boletos, sem_codigo: boletos.length === 0 });
+      }
+
+      const ids: string[] = Array.isArray(body?.payment_ids) ? body.payment_ids.filter((x: unknown) => typeof x === "string" && x) : [];
+      const resultados: Record<string, unknown>[] = [];
+      for (const id of ids) {
+        try {
+          const r = await avaliar((await asaasGet(`/payments/${id}`)) as Pay);
+          if (!r.ok) { resultados.push({ ...r, removido: false }); continue; }
+          await asaasDelete(`/payments/${id}`);
+          await db.from("asaas_removals").insert({
+            client_id: (ct as { client_id: string }).client_id, asaas_payment_id: id,
+            value: r.value, due_date: r.dueDate, description: r.description,
+            motivo: "edição de contrato", removed_by: quem === "service" ? null : quem,
+          });
+          resultados.push({ ...r, removido: true });
+        } catch (e) {
+          resultados.push({ payment_id: id, removido: false, erro: (e as Error).message });
+        }
+      }
+      return json({ success: !resultados.some((x) => x.erro), resultados });
     }
 
     // ── Conferência / remoção dos boletos antigos da renegociação ────────────
