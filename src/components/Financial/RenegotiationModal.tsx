@@ -27,6 +27,7 @@ interface OverdueEntry {
   due_date: string;
   reference: string;
   status: string;
+  asaas_payment_id?: string | null;
 }
 
 interface RenegotiationModalProps {
@@ -282,41 +283,81 @@ export function RenegotiationModal({
       } : null;
 
       const newEntries: any[] = [];
+      // Cobrança criada no Asaas → id de cada boleto, para ligar ao lançamento.
+      // Se QUALQUER criação falhar, os boletos antigos não são removidos.
+      let falhouAsaas = false;
+      type Criada = { id: string };
+      const criar = async (body: Record<string, unknown>, rotulo: string): Promise<Criada[]> => {
+        const { data, error } = await supabase.functions.invoke("asaas-renegotiation", { body });
+        if (error || !data?.success) {
+          falhouAsaas = true;
+          console.warn(`Asaas ${rotulo}: ${data?.error || error?.message}`);
+          return [];
+        }
+        return (data.payments ?? (data.payment ? [data.payment] : [])) as Criada[];
+      };
 
       if (mode === "personalizado") {
         for (const [i, p] of customPayments.entries()) {
           const amount = parseInt(p.amountStr, 10) / 100;
+          let criadas: Criada[] = [];
           if (asaasClientData) {
-            const { data, error } = await supabase.functions.invoke("asaas-renegotiation", {
-              body: { ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}` },
-            });
-            if (error || !data?.success) console.warn(`Asaas pagamento ${i + 1}: ${data?.error || error?.message}`);
+            criadas = await criar({ ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}` }, `pagamento ${i + 1}`);
           }
-          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount, due_date: p.dueDate, reference: `Renegociação — Pagamento ${i + 1}/${customPayments.length}`, status: "pending" });
+          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount, due_date: p.dueDate, reference: `Renegociação — Pagamento ${i + 1}/${customPayments.length}`, status: "pending", asaas_payment_id: criadas[0]?.id ?? null });
         }
 
       } else {
         const asaasBase = asaasClientData ? { ...asaasClientData, billing_type: billingType } : null;
 
         if (hasEntrada && grossEntrada > 0) {
+          let criadas: Criada[] = [];
           if (asaasBase) {
-            const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
-              { body: { ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}` } });
-            if (error || !data?.success) console.warn("Asaas entrada:", data?.error || error?.message);
+            criadas = await criar({ ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}` }, "entrada");
           }
-          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: grossEntrada, due_date: entradaDate, reference: "Renegociação — Entrada", status: "pending" });
+          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: grossEntrada, due_date: entradaDate, reference: "Renegociação — Entrada", status: "pending", asaas_payment_id: criadas[0]?.id ?? null });
         }
 
         if (grossInstallments > 0) {
+          let criadas: Criada[] = [];
           if (asaasBase) {
-            const { data, error } = await supabase.functions.invoke("asaas-renegotiation",
-              { body: { ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}` } });
-            if (error || !data?.success) console.warn("Asaas parcelas:", data?.error || error?.message);
+            // Parcelado: a função devolve todas as parcelas em ordem de vencimento.
+            criadas = await criar({ ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}` }, "parcelas");
           }
           Array.from({ length: installments }).forEach((_, i) => {
-            newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: installmentValue, due_date: i === 0 ? dueDate : addMonths(dueDate, i), reference: installments > 1 ? `Renegociação — Parcela ${i + 1}/${installments}` : "Renegociação", status: "pending" });
+            newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: installmentValue, due_date: i === 0 ? dueDate : addMonths(dueDate, i), reference: installments > 1 ? `Renegociação — Parcela ${i + 1}/${installments}` : "Renegociação", status: "pending", asaas_payment_id: criadas[i]?.id ?? null });
           });
         }
+      }
+
+      // Boletos antigos no Asaas: remove os que ainda estão em aberto — senão o
+      // cliente segue recebendo aviso de atraso de dívida já renegociada.
+      // Só se TODAS as cobranças novas foram criadas (nunca deixar o cliente
+      // sem boleto nenhum). Cobrança já paga nunca é removida.
+      const antigas = overdueEntries.filter((e) => selectedIds.has(e.id));
+      const idsAsaas = antigas.map((e) => e.asaas_payment_id).filter((x): x is string => !!x);
+      const semVinculo = antigas.length - idsAsaas.length;
+      if (hasCnpj && idsAsaas.length > 0) {
+        if (falhouAsaas) {
+          toast.warning("Alguma cobrança nova não foi criada no Asaas — os boletos antigos foram MANTIDOS lá. Confira no Asaas.");
+        } else {
+          const { data: canc, error: cancErr } = await supabase.functions.invoke("asaas-renegotiation", {
+            body: { action: "cancel", payment_ids: idsAsaas },
+          });
+          const res = (canc?.resultados ?? []) as { resultado: string; status?: string }[];
+          const removidas = res.filter((x) => x.resultado === "removida" || x.resultado === "ja_removida").length;
+          const pagas = res.filter((x) => x.resultado === "mantida").length;
+          if (cancErr || !canc) {
+            toast.warning("Não foi possível remover os boletos antigos no Asaas. Remova-os manualmente para o cliente não receber aviso de atraso.");
+          } else {
+            if (removidas > 0) toast.success(`${removidas} boleto(s) antigo(s) removido(s) no Asaas.`);
+            if (pagas > 0) toast.warning(`${pagas} boleto(s) antigo(s) já constam como PAGOS no Asaas e foram mantidos — confira antes de cobrar de novo.`);
+            if (res.some((x) => x.resultado === "erro")) toast.warning("Algum boleto antigo não pôde ser removido no Asaas — confira manualmente.");
+          }
+        }
+      }
+      if (semVinculo > 0) {
+        toast.warning(`${semVinculo} cobrança(s) antiga(s) sem vínculo com o Asaas — confira lá se ainda estão em aberto.`);
       }
 
       // Apaga cobranças em atraso selecionadas
