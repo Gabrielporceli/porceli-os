@@ -13,6 +13,11 @@ export const useFinancialEntries = () => {
   // Buscar lançamentos financeiros
   const { data: financialEntries = [], isLoading: financialEntriesLoading, refetch } = useQuery({
     queryKey: ['financial-entries', user?.id],
+    // Valores do painel/financeiro mudam também fora desta tela (Asaas confirma
+    // pagamento, crons, outra aba): rebusca ao voltar pra aba e a cada 2 min.
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 120_000,
     queryFn: async () => {
       if (!user?.id) return [];
 

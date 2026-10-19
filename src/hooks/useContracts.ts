@@ -13,6 +13,10 @@ type ContractUpdate = TablesUpdate<'contracts'>;
 export const useContracts = () => {
   return useQuery({
     queryKey: ['contracts'],
+    // SEM rebusca periódica: esta query roda update_client_tags_from_contracts,
+    // que reescreve contratos e clientes — repetir isso a cada poucos minutos
+    // pesa demais na instância (ver incidente de 18/10/2026). Os valores que
+    // mudam sozinhos (lançamentos/despesas) já se atualizam pelos próprios hooks.
     queryFn: async () => {
       // Verificar autenticação antes de fazer query
       const { data: { user } } = await supabase.auth.getUser();
@@ -189,6 +193,9 @@ export const useCreateContract = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      // Contrato gera/remove lançamentos: painel e financeiro precisam recalcular.
+      queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['client-revenue'] });
       toast.success('Contrato criado com sucesso!');
     },
     onError: (error) => {
@@ -317,6 +324,9 @@ export const useUpdateContract = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      // Contrato gera/remove lançamentos: painel e financeiro precisam recalcular.
+      queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['client-revenue'] });
       toast.success('Contrato atualizado com sucesso!');
     },
     onError: (error) => {
@@ -390,6 +400,9 @@ export const useDeleteContract = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      // Contrato gera/remove lançamentos: painel e financeiro precisam recalcular.
+      queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['client-revenue'] });
       toast.success('Contrato excluído com sucesso!');
     },
     onError: (error) => {
@@ -567,6 +580,9 @@ export const useRenewContract = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      // Contrato gera/remove lançamentos: painel e financeiro precisam recalcular.
+      queryClient.invalidateQueries({ queryKey: ['financial-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['client-revenue'] });
       toast.success('Contrato renovado com sucesso!');
     },
     onError: (error) => {
