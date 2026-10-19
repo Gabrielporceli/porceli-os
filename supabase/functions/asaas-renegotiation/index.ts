@@ -16,7 +16,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *       2. o boleto é do MESMO cliente (cliente Asaas do CNPJ do lançamento);
  *       3. mesmo valor (±R$ 0,01) e mesmo vencimento (ou vencimento original);
  *       4. está vencido (OVERDUE, ou PENDING com vencimento até hoje);
- *       5. não está pago nem já removido.
+ *       5. não está pago nem já removido;
+ *       6. código do boleto (externalReference): se o sistema criou a cobrança,
+ *          o código gravado no boleto tem que ser o mesmo guardado no
+ *          lançamento; um código "porceli:reneg:" sem o mesmo código no
+ *          lançamento (= boleto de OUTRO lançamento) bloqueia.
  *     Qualquer divergência → NÃO remove e devolve o motivo. "preview_removal"
  *     só confere (a tela mostra a lista pra aprovação); "cancel" confere de
  *     novo e remove, registrando em asaas_removals (dá pra restaurar no Asaas:
@@ -88,8 +92,12 @@ function toAsaasLocalPhone(phone: string): string {
 type Pay = {
   id: string; status: string; dueDate: string; originalDueDate?: string; value: number; originalValue?: number | null;
   description?: string; deleted?: boolean; installment?: string | null; customer?: string;
+  externalReference?: string | null;
 };
-const resumo = (p: Pay) => ({ id: p.id, status: p.status, dueDate: p.dueDate, value: p.value, description: p.description ?? null, deleted: !!p.deleted });
+const resumo = (p: Pay) => ({
+  id: p.id, status: p.status, dueDate: p.dueDate, value: p.value, description: p.description ?? null,
+  deleted: !!p.deleted, externalReference: p.externalReference ?? null,
+});
 
 const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -113,17 +121,20 @@ type Checagem = {
   dueDate?: string;
   description?: string | null;
   client_id?: string;
+  /** criacao_conferida = o código do boleto bate com o do lançamento (prova mais forte) */
+  origem?: "criacao_conferida" | "conciliacao" | "desconhecida";
 };
 
 type Entrada = {
   id: string; client_id: string; amount: number; due_date: string;
-  asaas_payment_id: string | null; clients: { cnpj: string | null } | null;
+  asaas_payment_id: string | null; asaas_link_origin: string | null; asaas_external_ref: string | null;
+  clients: { cnpj: string | null } | null;
 };
 
 /** Confere, um a um, se o boleto ligado a cada lançamento pode ser removido. */
 async function conferir(entryIds: string[], userId: string): Promise<Checagem[]> {
   let q = db.from("financial_entries")
-    .select("id, client_id, user_id, amount, due_date, asaas_payment_id, clients(cnpj)")
+    .select("id, client_id, user_id, amount, due_date, asaas_payment_id, asaas_link_origin, asaas_external_ref, clients(cnpj)")
     .in("id", entryIds);
   if (userId !== "service") q = q.eq("user_id", userId);
   const { data: entries, error } = await q;
@@ -170,14 +181,31 @@ async function conferir(entryIds: string[], userId: string): Promise<Checagem[]>
       continue;
     }
 
+    // 6. código gravado no boleto (externalReference)
+    const refBoleto = p.externalReference ?? null;
+    let origem: Checagem["origem"] = e.asaas_link_origin === "conciliacao" ? "conciliacao" : "desconhecida";
+    if (e.asaas_external_ref) {
+      if (refBoleto !== e.asaas_external_ref) {
+        out.push({ ...base, ...det, ok: false, motivo: "o código do boleto no Asaas não é o que o sistema criou para este lançamento" });
+        continue;
+      }
+      origem = "criacao_conferida";
+    } else if (refBoleto && refBoleto.startsWith("porceli:reneg:")) {
+      // Toda cobrança de renegociação guarda o código no lançamento — se este
+      // lançamento não tem, o boleto pertence a OUTRO lançamento.
+      out.push({ ...base, ...det, ok: false, motivo: "boleto criado pelo sistema para OUTRO lançamento" });
+      continue;
+    }
+    const comOrigem = { ...det, origem };
+
     // 4/5. situação
-    if (p.deleted) { out.push({ ...base, ...det, ok: false, motivo: "já removido no Asaas" }); continue; }
+    if (p.deleted) { out.push({ ...base, ...comOrigem, ok: false, motivo: "já removido no Asaas" }); continue; }
     if (p.status === "OVERDUE" || (p.status === "PENDING" && p.dueDate <= hojeBRT())) {
-      out.push({ ...base, ...det, ok: true });
+      out.push({ ...base, ...comOrigem, ok: true });
     } else if (["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"].includes(p.status)) {
-      out.push({ ...base, ...det, ok: false, motivo: "já está PAGO no Asaas" });
+      out.push({ ...base, ...comOrigem, ok: false, motivo: "já está PAGO no Asaas" });
     } else {
-      out.push({ ...base, ...det, ok: false, motivo: `situação ${p.status} — só boleto vencido é removido` });
+      out.push({ ...base, ...comOrigem, ok: false, motivo: `situação ${p.status} — só boleto vencido é removido` });
     }
   }
   return out;
@@ -242,6 +270,7 @@ serve(async (req) => {
       installments,
       billing_type,
       description,
+      external_reference,
     } = body as {
       cnpj: string;
       company_name: string;
@@ -252,6 +281,8 @@ serve(async (req) => {
       installments: number;
       billing_type: "BOLETO" | "PIX" | "CREDIT_CARD";
       description?: string;
+      /** código gravado no boleto (externalReference) — o lançamento guarda o mesmo */
+      external_reference?: string;
     };
 
     // 1. Busca ou cria cliente no Asaas
@@ -281,6 +312,7 @@ serve(async (req) => {
       interest: { value: 1 },
       fine: { value: 2 },
     };
+    if (external_reference) paymentBody.externalReference = String(external_reference).slice(0, 100);
 
     if (installments > 1) {
       paymentBody.installmentCount = installments;

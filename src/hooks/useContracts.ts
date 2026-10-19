@@ -145,6 +145,8 @@ export const useCreateContract = () => {
                   due_date: pay.dueDate,
                   installments: 1,
                   description: `${data.type} — Pagamento ${i + 1}/${customList.length} — ${c.company}`,
+                  // código no boleto: identifica que foi o sistema que criou (ver asaas-renegotiation)
+                  external_reference: `porceli:contrato:${data.id}:${i + 1}`,
                 },
               });
               if (fnErr || !res?.success) {

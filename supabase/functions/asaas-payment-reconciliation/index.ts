@@ -140,7 +140,8 @@ serve(async (req) => {
 
     type RI = { raw: AsaasPayment; dueIso: string; payDateIso: string | null; payValue: number | null; payNet: number | null; payOriginal: number | null };
 
-    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null }> = [];
+    // novo = o vínculo foi feito agora, por aproximação (fase 2) — marca a origem.
+    const matched:   Array<{ entryId: string; paymentId: string; clientName: string; amount: number; reference: string; paidDate: string | null; novo?: boolean }> = [];
     let unmatchedCount = 0;
 
     // Fase 1: entradas que JÁ têm asaas_payment_id (vinculadas numa execução
@@ -234,11 +235,14 @@ serve(async (req) => {
 
       const chosen = list.splice(bestIdx, 1)[0];
       usedPaymentIds.add(chosen.raw.id);
-      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "", paidDate: chosen.payDateIso });
+      matched.push({ entryId: entry.id, paymentId: chosen.raw.id, clientName: entry.name ?? "", amount, reference: entry.reference ?? "", paidDate: chosen.payDateIso, novo: true });
     }
 
     for (const m of matched) {
-      await supabase.from("financial_entries").update({ status: "paid", paid_date: m.paidDate, asaas_payment_id: m.paymentId }).eq("id", m.entryId);
+      await supabase.from("financial_entries").update({
+        status: "paid", paid_date: m.paidDate, asaas_payment_id: m.paymentId,
+        ...(m.novo ? { asaas_link_origin: "conciliacao" } : {}),
+      }).eq("id", m.entryId);
     }
 
     if (matched.length > 0) {
@@ -293,7 +297,7 @@ serve(async (req) => {
 
         const chosen = list.splice(bestIdx, 1)[0];
         usedPaymentIds.add(chosen.raw.id);
-        await supabase.from("financial_entries").update({ asaas_payment_id: chosen.raw.id }).eq("id", entry.id);
+        await supabase.from("financial_entries").update({ asaas_payment_id: chosen.raw.id, asaas_link_origin: "conciliacao" }).eq("id", entry.id);
         linked++;
       }
     }

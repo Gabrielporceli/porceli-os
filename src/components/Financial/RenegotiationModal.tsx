@@ -39,7 +39,14 @@ interface ChecagemBoleto {
   value?: number;
   dueDate?: string;
   description?: string | null;
+  origem?: "criacao_conferida" | "conciliacao" | "desconhecida";
 }
+
+const ORIGEM_LABEL: Record<NonNullable<ChecagemBoleto["origem"]>, string> = {
+  criacao_conferida: "Criado pelo sistema · código confere",
+  conciliacao: "Vínculo pela conciliação automática",
+  desconhecida: "Vínculo antigo (origem não registrada)",
+};
 
 interface RenegotiationModalProps {
   clientName: string;
@@ -320,6 +327,13 @@ export function RenegotiationModal({
       // Se QUALQUER criação falhar, os boletos antigos não são removidos.
       let falhouAsaas = false;
       type Criada = { id: string };
+      // Código único gravado no boleto (externalReference) e no lançamento: na
+      // hora de remover, o servidor exige que os dois batam.
+      const novaRef = () => `porceli:reneg:${crypto.randomUUID()}`;
+      const vinculo = (criadas: Criada[], i: number, ref: string) =>
+        criadas[i]?.id
+          ? { asaas_payment_id: criadas[i].id, asaas_link_origin: "criacao", asaas_external_ref: ref }
+          : { asaas_payment_id: null };
       const criar = async (body: Record<string, unknown>, rotulo: string): Promise<Criada[]> => {
         const { data, error } = await supabase.functions.invoke("asaas-renegotiation", { body });
         if (error || !data?.success) {
@@ -334,10 +348,11 @@ export function RenegotiationModal({
         for (const [i, p] of customPayments.entries()) {
           const amount = parseInt(p.amountStr, 10) / 100;
           let criadas: Criada[] = [];
+          const ref = novaRef();
           if (asaasClientData) {
-            criadas = await criar({ ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}` }, `pagamento ${i + 1}`);
+            criadas = await criar({ ...asaasClientData, billing_type: p.billingType, total_amount: amount, due_date: p.dueDate, installments: 1, description: `Renegociação Pagamento ${i + 1} — ${clientName}`, external_reference: ref }, `pagamento ${i + 1}`);
           }
-          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount, due_date: p.dueDate, reference: `Renegociação — Pagamento ${i + 1}/${customPayments.length}`, status: "pending", asaas_payment_id: criadas[0]?.id ?? null });
+          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount, due_date: p.dueDate, reference: `Renegociação — Pagamento ${i + 1}/${customPayments.length}`, status: "pending", ...vinculo(criadas, 0, ref) });
         }
 
       } else {
@@ -345,20 +360,23 @@ export function RenegotiationModal({
 
         if (hasEntrada && grossEntrada > 0) {
           let criadas: Criada[] = [];
+          const ref = novaRef();
           if (asaasBase) {
-            criadas = await criar({ ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}` }, "entrada");
+            criadas = await criar({ ...asaasBase, total_amount: grossEntrada, due_date: entradaDate, installments: 1, description: `Entrada Renegociação — ${clientName}`, external_reference: ref }, "entrada");
           }
-          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: grossEntrada, due_date: entradaDate, reference: "Renegociação — Entrada", status: "pending", asaas_payment_id: criadas[0]?.id ?? null });
+          newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: grossEntrada, due_date: entradaDate, reference: "Renegociação — Entrada", status: "pending", ...vinculo(criadas, 0, ref) });
         }
 
         if (grossInstallments > 0) {
           let criadas: Criada[] = [];
+          // Parcelamento: o Asaas grava o mesmo código em todas as parcelas.
+          const ref = novaRef();
           if (asaasBase) {
             // Parcelado: a função devolve todas as parcelas em ordem de vencimento.
-            criadas = await criar({ ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}` }, "parcelas");
+            criadas = await criar({ ...asaasBase, total_amount: grossInstallments, due_date: dueDate, installments, description: `Renegociação — ${clientName}`, external_reference: ref }, "parcelas");
           }
           Array.from({ length: installments }).forEach((_, i) => {
-            newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: installmentValue, due_date: i === 0 ? dueDate : addMonths(dueDate, i), reference: installments > 1 ? `Renegociação — Parcela ${i + 1}/${installments}` : "Renegociação", status: "pending", asaas_payment_id: criadas[i]?.id ?? null });
+            newEntries.push({ client_id: clientId, user_id: user!.id, name: clientName, amount: installmentValue, due_date: i === 0 ? dueDate : addMonths(dueDate, i), reference: installments > 1 ? `Renegociação — Parcela ${i + 1}/${installments}` : "Renegociação", status: "pending", ...vinculo(criadas, i, ref) });
           });
         }
       }
@@ -808,6 +826,7 @@ export function RenegotiationModal({
                           {c.dueDate ? ` · venc. ${formatDateBR(c.dueDate)}` : ""}
                         </p>
                         {c.description && <p className="truncate text-white/35">{c.description}</p>}
+                        {c.origem && <p className="text-white/35">{ORIGEM_LABEL[c.origem]}</p>}
                         {!c.ok && c.motivo && <p className="text-amber-300/80">{c.motivo}</p>}
                       </div>
                       <span className={c.ok ? "shrink-0 font-bold text-red-400" : "shrink-0 font-bold text-white/40"}>
