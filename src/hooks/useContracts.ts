@@ -152,6 +152,24 @@ export const useCreateContract = () => {
               if (fnErr || !res?.success) {
                 falhas++;
                 console.warn(`Asaas pagamento ${i + 1}:`, res?.error || fnErr?.message);
+                continue;
+              }
+              // Liga o boleto (id imutável do Asaas) ao lançamento deste pagamento.
+              const boletoId = res.payments?.[0]?.id ?? res.payment?.id;
+              if (boletoId) {
+                const { error: linkErr } = await supabase
+                  .from('financial_entries')
+                  .update({
+                    asaas_payment_id: boletoId,
+                    asaas_link_origin: 'criacao',
+                    asaas_external_ref: `porceli:contrato:${data.id}:${i + 1}`,
+                  } as any)
+                  .eq('client_id', data.client_id)
+                  .eq('due_date', pay.dueDate)
+                  .eq('amount', pay.amount)
+                  .eq('reference', `${data.type} — Pagamento ${i + 1}/${customList.length}`)
+                  .is('asaas_payment_id', null);
+                if (linkErr) console.warn(`vínculo pagamento ${i + 1}:`, linkErr.message);
               }
             }
             if (falhas > 0) toast.warning(`${falhas} de ${customList.length} cobranças não foram criadas no Asaas (vencimento no passado?). Confira no Asaas.`);
@@ -181,6 +199,8 @@ export const useCreateContract = () => {
               monthly_value: data.monthly_value,
               single_payment: data.single_payment,
               billing_type: billing_type || 'BOLETO',
+              // vira o código nos boletos e liga cada parcela ao lançamento
+              contract_id: data.id,
               event: 'contract_created',
               updated_at: new Date().toISOString()
             }
@@ -311,6 +331,7 @@ export const useUpdateContract = () => {
                 start_date: data.start_date,
                 payment_day: finalPaymentDay,
                 monthly_value: data.monthly_value,
+                contract_id: data.id,
                 event: 'contract_updated',
                 updated_at: new Date().toISOString()
               }
@@ -563,6 +584,7 @@ export const useRenewContract = () => {
               user_id: newContract.client.user_id,
               created_at: newContract.created_at,
               updated_at: newContract.updated_at,
+              contract_id: newContract.id,
               event: 'contract_renewed',
               previous_contract_end: currentContract.end_date,
               contract_duration_days: originalDiffDays

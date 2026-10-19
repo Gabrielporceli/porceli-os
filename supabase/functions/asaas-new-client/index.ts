@@ -193,6 +193,63 @@ async function logNotification(
   await supabase.from("notification_logs").insert(entry);
 }
 
+// ── Vínculo boleto ↔ lançamento ────────────────────────────────────────────
+
+type AsaasPay = { id: string; value: number; dueDate: string; installment?: string | null };
+
+/**
+ * Liga cada cobrança criada ao lançamento pendente do mesmo cliente, de mesmo
+ * valor, com o vencimento mais próximo (até 5 dias — o Asaas pode antecipar
+ * por dia útil/feriado). Cada lançamento é usado uma vez; o índice único de
+ * asaas_payment_id no banco impede ligar o mesmo boleto a dois lançamentos.
+ */
+async function ligarLancamentos(
+  supabase: ReturnType<typeof createClient>,
+  clientId: string,
+  criado: AsaasPay,
+  installments: number,
+  externalRef: string | null,
+): Promise<{ ligados: number; semLancamento: string[] }> {
+  let boletos: AsaasPay[] = [criado];
+  if (installments > 1 && criado.installment) {
+    try {
+      const lista = await asaasGet(`/payments?installment=${criado.installment}&limit=100`);
+      const todos = ((lista.data ?? []) as AsaasPay[]).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      if (todos.length > 0) boletos = todos;
+    } catch (e) {
+      console.warn("lista do parcelamento:", (e as Error).message);
+    }
+  }
+
+  const { data: abertos } = await supabase
+    .from("financial_entries")
+    .select("id, amount, due_date")
+    .eq("client_id", clientId)
+    .eq("status", "pending")
+    .is("asaas_payment_id", null);
+  const livres = [...((abertos ?? []) as { id: string; amount: number; due_date: string }[])];
+
+  const dias = (a: string, b: string) => Math.abs(new Date(`${a}T12:00:00`).getTime() - new Date(`${b}T12:00:00`).getTime()) / 86400000;
+  let ligados = 0;
+  const semLancamento: string[] = [];
+  for (const b of boletos) {
+    let melhor = -1, melhorDist = Infinity;
+    livres.forEach((e, i) => {
+      if (Math.abs(Number(e.amount) - Number(b.value)) > 0.01) return;
+      const d = dias(e.due_date, b.dueDate);
+      if (d <= 5 && d < melhorDist) { melhor = i; melhorDist = d; }
+    });
+    if (melhor === -1) { semLancamento.push(b.id); continue; }
+    const e = livres.splice(melhor, 1)[0];
+    const { error } = await supabase.from("financial_entries").update({
+      asaas_payment_id: b.id, asaas_link_origin: "criacao", asaas_external_ref: externalRef,
+    }).eq("id", e.id).is("asaas_payment_id", null);
+    if (error) { console.warn(`vínculo ${b.id}:`, error.message); semLancamento.push(b.id); }
+    else ligados++;
+  }
+  return { ligados, semLancamento };
+}
+
 // ── Main handler ───────────────────────────────────────────────────────────
 
 serve(async (req) => {
@@ -226,6 +283,10 @@ serve(async (req) => {
 
     const { company, cnpj, responsible, phone, email, start_date, contract_end, payment_day, monthly_value, single_payment } = client;
     const billingType = (body as any).billing_type ?? "BOLETO";
+    // Contrato de origem: vira o código gravado nos boletos (externalReference)
+    // e permite achar depois todas as cobranças deste contrato no Asaas.
+    const contractId = typeof (body as any).contract_id === "string" ? (body as any).contract_id as string : null;
+    const externalRef = contractId ? `porceli:contrato:${contractId}` : null;
 
     // 1. Verifica se cliente já existe no Asaas
     const existing = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
@@ -306,7 +367,15 @@ serve(async (req) => {
     } else {
       paymentBody.value = totalValue;
     }
-    await asaasPost("/payments", paymentBody);
+    if (externalRef) paymentBody.externalReference = externalRef;
+    const criado = await asaasPost("/payments", paymentBody) as AsaasPay;
+
+    // 4b. Liga cada boleto criado ao lançamento do sistema (asaas_payment_id).
+    // O id do Asaas é imutável — é a prova de que o lançamento e o boleto são
+    // o mesmo. Os lançamentos já foram gerados pelo CRM antes desta chamada.
+    const vinculo = client.id
+      ? await ligarLancamentos(supabase, client.id, criado, installments, externalRef)
+      : { ligados: 0, semLancamento: [] as string[] };
 
     // 5. Busca group_id do cliente no Supabase
     let groupId = ADMIN_GROUP;
@@ -377,7 +446,10 @@ serve(async (req) => {
       .eq("jobname", "asaas-novo-cliente");
 
     return new Response(
-      JSON.stringify({ success: true, asaasCustomerId, installments, totalValue, firstDueDateISO }),
+      JSON.stringify({
+        success: true, asaasCustomerId, installments, totalValue, firstDueDateISO,
+        ligados: vinculo.ligados, sem_lancamento: vinculo.semLancamento,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

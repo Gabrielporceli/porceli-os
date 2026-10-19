@@ -216,7 +216,7 @@ export default function Contracts() {
       if (deletingContract.client_id) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { error: fineError } = await supabase
+          const { data: fineRow, error: fineError } = await supabase
             .from('financial_entries')
             .insert({
               client_id: deletingContract.client_id,
@@ -226,7 +226,9 @@ export default function Contracts() {
               due_date: dueDate,
               reference: 'Multa Rescisória',
               status: 'pending',
-            });
+            })
+            .select('id')
+            .single();
 
           if (fineError) {
             console.error('Erro ao inserir multa rescisória:', fineError);
@@ -248,6 +250,7 @@ export default function Contracts() {
             .maybeSingle();
 
           if (clientRow?.cnpj) {
+            const multaRef = `porceli:multa:${deletingContract.id}`;
             try {
               const { data, error } = await supabase.functions.invoke('asaas-renegotiation', {
                 body: {
@@ -260,10 +263,20 @@ export default function Contracts() {
                   installments: 1,
                   billing_type: 'BOLETO',
                   description: `Multa Rescisória — ${deletingContract.client}`,
+                  external_reference: multaRef,
                 },
               });
               if (error || !data?.success) {
                 console.error('Erro ao gerar cobrança da multa no Asaas:', data?.error || error?.message);
+              } else if (fineRow?.id) {
+                // Liga o boleto da multa (id imutável do Asaas) ao lançamento.
+                const boletoId = data.payments?.[0]?.id ?? data.payment?.id;
+                if (boletoId) {
+                  await supabase
+                    .from('financial_entries')
+                    .update({ asaas_payment_id: boletoId, asaas_link_origin: 'criacao', asaas_external_ref: multaRef } as any)
+                    .eq('id', fineRow.id);
+                }
               }
             } catch (asaasErr) {
               console.error('Erro ao chamar asaas-renegotiation:', asaasErr);
