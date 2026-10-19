@@ -30,6 +30,17 @@ interface OverdueEntry {
   asaas_payment_id?: string | null;
 }
 
+/** Conferência feita no servidor de cada boleto antigo (ver asaas-renegotiation). */
+interface ChecagemBoleto {
+  entry_id: string;
+  payment_id: string | null;
+  ok: boolean;
+  motivo?: string;
+  value?: number;
+  dueDate?: string;
+  description?: string | null;
+}
+
 interface RenegotiationModalProps {
   clientName: string;
   clientId: string;
@@ -106,6 +117,11 @@ export function RenegotiationModal({
   const [passFeesToClient, setPassFees] = useState(true);
   // Ao concluir, manda ao cliente (WhatsApp) as novas parcelas com o link de pagamento.
   const [notifyClient, setNotifyClient] = useState(true);
+  // Etapa de revisão: antes de executar, o servidor confere cada boleto antigo
+  // no Asaas e a tela mostra o que vai ser removido. null = ainda não revisado.
+  const [revisao, setRevisao] = useState<ChecagemBoleto[] | null>(null);
+  // Mudou a seleção → a revisão anterior não vale mais.
+  useEffect(() => { setRevisao(null); }, [selectedIds]);
   const [isLoading, setIsLoading]       = useState(false);
 
   // Entrada
@@ -259,6 +275,23 @@ export function RenegotiationModal({
       return;
     }
 
+    if (revisao === null) {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("asaas-renegotiation", {
+          body: { action: "preview_removal", entry_ids: Array.from(selectedIds) },
+        });
+        if (error || !data?.success) {
+          toast.error(`Não consegui conferir os boletos antigos no Asaas: ${data?.error || error?.message || "erro desconhecido"}. Tente de novo.`);
+          return;
+        }
+        setRevisao((data.checagens ?? []) as ChecagemBoleto[]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     setIsLoading(true);
     // Margem de 1 min: o aviso só considera cobranças do Asaas criadas a partir daqui.
     const startedAt = new Date(Date.now() - 60_000).toISOString();
@@ -330,34 +363,29 @@ export function RenegotiationModal({
         }
       }
 
-      // Boletos antigos no Asaas: remove os que ainda estão em aberto — senão o
-      // cliente segue recebendo aviso de atraso de dívida já renegociada.
-      // Só se TODAS as cobranças novas foram criadas (nunca deixar o cliente
-      // sem boleto nenhum). Cobrança já paga nunca é removida.
-      const antigas = overdueEntries.filter((e) => selectedIds.has(e.id));
-      const idsAsaas = antigas.map((e) => e.asaas_payment_id).filter((x): x is string => !!x);
-      const semVinculo = antigas.length - idsAsaas.length;
-      if (hasCnpj && idsAsaas.length > 0) {
+      // Boletos antigos no Asaas: remove os que você aprovou na revisão — o
+      // servidor confere tudo de novo (cliente, valor, vencimento, situação)
+      // antes de remover. Só se TODAS as cobranças novas foram criadas: o
+      // cliente nunca fica sem boleto.
+      const aprovados = revisao.filter((c) => c.ok).map((c) => c.entry_id);
+      if (aprovados.length > 0) {
         if (falhouAsaas) {
           toast.warning("Alguma cobrança nova não foi criada no Asaas — os boletos antigos foram MANTIDOS lá. Confira no Asaas.");
         } else {
           const { data: canc, error: cancErr } = await supabase.functions.invoke("asaas-renegotiation", {
-            body: { action: "cancel", payment_ids: idsAsaas },
+            body: { action: "cancel", entry_ids: aprovados, motivo: `renegociação — ${clientName}` },
           });
-          const res = (canc?.resultados ?? []) as { resultado: string; status?: string }[];
-          const removidas = res.filter((x) => x.resultado === "removida" || x.resultado === "ja_removida").length;
-          const pagas = res.filter((x) => x.resultado === "mantida").length;
+          const res = (canc?.resultados ?? []) as { removido: boolean; motivo?: string; erro?: string }[];
+          const removidos = res.filter((x) => x.removido).length;
           if (cancErr || !canc) {
             toast.warning("Não foi possível remover os boletos antigos no Asaas. Remova-os manualmente para o cliente não receber aviso de atraso.");
           } else {
-            if (removidas > 0) toast.success(`${removidas} boleto(s) antigo(s) removido(s) no Asaas.`);
-            if (pagas > 0) toast.warning(`${pagas} boleto(s) antigo(s) já constam como PAGOS no Asaas e foram mantidos — confira antes de cobrar de novo.`);
-            if (res.some((x) => x.resultado === "erro")) toast.warning("Algum boleto antigo não pôde ser removido no Asaas — confira manualmente.");
+            if (removidos > 0) toast.success(`${removidos} boleto(s) antigo(s) removido(s) no Asaas.`);
+            if (removidos < aprovados.length) {
+              toast.warning(`${aprovados.length - removidos} boleto(s) antigo(s) não foram removidos (mudaram desde a revisão ou deram erro) — confira no Asaas.`);
+            }
           }
         }
-      }
-      if (semVinculo > 0) {
-        toast.warning(`${semVinculo} cobrança(s) antiga(s) sem vínculo com o Asaas — confira lá se ainda estão em aberto.`);
       }
 
       // Apaga cobranças em atraso selecionadas
@@ -767,6 +795,32 @@ export function RenegotiationModal({
                 </div>
               )}
 
+              {/* Revisão: o que acontece com os boletos antigos no Asaas */}
+              {revisao !== null && (
+                <div className="space-y-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Boletos antigos no Asaas</p>
+                  {revisao.length === 0 && <p className="text-xs text-white/50">Nenhum boleto antigo para conferir.</p>}
+                  {revisao.map((c) => (
+                    <div key={c.entry_id} className="flex items-start justify-between gap-3 text-xs">
+                      <div className="min-w-0">
+                        <p className={c.ok ? "text-white/80" : "text-white/50"}>
+                          {c.value != null ? formatCurrency(Number(c.value)) : "—"}
+                          {c.dueDate ? ` · venc. ${formatDateBR(c.dueDate)}` : ""}
+                        </p>
+                        {c.description && <p className="truncate text-white/35">{c.description}</p>}
+                        {!c.ok && c.motivo && <p className="text-amber-300/80">{c.motivo}</p>}
+                      </div>
+                      <span className={c.ok ? "shrink-0 font-bold text-red-400" : "shrink-0 font-bold text-white/40"}>
+                        {c.ok ? "Será removido" : "Fica no Asaas"}
+                      </span>
+                    </div>
+                  ))}
+                  <p className="pt-1 text-[11px] text-white/40">
+                    Só é removido o boleto vencido do mesmo cliente, com o mesmo valor e vencimento. Confira e clique em Confirmar.
+                  </p>
+                </div>
+              )}
+
               {/* Aviso ao cliente */}
               <div className="flex items-center justify-between gap-4 rounded-xl border border-white/[0.05] bg-white/[0.03] p-3">
                 <div className="space-y-0.5">
@@ -798,7 +852,7 @@ export function RenegotiationModal({
             >
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Processando...</>
-                : "Confirmar Renegociação"
+                : revisao === null ? "Revisar Renegociação" : "Confirmar Renegociação"
               }
             </LiquidGlassButton>
           </motion.div>
