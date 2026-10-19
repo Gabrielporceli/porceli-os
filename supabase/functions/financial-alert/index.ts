@@ -57,8 +57,10 @@ function referenceMonth(dateStr: string): string {
   return `${MESES[d.getMonth()]}/${d.getFullYear()}`
 }
 
-serve(async () => {
+serve(async (req) => {
   try {
+    // dry_run: monta o relatório e devolve o texto, sem enviar (para conferência)
+    const { dry_run } = await req.json().catch(() => ({}))
     const today    = new Date().toISOString().split('T')[0]
     const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
@@ -69,16 +71,43 @@ serve(async () => {
       .lt('due_date', today)
       .order('due_date', { ascending: true })
 
-    const { data: expiringContracts } = await supabase
+    // Contratos a vencer: SÓ RECORRENTES. Pagamento único, pontual e rescisão
+    // têm fim por natureza — não são "contrato vencendo" que precise renovar.
+    const { data: vencendoBruto } = await supabase
       .from('contracts')
-      .select('type, monthly_value, end_date, client_id, clients(company, responsible, phone)')
-      .neq('status', 'inactive')
+      .select('id, type, category, single_payment, monthly_value, start_date, end_date, client_id, clients(company, responsible, phone)')
+      .not('status', 'in', '(inactive,cancelled)')
       .gte('end_date', today)
       .lte('end_date', in30Days)
       .order('end_date', { ascending: true })
+    const vencendo = (vencendoBruto ?? []).filter(
+      (c: any) => (c.category ?? 'recorrente') === 'recorrente' && !c.single_payment
+    )
+
+    // Renovação = outro contrato recorrente do MESMO cliente, ainda valendo,
+    // começando até 30 dias antes ou depois do fim deste (mesma regra do
+    // Dashboard). Contrato cancelado não conta como renovação.
+    const clientIds = [...new Set(vencendo.map((c: any) => c.client_id).filter(Boolean))]
+    const { data: candidatos } = clientIds.length
+      ? await supabase
+          .from('contracts')
+          .select('id, client_id, category, single_payment, start_date')
+          .in('client_id', clientIds)
+          .not('status', 'in', '(inactive,cancelled)')
+      : { data: [] as any[] }
+    const DIA = 86400000
+    const sucessor = (c: any) => (candidatos ?? [])
+      .filter((o: any) =>
+        o.id !== c.id && o.client_id === c.client_id &&
+        (o.category ?? 'recorrente') === 'recorrente' && !o.single_payment &&
+        Math.abs(new Date(o.start_date + 'T12:00:00').getTime() - new Date(c.end_date + 'T12:00:00').getTime()) <= 30 * DIA)
+      .sort((a: any, b: any) => a.start_date.localeCompare(b.start_date))[0]
+
+    const semRenovacao = vencendo.filter((c: any) => !sucessor(c))
+    const renovados    = vencendo.filter((c: any) => !!sucessor(c))
 
     const hasOverdue  = overdueFinances && overdueFinances.length > 0
-    const hasExpiring = expiringContracts && expiringContracts.length > 0
+    const hasExpiring = vencendo.length > 0
 
     if (!hasOverdue && !hasExpiring) {
       await supabase
@@ -131,19 +160,30 @@ serve(async () => {
       message += `*Sem inadimplentes no momento.*\n\n`
     }
 
-    if (hasExpiring) {
-      message += `*CONTRATOS VENCENDO EM 30 DIAS (${expiringContracts!.length}):*\n`
-      for (const c of expiringContracts!) {
-        const client   = (c as any).clients
-        const endDate  = new Date(c.end_date + 'T12:00:00').toLocaleDateString('pt-BR')
+    const dataBR = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR')
+    if (semRenovacao.length > 0) {
+      message += `*CONTRATOS VENCENDO EM 30 DIAS — SEM RENOVACAO (${semRenovacao.length}):*\n`
+      for (const c of semRenovacao as any[]) {
+        const client   = c.clients
         const daysLeft = Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)
         message += `\n*${client?.company || 'Cliente desconhecido'}*\n`
         message += `  - Plano: ${c.type} - ${formatMoney(Number(c.monthly_value))}/mes\n`
-        message += `  - Vence em: *${endDate}* (${daysLeft} dias)\n`
+        message += `  - Vence em: *${dataBR(c.end_date)}* (${daysLeft} dias)\n`
       }
     } else {
-      message += `*Sem contratos vencendo nos proximos 30 dias.*`
+      message += `*Sem contratos recorrentes vencendo sem renovacao nos proximos 30 dias.*\n`
     }
+
+    // Já renovados: só uma linha de registro, sem alarme.
+    if (renovados.length > 0) {
+      message += `\n*Ja renovados (${renovados.length}):*\n`
+      for (const c of renovados as any[]) {
+        const s = sucessor(c)
+        message += `  - ${c.clients?.company || 'Cliente desconhecido'}: vence ${dataBR(c.end_date)}, novo contrato a partir de ${dataBR(s.start_date)}\n`
+      }
+    }
+
+    if (dry_run) return new Response(JSON.stringify({ success: true, dry_run: true, message }), { status: 200 })
 
     const fila = await enfileirarWhatsApp(GROUP_JID, message)
     if (!fila.ok) throw new Error(fila.error)
