@@ -66,6 +66,10 @@ const subscribe = (l: () => void) => {
 
 export const useAgentsState = () => useSyncExternalStore(subscribe, () => state);
 
+/** Para quem vive fora do React (as sessões de terminal). */
+export const subscribeAgents = subscribe;
+export const getAgentsState = () => state;
+
 const uid = () => crypto.randomUUID();
 
 export type AgentDraft = Omit<StoredAgent, "id" | "criadoEm" | "status" | "principal">;
@@ -82,6 +86,10 @@ export function createAgent(draft: AgentDraft & { principal?: boolean }): string
 
 export function updateAgent(id: string, patch: Partial<AgentDraft>) {
   commit({ ...state, agents: state.agents.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
+}
+
+export function setAgentStatus(id: string, status: StoredAgent["status"]) {
+  commit({ ...state, agents: state.agents.map((a) => (a.id === id ? { ...a, status } : a)) });
 }
 
 export function setPrincipal(id: string) {

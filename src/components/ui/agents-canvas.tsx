@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   Handle,
+  NodeResizer,
   NodeToolbar,
   Position,
   type Edge,
   BackgroundVariant,
   ReactFlow,
   ReactFlowProvider,
+  useNodesInitialized,
   useNodesState,
   useReactFlow,
   type Node,
@@ -16,6 +18,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
+import { AgentTerminal } from "@/features/agents/terminal/AgentTerminal";
 import {
   OrbAvatar,
   defaultOrbColor,
@@ -88,11 +91,185 @@ function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
   );
 }
 
+
+/* ─────────────────────────── modo terminal ─────────────────────────── */
+
+type TerminalNodeData = AgentNodeData & {
+  onEdit?: (id: string) => void;
+  onSelect?: (id: string) => void;
+  onRename?: (id: string, nome: string) => void;
+};
+
+/** Nome na barra de título; duplo clique vira campo, Enter salva, Esc cancela. */
+function NomeEditavel({ nome, onSalvar }: { nome: string; onSalvar?: (nome: string) => void }) {
+  const [editando, setEditando] = useState(false);
+  const [valor, setValor] = useState(nome);
+  if (!editando || !onSalvar) {
+    return (
+      <span
+        className={cn("truncate text-[13px] font-bold text-white", onSalvar && "cursor-text")}
+        title={onSalvar ? "Duplo clique para renomear" : undefined}
+        onDoubleClick={(e) => {
+          if (!onSalvar) return;
+          // Sem isto o duplo clique também dispara o "focar" da barra.
+          e.stopPropagation();
+          setValor(nome);
+          setEditando(true);
+        }}
+      >
+        {nome}
+      </span>
+    );
+  }
+  const salvar = () => {
+    const v = valor.trim();
+    if (v && v !== nome) onSalvar(v);
+    setEditando(false);
+  };
+  return (
+    <input
+      autoFocus
+      value={valor}
+      onChange={(e) => setValor(e.target.value)}
+      onBlur={salvar}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") salvar();
+        if (e.key === "Escape") setEditando(false);
+        e.stopPropagation();
+      }}
+      onFocus={(e) => e.target.select()}
+      className="nodrag w-40 rounded-md border border-violet-400/50 bg-black/40 px-1.5 py-0.5 text-[13px] font-bold text-white outline-none"
+    />
+  );
+}
+
+const STATUS_DOT: Record<AgentStatus, string> = {
+  ativo: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.7)]",
+  parado: "bg-white/30",
+  erro: "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,.7)]",
+};
+
+/** Janela de terminal: arrasta pela barra de título, redimensiona pelas bordas. */
+function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
+  const { agent: a, selected, onEdit, onSelect, onRename } = data;
+  const { fitView } = useReactFlow();
+  const focar = () => fitView({ nodes: [{ id }], padding: 0.12, maxZoom: 1.3, duration: 350 });
+  return (
+    <>
+      <NodeResizer
+        minWidth={TERM_MIN_W}
+        minHeight={TERM_MIN_H}
+        isVisible={selected}
+        lineClassName="!border-violet-400/40"
+        handleClassName="!h-2.5 !w-2.5 !rounded-sm !border-violet-300 !bg-[#0b0b0f]"
+        onResizeEnd={(_, p) => saveSize(id, { width: p.width, height: p.height })}
+      />
+      <Handle type="target" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
+      <Handle type="source" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
+      <div
+        className={cn(
+          "flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-[#0b0b0f] shadow-[0_18px_50px_-12px_rgba(0,0,0,.8)] transition-[border-color,box-shadow]",
+          selected ? "border-violet-400/50 shadow-[0_0_0_1px_rgba(167,139,250,.25),0_18px_50px_-12px_rgba(0,0,0,.8)]" : "border-white/10",
+        )}
+        onMouseDownCapture={() => onSelect?.(id)}
+      >
+        <div
+          className="term-drag flex h-10 shrink-0 cursor-grab items-center gap-2.5 border-b border-white/[0.07] bg-white/[0.03] px-3 active:cursor-grabbing"
+          onDoubleClick={focar}
+          title="Arraste para mover · duplo clique para ampliar"
+        >
+          <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_DOT[a.status])} />
+          <NomeEditavel nome={a.nome} onSalvar={onRename ? (n) => onRename(id, n) : undefined} />
+          <span className="hidden truncate text-[11px] text-white/35 sm:inline">{a.papel}</span>
+          {a.principal && (
+            <span className="shrink-0 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-300">
+              Principal
+            </span>
+          )}
+          <div className="nodrag ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={focar}
+              className="rounded-md px-1.5 py-0.5 text-[11px] text-white/40 hover:bg-white/10 hover:text-white"
+              title="Ampliar este terminal (Ver todos volta à visão geral)"
+            >
+              Ampliar
+            </button>
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(id)}
+                className="rounded-md px-1.5 py-0.5 text-[11px] text-white/40 hover:bg-white/10 hover:text-white"
+                title="Editar agente"
+              >
+                Editar
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="nodrag nowheel nopan min-h-0 flex-1 cursor-text">
+          <AgentTerminal agentId={id} onFocus={() => onSelect?.(id)} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+const TERM_W = 560;
+const TERM_H = 340;
+const TERM_MIN_W = 360;
+const TERM_MIN_H = 200;
+const termPosKey = (id: string) => `agents-canvas:term:pos:${id}`;
+const termSizeKey = (id: string) => `agents-canvas:term:size:${id}`;
+
+function readJSON<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSize(id: string, size: { width: number; height: number }) {
+  try {
+    localStorage.setItem(termSizeKey(id), JSON.stringify(size));
+  } catch {
+    /* sem storage: o tamanho só não persiste */
+  }
+}
+
+/** Grade de 2 colunas para terminais; a posição arrastada vence. */
+function termInitialPos(id: string, index: number) {
+  return (
+    readJSON<{ x: number; y: number }>(termPosKey(id)) ?? {
+      x: (index % 2) * (TERM_W + 40),
+      y: Math.floor(index / 2) * (TERM_H + 40),
+    }
+  );
+}
+
+function termSize(id: string) {
+  return readJSON<{ width: number; height: number }>(termSizeKey(id)) ?? { width: TERM_W, height: TERM_H };
+}
+
+/** Volta os terminais para a grade e o tamanho padrão. */
+export function resetTerminalLayout(ids: string[]) {
+  try {
+    ids.forEach((id) => {
+      localStorage.removeItem(termPosKey(id));
+      localStorage.removeItem(termSizeKey(id));
+    });
+  } catch {
+    /* nada a limpar */
+  }
+}
+
 // Tamanho conhecido de saída: o fitView não depende de medir o DOM.
 const NODE_W = 144;
 const NODE_H = 190;
 
-const nodeTypes: NodeTypes = { agent: AgentNode };
+const nodeTypes: NodeTypes = { agent: AgentNode, terminal: TerminalNode };
 
 const storageKey = (id: string) => `agents-canvas:pos:${id}`;
 
@@ -121,48 +298,107 @@ interface Props {
   className?: string;
   /** Ocupa 100% da altura do contêiner (quem chama define a altura). */
   fill?: boolean;
+  /** "orb" (padrão) desenha orbes; "terminal" desenha uma janela de terminal por agente. */
+  variant?: "orb" | "terminal";
+  /** Botão "Editar" da janela de terminal. */
+  onEdit?: (id: string) => void;
+  /** Renomear direto na barra de título (duplo clique no nome). */
+  onRename?: (id: string, nome: string) => void;
+  /** Ao mudar, volta todos para a grade padrão e reenquadra (botão "Organizar"). */
+  layoutVersion?: number;
+  /** Ao mudar, só afasta o zoom para mostrar todos, sem mexer nas posições (botão "Ver todos"). */
+  fitVersion?: number;
 }
 
-function Inner({ agents, selectedId, onSelect, panel, conversas = [], className, fill }: Props) {
-  const built = useMemo<Node<AgentNodeData>[]>(
-    () =>
-      agents.map((agent, i) => ({
+function Inner({
+  agents,
+  selectedId,
+  onSelect,
+  panel,
+  conversas = [],
+  className,
+  fill,
+  variant = "orb",
+  onEdit,
+  onRename,
+  layoutVersion = 0,
+  fitVersion = 0,
+}: Props) {
+  const term = variant === "terminal";
+  const { fitView } = useReactFlow();
+
+  const toNode = useCallback(
+    (agent: CanvasAgent, i: number, old?: Node<AgentNodeData>, resetPos = false): Node<AgentNodeData> => {
+      // A medida que o canvas já fez TEM de ser repassada: sem `measured`, o
+      // React Flow trata o nó como não medido, e o fitView (Ampliar, Ver todos)
+      // fica esperando uma medição que não vem, porque o tamanho não mudou.
+      const measured = old?.measured ? { measured: old.measured } : {};
+      const pos = resetPos ? undefined : old?.position;
+      if (!term) {
+        return {
+          id: agent.id,
+          type: "agent",
+          width: NODE_W,
+          height: NODE_H,
+          ...measured,
+          position: pos ?? initialPos(agent.id, i),
+          data: { agent, selected: selectedId === agent.id },
+        };
+      }
+      const size =
+        !resetPos && old?.width && old?.height ? { width: old.width, height: old.height } : termSize(agent.id);
+      const data: TerminalNodeData = { agent, selected: selectedId === agent.id, onEdit, onSelect, onRename };
+      return {
         id: agent.id,
-        type: "agent",
-        width: NODE_W,
-        height: NODE_H,
-        position: initialPos(agent.id, i),
-        data: { agent, selected: selectedId === agent.id },
-      })),
+        type: "terminal",
+        dragHandle: ".term-drag",
+        ...size,
+        ...measured,
+        position: pos ?? termInitialPos(agent.id, i),
+        data,
+      };
+    },
+    [term, selectedId, onEdit, onSelect, onRename],
+  );
+
+  const built = useMemo<Node<AgentNodeData>[]>(
+    () => agents.map((agent, i) => toNode(agent, i)),
     // posições só na primeira montagem; o resto é sincronizado abaixo
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<AgentNodeData>>(built);
 
-  // Agentes que entram/saem ou mudam de estado, sem perder a posição arrastada.
+  // Agentes que entram/saem ou mudam de estado, sem perder posição nem tamanho.
   useEffect(() => {
-    setNodes((cur) =>
-      agents.map((agent, i) => {
-        const old = cur.find((n) => n.id === agent.id);
-        return {
-          id: agent.id,
-          type: "agent",
-        width: NODE_W,
-        height: NODE_H,
-          position: old?.position ?? initialPos(agent.id, i),
-          data: { agent, selected: selectedId === agent.id },
-        };
-      }),
-    );
-  }, [agents, selectedId, setNodes]);
+    setNodes((cur) => agents.map((agent, i) => toNode(agent, i, cur.find((n) => n.id === agent.id))));
+  }, [agents, toNode, setNodes]);
 
   // O fitView do ReactFlow roda antes dos nós serem medidos; enquadra de novo.
-  const { fitView } = useReactFlow();
+  const fitOpts = useMemo(() => (term ? { padding: 0.15, maxZoom: 1 } : { padding: 0.4, maxZoom: 1.25 }), [term]);
+  // Os terminais demoram mais a ser medidos que os orbes: só enquadra depois
+  // que o canvas confirmar a medida de todos os nós.
+  const initialized = useNodesInitialized();
   useEffect(() => {
-    const t = setTimeout(() => fitView({ padding: 0.4, maxZoom: 1.25 }), 80);
+    if (!initialized) return;
+    const t = setTimeout(() => fitView(fitOpts), 80);
     return () => clearTimeout(t);
-  }, [agents.length, fitView]);
+  }, [initialized, agents.length, fitView, fitOpts]);
+
+  // "Ver todos": só reenquadra.
+  useEffect(() => {
+    if (fitVersion) fitView({ ...fitOpts, duration: 300 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitVersion]);
+
+  // "Organizar": volta à grade padrão e reenquadra.
+  useEffect(() => {
+    if (!layoutVersion) return;
+    setNodes((cur) => agents.map((agent, i) => toNode(agent, i, cur.find((n) => n.id === agent.id), true)));
+    const t = setTimeout(() => fitView({ ...fitOpts, duration: 300 }), 60);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutVersion]);
 
   // Se o canvas nasceu sem largura (aba/painel escondido), enquadra quando ganhar uma.
   const boxRef = useRef<HTMLDivElement>(null);
@@ -171,11 +407,11 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className,
     if (!el) return;
     // Reenquadra quando o canvas muda de tamanho (e ao ganhar o primeiro tamanho).
     const ro = new ResizeObserver(() => {
-      if (el.clientWidth > 0) fitView({ padding: 0.4, maxZoom: 1.25 });
+      if (el.clientWidth > 0) fitView(fitOpts);
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [fitView]);
+  }, [fitView, fitOpts]);
 
   // Linha fina do principal para cada agente; linha viva para quem conversou.
   const edges = useMemo<Edge[]>(() => {
@@ -208,11 +444,11 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className,
 
   const onDragStop = useCallback((_: unknown, node: Node) => {
     try {
-      localStorage.setItem(storageKey(node.id), JSON.stringify(node.position));
+      localStorage.setItem(term ? termPosKey(node.id) : storageKey(node.id), JSON.stringify(node.position));
     } catch {
       /* sem storage: a posição só não persiste */
     }
-  }, []);
+  }, [term]);
 
   return (
     <div ref={boxRef} className={cn("surface-flat no-elevation relative overflow-hidden rounded-3xl", className)} style={fill ? { height: "100%" } : { height: "max(560px, calc(100vh - 11rem))" }}>
@@ -226,9 +462,14 @@ function Inner({ agents, selectedId, onSelect, panel, conversas = [], className,
         onNodeClick={(_, n) => onSelect?.(n.id)}
         onPaneClick={() => onSelect?.(null)}
         fitView
-        fitViewOptions={{ padding: 0.4, maxZoom: 1.25 }}
-        minZoom={0.4}
+        fitViewOptions={fitOpts}
+        minZoom={term ? 0.25 : 0.4}
         maxZoom={1.6}
+        // Nos terminais, espaço, backspace e shift pertencem ao terminal, não ao canvas.
+        deleteKeyCode={null}
+        panActivationKeyCode={term ? null : "Space"}
+        selectionKeyCode={term ? null : "Shift"}
+        zoomOnDoubleClick={!term}
         nodesConnectable={false}
         elementsSelectable={false}
         proOptions={{ hideAttribution: true }}

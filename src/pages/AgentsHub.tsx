@@ -1,10 +1,11 @@
 /**
  * Central de Agentes.
  *
- * Canvas com os agentes (um orbe cada), chat individual com histórico,
- * troca de mensagens entre agentes e um agente principal que coordena os
- * demais. Os dados vivem no navegador (features/agents/agentsStore) e não há
- * motor ligado: as mensagens ficam gravadas, mas ninguém responde sozinho.
+ * Canvas com um terminal por agente: arrasta pela barra de título,
+ * redimensiona pelas bordas, digita direto. Os terminais trocam mensagens
+ * entre si (comando `msg`) e a linha entre eles anima. Ainda não há motor:
+ * cada terminal roda em modo demonstração (features/agents/terminal/session)
+ * até o Hermes estar na VPS; aí entra a sessão por WebSocket, sem mudar a tela.
  */
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -13,15 +14,16 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Icon } from "@/components/ui/icon";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
-import { AgentsCanvas } from "@/components/ui/agents-canvas";
-import { AgentChat } from "@/features/agents/AgentChat";
+import { AgentsCanvas, resetTerminalLayout } from "@/components/ui/agents-canvas";
 import { AgentDialog } from "@/features/agents/AgentDialog";
-import { VOCE, useAgentsState } from "@/features/agents/agentsStore";
+import { VOCE, updateAgent, useAgentsState } from "@/features/agents/agentsStore";
 
 export default function AgentsHub() {
   const { agents, messages } = useAgentsState();
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [dialogo, setDialogo] = useState<{ open: boolean; editar?: string }>({ open: false });
+  const [layoutVersion, setLayoutVersion] = useState(0);
+  const [fitVersion, setFitVersion] = useState(0);
 
   const conversas = useMemo(
     () => messages.filter((m) => m.de !== VOCE && m.para !== VOCE).map((m) => [m.de, m.para] as [string, string]),
@@ -53,7 +55,26 @@ export default function AgentsHub() {
 
   return (
     <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
-      <div className="absolute right-4 top-4 z-20">
+      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        {agents.length > 1 && (
+          <LiquidGlassButton
+            onClick={() => setFitVersion((v) => v + 1)}
+            className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+          >
+            Ver todos
+          </LiquidGlassButton>
+        )}
+        {agents.length > 1 && (
+          <LiquidGlassButton
+            onClick={() => {
+              resetTerminalLayout(agents.map((a) => a.id));
+              setLayoutVersion((v) => v + 1);
+            }}
+            className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+          >
+            Organizar
+          </LiquidGlassButton>
+        )}
         <motion.div
         >
           <LiquidGlassButton
@@ -71,28 +92,21 @@ export default function AgentsHub() {
           <Icon as={Cpu} size={28} className="mx-auto mb-3 text-white/25" />
           <p className="text-sm text-white/45">Nenhum agente ainda</p>
           <p className="mt-1 text-xs text-white/30">
-            O primeiro que você criar vira o agente principal; cada um aparece aqui como um orbe.
+            O primeiro que você criar vira o agente principal; cada um ganha um terminal aqui.
           </p>
         </section>
       ) : (
         <AgentsCanvas
           fill
+          variant="terminal"
           agents={agents}
           selectedId={selecionado}
           onSelect={setSelecionado}
           conversas={conversas}
-          panel={(id) => {
-            const ag = agents.find((x) => x.id === id);
-            return ag ? (
-              <AgentChat
-                agent={ag}
-                agents={agents}
-                messages={messages}
-                onEdit={() => setDialogo({ open: true, editar: ag.id })}
-                onClose={() => setSelecionado(null)}
-              />
-            ) : null;
-          }}
+          layoutVersion={layoutVersion}
+          fitVersion={fitVersion}
+          onEdit={(id) => setDialogo({ open: true, editar: id })}
+          onRename={(id, nome) => updateAgent(id, { nome })}
         />
       )}
 

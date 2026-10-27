@@ -28,6 +28,7 @@ const IconLab = lazy(() => import("./pages/IconLab"))
 const NotesLab = lazy(() => import("./pages/NotesLab"))
 const RoundTripLab = lazy(() => import("./pages/RoundTripLab"))
 const OrbLab = lazy(() => import("./pages/OrbLab"))
+const TerminaisLab = lazy(() => import("./pages/TerminaisLab"))
 const PadroesLab = lazy(() => import("./pages/PadroesLab"))
 const ModalTest = lazy(() => import("./pages/ModalTest"))
 import { CRMLayout } from "./components/Layout/CRMLayout"
@@ -67,6 +68,8 @@ function App() {
                   <Route path="/dev/icons" element={<IconLab />} />
                   {/* Catálogo dos orbes dos agentes (cores, formas, tamanhos). Pública, sem layout. */}
                   <Route path="/dev/orbs" element={<OrbLab />} />
+                  {/* Canvas de terminais da Central de Agentes com agentes de exemplo. Pública, sem layout. */}
+                  <Route path="/dev/terminais" element={<TerminaisLab />} />
                   <Route path="/dev/padroes" element={<PadroesLab />} />
                   {/* Mural, janelas e quadros das Notas com dados falsos —
                       a tela real fica atrás do login. Pública, sem layout. */}
