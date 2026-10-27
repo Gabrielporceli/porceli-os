@@ -5,13 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import {
-  OrbAvatar,
-  ORB_COLORS,
-  type AvatarColor,
-} from "@/components/ui/orb-avatar";
+import { ORB_COLORS, type AvatarColor } from "@/components/ui/orb-avatar";
 import { cn } from "@/lib/utils";
 import { createAgent, deleteAgent, setPrincipal, updateAgent, type StoredAgent } from "./agentsStore";
+import { COR_TERMINAL, comAlfa } from "./terminal/cores";
+import { apelido } from "./terminal/session";
 
 const field = "bg-white/[0.03] border-white/[0.05] text-white placeholder:text-white/20 rounded-xl";
 const label = "text-white/70 text-xs font-bold uppercase tracking-widest";
@@ -70,14 +68,11 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
       >
         <form onSubmit={submit} className="contents">
           <div className="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
-            <div className="flex items-center gap-5">
-              <div className="flex h-24 w-24 shrink-0 items-end justify-center pb-1">
-                <OrbAvatar size="lg" color={cor} hat={agent?.chapeu} eyewear={agent?.oculos} extras={agent?.extras} />
-              </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <Label htmlFor="ag-nome" className={label}>Nome *</Label>
-                <Input id="ag-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Atendente" className={cn(field, "h-11")} autoFocus />
-              </div>
+            <PreviaTerminal nome={nome} papel={papel} cor={COR_TERMINAL[cor]} principal={principal} />
+
+            <div className="space-y-2">
+              <Label htmlFor="ag-nome" className={label}>Nome *</Label>
+              <Input id="ag-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Atendente" className={cn(field, "h-11")} autoFocus />
             </div>
 
             <div className="space-y-2">
@@ -100,9 +95,17 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
               <span className={label}>Cor</span>
               <div className="flex flex-wrap gap-2">
                 {ORB_COLORS.map((c) => (
-                  <button key={c} type="button" onClick={() => setCor(c)} aria-label={c} className={cn("rounded-full p-1 transition", cor === c ? "ring-2 ring-white" : "opacity-70 hover:opacity-100")}>
-                    <OrbAvatar size="sm" color={c} blinking={false} />
-                  </button>
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCor(c)}
+                    aria-label={c}
+                    className={cn(
+                      "h-8 w-8 rounded-full transition hover:scale-110",
+                      cor === c ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1a1d]" : "opacity-75 hover:opacity-100",
+                    )}
+                    style={{ background: COR_TERMINAL[c] }}
+                  />
                 ))}
               </div>
             </div>
@@ -134,5 +137,42 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Miniatura da janela de terminal como ela vai aparecer no canvas. */
+function PreviaTerminal({ nome, papel, cor, principal }: { nome: string; papel: string; cor: string; principal: boolean }) {
+  const n = nome.trim() || "Novo agente";
+  return (
+    <div
+      className="overflow-hidden rounded-2xl border bg-[#0b0b0f]"
+      style={{ borderColor: comAlfa(cor, 0.45), boxShadow: `0 0 26px -8px ${comAlfa(cor, 0.5)}` }}
+    >
+      <div
+        className="flex h-10 items-center gap-2.5 border-b px-3"
+        style={{ borderColor: comAlfa(cor, 0.18), background: `linear-gradient(90deg, ${comAlfa(cor, 0.16)}, ${comAlfa(cor, 0.04)})` }}
+      >
+        <span className="h-2 w-2 shrink-0 rounded-full bg-white/30" />
+        <span className="truncate text-[13px] font-bold text-white">{n}</span>
+        {papel.trim() && <span className="truncate text-[11px] text-white/35">{papel.trim()}</span>}
+        {principal && (
+          <span className="shrink-0 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-300">Principal</span>
+        )}
+        <span className="ml-auto h-3 w-3 shrink-0 rounded-full ring-1 ring-white/30" style={{ background: cor }} />
+      </div>
+      <div className="space-y-0.5 px-3 py-2.5 font-mono text-[12px] leading-relaxed">
+        <p>
+          <span className="font-bold" style={{ color: cor }}>Hermes</span>
+          <span className="text-white/40"> · </span>
+          <span className="font-bold text-white">{n}</span>
+        </p>
+        {papel.trim() && <p className="text-white/45">{papel.trim()}</p>}
+        <p className="pt-1">
+          <span className="font-bold" style={{ color: cor }}>{apelido({ nome: n })}</span>
+          <span className="text-white/40"> ❯ </span>
+          <span className="inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse" style={{ background: cor }} />
+        </p>
+      </div>
+    </div>
   );
 }

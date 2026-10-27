@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AgentsCanvas, resetTerminalLayout } from "@/components/ui/agents-canvas";
 import { VOCE, createAgent, deleteAgent, updateAgent, useAgentsState } from "@/features/agents/agentsStore";
+import { AgentDialog } from "@/features/agents/AgentDialog";
 import { appBackgroundStyle } from "@/lib/appBackground";
 
 /**
@@ -21,6 +22,7 @@ export default function TerminaisLab() {
   const [sel, setSel] = useState<string | null>(null);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [fitVersion, setFitVersion] = useState(0);
+  const [dialogo, setDialogo] = useState<{ open: boolean; editar?: string }>({ open: false });
 
   const conversas = useMemo(
     () => messages.filter((m) => m.de !== VOCE && m.para !== VOCE).map((m) => [m.de, m.para] as [string, string]),
@@ -37,6 +39,12 @@ export default function TerminaisLab() {
           </p>
         </div>
         <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => setDialogo({ open: true })}
+            className="rounded-full bg-violet-500 px-4 py-1.5 text-sm font-semibold hover:bg-violet-400"
+          >
+            Criar agente
+          </button>
           {agents.length === 0 && (
             <button
               onClick={() => EXEMPLOS.forEach((e) => createAgent({ ...e, prompt: "" }))}
@@ -85,9 +93,17 @@ export default function TerminaisLab() {
             fitVersion={fitVersion}
             onRename={(id, nome) => updateAgent(id, { nome })}
             onColor={(id, cor) => updateAgent(id, { cor })}
+            onEdit={(id) => setDialogo({ open: true, editar: id })}
           />
         )}
       </div>
+      <AgentDialog
+        open={dialogo.open}
+        onClose={() => setDialogo({ open: false })}
+        agent={agents.find((a) => a.id === dialogo.editar) ?? null}
+        isFirst={agents.length === 0}
+        onCreated={setSel}
+      />
     </div>
   );
 }
