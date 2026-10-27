@@ -1,7 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Edit2, Flash, Refresh, TickCircle, Trash, Warning2 } from "iconsax-react";
+import { Calendar, DollarCircle, Edit2, Flash, Profile2User, Refresh, TickCircle, Trash, Warning2 } from "iconsax-react";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
+import { Card } from "@/components/ui/card";
+import { DeconstructedCard } from "@/components/ui/deconstructed-card";
+import { StatsCard } from "@/components/Dashboard/StatsCard";
 import { Switch } from "@/components/ui/switch";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { appBackgroundStyle } from "@/lib/appBackground";
@@ -73,7 +76,12 @@ const CSS = `
 
 function Par({
   n, titulo, regra, onde, antes, depois,
-}: { n: number; titulo: string; regra: string; onde: string; antes: ReactNode; depois: ReactNode }) {
+  rotuloAntes = "Antes · hoje", rotuloDepois = "Depois · padrão", antesOk = false,
+}: {
+  n: number; titulo: string; regra: ReactNode; onde: string; antes: ReactNode; depois: ReactNode;
+  /** Regras que o sistema já segue mostram "usar × não usar" em vez de "antes × depois". */
+  rotuloAntes?: string; rotuloDepois?: string; antesOk?: boolean;
+}) {
   return (
     <section className="surface-flat no-elevation space-y-4 p-6">
       <div className="space-y-1">
@@ -81,16 +89,16 @@ function Par({
           <span className="mr-2 text-white/30">{n}.</span>
           {titulo}
         </h2>
-        <p className="text-sm text-white/60">{regra}</p>
+        <div className="text-sm text-white/60">{regra}</div>
         <p className="text-xs text-amber-300/80">No sistema hoje: {onde}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-3 rounded-2xl bg-white/[0.03] p-5">
-          <span className="rounded-full bg-red-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90">Antes · hoje</span>
+          <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90", antesOk ? "bg-emerald-500/20" : "bg-red-500/20")}>{rotuloAntes}</span>
           <div className="space-y-3">{antes}</div>
         </div>
         <div className="pad-depois space-y-3 rounded-2xl bg-white/[0.03] p-5">
-          <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90">Depois · padrão</span>
+          <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90", antesOk ? "bg-red-500/20" : "bg-emerald-500/20")}>{rotuloDepois}</span>
           <div className="space-y-3">{depois}</div>
         </div>
       </div>
@@ -113,6 +121,29 @@ function InterruptorVisual({ ligado }: { ligado: boolean }) {
 }
 
 const ANTES_ABAS = ["Todas", "Agendadas", "Enviadas", "Falhou"];
+
+/** Card de lista em miniatura, nas cores do Dashboard (escuro ou claro). */
+function MiniLista({ titulo, linhas, claro = false, nota }: { titulo: string; linhas: [string, string][]; claro?: boolean; nota?: string }) {
+  return (
+    <Card className={cn(claro ? "surface-light" : "surface-flat", "flex flex-col p-4")}>
+      <p className={cn("mb-2 text-[10px] font-black uppercase tracking-widest", claro ? "text-[#2F2D2E]/50" : "text-white/40")}>{titulo}</p>
+      <div className={cn("divide-y", claro ? "divide-black/[0.08]" : "divide-white/[0.06]")}>
+        {linhas.map(([l, v]) => (
+          <div key={l} className="flex items-center justify-between py-1.5 text-xs">
+            <span className={claro ? "text-[#2F2D2E]/60" : "text-white/55"}>{l}</span>
+            <b className={claro ? "text-[#2F2D2E]" : "text-white"}>{v}</b>
+          </div>
+        ))}
+      </div>
+      {nota && <p className={cn("mt-2 text-[10px]", claro ? "text-[#2F2D2E]/50" : "text-white/40")}>{nota}</p>}
+    </Card>
+  );
+}
+
+/** Legenda de qual pergunta da regra decidiu a cor de um card. */
+function Porque({ children }: { children: ReactNode }) {
+  return <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{children}</p>;
+}
 
 export default function PadroesLab() {
   const [abaAntes, setAbaAntes] = useState("Todas");
@@ -342,6 +373,120 @@ export default function PadroesLab() {
             <div className="relative h-44 overflow-hidden rounded-2xl" style={appBackgroundStyle}>
               <div className="absolute inset-0 backdrop-blur-[18px]" />
               <img src="/logo.png" alt="" className="logo-respirando absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 object-contain" />
+            </div>
+          }
+        />
+
+        {/* 9 */}
+        <Par
+          n={9}
+          titulo="Cor do card: roxo, vidro, cinza claro ou cinza escuro"
+          regra={
+            <div className="space-y-1">
+              <p>A cor diz o papel do card, não o valor. Responda nesta ordem:</p>
+              <ol className="list-decimal space-y-0.5 pl-5">
+                <li><b className="text-white">É o número principal da tela?</b> → <b className="text-white">roxo</b> (<code>surface-accent</code>). No máximo 1 por tela.</li>
+                <li><b className="text-white">É só um número com legenda</b> (sem lista nem gráfico)? → <b className="text-white">vidro</b> (indicador desconstruído).</li>
+                <li><b className="text-white">É bloco de conteúdo</b> (lista, gráfico, funil, tabela) <b className="text-white">e pede uma ação sua</b> (cobrar, renovar, resolver)? → <b className="text-white">cinza claro</b> (<code>surface-light</code>), no máximo 2 por tela.</li>
+                <li>Bloco de conteúdo <b className="text-white">só para ler e analisar</b> → <b className="text-white">cinza escuro</b> (<code>surface-flat</code>), o padrão.</li>
+              </ol>
+              <p>O que muda com o valor é só a cor do texto (verde, vermelho), nunca a do card.</p>
+            </div>
+          }
+          onde="Dashboard: Faturamento previsto roxo; MRR, Previsão 12 meses, Clientes ativos e Contratos a vencer em vidro; Recebíveis e Saúde do negócio claros. Saúde do negócio é análise (não pede ação) e pela regra seria cinza escuro."
+          antes={
+            <div className="grid grid-cols-2 gap-3">
+              <MiniLista titulo="Recebíveis" claro linhas={[["A receber", "R$ 18.400"], ["Vencidos", "R$ 2.100"]]} />
+              <MiniLista titulo="Saúde do negócio" claro linhas={[["LTV", "R$ 21.300"], ["Ticket médio", "R$ 1.950"], ["Margem", "38,2%"]]} />
+            </div>
+          }
+          depois={
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <MiniLista titulo="Recebíveis" claro linhas={[["A receber", "R$ 18.400"], ["Vencidos", "R$ 2.100"]]} />
+                <Porque>Pede ação (cobrar) → claro</Porque>
+              </div>
+              <div className="space-y-1.5">
+                <MiniLista titulo="Saúde do negócio" linhas={[["LTV", "R$ 21.300"], ["Ticket médio", "R$ 1.950"], ["Margem", "38,2%"]]} />
+                <Porque>Só análise → escuro</Porque>
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Card className="surface-accent flex flex-col gap-1 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Faturamento previsto</p>
+                  <p className="text-2xl font-black tracking-tighter text-white">R$ 42.800</p>
+                </Card>
+                <Porque>O número principal da tela → roxo (só este)</Porque>
+              </div>
+            </div>
+          }
+        />
+
+        {/* 10 */}
+        <Par
+          n={10}
+          titulo="Card desconstruído ou card inteiro"
+          antesOk
+          rotuloAntes="Desconstruído · um objeto"
+          rotuloDepois="Inteiro · um painel"
+          regra={
+            <div className="space-y-1">
+              <p>
+                Desconstruído (chip com o título no canto + círculo encaixado) quando as <b className="text-white">três</b> respostas forem sim:
+              </p>
+              <ol className="list-decimal space-y-0.5 pl-5">
+                <li><b className="text-white">Tem um nome curto que identifica?</b> Cabe no chip: 1 a 3 palavras (“MRR”, o nome do lead, “Novo agente”).</li>
+                <li><b className="text-white">Tem no máximo um ícone ou uma ação?</b> É o que vai no círculo: ícone do indicador, editar, fechar.</li>
+                <li><b className="text-white">É um item de uma série, ou uma janela própria?</b> Indicadores lado a lado, leads numa coluna, atividades do dia, modal, Post-it.</li>
+              </ol>
+              <p>
+                Qualquer “não” → card inteiro. <b className="text-white">Nunca desconstruído:</b> o roxo de destaque (o chip disputa com o número),
+                listas, gráficos, funis e tabelas (o título descreve o conteúdo e o recorte rouba espaço) e card com 2 ou mais ações.
+              </p>
+              <p>Forma e cor são decisões separadas: desconstruído pode ser vidro (indicador) ou cinza sólido (lead, modal).</p>
+            </div>
+          }
+          onde="já seguido: indicadores do Dashboard, Clientes e Financeiro, atividades do Calendário, leads do Kanban, modais e Post-its são desconstruídos; listas, gráficos e o funil são inteiros."
+          antes={
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <StatsCard title="MRR" value="R$ 31.500" icon={DollarCircle} description="Mensalidades valendo hoje" valueClassName="text-xl text-white" className="h-[150px]" />
+                <Porque>Indicador de uma série</Porque>
+              </div>
+              <div className="space-y-1.5">
+                <DeconstructedCard
+                  chip={<span className="truncate text-[11px] font-black uppercase tracking-widest text-white/75">Kor Brasil</span>}
+                  circle={
+                    <span className="liquid-glass flex h-full w-full items-center justify-center !rounded-full">
+                      <Edit2 size={16} className="relative z-10 text-white/85" />
+                    </span>
+                  }
+                  className="h-[150px]"
+                >
+                  <p className="text-sm font-bold text-white">Reunião de renovação</p>
+                  <p className="text-xs text-white/45">Qui, 14:00 · 1 ação: editar</p>
+                </DeconstructedCard>
+                <Porque>Item de uma lista, 1 ação</Porque>
+              </div>
+            </div>
+          }
+          depois={
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <MiniLista titulo="O ano de 2026" linhas={[["Total faturado", "R$ 412 mil"], ["Recebido", "R$ 371 mil"], ["A receber", "R$ 41 mil"]]} />
+                <Porque>Lista: o título descreve conteúdo</Porque>
+              </div>
+              <div className="space-y-1.5">
+                <Card className="surface-flat flex h-full flex-col gap-2 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Contrato · Meta</p>
+                  <p className="text-xs text-white/55">R$ 700,00 · 27/08 → 26/02</p>
+                  <div className="mt-auto flex gap-1.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Edit2 size={13} /></span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Refresh size={13} /></span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Profile2User size={13} /></span>
+                  </div>
+                </Card>
+                <Porque>3 ações: não cabem no círculo</Porque>
+              </div>
             </div>
           }
         />
