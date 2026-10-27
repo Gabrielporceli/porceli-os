@@ -107,6 +107,7 @@ export default function AgentsHub() {
           fitVersion={fitVersion}
           onEdit={(id) => setDialogo({ open: true, editar: id })}
           onRename={(id, nome) => updateAgent(id, { nome })}
+          onColor={(id, cor) => updateAgent(id, { cor })}
         />
       )}
 

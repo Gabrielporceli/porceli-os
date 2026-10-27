@@ -84,6 +84,7 @@ export default function TerminaisLab() {
             layoutVersion={layoutVersion}
             fitVersion={fitVersion}
             onRename={(id, nome) => updateAgent(id, { nome })}
+            onColor={(id, cor) => updateAgent(id, { cor })}
           />
         )}
       </div>

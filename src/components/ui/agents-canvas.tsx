@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
+  BaseEdge,
+  getStraightPath,
+  useInternalNode,
+  type InternalNode,
+  type EdgeProps,
+  type EdgeTypes,
   Handle,
   NodeResizer,
   NodeToolbar,
@@ -19,6 +25,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
 import { AgentTerminal } from "@/features/agents/terminal/AgentTerminal";
+import { CORES, COR_TERMINAL, comAlfa, corDoAgente } from "@/features/agents/terminal/cores";
 import {
   OrbAvatar,
   defaultOrbColor,
@@ -98,7 +105,54 @@ type TerminalNodeData = AgentNodeData & {
   onEdit?: (id: string) => void;
   onSelect?: (id: string) => void;
   onRename?: (id: string, nome: string) => void;
+  onColor?: (id: string, cor: AvatarColor) => void;
 };
+
+/** Bolinha da cor na barra de título; abre a paleta com as 12 cores dos agentes. */
+function SeletorCor({ atual, valor, onEscolher }: { atual: string; valor?: AvatarColor; onEscolher: (c: AvatarColor) => void }) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!aberto) return;
+    const fechar = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as globalThis.Node)) setAberto(false);
+    };
+    document.addEventListener("mousedown", fechar);
+    return () => document.removeEventListener("mousedown", fechar);
+  }, [aberto]);
+  return (
+    <div ref={ref} className="nodrag relative">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-white/10"
+        title="Cor deste terminal"
+      >
+        <span className="h-3 w-3 rounded-full ring-1 ring-white/30" style={{ background: atual }} />
+      </button>
+      {aberto && (
+        <div className="absolute right-0 top-8 z-50 grid w-[132px] grid-cols-4 gap-1.5 rounded-xl border border-white/10 bg-[#141418] p-2 shadow-2xl">
+          {CORES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              aria-label={c}
+              onClick={() => {
+                onEscolher(c);
+                setAberto(false);
+              }}
+              className={cn(
+                "h-6 w-6 rounded-full transition hover:scale-110",
+                valor === c ? "ring-2 ring-white ring-offset-2 ring-offset-[#141418]" : "",
+              )}
+              style={{ background: COR_TERMINAL[c] }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Nome na barra de título; duplo clique vira campo, Enter salva, Esc cancela. */
 function NomeEditavel({ nome, onSalvar }: { nome: string; onSalvar?: (nome: string) => void }) {
@@ -151,30 +205,41 @@ const STATUS_DOT: Record<AgentStatus, string> = {
 
 /** Janela de terminal: arrasta pela barra de título, redimensiona pelas bordas. */
 function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
-  const { agent: a, selected, onEdit, onSelect, onRename } = data;
+  const { agent: a, selected, onEdit, onSelect, onRename, onColor } = data;
   const { fitView } = useReactFlow();
+  const cor = corDoAgente(a);
   const focar = () => fitView({ nodes: [{ id }], padding: 0.12, maxZoom: 1.3, duration: 350 });
   return (
     <>
       <NodeResizer
         minWidth={TERM_MIN_W}
         minHeight={TERM_MIN_H}
-        isVisible={selected}
-        lineClassName="!border-violet-400/40"
-        handleClassName="!h-2.5 !w-2.5 !rounded-sm !border-violet-300 !bg-[#0b0b0f]"
+        // Sempre ativo, mas invisível: as bolinhas só aparecem com o mouse
+        // perto da borda (CSS .term-handle / .term-line em index.css).
+        isVisible
+        lineClassName="term-line"
+        handleClassName="term-handle"
+        handleStyle={{ ["--term-cor" as string]: cor }}
         onResizeEnd={(_, p) => saveSize(id, { width: p.width, height: p.height })}
       />
       <Handle type="target" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
       <Handle type="source" position={Position.Top} className="!pointer-events-none !h-0 !w-0 !border-0 !bg-transparent !top-1/2 !left-1/2" />
       <div
-        className={cn(
-          "flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-[#0b0b0f] shadow-[0_18px_50px_-12px_rgba(0,0,0,.8)] transition-[border-color,box-shadow]",
-          selected ? "border-violet-400/50 shadow-[0_0_0_1px_rgba(167,139,250,.25),0_18px_50px_-12px_rgba(0,0,0,.8)]" : "border-white/10",
-        )}
+        className="flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-[#0b0b0f] transition-[border-color,box-shadow]"
+        style={{
+          borderColor: comAlfa(cor, selected ? 0.6 : 0.22),
+          boxShadow: selected
+            ? `0 0 0 1px ${comAlfa(cor, 0.3)}, 0 0 28px -6px ${comAlfa(cor, 0.45)}, 0 18px 50px -12px rgba(0,0,0,.8)`
+            : "0 18px 50px -12px rgba(0,0,0,.8)",
+        }}
         onMouseDownCapture={() => onSelect?.(id)}
       >
         <div
-          className="term-drag flex h-10 shrink-0 cursor-grab items-center gap-2.5 border-b border-white/[0.07] bg-white/[0.03] px-3 active:cursor-grabbing"
+          className="term-drag flex h-10 shrink-0 cursor-grab items-center gap-2.5 border-b px-3 active:cursor-grabbing"
+          style={{
+            borderColor: comAlfa(cor, 0.18),
+            background: `linear-gradient(90deg, ${comAlfa(cor, 0.16)}, ${comAlfa(cor, 0.04)})`,
+          }}
           onDoubleClick={focar}
           title="Arraste para mover · duplo clique para ampliar"
         >
@@ -187,6 +252,7 @@ function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
             </span>
           )}
           <div className="nodrag ml-auto flex items-center gap-1">
+            {onColor && <SeletorCor atual={cor} valor={a.cor} onEscolher={(c) => onColor(id, c)} />}
             <button
               type="button"
               onClick={focar}
@@ -208,7 +274,7 @@ function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
           </div>
         </div>
         <div className="nodrag nowheel nopan min-h-0 flex-1 cursor-text">
-          <AgentTerminal agentId={id} onFocus={() => onSelect?.(id)} />
+          <AgentTerminal agentId={id} cor={cor} onFocus={() => onSelect?.(id)} />
         </div>
       </div>
     </>
@@ -271,6 +337,59 @@ const NODE_H = 190;
 
 const nodeTypes: NodeTypes = { agent: AgentNode, terminal: TerminalNode };
 
+type ConversaEdgeData = { de: string; para: string };
+
+/** Centro e meia-largura/altura de um nó no espaço do canvas. */
+function caixa(n: InternalNode) {
+  const w = n.measured.width ?? n.width ?? 0;
+  const h = n.measured.height ?? n.height ?? 0;
+  const { x, y } = n.internals.positionAbsolute;
+  return { cx: x + w / 2, cy: y + h / 2, hw: w / 2, hh: h / 2 };
+}
+
+/** Onde a reta do centro deste nó até o ponto (tx, ty) cruza a borda dele. */
+function pontoNaBorda(n: InternalNode, tx: number, ty: number) {
+  const { cx, cy, hw, hh } = caixa(n);
+  const dx = tx - cx;
+  const dy = ty - cy;
+  if (!dx && !dy) return { x: cx, y: cy };
+  const t = Math.min(dx ? hw / Math.abs(dx) : Infinity, dy ? hh / Math.abs(dy) : Infinity);
+  return { x: cx + dx * t, y: cy + dy * t };
+}
+
+/**
+ * Linha de conversa: degradê da cor de quem enviou a última mensagem até a
+ * cor de quem recebeu. A linha vai de BORDA a borda (não de centro a centro):
+ * assim a parte visível é a linha inteira, e cada ponta tem 100% da cor do
+ * seu card, mesmo com cards de tamanhos diferentes.
+ */
+function ConversaEdge({ id, source, target, data, style }: EdgeProps<Edge<ConversaEdgeData>>) {
+  const de = useInternalNode(source);
+  const para = useInternalNode(target);
+  if (!de || !para) return null;
+  const cDe = caixa(de);
+  const cPara = caixa(para);
+  const a = pontoNaBorda(de, cPara.cx, cPara.cy);
+  const b = pontoNaBorda(para, cDe.cx, cDe.cy);
+  const [sourceX, sourceY, targetX, targetY] = [a.x, a.y, b.x, b.y];
+  const [path] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+  // Só letras, números e hífen: "|" no id quebra a referência url(#...) em alguns navegadores.
+  const gid = `conversa-${id.replace(/[^a-zA-Z0-9-]/g, "-")}`;
+  return (
+    <>
+      <defs>
+        <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
+          <stop offset="0%" stopColor={data?.de ?? "#8B5CF6"} />
+          <stop offset="100%" stopColor={data?.para ?? "#8B5CF6"} />
+        </linearGradient>
+      </defs>
+      <BaseEdge id={id} path={path} style={{ ...style, stroke: `url(#${gid})`, strokeWidth: 2 }} />
+    </>
+  );
+}
+
+const edgeTypes: EdgeTypes = { conversa: ConversaEdge };
+
 const storageKey = (id: string) => `agents-canvas:pos:${id}`;
 
 function loadPos(id: string): { x: number; y: number } | null {
@@ -304,6 +423,8 @@ interface Props {
   onEdit?: (id: string) => void;
   /** Renomear direto na barra de título (duplo clique no nome). */
   onRename?: (id: string, nome: string) => void;
+  /** Trocar a cor do terminal pela bolinha da barra de título. */
+  onColor?: (id: string, cor: AvatarColor) => void;
   /** Ao mudar, volta todos para a grade padrão e reenquadra (botão "Organizar"). */
   layoutVersion?: number;
   /** Ao mudar, só afasta o zoom para mostrar todos, sem mexer nas posições (botão "Ver todos"). */
@@ -321,6 +442,7 @@ function Inner({
   variant = "orb",
   onEdit,
   onRename,
+  onColor,
   layoutVersion = 0,
   fitVersion = 0,
 }: Props) {
@@ -347,7 +469,7 @@ function Inner({
       }
       const size =
         !resetPos && old?.width && old?.height ? { width: old.width, height: old.height } : termSize(agent.id);
-      const data: TerminalNodeData = { agent, selected: selectedId === agent.id, onEdit, onSelect, onRename };
+      const data: TerminalNodeData = { agent, selected: selectedId === agent.id, onEdit, onSelect, onRename, onColor };
       return {
         id: agent.id,
         type: "terminal",
@@ -358,7 +480,7 @@ function Inner({
         data,
       };
     },
-    [term, selectedId, onEdit, onSelect, onRename],
+    [term, selectedId, onEdit, onSelect, onRename, onColor],
   );
 
   const built = useMemo<Node<AgentNodeData>[]>(
@@ -418,11 +540,24 @@ function Inner({
     const boss = agents.find((a) => a.principal);
     const list: Edge[] = [];
     const seen = new Set<string>();
+    // Um par por linha; a direção é a da ÚLTIMA mensagem trocada entre os dois.
+    const ultima = new Map<string, [string, string]>();
     for (const [a, b] of conversas) {
-      const k = [a, b].sort().join("|");
-      if (seen.has(k) || !agents.some((x) => x.id === a) || !agents.some((x) => x.id === b)) continue;
+      if (!agents.some((x) => x.id === a) || !agents.some((x) => x.id === b)) continue;
+      ultima.set([a, b].sort().join("|"), [a, b]);
+    }
+    for (const [k, [a, b]] of ultima) {
       seen.add(k);
-      list.push({ id: `c-${k}`, source: a, target: b, animated: true, style: { stroke: "#8B5CF6", strokeWidth: 2 } });
+      const de = agents.find((x) => x.id === a)!;
+      const para = agents.find((x) => x.id === b)!;
+      list.push({
+        id: `c-${k}`,
+        type: "conversa",
+        source: a,
+        target: b,
+        animated: true,
+        data: { de: corDoAgente(de), para: corDoAgente(para) },
+      });
     }
     if (boss) {
       for (const a of agents) {
@@ -456,6 +591,7 @@ function Inner({
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        edgeTypes={edgeTypes}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onNodeDragStop={onDragStop}

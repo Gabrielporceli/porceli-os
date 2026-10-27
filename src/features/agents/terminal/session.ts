@@ -18,6 +18,7 @@ import {
   type AgentMessage,
   type StoredAgent,
 } from "../agentsStore";
+import { ansi, corDoAgente } from "./cores";
 
 export interface TerminalSession {
   input(data: string): void;
@@ -77,8 +78,14 @@ export class DemoSession implements TerminalSession {
     this.out(s.replace(/\n/g, "\r\n") + "\r\n");
   }
 
+  /** Cor do agente, lida a cada uso: trocar a cor vale no próximo prompt. */
+  private get cor() {
+    const a = this.agente;
+    return a ? ansi(corDoAgente(a)) : ROXO;
+  }
+
   private prompt() {
-    this.out(`${ROXO}${B}${apelido(this.agente ?? { nome: "agente" })}${R} ${DIM}❯${R} `);
+    this.out(`${this.cor}${B}${apelido(this.agente ?? { nome: "agente" })}${R} ${DIM}❯${R} `);
   }
 
   /** Imprime algo sem atropelar o que o usuário está digitando. */
@@ -106,7 +113,7 @@ export class DemoSession implements TerminalSession {
 
   start() {
     const a = this.agente;
-    this.println(`${ROXO}${B}Hermes${R} ${DIM}·${R} ${B}${a?.nome ?? "agente"}${R}${a?.principal ? `  ${AMARELO}[principal]${R}` : ""}`);
+    this.println(`${this.cor}${B}Hermes${R} ${DIM}·${R} ${B}${a?.nome ?? "agente"}${R}${a?.principal ? `  ${AMARELO}[principal]${R}` : ""}`);
     if (a?.papel) this.println(`${DIM}${a.papel}${R}`);
     this.println(`${DIM}Modo demonstração: este terminal ainda não está ligado à VPS. Digite ${R}ajuda${DIM}.${R}`);
     const recentes = getAgentsState()

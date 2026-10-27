@@ -1601,3 +1601,39 @@ button.vidro-vermelho:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.14);
   border-radius: 999px;
 }
+
+/* Alças de redimensionar dos terminais: invisíveis até o mouse chegar na
+   borda ou num canto; aí as quatro bolinhas aparecem na cor do agente. */
+.react-flow__resize-control.handle.term-handle {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
+}
+.react-flow__resize-control.handle.term-handle::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 3px;
+  border: 2px solid var(--term-cor, #a78bfa);
+  background: #0b0b0f;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.react-flow__node:has(.term-handle:hover, .term-line:hover) .term-handle::after {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Bordas: faixa de 8px para pegar com o mouse, sem desenhar linha. */
+.react-flow__resize-control.line.term-line {
+  border-color: transparent;
+}
+.react-flow__resize-control.line.term-line.left,
+.react-flow__resize-control.line.term-line.right {
+  width: 8px;
+}
+.react-flow__resize-control.line.term-line.top,
+.react-flow__resize-control.line.term-line.bottom {
+  height: 8px;
+}
