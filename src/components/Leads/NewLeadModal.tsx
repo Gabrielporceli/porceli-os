@@ -1,3 +1,4 @@
+import { lerMoeda } from "@/lib/utils";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -60,9 +61,7 @@ export function NewLeadModal({
     }
 
     // Converter valor monetário
-    const value = formData.value
-      ? parseFloat(formData.value.replace(/[^\d,.-]/g, '').replace(',', '.')) || undefined
-      : undefined;
+    const value = lerMoeda(formData.value) || undefined;
 
     onAddLead({
       name: formData.name,

@@ -1,3 +1,4 @@
+import { lerMoeda } from "@/lib/utils";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -61,7 +62,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
     }
 
     // Convert value from formatted string to number
-    const numericValue = parseFloat(formData.value.replace(/[^\d,.-]/g, '').replace(',', '.'));
+    const numericValue = lerMoeda(formData.value) ?? NaN;
 
     console.log('DEBUG - Valor convertido:', numericValue);
 

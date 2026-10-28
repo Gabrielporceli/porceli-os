@@ -15,3 +15,18 @@ export function formatToJID(phone: string): string {
 export function cleanPhone(phone: string): string {
   return phone.replace(/\D/g, "");
 }
+
+/**
+ * Lê um valor digitado em reais ("R$ 1.500,00", "1500,5", "1500") como número.
+ *
+ * O ponto é separador de MILHAR e a vírgula, de centavos. A versão que existia
+ * espalhada pelos modais trocava a vírgula por ponto sem antes tirar o ponto
+ * do milhar: "1.500,00" virava "1.500.00", que o parseFloat lê como 1.5 —
+ * todo valor a partir de R$ 1.000 era salvo dividido por mil.
+ */
+export function lerMoeda(texto: string | null | undefined): number | null {
+  if (!texto) return null;
+  const limpo = texto.replace(/[^\d,-]/g, "").replace(",", ".");
+  const n = parseFloat(limpo);
+  return Number.isFinite(n) ? n : null;
+}
