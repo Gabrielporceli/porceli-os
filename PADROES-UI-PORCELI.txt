@@ -1,0 +1,274 @@
+PADRÕES DE UI — PORCELI
+=======================
+
+Regras de interface para padronizar qualquer sistema. Cada regra traz o que
+fazer, os valores concretos e os erros comuns que ela evita.
+
+
+-------------------------------------------------------------------------------
+BASE: PALETA E SUPERFÍCIES
+-------------------------------------------------------------------------------
+
+Paleta
+  - #2F2D2E  cinza grafite: a cor padrão das superfícies.
+  - #F4F4F4  cinza claro: uso pontual, para contraste.
+  - #6829C0  roxo: SÓ em card de destaque e em detalhe pequeno (ver regra 7).
+
+Superfícies (cards, painéis, modais) — todas com:
+  - desfoque de fundo: backdrop-filter: blur(20px) saturate(180%) brightness(1.12)
+  - cantos: border-radius 24px (1.5rem)
+  - sem `border`: a borda é um contorno interno (inset 0 0 0 1px rgba(255,255,255,.06))
+    mais um leve bisel de luz e sombra internas, e sombra externa
+    0 2px 8px rgba(0,0,0,.18), 0 14px 36px rgba(0,0,0,.26)
+
+  Fundo de cada superfície:
+  - cinza escuro (padrão) .. rgba(47, 45, 46, .72)
+  - cinza claro ............ rgba(244, 244, 244, .78), texto #2F2D2E
+  - roxo (destaque) ........ rgba(104, 41, 192, .85)
+  - vidro .................. translúcido, sem cor própria (só o desfoque e o bisel)
+
+
+-------------------------------------------------------------------------------
+1. ANIMAÇÃO DOS BOTÕES
+-------------------------------------------------------------------------------
+Regra: hover só clareia (nada cresce, nada sobe). Clique afunda levemente
+(scale .97). Uma regra única, em todo botão.
+
+  - hover: só o fundo clareia (ex.: de rgba(255,255,255,.06) para .11)
+  - clique: transform: scale(.97), transição de 150ms
+  - nunca: crescer (scale > 1), subir (translateY), mola/spring
+
+Evita: cada botão com uma animação diferente; botões que "pulam" no hover.
+
+
+-------------------------------------------------------------------------------
+2. RODAPÉ DE MODAL: HIERARQUIA DE AÇÕES
+-------------------------------------------------------------------------------
+Regra: uma ação principal por área. "Cancelar" é texto, "Salvar e sair" é
+secundária, "Próximo/Salvar" é a principal. Nunca três botões iguais.
+
+  - principal: botão cheio (roxo), à direita
+  - secundária: pílula de vidro pequena
+  - terciária ("Cancelar"): só texto, 11px, caixa alta, branco a 50%,
+    branco no hover
+  - alinhados à direita, a principal por último
+
+Evita: "Cancelar" vermelho e "Salvar" roxo com o mesmo peso visual.
+
+
+-------------------------------------------------------------------------------
+3. AÇÕES POR LINHA DE LISTA
+-------------------------------------------------------------------------------
+Regra: em listas, ação por linha é ícone (círculo de vidro de 32px).
+Excluir só fica vermelho no hover.
+
+  - círculo 32×32, ícone 14px, branco a 65% (branco no hover)
+  - "Excluir" neutro em repouso; no hover: ícone rosa claro e fundo vermelho a 14%
+  - o nome da ação vai no title/tooltip
+
+Evita: "Editar / Renovar / Excluir" em texto em cada linha, pesando a lista.
+
+
+-------------------------------------------------------------------------------
+4. SELEÇÃO ENTRE POUCAS OPÇÕES (ABAS EM PÍLULA)
+-------------------------------------------------------------------------------
+Regra: escolher uma entre 2 a 5 opções = abas em pílula. Uma pílula de vidro
+neutra marca a ativa e desliza de uma opção para a outra ("some de um,
+aparece no outro"). Nunca roxo em texto ou borda.
+
+Evita: cada tela com um seletor feito à mão, cada um com um estilo.
+
+
+-------------------------------------------------------------------------------
+5. INTERRUPTOR (TOGGLE)
+-------------------------------------------------------------------------------
+Regra: um desenho só.
+
+  - trilho 44×24, bolinha branca 20 (2px de folga)
+  - transição de 300ms ease-out
+  - ligado = vidro roxo; desligado = branco a 12%
+  - sem mola, sem esticar a bolinha, sem som
+
+Evita: tamanhos diferentes por tela, interruptor reduzido com scale.
+
+
+-------------------------------------------------------------------------------
+6. PÍLULA PLANA: O QUE SÓ INFORMA
+-------------------------------------------------------------------------------
+Regra: selos de status (enviada, agendada, falhou...) têm fundo tingido
+transparente, texto branco e ícone na mesma cor, mais forte. Sem borda, sem
+bisel.
+
+  - fundo: a cor do status a 20% (ex.: verde-500/20)
+  - texto: branco a 90%
+  - ícone: a cor do status, tom mais claro (ex.: verde-300)
+  - 11px, cantos totalmente arredondados
+
+Evita: texto colorido com borda colorida, que parece botão e cansa a leitura.
+
+
+-------------------------------------------------------------------------------
+7. ROXO: SÓ PREENCHIMENTO E ÍCONE
+-------------------------------------------------------------------------------
+Regra: roxo nunca em texto, borda, foco ou barra de rolagem.
+
+  - foco: anel branco a 40%
+  - barra de rolagem: branco a 14% (22% no hover)
+  - link/ação de texto ("Limpar filtro"): ação de texto neutra, não roxa
+  - roxo permitido: fundo de botão principal, card de destaque, ícone,
+    interruptor ligado
+
+Evita: roxo espalhado por todo lado, que tira o valor do destaque.
+
+
+-------------------------------------------------------------------------------
+8. CARREGAMENTO DE TELA
+-------------------------------------------------------------------------------
+Regra: tela inteira carregando = logo sobre fundo desfocado, que "respira".
+Spinner só dentro de botão.
+
+  - logo centralizado, fundo com desfoque de ~18px
+  - respiração: brilho 1 → 1,25 e escala 1 → .96, ciclo de 1,8s, infinito
+  - respeitar "reduzir movimento" do sistema (sem animação)
+
+Evita: spinners e "Carregando..." soltos, cada tela de um jeito.
+
+
+-------------------------------------------------------------------------------
+9. COR DO CARD: ROXO, VIDRO, CINZA CLARO OU CINZA ESCURO
+-------------------------------------------------------------------------------
+Regra: a cor diz o PAPEL do card, não o valor. Responda nesta ordem e pare na
+primeira resposta "sim":
+
+  1. É o número principal da tela?
+     (o que você veria se só pudesse ver um número)
+     → ROXO. No máximo 1 por tela.
+
+  2. É só um número com legenda? (um valor, uma linha de explicação,
+     sem lista nem gráfico)
+     → VIDRO (indicador; ver regra 10).
+
+  3. É um bloco de conteúdo (lista, gráfico, funil, tabela) que PEDE UMA
+     AÇÃO SUA (cobrar, renovar, resolver)?
+     → CINZA CLARO. No máximo 2 por tela.
+
+  4. Bloco de conteúdo só para ler e analisar
+     → CINZA ESCURO, o padrão.
+
+  - O que muda com o valor é só a cor do TEXTO (verde/vermelho), nunca a do card.
+  - Se há dois roxos, nenhum é destaque. Se tudo é claro, nada pede atenção.
+
+Exemplo (dashboard financeiro):
+  - Faturamento previsto ........................ roxo
+  - MRR, Previsão 12 meses, Clientes ativos ..... vidro
+  - Recebíveis (a receber / vencidos) ........... cinza claro (pede cobrança)
+  - Funil, gráfico de faturamento, "O ano" ...... cinza escuro
+  - Saúde do negócio (LTV, ticket, margem) ...... cinza escuro (só análise)
+
+
+-------------------------------------------------------------------------------
+10. CARD DESCONSTRUÍDO OU CARD INTEIRO
+-------------------------------------------------------------------------------
+Card desconstruído: o título fica num "chip" no canto superior esquerdo,
+ligado ao corpo por uma curva côncava, e um círculo encaixa no canto
+superior direito (ícone ou ação). Card inteiro: um retângulo só, com o título
+dentro.
+
+Regra: use DESCONSTRUÍDO quando as TRÊS respostas forem "sim":
+
+  1. Tem um nome curto que identifica o card?
+     Cabe no chip: 1 a 3 palavras ("MRR", o nome do lead, "Novo agente").
+  2. Tem no máximo UM ícone ou UMA ação?
+     É o que vai no círculo: ícone do indicador, editar, fechar.
+  3. É um item de uma série, ou uma janela própria?
+     Indicadores lado a lado, leads numa coluna, atividades do dia, modal,
+     post-it.
+
+Qualquer "não" → CARD INTEIRO.
+
+Nunca desconstruído:
+  - o card roxo de destaque (o chip disputa atenção com o número principal)
+  - listas, gráficos, funis e tabelas (o título descreve o conteúdo, não dá
+    nome a uma coisa, e o recorte do canto rouba espaço)
+  - cards com 2 ou mais ações (o círculo só comporta uma)
+
+Forma e cor são decisões separadas: um card desconstruído pode ser de vidro
+(indicador) ou cinza sólido (card de lead, modal).
+
+Resumo: desconstruído = um OBJETO. Inteiro = um PAINEL.
+
+
+===============================================================================
+PARTE 2 — PADRÕES DE FORMATO (qual caixa usar)
+===============================================================================
+As regras 1 a 10 dizem como cada elemento se parece. As de 11 a 16 dizem qual
+FORMATO a tela usa para o trabalho que ela faz. Decidir isto ANTES da cor.
+
+-------------------------------------------------------------------------------
+11. LISTA DE OBJETOS QUE SE ABREM (clientes, agentes, contratos)
+-------------------------------------------------------------------------------
+  - Uma linha por objeto; clicar na linha abre a página dele.
+  - Colunas: só as 3 ou 4 que ajudam a decidir QUAL abrir
+    (nome, estado/saúde, última atividade).
+  - Data de criação, ids e slugs ficam dentro do objeto, não na lista.
+  - Na linha, no máximo 1 ação (excluir). Editar = abrir.
+
+-------------------------------------------------------------------------------
+12. POUCOS REGISTROS, EDITADOS RARAMENTE (planos, pacotes, usuários)
+-------------------------------------------------------------------------------
+  - Lista só de leitura + modal de edição + botão "Novo" que abre o mesmo
+    modal vazio.
+  - Nunca tabela com campo em toda célula (isso é planilha, para editar
+    centenas de linhas toda hora), nem linha em branco no fim para criar.
+
+-------------------------------------------------------------------------------
+13. AJUSTES QUE SE PREENCHEM UMA VEZ (chaves, integrações)
+-------------------------------------------------------------------------------
+  - Página de blocos; cada bloco salva sozinho.
+  - Preenchido, o bloco vira uma linha "Configurado · Trocar".
+  - Nunca um "Salvar tudo" no fim da página.
+
+-------------------------------------------------------------------------------
+14. ASSISTENTE SÓ CRIA; EDITAR É NA PÁGINA DO OBJETO
+-------------------------------------------------------------------------------
+  - Criar algo com muitos passos = assistente em etapas.
+  - Depois de criado, o assistente NÃO é reaberto: cada parte se edita na aba
+    correspondente da página do objeto.
+  - Duas portas para o mesmo dado = uma delas fica desatualizada.
+
+-------------------------------------------------------------------------------
+15. FORMULÁRIO LONGO
+-------------------------------------------------------------------------------
+  - Interruptor no topo: desligado, o resto some.
+  - Blocos curtos com título.
+  - Lista longa de opções em grupos que abrem e fecham, mostrando "4 de 7".
+  - O que é da agência/workspace (saldo, compra, chaves) não mora na
+    configuração de um cliente; lá fica no máximo uma linha de resumo.
+
+-------------------------------------------------------------------------------
+16. ESCOLHA NO CONTROLE CERTO
+-------------------------------------------------------------------------------
+  - 1 entre 2–5 ............ PillTabs (regra 4)
+  - várias entre poucas .... chips com check
+  - várias entre muitas .... grupos que abrem e fecham (regra 15)
+  - Nunca botões feitos à mão para cada caso.
+
+-------------------------------------------------------------------------------
+17. LISTA LONGA DENTRO DE UM CARD
+-------------------------------------------------------------------------------
+  - Altura máxima (~420px) e rolagem por dentro da lista, não da página.
+  - Barra de rolagem oculta (rola com roda/toque, sem trilho visível).
+  - Esmaecido na borda onde ainda há conteúdo (embaixo até o fim; em cima
+    depois de rolar) — é o único sinal de que tem mais itens.
+  - Lista principal de uma página (clientes, planos): rola com a página,
+    sem altura máxima.
+  - EXCEÇÃO — tabela longa (leads): a linha de títulos fica parada e só as
+    linhas rolam, com altura da tela (ex.: calc(100vh - 270px)).
+      · títulos e linhas em contêineres separados, com as mesmas larguras de
+        coluna — os títulos não ficam por cima das linhas, então não precisam
+        de fundo próprio (que destoaria do vidro do card);
+      · barra oculta; esmaecido leve (~28px) só embaixo e só enquanto há
+        linha abaixo — em cima nunca (ali ficam os títulos);
+      · área das linhas medida até o fim da tela: a página não rola, só a
+        tabela;
+      · no celular, onde a tabela vira cards, volta a rolar com a página.

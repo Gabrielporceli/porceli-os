@@ -150,6 +150,7 @@ export default function PadroesLab() {
   const [abaDepois, setAbaDepois] = useState("Todas");
   const [swAntes, setSwAntes] = useState(true);
   const [swDepois, setSwDepois] = useState(true);
+  const [pill16, setPill16] = useState("a");
 
   return (
     <div className="min-h-screen p-6 text-white md:p-10" style={appBackgroundStyle}>
@@ -488,6 +489,165 @@ export default function PadroesLab() {
                 <Porque>3 ações: não cabem no círculo</Porque>
               </div>
             </div>
+          }
+        />
+
+        <header className="space-y-2 pt-6">
+          <h1 className="text-3xl font-black tracking-tight">Padrões de formato — qual caixa usar</h1>
+          <p className="max-w-3xl text-sm text-white/60">
+            As regras 1 a 10 dizem como cada elemento se parece. As de 11 a 16 dizem qual formato a tela usa para o trabalho que
+            ela faz — antes de decidir a cor de uma caixa, decidir se a caixa devia existir daquele jeito.
+          </p>
+        </header>
+
+        <Par
+          n={11}
+          titulo="Lista de objetos que se abrem"
+          regra="Uma linha por objeto, clica e abre a página dele. Colunas: só as 3–4 que ajudam a decidir qual abrir (nome, estado/saúde, última atividade). Data de criação, ids e slugs ficam dentro do objeto. Na linha, no máximo 1 ação (excluir); editar é abrir."
+          onde="Clientes trackeados mostrava “Criado em” e “Slug”, sem saúde, e o lápis abria o assistente de setup."
+          antes={
+            <Card className="surface-flat divide-y divide-white/[0.06] p-0">
+              {["Oka Resto", "Kor Brasil"].map((n) => (
+                <div key={n} className="flex items-center gap-3 px-4 py-3 text-xs">
+                  <b className="flex-1 text-white">{n}</b>
+                  <span className="w-16 text-white/50">12/03/26</span>
+                  <span className="w-16 font-mono text-white/50">{n.toLowerCase().replace(" ", "-")}</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Edit2 size={12} /></span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Trash size={12} /></span>
+                </div>
+              ))}
+            </Card>
+          }
+          depois={
+            <Card className="surface-flat divide-y divide-white/[0.06] p-0">
+              {([["Oka Resto", true, "há 2 h"], ["Kor Brasil", false, "há 6 dias"]] as const).map(([n, ok, u]) => (
+                <div key={n} className="flex items-center gap-3 px-4 py-3 text-xs">
+                  <b className="flex-1 text-white">{n}</b>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[10px] text-white/90", ok ? "bg-emerald-500/20" : "bg-amber-500/20")}>{ok ? "Ok" : "Atenção"}</span>
+                  <span className="w-20 text-white/50">{u}</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Trash size={12} /></span>
+                </div>
+              ))}
+            </Card>
+          }
+        />
+
+        <Par
+          n={12}
+          titulo="Poucos registros, editados raramente"
+          regra="Lista só de leitura + modal de edição + botão “Novo” que abre o mesmo modal vazio. Tabela com campo em toda célula é para editar centenas de linhas toda hora — planilha, não cadastro."
+          onde="Admin: Planos, Pacotes de IA e Agências eram tabelas de inputs com rolagem lateral e um formulário em branco na última linha."
+          antes={
+            <Card className="surface-flat space-y-1.5 p-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex gap-1.5">
+                  {[16, 28, 12, 14, 24].map((w, j) => (
+                    <span key={j} className="h-6 rounded-md bg-white/[0.06]" style={{ width: `${w}%` }} />
+                  ))}
+                </div>
+              ))}
+              <p className="pt-1 text-[10px] text-white/40">↔ rola para os lados · salvar por linha</p>
+            </Card>
+          }
+          depois={
+            <Card className="surface-flat divide-y divide-white/[0.06] p-0">
+              {([["Starter", "R$ 197", "5 clientes"], ["Pro", "R$ 397", "15 clientes"]] as const).map(([n, p, l]) => (
+                <div key={n} className="flex items-center gap-3 px-4 py-3 text-xs">
+                  <b className="flex-1 text-white">{n}</b>
+                  <span className="text-white/60">{p}</span>
+                  <span className="w-20 text-white/50">{l}</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06]"><Edit2 size={12} /></span>
+                </div>
+              ))}
+              <div className="px-4 py-3 text-xs text-white/60">+ Novo plano (abre o modal)</div>
+            </Card>
+          }
+        />
+
+        <Par
+          n={13}
+          titulo="Ajustes que se preenchem uma vez"
+          antesOk
+          rotuloAntes="Usar"
+          rotuloDepois="Não usar"
+          regra="Página de blocos, cada um salva sozinho. Preenchido, o bloco vira uma linha “Configurado · Trocar”. Nunca um botão “Salvar tudo” no fim da página."
+          onde="já seguido: Configurações da agência (Google, Meta, WhatsApp)."
+          antes={
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-xl bg-emerald-400/[0.06] px-4 py-3 text-xs">
+                <span className="flex items-center gap-2 text-white/85"><TickCircle size={14} className="text-emerald-300" /> Chaves do Google configuradas</span>
+                <span className="text-white/60">Trocar</span>
+              </div>
+              <Card className="surface-flat space-y-2 p-4 text-xs">
+                <p className="font-bold text-white">App da Meta</p>
+                <span className="block h-7 rounded-lg bg-white/[0.06]" />
+                <span className="inline-block rounded-full bg-white/[0.1] px-3 py-1 text-[10px]">Salvar</span>
+              </Card>
+            </div>
+          }
+          depois={
+            <Card className="surface-flat space-y-2 p-4 text-xs">
+              {["Google", "Meta", "WhatsApp"].map((n) => <span key={n} className="block h-7 rounded-lg bg-white/[0.06]" />)}
+              <span className="inline-block rounded-full bg-white/[0.1] px-3 py-1 text-[10px]">Salvar tudo</span>
+            </Card>
+          }
+        />
+
+        <Par
+          n={14}
+          titulo="Assistente só cria; editar é na página do objeto"
+          regra="Criar algo com muitos passos = assistente em etapas. Depois de criado, ele não é reaberto: cada parte se edita na aba correspondente da página do objeto. Duas portas para o mesmo dado = uma delas fica velha."
+          onde="Setup do cliente: o assistente era reaberto pelo lápis da lista e pelo “Editar setup”, e as abas do cliente editavam as mesmas coisas."
+          antes={
+            <div className="space-y-2 text-xs text-white/70">
+              <p>Lista → lápis → <b className="text-white">assistente</b></p>
+              <p>Cliente → “Editar setup” → <b className="text-white">assistente</b></p>
+              <p>Cliente → aba WhatsApp → <b className="text-white">edita o mesmo</b></p>
+            </div>
+          }
+          depois={
+            <div className="space-y-2 text-xs text-white/70">
+              <p>“Novo cliente” → <b className="text-white">assistente</b> (só aqui)</p>
+              <p>Cliente → aba Anúncios / WhatsApp / Site / Setup → <b className="text-white">edita</b></p>
+            </div>
+          }
+        />
+
+        <Par
+          n={15}
+          titulo="Formulário longo"
+          regra="Interruptor no topo: desligado, o resto some. Agrupar em blocos curtos com título; listas de opções longas em grupos que abrem e fecham mostrando “4 de 7”. O que é da agência (saldo, compra, chaves) não mora na configuração de um cliente."
+          onde="Análise de Atendimento com IA: tudo aberto mesmo desativado, saldo e compra do workspace no meio, todos os critérios com descrição sempre visível."
+          antes={
+            <Card className="surface-flat space-y-1.5 p-3">
+              {Array.from({ length: 9 }).map((_, i) => <span key={i} className="block h-5 rounded-md bg-white/[0.06]" />)}
+            </Card>
+          }
+          depois={
+            <Card className="surface-flat space-y-2 p-3 text-xs">
+              <div className="flex items-center justify-between"><b className="text-white">Ativado</b><InterruptorVisual ligado /></div>
+              {([["Atendimento", "4 de 7"], ["Venda", "2 de 5"], ["Pós-venda", "0 de 4"]] as const).map(([n, c]) => (
+                <div key={n} className="flex justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                  <span className="text-white/80">{n}</span><span className="text-white/45">{c} ›</span>
+                </div>
+              ))}
+            </Card>
+          }
+        />
+
+        <Par
+          n={16}
+          titulo="Escolha na tela certa"
+          regra="1 entre 2–5 → PillTabs. Várias entre poucas → chips com check. Várias entre muitas → grupos que abrem e fecham. Nunca botões feitos à mão para cada caso."
+          onde="“Quais leads analisar” (1 entre 2) era feito à mão em vez de PillTabs."
+          antes={
+            <div className="flex gap-2 text-[11px]">
+              <span className="rounded-xl bg-primary/40 px-3 py-2">Todos os leads</span>
+              <span className="rounded-xl border border-white/10 px-3 py-2 text-white/40">Só tráfego pago</span>
+            </div>
+          }
+          depois={
+            <PillTabs items={[{ value: "a", label: "Todos os leads" }, { value: "b", label: "Só tráfego pago" }]} value={pill16} onChange={setPill16} />
           }
         />
 
