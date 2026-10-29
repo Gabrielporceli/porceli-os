@@ -121,5 +121,9 @@ verify_jwt = false
 [functions.manage-automations]
 verify_jwt = false
 
+# MCP do Hermes: autentica pela chave própria (HERMES_MCP_TOKEN), não por JWT.
+[functions.mcp]
+verify_jwt = false
+
 [functions.renegotiation-notice]
 verify_jwt = true

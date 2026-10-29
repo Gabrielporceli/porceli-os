@@ -29,3 +29,6 @@ dist-ssr
 # Notas reais exportadas do cofre para o portao do editor (/dev/roundtrip).
 # NAO versionar: e o seu conteudo, e este repositorio e de codigo.
 public/_roundtrip.json
+
+# Chave do MCP do Hermes (local, nunca no git)
+.env.hermes
