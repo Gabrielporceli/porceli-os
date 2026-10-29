@@ -104,7 +104,9 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
         className="text-white max-w-2xl"
         chip={<DialogTitle className="truncate font-bold tracking-tight">Atividade do Hermes</DialogTitle>}
       >
-        <div className="space-y-4">
+        {/* Mesmo respiro (p-6) dos outros modais do sistema: o DialogContent
+            com chip não tem padding próprio. */}
+        <div className="space-y-4 p-6">
           <div className="flex items-center justify-between gap-3">
             <PillTabs
               items={[
