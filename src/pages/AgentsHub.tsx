@@ -16,6 +16,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { AgentsCanvas, resetTerminalLayout } from "@/components/ui/agents-canvas";
 import { AgentDialog } from "@/features/agents/AgentDialog";
+import { AtividadeHermes } from "@/features/agents/AtividadeHermes";
 import { VOCE, updateAgent, useAgentsState } from "@/features/agents/agentsStore";
 
 export default function AgentsHub() {
@@ -24,6 +25,7 @@ export default function AgentsHub() {
   const [dialogo, setDialogo] = useState<{ open: boolean; editar?: string }>({ open: false });
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [fitVersion, setFitVersion] = useState(0);
+  const [atividade, setAtividade] = useState(false);
 
   const conversas = useMemo(
     () => messages.filter((m) => m.de !== VOCE && m.para !== VOCE).map((m) => [m.de, m.para] as [string, string]),
@@ -56,6 +58,12 @@ export default function AgentsHub() {
   return (
     <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
       <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        <LiquidGlassButton
+          onClick={() => setAtividade(true)}
+          className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+        >
+          Atividade
+        </LiquidGlassButton>
         {agents.length > 1 && (
           <LiquidGlassButton
             onClick={() => setFitVersion((v) => v + 1)}
@@ -118,6 +126,8 @@ export default function AgentsHub() {
         isFirst={agents.length === 0}
         onCreated={setSelecionado}
       />
+
+      <AtividadeHermes open={atividade} onClose={() => setAtividade(false)} />
     </div>
   );
 }
