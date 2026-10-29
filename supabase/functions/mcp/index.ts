@@ -6,8 +6,10 @@
 // Hermes usa é initialize, tools/list, tools/call e ping, e isso cabe aqui
 // sem depender de versão de biblioteca no Deno.
 //
-// Autenticação: `Authorization: Bearer <HERMES_MCP_TOKEN>`. verify_jwt fica
-// desligado no config.toml porque a chave é nossa, não um JWT do Supabase.
+// Autenticação: `Authorization: Bearer <chave>`. As chaves são geradas e
+// revogadas pelo dono na tela (Central de Agentes → MCP → Conexão) e ficam em
+// `mcp_chaves` só como hash. verify_jwt fica desligado no config.toml porque a
+// chave é nossa, não um JWT do Supabase.
 //
 // Poder: total, por decisão do dono — ferramentas por módulo, CRUD em qualquer
 // tabela, SQL livre com escrita e chamada de qualquer Edge Function. Os
@@ -19,7 +21,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const URL_SUPABASE = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const TOKEN = Deno.env.get("HERMES_MCP_TOKEN") ?? "";
 /** O sistema tem um dono só; é em nome dele que o Hermes age. */
 const DONO_EMAIL = Deno.env.get("MCP_OWNER_EMAIL") ?? "";
 
@@ -30,13 +31,6 @@ const VERSOES = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const MAX_TEXTO = 60_000;
 
 // ── Utilidades ────────────────────────────────────────────────────────────
-
-function iguaisEmTempoConstante(a: string, b: string): boolean {
-  if (!a || a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 function texto(dado: unknown): string {
   const s = typeof dado === "string" ? dado : JSON.stringify(dado, null, 2);
@@ -394,7 +388,7 @@ type Pedido = { jsonrpc: "2.0"; id?: string | number | null; method: string; par
 const resposta = (id: Pedido["id"], result: unknown) => ({ jsonrpc: "2.0", id, result });
 const falha = (id: Pedido["id"], code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
 
-async function atender(p: Pedido) {
+async function atender(p: Pedido, chaveId: string) {
   switch (p.method) {
     case "initialize": {
       const pedida = String(p.params?.protocolVersion ?? "");
@@ -419,11 +413,11 @@ async function atender(p: Pedido) {
       const t0 = Date.now();
       try {
         const r = await f.executar(args);
-        await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: true, duracao_ms: Date.now() - t0 });
+        await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: true, duracao_ms: Date.now() - t0, chave_id: chaveId });
         return resposta(p.id, { content: [{ type: "text", text: texto(r) }] });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: false, erro: msg, duracao_ms: Date.now() - t0 });
+        await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: false, erro: msg, duracao_ms: Date.now() - t0, chave_id: chaveId });
         // Erro de ferramenta volta como resultado (isError), não como erro de
         // protocolo: assim o agente lê a mensagem e pode corrigir a chamada.
         return resposta(p.id, { content: [{ type: "text", text: msg }], isError: true });
@@ -441,8 +435,12 @@ Deno.serve(async (req) => {
     });
   }
 
-  const enviado = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!TOKEN || !iguaisEmTempoConstante(enviado, TOKEN)) {
+  const enviado = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
+  // Comparação por hash no banco: a chave em texto não fica guardada em lugar nenhum.
+  const { data: chaveId } = enviado
+    ? await db.rpc("mcp_validar_chave", { p_chave: enviado })
+    : { data: null };
+  if (!chaveId) {
     return new Response(JSON.stringify(falha(null, -32001, "não autorizado")), {
       status: 401, headers: { "Content-Type": "application/json" },
     });
@@ -460,7 +458,7 @@ Deno.serve(async (req) => {
   for (const p of lote) {
     // Notificação (sem id): só confirma o recebimento.
     if (p.id === undefined || p.id === null) continue;
-    respostas.push(await atender(p));
+    respostas.push(await atender(p, chaveId as string));
   }
   if (!respostas.length) return new Response(null, { status: 202 });
   return Response.json(Array.isArray(corpo) ? respostas : respostas[0]);

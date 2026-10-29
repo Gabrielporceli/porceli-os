@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { ConexaoMcp } from "./ConexaoMcp";
 
 interface Chamada {
   id: string;
@@ -102,26 +103,33 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="text-white max-w-2xl"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Atividade do Hermes</DialogTitle>}
+        chip={<DialogTitle className="truncate font-bold tracking-tight">MCP do Hermes</DialogTitle>}
       >
         {/* Mesmo respiro (p-6) dos outros modais do sistema: o DialogContent
             com chip não tem padding próprio. */}
         <div className="space-y-4 p-6">
+          {/* Uma linha de abas só: o filtro de erros entra como aba, em vez de
+              uma segunda fileira de pílulas dentro de "Atividade". */}
           <div className="flex items-center justify-between gap-3">
             <PillTabs
               items={[
-                { value: "todas", label: "Todas" },
+                { value: "todas", label: "Atividade" },
                 { value: "erros", label: "Erros", count: erros || undefined },
+                { value: "conexao", label: "Conexão" },
               ]}
               value={filtro}
               onChange={setFiltro}
             />
-            <span className="text-[11px] text-white/35">
-              {chamadas === null ? "" : `últimas ${Math.min(chamadas.length, LIMITE)} chamadas`}
-            </span>
+            {filtro !== "conexao" && (
+              <span className="text-[11px] text-white/35">
+                {chamadas === null ? "" : `últimas ${Math.min(chamadas.length, LIMITE)} chamadas`}
+              </span>
+            )}
           </div>
 
-          {chamadas === null ? (
+          {filtro === "conexao" ? (
+            <ConexaoMcp />
+          ) : chamadas === null ? (
             <p className="py-10 text-center text-sm text-white/35">Carregando…</p>
           ) : visiveis.length === 0 ? (
             <p className="py-10 text-center text-sm text-white/35">

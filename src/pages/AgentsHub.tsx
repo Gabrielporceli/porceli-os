@@ -62,7 +62,7 @@ export default function AgentsHub() {
           onClick={() => setAtividade(true)}
           className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
         >
-          Atividade
+          MCP
         </LiquidGlassButton>
         {agents.length > 1 && (
           <LiquidGlassButton

@@ -5,23 +5,28 @@ Function no Supabase (`supabase/functions/mcp`).
 
 - **URL:** `https://dygadnfeoiimmbeqbsvt.supabase.co/functions/v1/mcp`
 - **Transporte:** Streamable HTTP, sem estado (POST JSON-RPC, resposta JSON)
-- **Autenticação:** `Authorization: Bearer <HERMES_MCP_TOKEN>`
+- **Autenticação:** `Authorization: Bearer <chave>`
 
-A chave fica no arquivo local `.env.hermes` (fora do git) e como segredo da
-função no Supabase. Para trocar a chave, gere uma nova, rode
-`npx supabase secrets set HERMES_MCP_TOKEN=<nova> --project-ref dygadnfeoiimmbeqbsvt`
-e atualize o Hermes.
+## Chaves
+
+Gerenciadas no sistema: **Central de Agentes → MCP → Conexão**. Lá você
+copia o endereço, gera chave com nome (ela aparece uma vez, com o trecho de
+config pronto), vê o último uso de cada uma e revoga. O banco guarda só o
+hash (`mcp_chaves`); cada chamada em `mcp_audit` registra a chave usada.
+
+A "Chave inicial (.env.hermes)" é a primeira, gerada no setup e guardada no
+arquivo local `.env.hermes` (fora do git). Pode ser revogada pela tela.
 
 ## Configurar no Hermes (VPS)
 
-Em `~/.hermes/config.yaml`:
+Em `~/.hermes/config.yaml` (a tela gera este trecho já com a chave):
 
 ```yaml
 mcp_servers:
   porceli:
     url: "https://dygadnfeoiimmbeqbsvt.supabase.co/functions/v1/mcp"
     headers:
-      Authorization: "Bearer <HERMES_MCP_TOKEN>"
+      Authorization: "Bearer <chave>"
 ```
 
 ## Ferramentas
