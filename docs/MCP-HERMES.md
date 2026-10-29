@@ -29,26 +29,40 @@ mcp_servers:
       Authorization: "Bearer <chave>"
 ```
 
-## Ferramentas
+## Regra principal: o Hermes opera, não grava
 
-| Ferramenta | O que faz |
-|---|---|
-| `guia_do_sistema` | Módulos, tabelas, regras e funções. Primeira leitura do agente. |
-| `listar_tabelas` / `descrever_tabela` | Estrutura do banco. |
-| `buscar` | Lê linhas com filtros, ordem e limite. |
-| `inserir` / `atualizar` / `excluir` | CRUD em qualquer tabela. `user_id` preenchido com o dono; atualizar/excluir exigem filtro. |
-| `sql` | SQL livre, leitura e escrita. Timeout 15 s. DROP/TRUNCATE/DELETE ou UPDATE sem WHERE exigem `confirmar_destrutivo: true`. |
-| `enviar_whatsapp` | Põe a mensagem na fila `whatsapp_outbox` e dispara o worker. |
-| `tarefas_notion` | Listar, criar, atualizar e excluir tarefas no Notion. |
-| `agenda_google` | Listar, criar, atualizar e excluir eventos no Google Agenda. |
-| `automacoes` | Listar, ligar, desligar, reagendar e disparar os crons do sistema. |
-| `chamar_funcao` | Qualquer Edge Function do sistema, como serviço ou como o dono. |
+O Hermes **não grava direto no banco**. Cada ferramenta de escrita é uma
+operação do sistema que repete o passo a passo da tela: criar contrato =
+gravar + sincronizar o cliente + gerar os lançamentos + cobrar no Asaas
+(+ aviso no WhatsApp). O código fica em `supabase/functions/mcp/operacoes/`,
+um arquivo por módulo, cada um apontando para o hook/página da tela que ele
+espelha. O cálculo das parcelas é o MESMO arquivo da tela
+(`src/lib/contractBilling.ts`, importado pela função).
+
+**Mudou um fluxo na tela? Mude a operação correspondente no MCP.**
+
+| Módulo | Operações | Espelha |
+|---|---|---|
+| Leitura | `guia_do_sistema`, `listar_tabelas`, `descrever_tabela`, `buscar`, `sql` (somente leitura, travado no banco) | — |
+| Clientes | `criar_cliente`, `editar_cliente`, `excluir_cliente` | `useClients.ts`, `Clients.tsx` |
+| Contratos | `criar_contrato`, `editar_contrato`*, `renovar_contrato`, `encerrar_contrato`, `excluir_contrato` | `useContracts.ts`, `Contracts.tsx`, `NewContractModal`, `EditContractModal` |
+| Financeiro | `marcar_lancamento_pago`, `gerar_lancamentos_faltantes`, `renegociar`*, `criar_despesa`, `pagar_despesa`, `excluir_despesa` | `useFinancialEntries.ts`, `RenegotiationModal.tsx`, `useExpenses.ts` |
+| CRM | `criar_lead`, `editar_lead`, `mover_lead`, `excluir_lead` | `useLeads.ts` |
+| Agenda | `listar_agenda`, `criar_atividade`, `editar_atividade`, `concluir_tarefa`, `excluir_atividade` | `Calendar.tsx` |
+| Notas | `criar_nota`, `editar_nota`, `excluir_nota` | `useNotes.ts`, `sync.ts` |
+| Mensagens | `enviar_whatsapp`, `agendar_mensagem`, `cancelar_mensagem` | `useScheduledMessages.ts`, fila `whatsapp_outbox` |
+| Outros | `automacoes`, `cadastro` (etapas, tags, planos, ideias, funis) | `useAutomations.ts`, hooks simples |
+
+\* Duas etapas: a 1ª chamada só confere os boletos atuais no Asaas e devolve
+`precisa_confirmar`; a 2ª, com `remover_boletos_antigos`, executa.
 
 ## Limites
 
-- O Vault (segredos) não é acessível.
-- Toda chamada fica em `mcp_audit` (ferramenta, argumentos, ok/erro, duração).
-- Funções que exigem sessão de usuário (Notion, Agenda, notes-sync) recebem
-  uma sessão do dono gerada pelo servidor (link mágico do admin, sem e-mail).
+- O Vault (segredos) não é acessível. O SQL é somente leitura no próprio banco.
+- Toda chamada fica em `mcp_audit` (ferramenta, argumentos, ok/erro, duração, chave).
+- As funções que a tela chama com o usuário logado recebem uma sessão do dono
+  gerada pelo servidor (link mágico do admin, sem e-mail).
+- Dias trancados da agenda ficam no navegador (localStorage): o MCP não os vê.
+- O Nominatim recusa pedido de servidor; o MCP cai no Photon (mesma base OSM).
 - A instância é Nano: consulta pesada (ex.: `cron_runs` sem filtro) derruba o
   sistema. O timeout de 15 s existe por isso.

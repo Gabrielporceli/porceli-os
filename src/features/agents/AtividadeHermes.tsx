@@ -26,43 +26,77 @@ interface Chamada {
   created_at: string;
 }
 
+/** As operações do MCP (supabase/functions/mcp), em português de gente. */
 const ROTULOS: Record<string, string> = {
   guia_do_sistema: "Leu o guia do sistema",
   listar_tabelas: "Listou as tabelas",
   descrever_tabela: "Descreveu tabela",
   buscar: "Consultou",
-  inserir: "Criou registro",
-  atualizar: "Editou registro",
-  excluir: "Excluiu registro",
-  sql: "SQL",
+  sql: "SQL (leitura)",
+  criar_cliente: "Criou cliente",
+  editar_cliente: "Editou cliente",
+  excluir_cliente: "Excluiu cliente",
+  criar_contrato: "Criou contrato",
+  editar_contrato: "Editou contrato",
+  renovar_contrato: "Renovou contrato",
+  encerrar_contrato: "Encerrou contrato",
+  excluir_contrato: "Excluiu contrato",
+  marcar_lancamento_pago: "Deu baixa em lançamento",
+  gerar_lancamentos_faltantes: "Gerou lançamentos faltantes",
+  renegociar: "Renegociou cobranças",
+  criar_despesa: "Lançou despesa",
+  pagar_despesa: "Pagou despesa",
+  excluir_despesa: "Excluiu despesa",
+  criar_lead: "Criou lead",
+  editar_lead: "Editou lead",
+  mover_lead: "Moveu lead",
+  excluir_lead: "Excluiu lead",
+  listar_agenda: "Consultou a agenda",
+  criar_atividade: "Criou atividade",
+  editar_atividade: "Editou atividade",
+  concluir_tarefa: "Concluiu tarefa",
+  excluir_atividade: "Excluiu atividade",
+  criar_nota: "Criou nota",
+  editar_nota: "Editou nota",
+  excluir_nota: "Excluiu nota",
   enviar_whatsapp: "Enviou WhatsApp",
-  tarefas_notion: "Notion",
-  agenda_google: "Google Agenda",
+  agendar_mensagem: "Agendou mensagem",
+  cancelar_mensagem: "Cancelou mensagem agendada",
   automacoes: "Automações",
-  chamar_funcao: "Chamou função",
+  cadastro: "Cadastro",
 };
 
-/** O detalhe que identifica a chamada numa linha: tabela, número, ação… */
+/** O detalhe que identifica a chamada numa linha: tabela, nome, número, ação… */
 function resumo(c: Chamada): string {
   const a = c.argumentos ?? {};
   const s = (v: unknown) => (v === undefined || v === null ? "" : String(v));
   switch (c.ferramenta) {
     case "descrever_tabela":
     case "buscar":
-    case "inserir":
-    case "atualizar":
-    case "excluir":
       return s(a.tabela);
     case "sql":
       return s(a.query).replace(/\s+/g, " ").slice(0, 90);
+    case "criar_cliente":
+      return s(a.empresa);
+    case "criar_contrato":
+      return [s(a.tipo), a.valor_mensal ? `R$ ${Number(a.valor_mensal).toLocaleString("pt-BR")}` : ""].filter(Boolean).join(" · ");
+    case "criar_lead":
+    case "editar_lead":
+      return s(a.nome);
+    case "criar_despesa":
+      return s(a.descricao);
+    case "criar_atividade":
+    case "criar_nota":
+    case "editar_nota":
+      return s(a.titulo);
     case "enviar_whatsapp":
       return s(a.numero);
-    case "tarefas_notion":
-    case "agenda_google":
+    case "agendar_mensagem":
+      return s(a.telefone);
     case "automacoes":
       return s(a.acao);
-    case "chamar_funcao":
-      return s(a.nome);
+    case "cadastro":
+      return `${s(a.acao)} ${s(a.tabela)}`;
     default:
       return "";
   }
