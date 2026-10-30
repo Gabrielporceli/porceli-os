@@ -49,19 +49,21 @@ export const apelido = (a: Pick<StoredAgent, "nome">) => sem(a.nome).split(/\s+/
  */
 export class DemoSession implements TerminalSession {
   private listeners = new Set<(d: string) => void>();
-  private buffer = "";
+  protected buffer = "";
   private history: string[] = [];
   private histIdx = -1;
+  /** Um turno assíncrono (resposta do Hermes) está em andamento. */
+  protected ocupado = false;
   private vistos: Set<string>;
   private unsub: () => void;
 
-  constructor(private agentId: string) {
+  constructor(protected agentId: string) {
     // Mensagens que já existiam não "chegam" de novo; só as novas.
     this.vistos = new Set(getAgentsState().messages.map((m) => m.id));
     this.unsub = subscribeAgents(() => this.receber());
   }
 
-  private get agente() {
+  protected get agente() {
     return getAgentsState().agents.find((a) => a.id === this.agentId);
   }
 
@@ -70,21 +72,21 @@ export class DemoSession implements TerminalSession {
     return getAgentsState().agents.find((a) => a.id === id)?.nome ?? "agente removido";
   }
 
-  private out(d: string) {
+  protected out(d: string) {
     this.listeners.forEach((l) => l(d));
   }
 
-  private println(s = "") {
+  protected println(s = "") {
     this.out(s.replace(/\n/g, "\r\n") + "\r\n");
   }
 
   /** Cor do agente, lida a cada uso: trocar a cor vale no próximo prompt. */
-  private get cor() {
+  protected get cor() {
     const a = this.agente;
     return a ? ansi(corDoAgente(a)) : ROXO;
   }
 
-  private prompt() {
+  protected prompt() {
     this.out(`${this.cor}${B}${apelido(this.agente ?? { nome: "agente" })}${R} ${DIM}❯${R} `);
   }
 
@@ -128,7 +130,7 @@ export class DemoSession implements TerminalSession {
     this.prompt();
   }
 
-  private executar(linha: string) {
+  protected executar(linha: string): void | Promise<void> {
     const [cmd, ...resto] = linha.trim().split(/\s+/);
     const c = sem(cmd ?? "");
     const agentes = getAgentsState().agents;
@@ -199,6 +201,10 @@ export class DemoSession implements TerminalSession {
       return;
     }
     if (data.startsWith("\x1b")) return; // outras teclas especiais: ignora
+    if (this.ocupado) {
+      if (data.includes("\x03")) this.interromperTurno();
+      return; // enquanto o agente responde, a digitação espera
+    }
 
     for (const ch of data) {
       if (ch === "\r") {
@@ -207,7 +213,15 @@ export class DemoSession implements TerminalSession {
         this.buffer = "";
         this.histIdx = -1;
         if (linha.trim()) this.history.push(linha);
-        this.executar(linha);
+        const turno = this.executar(linha);
+        if (turno) {
+          this.ocupado = true;
+          turno.finally(() => {
+            this.ocupado = false;
+            this.prompt();
+          });
+          return;
+        }
         this.prompt();
       } else if (ch === "\x7f" || ch === "\b") {
         if (this.buffer.length) {
@@ -228,6 +242,9 @@ export class DemoSession implements TerminalSession {
       }
     }
   }
+
+  /** Ctrl+C durante um turno assíncrono; a demonstração não tem turno. */
+  protected interromperTurno() {}
 
   onOutput(cb: (d: string) => void) {
     this.listeners.add(cb);
