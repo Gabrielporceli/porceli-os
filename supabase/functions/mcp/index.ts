@@ -166,7 +166,7 @@ type Pedido = { jsonrpc: "2.0"; id?: string | number | null; method: string; par
 const resposta = (id: Pedido["id"], result: unknown) => ({ jsonrpc: "2.0", id, result });
 const falha = (id: Pedido["id"], code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
 
-async function atender(p: Pedido, chaveId: string) {
+async function atender(p: Pedido, chaveId: string, permitidas: Set<string> | null) {
   switch (p.method) {
     case "initialize": {
       const pedida = String(p.params?.protocolVersion ?? "");
@@ -181,13 +181,17 @@ async function atender(p: Pedido, chaveId: string) {
       return resposta(p.id, {});
     case "tools/list":
       return resposta(p.id, {
-        tools: Object.entries(FERRAMENTAS).map(([name, f]) => ({ name, description: f.description, inputSchema: f.inputSchema })),
+        tools: Object.entries(FERRAMENTAS)
+          .filter(([name]) => !permitidas || permitidas.has(name))
+          .map(([name, f]) => ({ name, description: f.description, inputSchema: f.inputSchema })),
       });
     case "tools/call": {
       const nome = String(p.params?.name ?? "");
       const args = (p.params?.arguments ?? {}) as Record<string, unknown>;
       const f = FERRAMENTAS[nome];
       if (!f) return falha(p.id, -32602, `ferramenta desconhecida: ${nome}`);
+      // Chave restrita: o servidor recusa o que não está na lista dela.
+      if (permitidas && !permitidas.has(nome)) return falha(p.id, -32602, `ferramenta não liberada para esta chave: ${nome}`);
       const t0 = Date.now();
       try {
         const r = await f.executar(args);
@@ -215,7 +219,10 @@ Deno.serve(async (req) => {
 
   const enviado = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
   // Comparação por hash no banco: a chave em texto não fica guardada em lugar nenhum.
-  const { data: chaveId } = enviado ? await db.rpc("mcp_validar_chave", { p_chave: enviado }) : { data: null };
+  const { data: validas } = enviado ? await db.rpc("mcp_validar_chave_v2", { p_chave: enviado }) : { data: null };
+  const chave = (validas as { id: string; ferramentas: string[] | null }[] | null)?.[0];
+  const chaveId = chave?.id;
+  const permitidas = chave?.ferramentas?.length ? new Set(chave.ferramentas) : null;
   if (!chaveId) {
     return new Response(JSON.stringify(falha(null, -32001, "não autorizado")), {
       status: 401, headers: { "Content-Type": "application/json" },
@@ -233,7 +240,7 @@ Deno.serve(async (req) => {
   const respostas = [];
   for (const p of lote) {
     if (p.id === undefined || p.id === null) continue; // notificação
-    respostas.push(await atender(p, chaveId as string));
+    respostas.push(await atender(p, chaveId, permitidas));
   }
   if (!respostas.length) return new Response(null, { status: 202 });
   return Response.json(Array.isArray(corpo) ? respostas : respostas[0]);
