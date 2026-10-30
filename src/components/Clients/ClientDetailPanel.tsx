@@ -4,6 +4,7 @@ import { Building, Calendar, Call, Hashtag, Sms, Edit2, Trash} from 'iconsax-rea
 import { LiquidGlassButton } from '@/components/ui/liquid-glass-button';
 import { Badge } from '@/components/ui/badge';
 import { usePlansContext } from '@/contexts/PlansContext';
+import { FichaClienteCard } from './FichaClienteCard';
 
 export interface ClientRow {
   id: string;
@@ -143,6 +144,8 @@ export function ClientDetailPanel({ client, planColors = {}, onEdit, onDelete }:
           </Field>
         </div>
       </div>
+
+      <FichaClienteCard clientId={client.id} empresa={client.company} responsavel={client.responsible} />
     </>
   );
 }

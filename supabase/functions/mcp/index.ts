@@ -21,6 +21,7 @@ import { CRM } from "./operacoes/crm.ts";
 import { AGENDA } from "./operacoes/agenda.ts";
 import { NOTAS } from "./operacoes/notas.ts";
 import { CADASTROS } from "./operacoes/cadastros.ts";
+import { FICHA } from "./operacoes/ficha.ts";
 
 const VERSOES = ["2025-06-18", "2025-03-26", "2024-11-05"];
 /** Resposta grande demais estoura o contexto do agente: corta e avisa. */
@@ -155,7 +156,7 @@ const LEITURA: Record<string, Ferramenta> = {
 };
 
 const FERRAMENTAS: Record<string, Ferramenta> = {
-  ...LEITURA, ...CLIENTES, ...CONTRATOS, ...FINANCEIRO, ...CRM, ...AGENDA, ...NOTAS, ...CADASTROS,
+  ...LEITURA, ...FICHA, ...CLIENTES, ...CONTRATOS, ...FINANCEIRO, ...CRM, ...AGENDA, ...NOTAS, ...CADASTROS,
 };
 
 // ── JSON-RPC ──────────────────────────────────────────────────────────────

@@ -131,3 +131,8 @@ verify_jwt = true
 # Terminais da Central de Agentes → Hermes na VPS. Exige usuário logado.
 [functions.hermes-chat]
 verify_jwt = true
+
+# Formulário da ficha que o dono do negócio responde pelo link, sem login.
+# O acesso é o token do link (validado na função), não um JWT.
+[functions.ficha-publica]
+verify_jwt = false
