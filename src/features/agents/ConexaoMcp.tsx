@@ -25,7 +25,12 @@ interface Chave {
   created_at: string;
   ultimo_uso: string | null;
   revogada_em: string | null;
+  /** Ferramentas permitidas; vazio = acesso completo. */
+  ferramentas: string[] | null;
 }
+
+/** Chave para os agentes de tráfego: o MCP recusa qualquer outra ferramenta. */
+const SO_FICHA = ["ficha_do_cliente"];
 
 const rotulo = "text-[10px] font-black uppercase tracking-widest text-white/40";
 
@@ -63,13 +68,14 @@ export function ConexaoMcp() {
   const sb = supabase as any;
   const [chaves, setChaves] = useState<Chave[] | null>(null);
   const [nome, setNome] = useState("");
+  const [soFicha, setSoFicha] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [nova, setNova] = useState<{ nome: string; chave: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     const { data } = await sb.from("mcp_chaves")
-      .select("id, nome, prefixo, created_at, ultimo_uso, revogada_em")
+      .select("id, nome, prefixo, created_at, ultimo_uso, revogada_em, ferramentas")
       .order("revogada_em", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: false });
     setChaves((data ?? []) as Chave[]);
@@ -80,11 +86,12 @@ export function ConexaoMcp() {
   const gerar = async () => {
     setGerando(true);
     setErro(null);
-    const { data, error } = await sb.rpc("mcp_criar_chave", { p_nome: nome });
+    const { data, error } = await sb.rpc("mcp_criar_chave", { p_nome: nome, p_ferramentas: soFicha ? SO_FICHA : null });
     setGerando(false);
     if (error) { setErro(error.message); return; }
     setNova({ nome: nome.trim(), chave: data as string });
     setNome("");
+    setSoFicha(false);
     carregar();
   };
 
@@ -130,6 +137,10 @@ export function ConexaoMcp() {
             Gerar chave
           </LiquidGlassButton>
         </form>
+        <label className="flex items-center gap-2 text-[12px] text-white/60">
+          <input type="checkbox" checked={soFicha} onChange={(e) => setSoFicha(e.target.checked)} />
+          Só a ficha do cliente (para os agentes de tráfego): o MCP recusa qualquer outra ferramenta com esta chave.
+        </label>
         {erro && <p className="text-[12px] text-rose-300/90">{erro}</p>}
 
         {/* A chave só existe aqui e agora: o banco guarda o hash. */}
@@ -174,6 +185,11 @@ export function ConexaoMcp() {
                     <p className="truncate text-[13px] text-white">
                       {c.nome}
                       <span className="ml-2 font-mono text-[11px] text-white/35">{c.prefixo}…</span>
+                      {c.ferramentas?.length ? (
+                        <span className="ml-2 rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] text-white/50">
+                          só {c.ferramentas.join(", ")}
+                        </span>
+                      ) : null}
                     </p>
                     <p className="text-[11px] text-white/35">
                       criada em {new Date(c.created_at).toLocaleDateString("pt-BR")}
