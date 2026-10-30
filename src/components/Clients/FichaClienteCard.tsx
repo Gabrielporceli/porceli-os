@@ -1,22 +1,37 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { DocumentText, Send2 } from "iconsax-react";
-import { completude } from "@/features/clients/fichaCampos";
-import { useFichaCliente, useGerarLinkFicha } from "@/hooks/useFichaCliente";
+import { Copy, DocumentText } from "iconsax-react";
+import { BLOCOS_FICHA, completude } from "@/features/clients/fichaCampos";
+import { useFichaCliente } from "@/hooks/useFichaCliente";
 import { FichaClienteModal } from "./FichaClienteModal";
 
 const card = "rounded-2xl border border-white/[0.06] bg-white/[0.04] px-5 py-4";
 const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 /**
+ * As perguntas da ficha em texto, prontas para colar no WhatsApp do cliente.
+ * Quem responde é o dono; a agência passa as respostas para o modal.
+ */
+function perguntasParaWhatsApp(empresa: string, responsavel?: string): string {
+  const nome = responsavel?.split(" ")[0];
+  let n = 0;
+  const blocos = BLOCOS_FICHA.map((b) =>
+    [`*${b.titulo}*`, ...b.campos.map((c) => `${++n}. ${c.pergunta}`)].join("\n"));
+  return [
+    `Oi${nome ? `, ${nome}` : ""}! Para a gente acertar ainda mais nos anúncios da ${empresa}, preciso que você responda `
+      + "estas perguntas sobre o seu negócio. Só você sabe responder. Pode ser por texto ou áudio, e o que não souber pode pular.",
+    ...blocos,
+  ].join("\n\n");
+}
+
+/**
  * Cartão da ficha no cadastro do cliente: quanto já foi respondido, o CPL
- * máximo, e os dois jeitos de preencher — a agência no modal, ou o dono do
- * negócio pelo link (copiado com a mensagem pronta para o WhatsApp).
+ * máximo, o botão para copiar as perguntas (o dono responde pelo WhatsApp) e o
+ * modal onde a agência registra as respostas.
  */
 export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId: string; empresa: string; responsavel?: string }) {
   const { data: ficha, isLoading } = useFichaCliente(clientId);
-  const gerarLink = useGerarLinkFicha(clientId);
   const [aberta, setAberta] = useState(false);
 
   const { respondidos, total } = completude(ficha);
@@ -25,16 +40,12 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
     : respondidos === total ? "Completa"
     : `${respondidos} de ${total} respondidas`;
 
-  const enviar = async () => {
+  const copiar = async () => {
     try {
-      const link = await gerarLink.mutateAsync();
-      const nome = responsavel?.split(" ")[0];
-      const mensagem = `Oi${nome ? `, ${nome}` : ""}! Para a gente acertar ainda mais nos anúncios da ${empresa}, `
-        + `preciso que você responda a ficha do seu negócio. Leva uns 10 minutos e só você sabe responder: ${link}`;
-      await navigator.clipboard.writeText(mensagem);
-      toast.success("Link criado e mensagem copiada. É só colar no WhatsApp do cliente (vale 30 dias).");
-    } catch (e) {
-      toast.error(`Não consegui gerar o link: ${(e as Error).message}`);
+      await navigator.clipboard.writeText(perguntasParaWhatsApp(empresa, responsavel));
+      toast.success("Perguntas copiadas. Cole no WhatsApp do cliente e depois registre as respostas em \"Abrir ficha\".");
+    } catch {
+      toast.error("Não consegui copiar. Tente de novo.");
     }
   };
 
@@ -60,8 +71,8 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <motion.div>
-          <button type="button" onClick={enviar} disabled={gerarLink.isPending} className="acao-vidro" title="Gera um link para o dono do negócio responder e copia a mensagem">
-            <Send2 size={14} /> Enviar ao cliente
+          <button type="button" onClick={copiar} className="acao-vidro" title="Copia as perguntas para mandar ao dono do negócio pelo WhatsApp">
+            <Copy size={14} /> Copiar perguntas
           </button>
         </motion.div>
         <motion.div>
