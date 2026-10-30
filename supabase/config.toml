@@ -127,3 +127,7 @@ verify_jwt = false
 
 [functions.renegotiation-notice]
 verify_jwt = true
+
+# Terminais da Central de Agentes → Hermes na VPS. Exige usuário logado.
+[functions.hermes-chat]
+verify_jwt = true

@@ -80,16 +80,24 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
               <Input id="ag-papel" value={papel} onChange={(e) => setPapel(e.target.value)} placeholder="O que ele faz, em uma linha" className={cn(field, "h-11")} />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ag-prompt" className={label}>Instruções</Label>
-              <Textarea
-                id="ag-prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Como ele deve se comportar, o que pode e não pode fazer…"
-                className={cn(field, "min-h-[110px] resize-none")}
-              />
-            </div>
+            {agent?.hermes ? (
+              <p className="rounded-2xl bg-white/[0.04] p-4 text-xs leading-relaxed text-white/45">
+                Agente do Hermes (<span className="font-mono text-white/70">{agent.hermes}</span>). As instruções, o
+                modelo e as ferramentas dele ficam no repositório <span className="font-mono">porceli-agentes</span>;
+                aqui muda só o nome, o papel e a cor na tela.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="ag-prompt" className={label}>Instruções</Label>
+                <Textarea
+                  id="ag-prompt"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Como ele deve se comportar, o que pode e não pode fazer…"
+                  className={cn(field, "min-h-[110px] resize-none")}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <span className={label}>Cor</span>
@@ -123,7 +131,7 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
           </div>
 
           <div className="flex items-center justify-end shrink-0 items-center gap-6 border-t border-white/[0.05] p-6">
-            {agent && (
+            {agent && !agent.hermes && (
               <LiquidGlassButton type="button" tint="danger" onClick={remove} className="h-10 px-5 text-xs font-bold uppercase tracking-widest">
                 Excluir
               </LiquidGlassButton>

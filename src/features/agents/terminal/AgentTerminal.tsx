@@ -5,13 +5,15 @@ import "@xterm/xterm/css/xterm.css";
 import { Microphone2 } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import { getAgentsState } from "../agentsStore";
 import { DemoSession, type TerminalSession } from "./session";
+import { HermesSession } from "./hermesSession";
 import { useDictation } from "./useDictation";
 import { comAlfa } from "./cores";
 
 /**
- * Terminal de um agente (xterm.js). Só conversa com a TerminalSession; trocar
- * a DemoSession pela sessão da VPS é mudar a linha que a cria.
+ * Terminal de um agente (xterm.js). Só conversa com a TerminalSession: agente
+ * do Hermes usa a HermesSession (VPS); agente criado à mão, a DemoSession.
  */
 
 const TEMA = {
@@ -52,7 +54,10 @@ export function AgentTerminal({ agentId, cor = "#a78bfa", onFocus }: { agentId: 
     term.loadAddon(fit);
     term.open(el);
 
-    const session: TerminalSession & { start?: () => void } = new DemoSession(agentId);
+    const perfil = getAgentsState().agents.find((a) => a.id === agentId)?.hermes;
+    const session: TerminalSession & { start?: () => void } = perfil
+      ? new HermesSession(agentId, perfil)
+      : new DemoSession(agentId);
     termRef.current = term;
     sessionRef.current = session;
     const offOut = session.onOutput((d) => term.write(d));

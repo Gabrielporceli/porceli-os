@@ -1,17 +1,19 @@
 import { useSyncExternalStore } from "react";
 import type { CanvasAgent } from "@/components/ui/agents-canvas";
+import { AGENTES_HERMES, idHermes } from "./hermesAgentes";
 
 /**
- * Agentes e conversas, salvos no navegador. Não há motor ligado: o que o
- * usuário (ou um agente) escreve fica gravado, mas ninguém responde sozinho.
- * Quando houver um motor, é aqui que ele entra (chamando `sendMessage` com
- * `de` = id do agente), sem mexer na interface.
+ * Agentes e conversas, salvos no navegador. Os agentes do Hermes (campo
+ * `hermes`) entram sozinhos e respondem pelo terminal; os criados à mão
+ * continuam em demonstração.
  */
 export interface StoredAgent extends CanvasAgent {
   /** Instruções do agente (o "prompt de sistema"). */
   prompt: string;
   /** O agente principal coordena os outros; só um por vez. */
   principal?: boolean;
+  /** Profile no Hermes da VPS. Com ele, o terminal fala com o agente de verdade. */
+  hermes?: string;
   criadoEm: number;
 }
 
@@ -46,7 +48,30 @@ function load(): State {
   return { agents: [], messages: [] };
 }
 
-let state: State = load();
+/**
+ * Garante na tela os agentes que existem no Hermes. Os que já estão lá ficam
+ * como o usuário deixou (cor, posição); só entram os que faltam. O principal
+ * passa a ser a Elly, que é quem coordena no Hermes.
+ */
+function comAgentesHermes(s: State): State {
+  const faltam = AGENTES_HERMES.filter((h) => !s.agents.some((a) => a.id === idHermes(h.perfil)));
+  if (!faltam.length) return s;
+  const novos: StoredAgent[] = faltam.map((h) => ({
+    id: idHermes(h.perfil),
+    nome: h.nome,
+    papel: h.papel,
+    cor: h.cor,
+    status: "parado",
+    prompt: "",
+    hermes: h.perfil,
+    principal: !!h.principal,
+    criadoEm: Date.now(),
+  }));
+  const antigos = novos.some((a) => a.principal) ? s.agents.map((a) => ({ ...a, principal: false })) : s.agents;
+  return { ...s, agents: [...novos, ...antigos] };
+}
+
+let state: State = comAgentesHermes(load());
 const listeners = new Set<() => void>();
 
 function commit(next: State) {
