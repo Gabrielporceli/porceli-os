@@ -18,6 +18,7 @@ import Calendar from "./pages/Calendar"
 import Automations from "./pages/Automations"
 import ScheduledMessages from "./pages/ScheduledMessages"
 import FunnelMaps from "./pages/FunnelMaps"
+import FichaPublica from "./pages/FichaPublica"
 import AgentsHub from "./pages/AgentsHub"
 import Notes from "./pages/Notes"
 // Laboratorios sao carregados sob demanda: o RoundTripLab puxa o Tiptap
@@ -62,6 +63,8 @@ function App() {
                 <Suspense fallback={null}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
+                  {/* Ficha que o dono do negócio responde pelo link da agência — pública, sem layout. */}
+                  <Route path="/ficha/:token" element={<FichaPublica />} />
                   {/* Laboratório de design da pílula do menu mobile — pública, sem layout. */}
                   <Route path="/dev/pill" element={<PillLab />} />
                   {/* Exemplo dos ícones do iconsax — pública, sem layout. */}
