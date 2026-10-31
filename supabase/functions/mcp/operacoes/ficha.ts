@@ -2,7 +2,7 @@
 // para tratar cada cliente no nicho dele (ticket, margem, conversão, oferta,
 // público, restrições, tom). Quem preenche é a agência ou o dono do negócio;
 // agente nunca grava aqui: propõe a mudança e o Gabriel aprova.
-import { CAMPOS_FICHA, completude } from "../../../../src/features/clients/fichaCampos.ts";
+import { CAMPOS_FICHA, completude, campoVisivel, rotuloDoModelo } from "../../../../src/features/clients/fichaCampos.ts";
 import { db, Ferramenta, parametros } from "../contexto.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -37,13 +37,16 @@ export const FICHA: Record<string, Ferramenta> = {
       if (!f) {
         return {
           cliente: c.company, ficha: null,
-          aviso: "Sem ficha. Peça ao Gabriel para preencher no cadastro do cliente ou enviar o link ao dono do negócio.",
+          aviso: "Sem ficha. Peça ao Gabriel para preencher no cadastro do cliente (ou usar \"Copiar perguntas\" e mandar ao dono do negócio).",
         };
       }
       const respostas: Record<string, unknown> = {};
       const faltando: string[] = [];
+      const modelo = (f as Record<string, unknown>).modelo_negocio;
       for (const campo of CAMPOS_FICHA) {
-        const v = (f as Record<string, unknown>)[campo.chave];
+        if (!campoVisivel(campo, modelo)) continue;
+        const bruto = (f as Record<string, unknown>)[campo.chave];
+        const v = campo.chave === "modelo_negocio" ? rotuloDoModelo(bruto) : bruto;
         if (v === null || v === undefined || String(v).trim() === "") faltando.push(campo.rotulo);
         else respostas[campo.rotulo] = v;
       }

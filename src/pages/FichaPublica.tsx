@@ -3,8 +3,9 @@ import { useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { BLOCOS_FICHA, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
+import { blocosDoModelo, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
 
 /** Mesmo projeto do cliente Supabase do app (src/integrations/supabase/client.ts). */
 const URL_FUNCAO = "https://dygadnfeoiimmbeqbsvt.supabase.co/functions/v1/ficha-publica";
@@ -73,6 +74,18 @@ export default function FichaPublica() {
       onChange: (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setValores((v) => ({ ...v, [c.chave]: ev.target.value })),
     };
+    if (c.tipo === "escolha") {
+      return (
+        <Select value={valores[c.chave] || undefined} onValueChange={(v) => setValores((x) => ({ ...x, [c.chave]: v }))}>
+          <SelectTrigger id={comum.id} className="bg-white/[0.04] border-white/[0.08] h-12 rounded-xl text-white/85">
+            <SelectValue placeholder="Escolha uma opção" />
+          </SelectTrigger>
+          <SelectContent>
+            {c.opcoes?.map((o) => <SelectItem key={o.valor} value={o.valor}>{o.rotulo}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      );
+    }
     if (c.tipo === "simnao") {
       const sim = simNaoDaResposta(valores[c.chave]) === true;
       return (
@@ -112,7 +125,7 @@ export default function FichaPublica() {
 
         {(estado === "pronto" || estado === "enviando") && (
           <form onSubmit={enviar} className="space-y-10">
-            {BLOCOS_FICHA.map((b) => (
+            {blocosDoModelo(valores.modelo_negocio).map((b) => (
               <section key={b.titulo} className="space-y-5">
                 <h2 className="border-b border-white/[0.08] pb-2 text-lg font-semibold">{b.titulo}</h2>
                 {b.campos.map((c) => (

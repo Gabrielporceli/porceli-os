@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { BLOCOS_FICHA, cplMaximo, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
+import { BLOCOS_FICHA, blocosDoModelo, cplMaximo, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
 import { useFichaCliente, useSalvarFicha } from "@/hooks/useFichaCliente";
 
 const campo =
@@ -63,6 +64,18 @@ export function FichaClienteModal({
       onChange: (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setValores((v) => ({ ...v, [c.chave]: ev.target.value })),
     };
+    if (c.tipo === "escolha") {
+      return (
+        <Select value={valores[c.chave] || undefined} onValueChange={(v) => setValores((x) => ({ ...x, [c.chave]: v }))}>
+          <SelectTrigger id={comum.id} className="bg-white/[0.03] border-white/[0.05] h-11 rounded-xl text-white/80 font-medium">
+            <SelectValue placeholder="Escolha o modelo para ver as perguntas certas" />
+          </SelectTrigger>
+          <SelectContent>
+            {c.opcoes?.map((o) => <SelectItem key={o.valor} value={o.valor}>{o.rotulo}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      );
+    }
     if (c.tipo === "simnao") {
       const sim = simNaoDaResposta(valores[c.chave]) === true;
       return (
@@ -93,12 +106,12 @@ export function FichaClienteModal({
                 Respondida pelo cliente em {new Date(ficha.respondido_cliente_em).toLocaleDateString("pt-BR")}.
               </p>
             )}
-            {BLOCOS_FICHA.map((b) => (
+            {blocosDoModelo(valores.modelo_negocio).map((b) => (
               <div key={b.titulo} className="space-y-5">
                 <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">{b.titulo}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {b.campos.map((c) => (
-                    <div key={c.chave} className={`space-y-2 ${c.tipo === "longo" ? "md:col-span-2" : ""}`}>
+                    <div key={c.chave} className={`space-y-2 ${c.tipo === "longo" || c.tipo === "escolha" ? "md:col-span-2" : ""}`}>
                       <Label htmlFor={`ficha-${c.chave}`} className="text-white">{c.rotulo}</Label>
                       <p className="text-[11px] text-white/35">{c.pergunta}</p>
                       {entrada(c)}
