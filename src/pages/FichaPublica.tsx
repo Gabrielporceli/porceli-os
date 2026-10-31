@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
-import { BLOCOS_FICHA, type CampoFicha } from "@/features/clients/fichaCampos";
+import { BLOCOS_FICHA, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
 
 /** Mesmo projeto do cliente Supabase do app (src/integrations/supabase/client.ts). */
 const URL_FUNCAO = "https://dygadnfeoiimmbeqbsvt.supabase.co/functions/v1/ficha-publica";
@@ -72,6 +73,16 @@ export default function FichaPublica() {
       onChange: (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setValores((v) => ({ ...v, [c.chave]: ev.target.value })),
     };
+    if (c.tipo === "simnao") {
+      const sim = simNaoDaResposta(valores[c.chave]) === true;
+      return (
+        <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-4 py-3 text-sm text-white/70">
+          <Switch id={`${comum.id}`} checked={sim}
+            onCheckedChange={(v) => setValores((x) => ({ ...x, [c.chave]: v ? "sim" : "não" }))} />
+          {sim ? "Sim, pode usar" : "Não autorizado"}
+        </div>
+      );
+    }
     return c.tipo === "longo"
       ? <Textarea {...comum} rows={3} className={`${campo} resize-none`} />
       : <Input {...comum} inputMode={c.tipo === "texto" ? undefined : "decimal"} className={`${campo} h-12`} />;
