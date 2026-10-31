@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Copy, DocumentText } from "iconsax-react";
-import { BLOCOS_FICHA, completude } from "@/features/clients/fichaCampos";
+import { blocosDoModelo, completude, rotuloDoModelo } from "@/features/clients/fichaCampos";
 import { useFichaCliente } from "@/hooks/useFichaCliente";
 import { FichaClienteModal } from "./FichaClienteModal";
 
@@ -13,15 +13,21 @@ const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curr
  * As perguntas da ficha em texto, prontas para colar no WhatsApp do cliente.
  * Quem responde é o dono; a agência passa as respostas para o modal.
  */
-function perguntasParaWhatsApp(empresa: string, responsavel?: string): string {
+function perguntasParaWhatsApp(empresa: string, responsavel?: string, modelo?: unknown): string {
   const nome = responsavel?.split(" ")[0];
   let n = 0;
-  const blocos = BLOCOS_FICHA.map((b) =>
-    [`*${b.titulo}*`, ...b.campos.map((c) => `${++n}. ${c.pergunta}`)].join("\n"));
+  const blocos = blocosDoModelo(modelo).map((b) => [
+    `*${b.titulo}*`,
+    ...b.campos.map((c) => c.tipo === "escolha"
+      ? [`${++n}. ${c.pergunta}`, ...(c.opcoes ?? []).map((o) => `   • ${o.rotulo}`)].join("\n")
+      : `${++n}. ${c.pergunta}`),
+  ].join("\n"));
+  const fim = modelo ? [] : ["Depois que você me disser qual é o seu modelo de negócio, te mando mais algumas perguntas específicas."];
   return [
     `Oi${nome ? `, ${nome}` : ""}! Para a gente acertar ainda mais nos anúncios da ${empresa}, preciso que você responda `
       + "estas perguntas sobre o seu negócio. Só você sabe responder. Pode ser por texto ou áudio, e o que não souber pode pular.",
     ...blocos,
+    ...fim,
   ].join("\n\n");
 }
 
@@ -42,7 +48,7 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
 
   const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(perguntasParaWhatsApp(empresa, responsavel));
+      await navigator.clipboard.writeText(perguntasParaWhatsApp(empresa, responsavel, ficha?.modelo_negocio));
       toast.success("Perguntas copiadas. Cole no WhatsApp do cliente e depois registre as respostas em \"Abrir ficha\".");
     } catch {
       toast.error("Não consegui copiar. Tente de novo.");
@@ -59,6 +65,7 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
           <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-white/40">Ficha do cliente</span>
           <span className="block truncate font-medium text-white">
             {situacao}
+            {rotuloDoModelo(ficha?.modelo_negocio) ? ` · ${rotuloDoModelo(ficha?.modelo_negocio)}` : ""}
             {ficha?.nicho ? ` · ${ficha.nicho}` : ""}
             {ficha?.cpl_maximo != null ? ` · CPL máximo ${reais(Number(ficha.cpl_maximo))}` : ""}
           </span>
