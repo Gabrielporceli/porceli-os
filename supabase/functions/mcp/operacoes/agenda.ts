@@ -85,22 +85,50 @@ async function excluirAtividade(a: { tipo: "google" | "notion"; id: string }) {
   return { passos: [a.tipo === "google" ? "evento excluído do Google Agenda" : "tarefa excluída do Notion"] };
 }
 
-async function listarAgenda(a: { de?: string; ate?: string }) {
+/** Hoje em Brasília, YYYY-MM-DD. */
+const hojeBR = () => new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 10);
+
+/**
+ * Só o período pedido e só os campos que importam: a lista inteira do Notion
+ * custava milhares de tokens por consulta para o agente.
+ */
+async function listarAgenda(a: { dia?: string; ate_dia?: string; de?: string; ate?: string }) {
+  const de = (a.dia ?? a.de?.slice(0, 10)) || hojeBR();
+  const ate = (a.ate_dia ?? a.ate?.slice(0, 10)) || de;
   const [notion, google] = await Promise.all([
     invocar("notion-tasks", undefined, { metodo: "GET" }).catch((e) => ({ erro: (e as Error).message })),
     invocar("google-calendar-events", undefined, {
-      metodo: "GET", query: a.de && a.ate ? { timeMin: a.de, timeMax: a.ate } : undefined,
+      metodo: "GET", query: { timeMin: `${de}T00:00:00-03:00`, timeMax: `${ate}T23:59:59-03:00` },
     }).catch((e) => ({ erro: (e as Error).message })),
   ]);
-  return { tarefas_notion: notion?.tasks ?? notion, eventos_google: google?.events ?? google };
+  // deno-lint-ignore no-explicit-any
+  const tarefas = (notion?.tasks ?? []) as any[];
+  const aberta = (t: { status?: string }) => !/realizad|conclu|done/i.test(t.status ?? "");
+  const noPeriodo = tarefas.filter((t) => t.dueDate && t.dueDate.slice(0, 10) >= de && t.dueDate.slice(0, 10) <= ate);
+  const atrasadas = tarefas.filter((t) => t.dueDate && t.dueDate.slice(0, 10) < hojeBR() && aberta(t));
+  // deno-lint-ignore no-explicit-any
+  const curta = (t: any) => ({
+    id: t.id, titulo: t.title, dia: t.dueDate?.slice(0, 10), hora: t.time || undefined, status: t.status,
+    cliente: t.clients?.[0] || undefined, responsavel: t.responsible || undefined,
+  });
+  return {
+    periodo: de === ate ? de : `${de} a ${ate}`,
+    tarefas_notion: notion?.erro ? { erro: notion.erro } : noPeriodo.map(curta),
+    tarefas_atrasadas: notion?.erro ? undefined : atrasadas.length,
+    // deno-lint-ignore no-explicit-any
+    eventos_google: google?.erro ? { erro: google.erro } : ((google?.events ?? []) as any[]).map((e) => ({
+      id: e.id, titulo: e.title, inicio: e.start, fim: e.end, dia_inteiro: e.allDay || undefined,
+    })),
+  };
 }
 
 const recorrencia = { type: "string", enum: ["daily", "weekly", "biweekly", "monthly"] };
 
 export const AGENDA: Record<string, Ferramenta> = {
   listar_agenda: {
-    description: "Tarefas do Notion e eventos do Google Agenda, como a tela Calendário mostra. de/ate (ISO) filtram o Google.",
-    inputSchema: parametros({ de: { type: "string" }, ate: { type: "string" } }),
+    description: "Agenda de um dia ou período: tarefas do Notion e eventos do Google Agenda, como a tela Calendário. "
+      + "dia = YYYY-MM-DD (padrão: hoje em Brasília); ate_dia para um período. Traz também quantas tarefas estão atrasadas.",
+    inputSchema: parametros({ dia: { type: "string" }, ate_dia: { type: "string" } }),
     executar: listarAgenda,
   },
   criar_atividade: {
