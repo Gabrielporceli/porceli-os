@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { Copy, TickCircle, Trash } from "iconsax-react";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -137,10 +138,15 @@ export function ConexaoMcp() {
             Gerar chave
           </LiquidGlassButton>
         </form>
-        <label className="flex items-center gap-2 text-[12px] text-white/60">
-          <input type="checkbox" checked={soFicha} onChange={(e) => setSoFicha(e.target.checked)} />
-          Só a ficha do cliente (para os agentes de tráfego): o MCP recusa qualquer outra ferramenta com esta chave.
-        </label>
+        <div className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.04] p-4">
+          <div className="text-sm">
+            <p className="font-bold">Só a ficha do cliente</p>
+            <p className="text-xs text-white/45">
+              Para os agentes de tráfego: com esta chave o MCP recusa qualquer outra ferramenta.
+            </p>
+          </div>
+          <Switch checked={soFicha} onCheckedChange={setSoFicha} />
+        </div>
         {erro && <p className="text-[12px] text-rose-300/90">{erro}</p>}
 
         {/* A chave só existe aqui e agora: o banco guarda o hash. */}
