@@ -10,7 +10,7 @@
  * sobra?" em vez de "margem de lucro". O `rotulo` é o nome curto, para a tela
  * da agência e para os agentes.
  */
-export type TipoCampo = "texto" | "longo" | "reais" | "percentual";
+export type TipoCampo = "texto" | "longo" | "reais" | "percentual" | "simnao";
 
 export interface CampoFicha {
   chave: string;
@@ -34,6 +34,18 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
       { chave: "cidade", rotulo: "Cidade", pergunta: "Em que cidade vocês atendem?", tipo: "texto" },
       { chave: "raio_atendimento", rotulo: "Raio de atendimento", pergunta: "Até onde vocês atendem ou entregam?", tipo: "texto", exemplo: "Até 8 km, bairros X e Y, a cidade toda…" },
       { chave: "tempo_mercado", rotulo: "Tempo de mercado", pergunta: "Há quanto tempo o negócio existe?", tipo: "texto" },
+    ],
+  },
+  {
+    titulo: "Canais",
+    campos: [
+      { chave: "instagram", rotulo: "Instagram", pergunta: "Qual é o @ do Instagram do negócio?", tipo: "texto", exemplo: "@seunegocio" },
+      { chave: "site", rotulo: "Site", pergunta: "Tem site? Qual o endereço?", tipo: "texto", exemplo: "www.seunegocio.com.br" },
+      { chave: "outros_canais", rotulo: "Outros canais", pergunta: "Está em outros canais? (Google Meu Negócio, TikTok, iFood…)", tipo: "longo" },
+      {
+        chave: "autoriza_analise_canais", rotulo: "Autoriza análise dos canais", tipo: "simnao",
+        pergunta: "Podemos usar o seu Instagram, site e anúncios como fonte de informações sobre a sua marca, para melhorar seus anúncios?",
+      },
     ],
   },
   {
@@ -94,6 +106,17 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
 export const CAMPOS_FICHA: CampoFicha[] = BLOCOS_FICHA.flatMap((b) => b.campos);
 export const CHAVES_FICHA: string[] = CAMPOS_FICHA.map((c) => c.chave);
 export const CHAVES_NUMERICAS = new Set(CAMPOS_FICHA.filter((c) => c.tipo === "reais" || c.tipo === "percentual").map((c) => c.chave));
+export const CHAVES_SIMNAO = new Set(CAMPOS_FICHA.filter((c) => c.tipo === "simnao").map((c) => c.chave));
+
+/** "sim" / true / "não" → booleano; vazio → null. */
+export function simNaoDaResposta(v: unknown): boolean | null {
+  if (typeof v === "boolean") return v;
+  const s = String(v ?? "").trim().toLowerCase();
+  if (!s) return null;
+  if (["sim", "s", "true", "yes", "pode"].includes(s)) return true;
+  if (["não", "nao", "n", "false", "no"].includes(s)) return false;
+  return null;
+}
 
 /** Limite por resposta de texto: protege o formulário público de abuso. */
 export const MAX_TEXTO_FICHA = 2000;
@@ -132,12 +155,14 @@ export function completude(f: Record<string, unknown> | null | undefined): { res
  * Limpa um conjunto de respostas: só as chaves da ficha, texto aparado e com
  * limite, números convertidos. Usado pela tela e pelo formulário público.
  */
-export function limparRespostas(entrada: Record<string, unknown>): Record<string, string | number | null> {
-  const saida: Record<string, string | number | null> = {};
+export function limparRespostas(entrada: Record<string, unknown>): Record<string, string | number | boolean | null> {
+  const saida: Record<string, string | number | boolean | null> = {};
   for (const chave of CHAVES_FICHA) {
     if (!(chave in entrada)) continue;
     const v = entrada[chave];
-    if (CHAVES_NUMERICAS.has(chave)) {
+    if (CHAVES_SIMNAO.has(chave)) {
+      saida[chave] = simNaoDaResposta(v);
+    } else if (CHAVES_NUMERICAS.has(chave)) {
       saida[chave] = numeroDaResposta(v);
     } else {
       const s = String(v ?? "").trim().slice(0, MAX_TEXTO_FICHA);
