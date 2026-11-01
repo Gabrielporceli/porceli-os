@@ -1583,7 +1583,10 @@ button.vidro-vermelho:hover:not(:disabled) {
    em busca rápida ele nem chega a aparecer (nada salta na tela). */
 .aparece-devagar { animation: aparece-devagar 400ms ease-out 300ms both; }
 @keyframes aparece-devagar { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .aparece-devagar { animation: none; } }
+/* A logo da espera de página/aba: entra na hora em que é chamada (o atraso já
+   é do QuandoPronto) — atraso dobrado a fazia surgir tarde e piscar. */
+.aparece-ja { animation: aparece-devagar 250ms ease-out both; }
+@media (prefers-reduced-motion: reduce) { .aparece-devagar, .aparece-ja { animation: none; } }
 
 /* Terminais da Central de Agentes: barra de rolagem fina, sem as setas nativas. */
 .agent-term .xterm .xterm-viewport {
