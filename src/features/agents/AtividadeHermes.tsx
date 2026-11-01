@@ -64,6 +64,10 @@ const ROTULOS: Record<string, string> = {
   cancelar_mensagem: "Cancelou mensagem agendada",
   automacoes: "Automações",
   cadastro: "Cadastro",
+  pedir_aprovacao: "Pediu aprovação",
+  aprovacoes: "Consultou aprovações",
+  atualizar_aprovacao: "Atualizou aprovação",
+  ficha_do_cliente: "Leu a ficha do cliente",
 };
 
 /** O detalhe que identifica a chamada numa linha: tabela, nome, número, ação… */
