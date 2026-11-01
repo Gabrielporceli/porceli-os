@@ -29,6 +29,31 @@ export function carregamentosPendentes(): number {
   return pendentes;
 }
 
+/**
+ * Páginas que ainda estão no `PageLoader` (dados não chegaram). Contador à parte
+ * de propósito: o `usePageReady` espera as BUSCAS para liberar a página, e se o
+ * PageLoader entrasse nesse mesmo contador ele esperaria a si mesmo — a página
+ * só saía pelo teto de 6 s. Quem soma os dois é só o `QuandoPronto`.
+ */
+let segurando = 0;
+
+export function paginaSegurando(): () => void {
+  segurando++;
+  avisar();
+  let terminou = false;
+  return () => {
+    if (terminou) return;
+    terminou = true;
+    segurando--;
+    avisar();
+  };
+}
+
+/** Buscas em andamento + páginas ainda no PageLoader: o que o QuandoPronto espera. */
+export function algoCarregando(): boolean {
+  return pendentes > 0 || segurando > 0;
+}
+
 export function aoMudarCarregamento(f: () => void): () => void {
   ouvintes.add(f);
   return () => { ouvintes.delete(f); };

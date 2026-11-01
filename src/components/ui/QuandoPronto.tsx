@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
-import { aoMudarCarregamento, carregamentosPendentes } from "@/lib/carregamentoDaPagina";
+import { algoCarregando, aoMudarCarregamento } from "@/lib/carregamentoDaPagina";
 import { cn } from "@/lib/utils";
 
 /** A rede precisa ficar quieta por este tempo (uma busca costuma puxar outra). */
@@ -37,8 +37,8 @@ export function QuandoPronto({ chave, children, className }: { chave: string; ch
     const revelar = () => { if (!terminou) { terminou = true; setPronto(true); } };
     const avaliar = () => {
       clearTimeout(calma);
-      if (carregamentosPendentes() > 0) return;
-      calma = setTimeout(() => { if (carregamentosPendentes() === 0) revelar(); }, CALMA_MS);
+      if (algoCarregando()) return;
+      calma = setTimeout(() => { if (!algoCarregando()) revelar(); }, CALMA_MS);
     };
     const parar = aoMudarCarregamento(avaliar);
     // Depois dos efeitos dos filhos: é neles que as buscas começam.

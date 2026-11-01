@@ -1,7 +1,9 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { SystemAlerts } from "./SystemAlerts";
 import { PageTransitionProvider } from "@/components/ui/PageTransition";
+import { QuandoPronto } from "@/components/ui/QuandoPronto";
 import { supabase } from "@/integrations/supabase/client";
 import { appBackgroundStyle } from "@/lib/appBackground";
 
@@ -10,6 +12,7 @@ interface CRMLayoutProps {
 }
 
 export function CRMLayout({ children }: CRMLayoutProps) {
+  const { pathname } = useLocation();
   useEffect(() => {
     // Estabelece a conexão com o Supabase assim que o layout carrega,
     // antes dos dados do Dashboard serem requisitados.
@@ -26,10 +29,9 @@ export function CRMLayout({ children }: CRMLayoutProps) {
         style={appBackgroundStyle}
       />
 
-      {/* PageTransitionProvider: overlay preto + logo que cobre a tela
-          inteira (header incluso) a cada troca de página — ver
-          PageTransition.tsx. Fica aqui, e não dentro das páginas, pra
-          conseguir animar a saída por cima do conteúdo já montado. */}
+      {/* Troca de página sem véu: a página aparece inteira e suave quando
+          terminou de carregar (QuandoPronto, logo abaixo). O provider fica só
+          pelo sinal da animação do Header. */}
       <PageTransitionProvider>
         <div className="flex flex-col min-h-screen w-full relative z-10">
 
@@ -51,7 +53,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
             <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-[104px]">
               <div className="w-full px-4">
                 <SystemAlerts />
-                {children}
+                <QuandoPronto chave={pathname}>{children}</QuandoPronto>
               </div>
             </main>
 
