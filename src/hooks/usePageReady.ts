@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useIsFetching } from "@tanstack/react-query";
 import { usePageRevealGate } from "@/components/ui/PageTransition";
+import { aoMudarCarregamento, carregamentosPendentes } from "@/lib/carregamentoDaPagina";
+
+/**
+ * Teto da espera pelas buscas diretas ao Supabase: uma busca que se repete sem
+ * parar (sincronização, polling) nunca pode prender a página no carregando.
+ */
+const TETO_BUSCAS_MS = 6000;
 
 /**
  * Retorna `true` quando a página pode DESENHAR — o que são duas coisas:
  *
- *   1. os dados chegaram (queries do React Query + o `extraLoading`), e
+ *   1. os dados chegaram (queries do React Query, buscas diretas ao Supabase
+ *      — notas, pauta, agenda — e o `extraLoading`), e
  *   2. a transição de página liberou (ver usePageRevealGate).
  *
  * O item 2 existe porque, com os dados em cache, a página ficava pronta
@@ -24,8 +32,18 @@ export function usePageReady(extraLoading = false): boolean {
   const mountTimeRef = useRef(Date.now());
   const hasFetchedRef = useRef(false);
 
+  // Buscas que não passam pelo React Query. Depois do teto, deixam de contar.
+  const [buscasDiretas, setBuscasDiretas] = useState(carregamentosPendentes());
+  const [tetoPassou, setTetoPassou] = useState(false);
   useEffect(() => {
-    if (fetchingCount > 0 || extraLoading) {
+    const parar = aoMudarCarregamento(() => setBuscasDiretas(carregamentosPendentes()));
+    const teto = setTimeout(() => setTetoPassou(true), TETO_BUSCAS_MS);
+    return () => { parar(); clearTimeout(teto); };
+  }, []);
+  const esperandoBuscas = buscasDiretas > 0 && !tetoPassou;
+
+  useEffect(() => {
+    if (fetchingCount > 0 || extraLoading || esperandoBuscas) {
       hasFetchedRef.current = true;
       return;
     }
@@ -38,7 +56,7 @@ export function usePageReady(extraLoading = false): boolean {
 
     const t = setTimeout(() => setIsReady(true), remaining);
     return () => clearTimeout(t);
-  }, [fetchingCount, extraLoading, isReady]);
+  }, [fetchingCount, extraLoading, esperandoBuscas, isReady]);
 
   return usePageRevealGate(isReady);
 }
