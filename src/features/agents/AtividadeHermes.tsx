@@ -174,7 +174,7 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
               {filtro === "erros" ? "Nenhum erro." : "O Hermes ainda não fez nada pelo MCP."}
             </p>
           ) : (
-            <div className="max-h-[60vh] divide-y divide-white/[0.05] overflow-y-auto rounded-2xl bg-white/[0.03] scrollbar-hide">
+            <div className="max-h-[calc(85vh-15rem)] divide-y divide-white/[0.05] overflow-y-auto rounded-2xl bg-white/[0.03] scrollbar-hide">
               {visiveis.map((c) => {
                 const expandida = aberta === c.id;
                 const detalhe = resumo(c);
