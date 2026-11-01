@@ -53,7 +53,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
             <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-[104px]">
               <div className="w-full px-4">
                 <SystemAlerts />
-                <QuandoPronto chave={pathname}>{children}</QuandoPronto>
+                <QuandoPronto chave={pathname} tela>{children}</QuandoPronto>
               </div>
             </main>
 
