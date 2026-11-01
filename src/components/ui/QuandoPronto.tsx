@@ -23,7 +23,16 @@ const TETO_MS = 6000;
  * sem remontar ninguém. Sem nada a buscar, a espera é só a calma de 150 ms: a
  * troca de aba vira um aparecimento curto, nunca um corte seco.
  */
-export function QuandoPronto({ chave, children, className }: { chave: string; children: ReactNode; className?: string }) {
+export function QuandoPronto({ chave, children, className, tela = false }: {
+  chave: string;
+  children: ReactNode;
+  className?: string;
+  /**
+   * Página inteira (layouts): a logo fica no centro da TELA, descontando a barra
+   * lateral. Sem isto (abas), fica logo abaixo das pílulas, perto do conteúdo.
+   */
+  tela?: boolean;
+}) {
   const reduzir = useReducedMotion();
   const [pronto, setPronto] = useState(true);
   const [mostrarLogo, setMostrarLogo] = useState(false);
@@ -69,8 +78,17 @@ export function QuandoPronto({ chave, children, className }: { chave: string; ch
         {children}
       </div>
       {!pronto && mostrarLogo && (
-        <div role="status" aria-label="Carregando" className="aparece-devagar absolute inset-x-0 top-24 flex justify-center">
-          <img src="/logo.png" alt="" className="logo-respirando h-9 w-9 object-contain" />
+        <div
+          role="status"
+          aria-label="Carregando"
+          className={cn(
+            "aparece-devagar flex justify-center",
+            tela
+              ? "pointer-events-none fixed inset-0 z-40 items-center md:pl-[104px]"
+              : "absolute inset-x-0 top-24",
+          )}
+        >
+          <img src="/logo.png" alt="" className={cn("logo-respirando object-contain", tela ? "h-14 w-14" : "h-9 w-9")} />
         </div>
       )}
     </div>
