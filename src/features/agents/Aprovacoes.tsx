@@ -171,7 +171,7 @@ export function Aprovacoes({ open, onClose, lista, onMudou }: {
           ) : lista.length === 0 ? (
             <p className="py-10 text-center text-sm text-white/35">Nada esperando por você.</p>
           ) : (
-            <div className="max-h-[60vh] divide-y divide-white/[0.05] overflow-y-auto rounded-2xl bg-white/[0.03] scrollbar-hide">
+            <div className="max-h-[calc(85vh-14rem)] divide-y divide-white/[0.05] overflow-y-auto rounded-2xl bg-white/[0.03] scrollbar-hide">
               {lista.map((a) => <Item key={a.id} a={a} onDecidido={onMudou} />)}
             </div>
           )}
