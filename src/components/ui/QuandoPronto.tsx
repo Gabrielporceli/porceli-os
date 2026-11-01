@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import { algoCarregando, aoMudarCarregamento } from "@/lib/carregamentoDaPagina";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,14 @@ const LOGO_APOS_MS = 400;
  * logo depois de a logo surgir fazia ela aparecer e sumir num relance (piscava).
  */
 const LOGO_MINIMO_MS = 700;
+
+/**
+ * "Um QuandoPronto acima ainda está escondendo esta área." Aí a espera é dele:
+ * o de dentro (aba) não esconde de novo nem mostra a própria logo. Sem isto, a
+ * logo da aba entrava invisível por baixo da página escondida e o mínimo dela
+ * segurava a aba depois que a página aparecia — surgia uma segunda logo no topo.
+ */
+const AcimaEscondendo = createContext(false);
 
 /**
  * Mostra a área (uma aba) só quando ela inteira carregou, e de uma vez, com um
@@ -50,11 +58,23 @@ export function QuandoPronto({ chave, children, className, tela = false }: {
   const reduzir = useReducedMotion();
   const [pronto, setPronto] = useState(true);
   const [mostrarLogo, setMostrarLogo] = useState(false);
+  const acimaEscondendo = useContext(AcimaEscondendo);
+  const acimaRef = useRef(acimaEscondendo);
+  acimaRef.current = acimaEscondendo;
+  // Chave já tratada pelo efeito. No render em que a chave muda, os filhos já
+  // precisam saber que esta área vai esconder (o efeito daqui roda depois dos deles).
+  const chaveVista = useRef<string | null>(null);
 
   // Antes da pintura: a área nova nunca aparece pela metade nem por um quadro.
-  useLayoutEffect(() => { setPronto(false); setMostrarLogo(false); }, [chave]);
+  useLayoutEffect(() => {
+    chaveVista.current = chave;
+    const minha = !acimaRef.current;
+    setPronto(!minha);
+    setMostrarLogo(false);
+  }, [chave]);
 
   useEffect(() => {
+    if (acimaRef.current) return;
     let calma: ReturnType<typeof setTimeout> | undefined;
     let segura: ReturnType<typeof setTimeout> | undefined;
     let terminou = false;
@@ -97,7 +117,10 @@ export function QuandoPronto({ chave, children, className, tela = false }: {
     };
   }, [chave]);
 
+  const escondendo = acimaEscondendo || !pronto || chaveVista.current !== chave;
+
   return (
+    <AcimaEscondendo.Provider value={escondendo}>
     <div className={cn("relative", !pronto && "min-h-[240px]", className)}>
       <div
         aria-busy={!pronto}
@@ -124,5 +147,6 @@ export function QuandoPronto({ chave, children, className, tela = false }: {
         </div>
       )}
     </div>
+    </AcimaEscondendo.Provider>
   );
 }
