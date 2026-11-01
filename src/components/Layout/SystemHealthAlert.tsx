@@ -54,7 +54,7 @@ export function SystemHealthAlert() {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [fechadoEm, setFechadoEm] = useState<string | null>(null);
 
-  const { data } = useQuery({
+  const { data, dataUpdatedAt } = useQuery({
     queryKey: ["system-health"],
     queryFn: async () => {
       const { data, error } = await rpc("system_health");
@@ -68,8 +68,11 @@ export function SystemHealthAlert() {
   if (!data) return null;
 
   const jobs = data.jobs_com_falha ?? [];
+  // Mede contra a hora em que o dado foi lido, não contra o relógio de agora: com a aba em
+  // segundo plano (ou o computador hibernando) a tela se redesenha com a última resposta
+  // guardada antes da busca nova voltar, e o atraso aparente virava "fila parada" falso.
   const minutosSemWorker = data.worker_ultima_execucao
-    ? (Date.now() - new Date(data.worker_ultima_execucao).getTime()) / 60_000
+    ? (dataUpdatedAt - new Date(data.worker_ultima_execucao).getTime()) / 60_000
     : null;
   const workerParado = minutosSemWorker !== null && minutosSemWorker > WORKER_PARADO_MIN;
   const temProblema = jobs.length > 0 || data.mensagens_com_falha > 0 || workerParado;
