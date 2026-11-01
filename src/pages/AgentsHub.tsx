@@ -17,6 +17,7 @@ import { usePageReady } from "@/hooks/usePageReady";
 import { AgentsCanvas, resetTerminalLayout } from "@/components/ui/agents-canvas";
 import { AgentDialog } from "@/features/agents/AgentDialog";
 import { AtividadeHermes } from "@/features/agents/AtividadeHermes";
+import { Aprovacoes, BotaoAprovacoes, useAprovacoesPendentes } from "@/features/agents/Aprovacoes";
 import { VOCE, updateAgent, useAgentsState } from "@/features/agents/agentsStore";
 
 export default function AgentsHub() {
@@ -26,6 +27,8 @@ export default function AgentsHub() {
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [fitVersion, setFitVersion] = useState(0);
   const [atividade, setAtividade] = useState(false);
+  const [aprovacoes, setAprovacoes] = useState(false);
+  const pendentes = useAprovacoesPendentes();
 
   const conversas = useMemo(
     () => messages.filter((m) => m.de !== VOCE && m.para !== VOCE).map((m) => [m.de, m.para] as [string, string]),
@@ -58,6 +61,7 @@ export default function AgentsHub() {
   return (
     <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
       <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        <BotaoAprovacoes pendentes={pendentes.lista?.length ?? 0} onClick={() => setAprovacoes(true)} />
         <LiquidGlassButton
           onClick={() => setAtividade(true)}
           className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
@@ -128,6 +132,7 @@ export default function AgentsHub() {
       />
 
       <AtividadeHermes open={atividade} onClose={() => setAtividade(false)} />
+      <Aprovacoes open={aprovacoes} onClose={() => setAprovacoes(false)} lista={pendentes.lista} onMudou={pendentes.carregar} />
     </div>
   );
 }

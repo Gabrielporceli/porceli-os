@@ -587,7 +587,8 @@ function Inner({
 
   return (
     <div ref={boxRef} className={cn("surface-flat no-elevation relative overflow-hidden rounded-3xl", className)} style={fill ? { height: "100%" } : { height: "max(560px, calc(100vh - 11rem))" }}>
-      <div className="absolute inset-0">
+      {/* Recorte 6px para dentro: recortando na própria borda, o terminal passava por cima dela. */}
+      <div className="absolute inset-1.5 overflow-hidden rounded-[1.25rem]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -621,7 +622,9 @@ function Inner({
             <div className="nodrag nowheel nopan">{panel(selectedId)}</div>
           </NodeToolbar>
         )}
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1.4} color="#2a2a30" />
+        {/* Os pontos encolhem com o zoom: tamanho e contraste pensados para continuarem
+            visíveis afastado (os terminais abrem perto de 40%). */}
+        <Background variant={BackgroundVariant.Dots} gap={22} size={2.6} color="rgba(255,255,255,0.16)" />
       </ReactFlow>
       </div>
     </div>
