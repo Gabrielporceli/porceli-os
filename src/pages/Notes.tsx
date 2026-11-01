@@ -44,6 +44,7 @@ import { useBoards } from "@/features/notes/boards/useBoards";
 import { BoardCanvas } from "@/features/notes/boards/BoardCanvas";
 import type { TipoQuadro } from "@/features/notes/boards/types";
 import { PillTabs } from "@/components/ui/pill-tabs";
+import { QuandoPronto } from "@/components/ui/QuandoPronto";
 
 type Aba = "notas" | "pauta" | "quadros";
 
@@ -415,6 +416,8 @@ export default function Notes() {
         </div>
             </div>
 
+            {/* A aba aparece inteira quando terminou de carregar (QuandoPronto). */}
+            <QuandoPronto chave={aba}>
             {aba === "pauta" ? (
               <PautaConectada />
             ) : aba === "quadros" ? (
@@ -462,6 +465,7 @@ export default function Notes() {
                 onAbrir={abrir}
               />
             )}
+            </QuandoPronto>
           </div>
         </div>
       )}

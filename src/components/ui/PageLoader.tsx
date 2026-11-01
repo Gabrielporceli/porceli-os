@@ -1,14 +1,16 @@
+import { useEffect } from "react";
+import { paginaSegurando } from "@/lib/carregamentoDaPagina";
+
 /**
  * Renderizado pelas páginas enquanto `usePageReady()` é false.
  *
- * Não desenha nada: quem cobre a tela é o overlay da transição, que mora
- * no CRMLayout (ver PageTransition.tsx). Aqui só ocupamos uma altura
- * mínima pro documento não colapsar a zero e dar salto de scroll quando o
- * conteúdo real montar.
- *
- * Também não avisa mais ninguém: o "estou carregando" passou a sair do
- * próprio usePageReady, que é quem realmente sabe se os dados chegaram.
+ * Não desenha nada: só ocupa uma altura mínima (o documento não colapsa a zero
+ * e não salta o scroll quando o conteúdo real monta) e avisa que a página está
+ * segurando (contador próprio — ver `paginaSegurando`).
+ * É isso que faz o `QuandoPronto` do CRMLayout esperar a página trocar o
+ * PageLoader pelo conteúdo antes de mostrar — e então mostrar tudo junto.
  */
 export function PageLoader() {
+  useEffect(() => paginaSegurando(), []);
   return <div className="h-[70vh]" aria-busy="true" />;
 }
