@@ -213,7 +213,7 @@ const NotchedFromClickOrigin = React.forwardRef<
       ref={ref}
       style={style}
       className={cn(
-        "modal-notched modal-legivel fixed left-[50%] top-[50%] z-50 w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto",
+        "modal-notched modal-legivel fixed left-[50%] top-[50%] z-50 w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto scrollbar-hide",
         className,
         // Depois do className de propósito: o chamador costuma mandar
         // shadow-2xl/borda, que aqui desenhariam um retângulo em volta do
