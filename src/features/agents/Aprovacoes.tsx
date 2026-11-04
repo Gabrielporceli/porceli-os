@@ -11,6 +11,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { Check, Pencil } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -75,6 +76,7 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
   const [ajustando, setAjustando] = useState(false);
   const [texto, setTexto] = useState("");
   const [publicar, setPublicar] = useState(a.texto ?? "");
+  const [editando, setEditando] = useState(false);
   const [salvando, setSalvando] = useState<Decisao | null>(null);
   const temTexto = a.texto !== null;
 
@@ -124,12 +126,28 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
       {a.resumo && <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/70">{a.resumo}</p>}
       {temTexto && (
         <div className="space-y-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Texto que será publicado (pode editar)</p>
-          <Textarea
-            value={publicar}
-            onChange={(e) => setPublicar(e.target.value)}
-            className="min-h-[96px] rounded-xl border-white/[0.06] bg-white/[0.03] text-[13px] text-white placeholder:text-white/25"
-          />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Texto que será publicado</p>
+          <div className="flex items-start gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
+            {editando ? (
+              <Textarea
+                autoFocus
+                value={publicar}
+                onChange={(e) => setPublicar(e.target.value)}
+                className="min-h-[96px] flex-1 rounded-lg border-white/[0.06] bg-white/[0.03] text-[13px] text-white"
+              />
+            ) : (
+              <p className="flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-white/85">{publicar || "—"}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setEditando((e) => !e)}
+              title={editando ? "Pronto" : "Editar texto"}
+              aria-label={editando ? "Pronto" : "Editar texto"}
+              className="acao-vidro so-icone shrink-0"
+            >
+              {editando ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+            </button>
+          </div>
         </div>
       )}
       {ajustando && (
