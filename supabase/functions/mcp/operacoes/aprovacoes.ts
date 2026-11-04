@@ -6,38 +6,44 @@ const exigir = (v: unknown, msg: string) => {
   if (v === undefined || v === null || String(v).trim() === "") throw new Error(msg);
 };
 
-const CAMPOS = "id, agente, titulo, resumo, cliente, acao, status, comentario, decidido_em, processado_em, kanban_task, relatado_em, created_at";
+const CAMPOS = "id, agente, titulo, resumo, cliente, texto, acao, status, comentario, decidido_em, processado_em, kanban_task, relatado_em, created_at";
 
 export const APROVACOES: Record<string, Ferramenta> = {
   pedir_aprovacao: {
     description: "Registra um pedido de aprovação do Gabriel (aparece no botão Aprovações da Central de Agentes). "
       + "Use antes de qualquer ação que dependa do ok dele. `ao_aprovar` diz o que fazer se ele aprovar: "
       + "agente (profile do Hermes), modelo opcional, skill opcional e as instruções completas, porque quem "
-      + "executa começa do zero. Depois de pedir, encerre a tarefa avisando que está aguardando aprovação.",
+      + "executa começa do zero. Depois de pedir, encerre a tarefa avisando que está aguardando aprovação. "
+      + "Se a ação publica um texto (resposta a avaliação, post), mande-o em `texto`: o Gabriel edita no painel e o "
+      + "texto final é o que vale. Ações que um script executa sozinho usam ao_aprovar.executor = 'script' + tipo.",
     inputSchema: parametros({
       agente: { type: "string", description: "Quem está pedindo (seu profile, ex.: especialista-os)." },
       titulo: { type: "string", description: "A decisão em uma linha, ex.: 'Enviar contrato da Clínica X para assinatura'." },
       resumo: { type: "string", description: "O que o Gabriel precisa saber para decidir (valores, prazos, o que muda), em até 8 linhas." },
       cliente: { type: "string" },
+      texto: { type: "string", description: "Texto a publicar se aprovado; o Gabriel pode editar no painel." },
       ao_aprovar: {
         type: "object",
-        description: "{ assignee, model?, skill?, instrucoes }",
+        description: "{ assignee, model?, skill?, instrucoes } ou { executor: 'script', tipo, ...dados do tipo }",
         properties: {
           assignee: { type: "string" }, model: { type: "string" }, skill: { type: "string" },
-          instrucoes: { type: "string" },
+          instrucoes: { type: "string" }, executor: { type: "string" }, tipo: { type: "string" },
         },
-        required: ["assignee", "instrucoes"],
       },
     }, ["agente", "titulo", "resumo", "ao_aprovar"]),
     executar: async (a) => {
       exigir(a.titulo, "titulo é obrigatório");
       const acao = (a.ao_aprovar ?? {}) as Record<string, unknown>;
-      exigir(acao.assignee, "ao_aprovar.assignee é obrigatório");
-      exigir(acao.instrucoes, "ao_aprovar.instrucoes é obrigatório");
+      if (acao.executor === "script") {
+        exigir(acao.tipo, "ao_aprovar.tipo é obrigatório com executor script");
+      } else {
+        exigir(acao.assignee, "ao_aprovar.assignee é obrigatório");
+        exigir(acao.instrucoes, "ao_aprovar.instrucoes é obrigatório");
+      }
       const { id: user_id } = await dono();
       const { data, error } = await db.from("agente_aprovacoes").insert({
         user_id, agente: String(a.agente), titulo: String(a.titulo), resumo: a.resumo ? String(a.resumo) : null,
-        cliente: a.cliente ? String(a.cliente) : null, acao,
+        cliente: a.cliente ? String(a.cliente) : null, texto: a.texto ? String(a.texto) : null, acao,
       }).select("id").single();
       if (error) throw new Error(error.message);
       return { id: data.id, aviso: "Pedido registrado nas Aprovações da Central de Agentes. O Gabriel também pode responder no Telegram." };

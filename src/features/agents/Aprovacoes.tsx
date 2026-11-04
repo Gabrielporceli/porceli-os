@@ -4,7 +4,9 @@
  * Lê `agente_aprovacoes`, onde os agentes registram pelo MCP (`pedir_aprovacao`)
  * o que depende do "ok" do Gabriel. Aqui ele aprova, pede ajuste (com o que
  * mudar) ou recusa; um script na VPS, sem IA, entrega a decisão ao agente pelo
- * Kanban e avisa o resultado no Telegram. O botão mostra quantas estão
+ * Kanban e avisa o resultado no Telegram. Quando o pedido traz `texto` (o que
+ * vai ser publicado, ex.: resposta a uma avaliação), ele aparece editável e o
+ * que estiver na caixa na hora de aprovar é o que será publicado. O botão mostra quantas estão
  * pendentes e se atualiza a cada 30 s.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -23,6 +25,7 @@ interface Aprovacao {
   titulo: string;
   resumo: string | null;
   cliente: string | null;
+  texto: string | null;
   created_at: string;
 }
 
@@ -41,7 +44,7 @@ export function useAprovacoesPendentes() {
   const carregar = useCallback(async () => {
     const { data } = await supabase
       .from("agente_aprovacoes" as never)
-      .select("id, agente, titulo, resumo, cliente, created_at")
+      .select("id, agente, titulo, resumo, cliente, texto, created_at")
       .eq("status", "pendente")
       .order("created_at", { ascending: true });
     setLista((data ?? []) as unknown as Aprovacao[]);
@@ -71,17 +74,25 @@ export function BotaoAprovacoes({ pendentes, onClick }: { pendentes: number; onC
 function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
   const [ajustando, setAjustando] = useState(false);
   const [texto, setTexto] = useState("");
+  const [publicar, setPublicar] = useState(a.texto ?? "");
   const [salvando, setSalvando] = useState<Decisao | null>(null);
+  const temTexto = a.texto !== null;
 
   const decidir = async (status: Decisao) => {
     if (status === "ajuste" && !texto.trim()) {
       toast.error("Diga o que precisa mudar.");
       return;
     }
+    if (status === "aprovado" && temTexto && !publicar.trim()) {
+      toast.error("O texto a publicar está vazio.");
+      return;
+    }
     setSalvando(status);
+    const mudancas: Record<string, unknown> = { status, comentario: texto.trim() || null, decidido_em: new Date().toISOString() };
+    if (temTexto && status === "aprovado") mudancas.texto = publicar.trim();
     const { error } = await supabase
       .from("agente_aprovacoes" as never)
-      .update({ status, comentario: texto.trim() || null, decidido_em: new Date().toISOString() } as never)
+      .update(mudancas as never)
       .eq("id", a.id)
       .eq("status", "pendente");
     setSalvando(null);
@@ -111,6 +122,16 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
         </div>
       </div>
       {a.resumo && <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/70">{a.resumo}</p>}
+      {temTexto && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Texto que será publicado (pode editar)</p>
+          <Textarea
+            value={publicar}
+            onChange={(e) => setPublicar(e.target.value)}
+            className="min-h-[96px] rounded-xl border-white/[0.06] bg-white/[0.03] text-[13px] text-white placeholder:text-white/25"
+          />
+        </div>
+      )}
       {ajustando && (
         <Textarea
           autoFocus
