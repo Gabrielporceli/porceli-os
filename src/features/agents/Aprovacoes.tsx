@@ -111,32 +111,34 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
   };
 
   return (
-    <div className="space-y-3 px-4 py-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-white">{a.titulo}</p>
-          <p className="mt-0.5 text-[11px] text-white/40">
-            {AGENTE[a.agente] ?? a.agente}
-            {a.cliente && ` · ${a.cliente}`}
-            {" · "}
-            {formatDistanceToNow(new Date(a.created_at), { addSuffix: true, locale: ptBR })}
-          </p>
+    <article className="rounded-2xl bg-white/[0.035] p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+      {/* Cabeçalho: o que decidir, quem pede, de quem é e quando */}
+      <header className="space-y-2">
+        <h3 className="text-[14px] font-semibold leading-snug text-white">{a.titulo}</h3>
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="rounded-full bg-primary/20 px-2.5 py-0.5 font-semibold text-white">{AGENTE[a.agente] ?? a.agente}</span>
+          {a.cliente && <span className="rounded-full bg-white/[0.07] px-2.5 py-0.5 font-semibold text-white/80">{a.cliente}</span>}
+          <span className="pl-1 text-white/35">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true, locale: ptBR })}</span>
         </div>
-      </div>
-      {a.resumo && <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/70">{a.resumo}</p>}
+      </header>
+
+      {a.resumo && (
+        <p className="mt-4 whitespace-pre-wrap text-[12.5px] leading-6 text-white/65">{a.resumo}</p>
+      )}
+
       {temTexto && (
-        <div className="space-y-1.5">
+        <section className="mt-5 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Texto que será publicado</p>
-          <div className="flex items-start gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
+          <div className="flex items-start gap-3 rounded-xl bg-black/25 p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
             {editando ? (
               <Textarea
                 autoFocus
                 value={publicar}
                 onChange={(e) => setPublicar(e.target.value)}
-                className="min-h-[96px] flex-1 rounded-lg border-white/[0.06] bg-white/[0.03] text-[13px] text-white"
+                className="min-h-[110px] flex-1 rounded-lg border-white/[0.06] bg-white/[0.03] text-[13px] leading-6 text-white"
               />
             ) : (
-              <p className="flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-white/85">{publicar || "—"}</p>
+              <p className="flex-1 whitespace-pre-wrap text-[13px] leading-6 text-white/90">{publicar || "—"}</p>
             )}
             <button
               type="button"
@@ -148,32 +150,35 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
               {editando ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
             </button>
           </div>
-        </div>
+        </section>
       )}
+
       {ajustando && (
         <Textarea
           autoFocus
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="O que precisa mudar?"
-          className="min-h-[72px] rounded-xl border-white/[0.06] bg-white/[0.03] text-[13px] text-white placeholder:text-white/25"
+          className="mt-5 min-h-[80px] rounded-xl border-white/[0.06] bg-white/[0.03] text-[13px] text-white placeholder:text-white/25"
         />
       )}
-      <div className="flex flex-wrap items-center gap-2">
+
+      {/* Ações separadas do conteúdo; recusar fica à direita, longe do aprovar */}
+      <footer className="mt-5 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-4">
         {ajustando ? (
           <>
             <LiquidGlassButton tint="primary" disabled={!!salvando} onClick={() => decidir("ajuste")}
               className="h-9 px-4 text-[11px] font-bold uppercase tracking-widest">
               Enviar ajuste
             </LiquidGlassButton>
-            <button type="button" onClick={() => setAjustando(false)} className="px-2 text-[11px] text-white/40 hover:text-white/70">
+            <button type="button" onClick={() => setAjustando(false)} className="acao-texto px-2">
               Cancelar
             </button>
           </>
         ) : (
           <>
             <LiquidGlassButton tint="primary" disabled={!!salvando} onClick={() => decidir("aprovado")}
-              className="h-9 px-4 text-[11px] font-bold uppercase tracking-widest">
+              className="h-9 px-5 text-[11px] font-bold uppercase tracking-widest">
               {salvando === "aprovado" ? "Aprovando…" : "Aprovar"}
             </LiquidGlassButton>
             <LiquidGlassButton disabled={!!salvando} onClick={() => setAjustando(true)}
@@ -181,14 +186,14 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
               Pedir ajuste
             </LiquidGlassButton>
             <button type="button" disabled={!!salvando} onClick={() => decidir("recusado")}
-              className={cn("px-2 text-[11px] font-bold uppercase tracking-widest text-rose-300/70 hover:text-rose-300",
+              className={cn("ml-auto px-2 text-[11px] font-bold uppercase tracking-widest text-rose-300/70 hover:text-rose-300",
                 salvando && "opacity-50")}>
               Recusar
             </button>
           </>
         )}
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }
 
@@ -204,13 +209,14 @@ export function Aprovacoes({ open, onClose, lista, onMudou }: {
         <div className="space-y-4 p-6">
           <p className="text-[11px] text-white/35">
             O que os agentes só fazem com o seu ok. Você também pode responder pelo Telegram.
+            {lista && lista.length > 0 && <span className="text-white/55"> · {lista.length} aguardando</span>}
           </p>
           {lista === null ? (
             <p className="py-10 text-center text-sm text-white/35">Carregando…</p>
           ) : lista.length === 0 ? (
             <p className="py-10 text-center text-sm text-white/35">Nada esperando por você.</p>
           ) : (
-            <div className="max-h-[calc(85vh-14rem)] divide-y divide-white/[0.05] overflow-y-auto rounded-2xl bg-white/[0.03] scrollbar-hide">
+            <div className="max-h-[calc(85vh-14rem)] space-y-3 overflow-y-auto scrollbar-hide">
               {lista.map((a) => <Item key={a.id} a={a} onDecidido={onMudou} />)}
             </div>
           )}
