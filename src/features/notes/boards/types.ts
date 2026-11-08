@@ -27,6 +27,41 @@ export interface DadosNo extends Record<string, unknown> {
   papel: PapelNo;
   /** Índice na paleta. Fixo por nó para a cor não dançar a cada render. */
   cor?: number;
+  /** Forma escolhida no card. Sem ela (quadros antigos), vale a do papel. */
+  forma?: FormaNo;
+}
+
+/** Formas padrão de fluxograma e mapa mental. */
+export type FormaNo = "retangulo" | "pilula" | "circulo" | "losango" | "triangulo";
+
+export const FORMAS: { id: FormaNo; rotulo: string }[] = [
+  { id: "retangulo", rotulo: "Retângulo" },
+  { id: "pilula", rotulo: "Pílula" },
+  { id: "circulo", rotulo: "Círculo" },
+  { id: "losango", rotulo: "Losango" },
+  { id: "triangulo", rotulo: "Triângulo" },
+];
+
+/** A forma que o papel sugere: losango é decisão, pílula é começo e fim. */
+const FORMA_DO_PAPEL: Record<PapelNo, FormaNo> = {
+  central: "retangulo", ideia: "retangulo", inicio: "pilula", etapa: "retangulo", decisao: "losango", fim: "pilula",
+};
+
+export function formaDoNo(d: Pick<DadosNo, "papel" | "forma">): FormaNo {
+  return d.forma ?? FORMA_DO_PAPEL[d.papel];
+}
+
+/** Tamanho do card. Losango e círculo precisam ser quadrados. */
+export function tamanhoDoNo(d: Pick<DadosNo, "papel" | "forma">): { w: number; h: number } {
+  const base = {
+    retangulo: { w: 170, h: 66 },
+    pilula: { w: 150, h: 56 },
+    circulo: { w: 120, h: 120 },
+    losango: { w: 150, h: 150 },
+    triangulo: { w: 170, h: 140 },
+  }[formaDoNo(d)];
+  // O tema central do mapa mental é um pouco maior que as ideias.
+  return d.papel === "central" ? { w: Math.round(base.w * 1.12), h: Math.round(base.h * 1.15) } : base;
 }
 
 export interface NoQuadro {

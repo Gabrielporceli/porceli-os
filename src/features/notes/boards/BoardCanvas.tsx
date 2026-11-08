@@ -16,6 +16,7 @@ import {
   ConnectionMode,
   Controls,
   MarkerType,
+  Position,
   ReactFlow,
   ReactFlowProvider,
   addEdge,
@@ -28,22 +29,50 @@ import {
   type Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Add, ArrowLeft2, Trash } from "iconsax-react";
+import { ArrowLeft2, Trash } from "iconsax-react";
 import { Icon } from "@/components/ui/icon";
-import { cn } from "@/lib/utils";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { QuadroNo } from "./nodes/QuadroNo";
 import {
+  FORMAS,
   PAPEIS_POR_TIPO,
   ROTULO_PAPEL,
   corDoNo,
+  formaDoNo,
+  tamanhoDoNo,
   type ArestaQuadro,
+  type DadosNo,
+  type FormaNo,
   type NoQuadro,
   type PapelNo,
   type TipoQuadro,
 } from "./types";
 
 const nodeTypes = { quadroNo: QuadroNo };
-const ROXO = "#8b5cf6";
+/** Setas neutras: roxo só em preenchimento e ícone (padrão de UI, regra 7). */
+const COR_SETA = "rgba(255,255,255,0.55)";
+const COR_SETA_SELECIONADA = "#fff";
+
+const OPOSTO: Record<Position, Position> = {
+  [Position.Top]: Position.Bottom,
+  [Position.Bottom]: Position.Top,
+  [Position.Left]: Position.Right,
+  [Position.Right]: Position.Left,
+};
+
+/** Desenho pequeno da forma, para os botões da barra. */
+function IconeForma({ forma, cor = "currentColor", fundo = "none" }: { forma: FormaNo; cor?: string; fundo?: string }) {
+  const comum = { fill: fundo, stroke: cor, strokeWidth: 1.6, strokeLinejoin: "round" as const };
+  return (
+    <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden>
+      {forma === "retangulo" && <rect x="1" y="2.5" width="14" height="9" rx="2" {...comum} />}
+      {forma === "pilula" && <rect x="1" y="3" width="14" height="8" rx="4" {...comum} />}
+      {forma === "circulo" && <circle cx="8" cy="7" r="6" {...comum} />}
+      {forma === "losango" && <polygon points="8,1 15,7 8,13 1,7" {...comum} />}
+      {forma === "triangulo" && <polygon points="8,1.5 15,12.5 1,12.5" {...comum} />}
+    </svg>
+  );
+}
 
 /** Cor padrão por papel, pra um fluxograma novo já nascer legível. */
 const COR_PADRAO: Record<PapelNo, number> = {
@@ -124,16 +153,58 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
       const ponto = "changedTouches" in evento ? evento.changedTouches[0] : evento;
       const pos = screenToFlowPosition({ x: ponto.clientX, y: ponto.clientY });
       const papel: PapelNo = kind === "mapa" ? "ideia" : "etapa";
-      const novo = criarNo(papel, { x: pos.x - 85, y: pos.y - 33 });
+      // A seta sai da bolinha que foi puxada e chega no lado do card novo
+      // virado para ela. Sem dizer as duas, o React Flow usa a primeira
+      // âncora (a de cima) nas duas pontas.
+      const lado = estado.fromHandle?.position ?? Position.Bottom;
+      const chegada = OPOSTO[lado];
+      const { w, h } = tamanhoDoNo({ papel });
+      // O card nasce com a âncora de chegada no ponto onde a linha foi solta.
+      const canto = {
+        [Position.Left]: { x: pos.x, y: pos.y - h / 2 },
+        [Position.Right]: { x: pos.x - w, y: pos.y - h / 2 },
+        [Position.Top]: { x: pos.x - w / 2, y: pos.y },
+        [Position.Bottom]: { x: pos.x - w / 2, y: pos.y - h },
+      }[chegada];
+      const novo = criarNo(papel, canto);
       setEdges((es) => [
         ...es,
-        { id: crypto.randomUUID(), source: estado.fromNode!.id, target: novo.id, type: "default" } as Edge,
+        {
+          id: crypto.randomUUID(),
+          source: estado.fromNode!.id,
+          sourceHandle: estado.fromHandle?.id ?? lado,
+          target: novo.id,
+          targetHandle: chegada,
+          type: "default",
+        } as Edge,
       ]);
     },
     [kind, criarNo, screenToFlowPosition, setEdges]
   );
 
   const arestaSelecionada = useMemo(() => edges.find((e) => e.selected) ?? null, [edges]);
+  const nosSelecionados = useMemo(() => nodes.filter((n) => n.selected), [nodes]);
+  // Com vários cards de formas diferentes, nenhuma aparece marcada.
+  const formasSelecionadas = new Set(nosSelecionados.map((n) => formaDoNo(n.data as DadosNo)));
+  const formaAtual = formasSelecionadas.size === 1 ? [...formasSelecionadas][0] : "";
+
+  /** Troca a forma mantendo o centro do card no lugar. */
+  const mudarForma = (forma: FormaNo) => {
+    const ids = new Set(nosSelecionados.map((n) => n.id));
+    setNodes((ns) =>
+      ns.map((n) => {
+        if (!ids.has(n.id)) return n;
+        const dados = n.data as DadosNo;
+        const antes = tamanhoDoNo(dados);
+        const depois = tamanhoDoNo({ ...dados, forma });
+        return {
+          ...n,
+          position: { x: n.position.x + (antes.w - depois.w) / 2, y: n.position.y + (antes.h - depois.h) / 2 },
+          data: { ...dados, forma },
+        };
+      })
+    );
+  };
 
   const rotular = (rotulo: string | null) => {
     if (!arestaSelecionada) return;
@@ -146,10 +217,10 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
     () =>
       edges.map((e) => ({
         ...e,
-        markerEnd: { type: MarkerType.ArrowClosed, color: ROXO },
-        style: { stroke: ROXO, strokeWidth: 1.8 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: e.selected ? COR_SETA_SELECIONADA : COR_SETA },
+        style: { stroke: e.selected ? COR_SETA_SELECIONADA : COR_SETA, strokeWidth: e.selected ? 2.2 : 1.8 },
         labelStyle: { fill: "#fff", fontSize: 11, fontWeight: 700 },
-        labelBgStyle: { fill: "#1a1a20", fillOpacity: 0.9 },
+        labelBgStyle: { fill: "rgb(47,45,46)", fillOpacity: 0.95 },
         labelBgPadding: [6, 3] as [number, number],
         labelBgBorderRadius: 6,
       })),
@@ -173,7 +244,7 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
             value={title}
             onChange={(e) => onTitle(e.target.value)}
             placeholder="Nome do quadro"
-            className="w-48 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
+            className="w-48 rounded-full bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
           />
           <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/50">
             {kind === "mapa" ? "mapa mental" : "fluxograma"}
@@ -182,9 +253,10 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
             type="button"
             onClick={onDelete}
             title="Excluir quadro"
-            className="rounded-full p-1.5 text-white/40 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+            aria-label="Excluir quadro"
+            className="acao-vidro so-icone perigo"
           >
-            <Icon as={Trash} size={15} />
+            <Icon as={Trash} size={14} />
           </button>
         </div>
 
@@ -196,10 +268,10 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
                 key={papel}
                 type="button"
                 onClick={() => criarNo(papel)}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-white/80 transition-colors hover:text-white"
-                style={{ background: cor.fundo, border: `1px solid ${cor.borda}` }}
+                title={`Adicionar ${ROTULO_PAPEL[papel].toLowerCase()}`}
+                className="acao-vidro"
               >
-                <Icon as={Add} size={13} />
+                <IconeForma forma={formaDoNo({ papel })} cor={cor.borda} fundo={cor.fundo} />
                 {ROTULO_PAPEL[papel]}
               </button>
             );
@@ -208,30 +280,41 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
           {arestaSelecionada && (
             <>
               <span className="mx-1 h-5 w-px bg-white/10" />
-              <span className="pl-1 text-[11px] uppercase tracking-wider text-white/40">seta</span>
-              {["sim", "não"].map((rot) => (
-                <button
-                  key={rot}
-                  type="button"
-                  onClick={() => rotular(rot)}
-                  className={cn(
-                    "rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors",
-                    arestaSelecionada.label === rot
-                      ? "bg-white/90 text-black"
-                      : "bg-white/[0.07] text-white/70 hover:bg-white/15"
-                  )}
-                >
-                  {rot}
-                </button>
-              ))}
+              <span className="pl-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white/40">seta</span>
+              <PillTabs
+                items={[{ value: "sim", label: "sim" }, { value: "não", label: "não" }]}
+                value={typeof arestaSelecionada.label === "string" ? arestaSelecionada.label : ""}
+                onChange={rotular}
+              />
               <button
                 type="button"
                 onClick={() => rotular(null)}
                 title="Tirar o rótulo da seta"
-                className="rounded-full bg-white/[0.07] px-2 py-1.5 text-white/50 transition-colors hover:bg-white/15 hover:text-white/80"
+                aria-label="Tirar o rótulo da seta"
+                className="acao-vidro so-icone perigo"
               >
                 <Icon as={Trash} size={13} />
               </button>
+            </>
+          )}
+
+          {nosSelecionados.length > 0 && (
+            <>
+              <span className="mx-1 h-5 w-px bg-white/10" />
+              <span className="pl-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white/40">forma</span>
+              <PillTabs
+                items={FORMAS.map((f) => ({
+                  value: f.id,
+                  label: (
+                    <span title={f.rotulo} aria-label={f.rotulo} className="flex h-4 items-center">
+                      <IconeForma forma={f.id} />
+                    </span>
+                  ),
+                }))}
+                value={formaAtual}
+                onChange={(v) => mudarForma(v as FormaNo)}
+                className="flex-nowrap [&>button]:!px-2.5"
+              />
             </>
           )}
         </div>
@@ -252,6 +335,7 @@ function Interno({ kind, nodes: iniciais, edges: arestasIniciais, onChange, titl
           onConnectEnd={onConnectEnd}
           nodeTypes={nodeTypes}
           fitView
+          className="quadro-flow"
           colorMode="dark"
           proOptions={{ hideAttribution: true }}
           connectionMode={ConnectionMode.Loose}

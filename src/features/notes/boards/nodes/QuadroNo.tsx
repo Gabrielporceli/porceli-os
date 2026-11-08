@@ -1,18 +1,17 @@
 /**
- * O nó dos quadros. Um componente só para mapa mental e fluxograma — o que
- * muda entre eles é a FORMA, decidida pelo papel.
+ * O nó dos quadros. Um componente só para mapa mental e fluxograma.
  *
  * A forma não é decoração: num fluxograma, losango significa decisão e pílula
- * significa começo/fim. Desenhar tudo como retângulo tiraria a única coisa que
- * faz um fluxograma ser lido sem legenda.
+ * significa começo/fim. O papel sugere a forma, e a pessoa pode trocar por
+ * card (retângulo, pílula, círculo, losango, triângulo).
  *
- * O losango é feito com um quadrado rotacionado 45° ATRÁS do texto, e não com
- * `transform` no nó inteiro: rotacionar o nó rotacionaria o texto junto e
- * bagunçaria as âncoras de conexão do React Flow.
+ * Losango e triângulo são desenhados num SVG ATRÁS do texto, e não com
+ * `transform` ou `clip-path` no nó inteiro: girar o nó giraria o texto junto e
+ * bagunçaria as âncoras de conexão do React Flow, e o clip-path cortaria a borda.
  */
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import { corDoNo, type DadosNo } from "../types";
+import { corDoNo, formaDoNo, tamanhoDoNo, type DadosNo, type FormaNo } from "../types";
 
 const LADOS = [
   { id: "top", position: Position.Top },
@@ -21,12 +20,31 @@ const LADOS = [
   { id: "left", position: Position.Left },
 ] as const;
 
-/** Medidas por papel. O losango precisa ser quadrado pra girar direito. */
-function medidas(papel: DadosNo["papel"]) {
-  if (papel === "central") return { w: 190, h: 76, raio: "1.75rem", peso: "font-black", texto: "text-sm" };
-  if (papel === "decisao") return { w: 150, h: 150, raio: "0.5rem", peso: "font-bold", texto: "text-xs" };
-  if (papel === "inicio" || papel === "fim") return { w: 150, h: 56, raio: "999px", peso: "font-bold", texto: "text-xs" };
-  return { w: 170, h: 66, raio: "1rem", peso: "font-semibold", texto: "text-xs" };
+/** Pontos do contorno das formas em SVG, numa caixa de 100×100. */
+const POLIGONO: Partial<Record<FormaNo, string>> = {
+  losango: "50,1.5 98.5,50 50,98.5 1.5,50",
+  triangulo: "50,1.5 98.5,98.5 1.5,98.5",
+};
+
+/** Arredondamento das formas desenhadas com o próprio bloco. */
+function raio(forma: FormaNo, central: boolean) {
+  if (forma === "pilula" || forma === "circulo") return "999px";
+  return central ? "1.75rem" : "1rem";
+}
+
+/** Respiro do texto: no losango e no triângulo a área útil é menor. */
+const RESPIRO: Partial<Record<FormaNo, CSSProperties>> = {
+  losango: { padding: "0 1.9rem" },
+  triangulo: { padding: "38% 2.4rem 0.6rem" },
+  circulo: { padding: "0 1rem" },
+};
+
+/** No triângulo, as âncoras dos lados ficam no meio das faces inclinadas. */
+function posicaoDaAncora(forma: FormaNo, lado: string): CSSProperties | undefined {
+  if (forma !== "triangulo") return undefined;
+  if (lado === "left") return { left: "25%" };
+  if (lado === "right") return { right: "25%" };
+  return undefined;
 }
 
 export const QuadroNo = memo(function QuadroNo({ id, data, selected }: NodeProps) {
@@ -53,30 +71,49 @@ export const QuadroNo = memo(function QuadroNo({ id, data, selected }: NodeProps
   };
 
   const cor = corDoNo(d.cor);
-  const m = medidas(d.papel);
-  const eLosango = d.papel === "decisao";
+  const forma = formaDoNo(d);
+  const { w, h } = tamanhoDoNo(d);
+  const central = d.papel === "central";
+  const peso = central ? "font-black" : d.papel === "decisao" || d.papel === "inicio" || d.papel === "fim" ? "font-bold" : "font-semibold";
+  const tamanhoTexto = central ? "text-sm" : "text-xs";
+  const poligono = POLIGONO[forma];
+  const sombra = selected
+    ? `drop-shadow(0 0 1.5px ${cor.borda}) drop-shadow(0 8px 20px rgba(0,0,0,0.45))`
+    : "drop-shadow(0 4px 12px rgba(0,0,0,0.3))";
 
   return (
     <div
       className="group relative flex items-center justify-center"
-      style={{ width: m.w, height: m.h }}
+      style={{ width: w, height: h }}
       onDoubleClick={() => setEditando(true)}
     >
-      {/* Corpo. No losango é um quadrado girado; nos demais, o próprio bloco. */}
-      <div
-        className="absolute inset-0 backdrop-blur-sm transition-shadow"
-        style={{
-          background: cor.fundo,
-          border: `1.5px solid ${cor.borda}`,
-          borderRadius: m.raio,
-          transform: eLosango ? "rotate(45deg)" : undefined,
-          boxShadow: selected ? `0 0 0 2px ${cor.borda}, 0 8px 28px rgba(0,0,0,0.45)` : "0 4px 16px rgba(0,0,0,0.3)",
-        }}
-      />
+      {/* Corpo: SVG nas formas com ponta; nas demais, o próprio bloco. */}
+      {poligono ? (
+        <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: sombra }}>
+          <polygon
+            points={poligono}
+            fill={cor.fundo}
+            stroke={cor.borda}
+            strokeWidth={selected ? 2.5 : 1.5}
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      ) : (
+        <div
+          className="absolute inset-0 backdrop-blur-sm transition-shadow"
+          style={{
+            background: cor.fundo,
+            border: `1.5px solid ${cor.borda}`,
+            borderRadius: raio(forma, central),
+            boxShadow: selected ? `0 0 0 2px ${cor.borda}, 0 8px 28px rgba(0,0,0,0.45)` : "0 4px 16px rgba(0,0,0,0.3)",
+          }}
+        />
+      )}
 
       <div
         className="relative z-[1] flex h-full w-full items-center justify-center px-3 text-center"
-        style={eLosango ? { padding: "0 1.75rem" } : undefined}
+        style={RESPIRO[forma]}
       >
         {editando ? (
           <textarea
@@ -89,11 +126,11 @@ export const QuadroNo = memo(function QuadroNo({ id, data, selected }: NodeProps
               if (e.key === "Escape") { setTexto(d.texto); setEditando(false); }
             }}
             // `nodrag` impede o React Flow de arrastar o nó ao selecionar texto.
-            className={`nodrag w-full resize-none bg-transparent text-center ${m.texto} ${m.peso} text-white outline-none`}
+            className={`nodrag w-full resize-none bg-transparent text-center ${tamanhoTexto} ${peso} text-white outline-none`}
             rows={2}
           />
         ) : (
-          <span className={`line-clamp-3 break-words ${m.texto} ${m.peso} text-white/90`}>
+          <span className={`line-clamp-3 break-words ${tamanhoTexto} ${peso} text-white/90`}>
             {d.texto || <span className="text-white/30">duplo clique</span>}
           </span>
         )}
@@ -110,7 +147,7 @@ export const QuadroNo = memo(function QuadroNo({ id, data, selected }: NodeProps
           className={`!h-2.5 !w-2.5 !border-2 !border-white !transition-opacity group-hover:!opacity-100 ${
             selected ? "!opacity-100" : "!opacity-0"
           }`}
-          style={{ background: cor.borda }}
+          style={{ background: cor.borda, ...posicaoDaAncora(forma, lado) }}
         />
       ))}
     </div>
