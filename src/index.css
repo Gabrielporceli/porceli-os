@@ -1475,11 +1475,11 @@ button:focus-visible,
 }
 
 
-/* Mapa de funil: controles de zoom e minimapa no vidro das superfícies do
+/* Mapa de funil e quadros de Notas: controles de zoom e minimapa no vidro das superfícies do
    sistema (PADROES-UI-PORCELI, "Superfícies"): sem `border`, contorno interno
    e bisel; botões só clareiam no hover e afundam no clique. */
-.funnel-flow .react-flow__controls,
-.funnel-flow .react-flow__minimap {
+.funnel-flow .react-flow__controls, .quadro-flow .react-flow__controls,
+.funnel-flow .react-flow__minimap, .quadro-flow .react-flow__minimap {
   background: rgba(47, 45, 46, 0.72) !important;
   backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
   -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.12);
@@ -1491,13 +1491,13 @@ button:focus-visible,
     inset -2px -2px 2px -2px color-mix(in srgb, white 35%, transparent),
     0 2px 8px rgba(0, 0, 0, 0.18);
 }
-.funnel-flow .react-flow__controls {
+.funnel-flow .react-flow__controls, .quadro-flow .react-flow__controls {
   border-radius: 9999px;
   padding: 4px;
   gap: 2px;
 }
-.funnel-flow .react-flow__minimap { border-radius: 1.5rem; }
-.funnel-flow .react-flow__controls-button {
+.funnel-flow .react-flow__minimap, .quadro-flow .react-flow__minimap { border-radius: 1.5rem; }
+.funnel-flow .react-flow__controls-button, .quadro-flow .react-flow__controls-button {
   width: 32px;
   height: 32px;
   border: none;
@@ -1506,9 +1506,9 @@ button:focus-visible,
   color: rgba(255, 255, 255, 0.65);
   transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
-.funnel-flow .react-flow__controls-button:hover { background: rgba(255, 255, 255, 0.11); color: #fff; }
-.funnel-flow .react-flow__controls-button:active { transform: scale(0.97); }
-.funnel-flow .react-flow__controls-button svg { fill: currentColor; max-width: 12px; max-height: 12px; }
+.funnel-flow .react-flow__controls-button:hover, .quadro-flow .react-flow__controls-button:hover { background: rgba(255, 255, 255, 0.11); color: #fff; }
+.funnel-flow .react-flow__controls-button:active, .quadro-flow .react-flow__controls-button:active { transform: scale(0.97); }
+.funnel-flow .react-flow__controls-button svg, .quadro-flow .react-flow__controls-button svg { fill: currentColor; max-width: 12px; max-height: 12px; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    PADRÕES DE UI (PADROES-UI-PORCELI.md)
