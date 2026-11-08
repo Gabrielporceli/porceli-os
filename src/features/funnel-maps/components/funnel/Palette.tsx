@@ -76,7 +76,7 @@ export function Palette({ onDragStart }: PaletteProps) {
     <aside className="surface-flat no-elevation flex w-60 shrink-0 flex-col overflow-hidden rounded-3xl text-white xl:w-72">
       {/* SearchNormal1 + collapse */}
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
-        <div className="flex flex-1 items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
+        <div className="flex flex-1 items-center gap-2 rounded-full bg-white/[0.04] px-3 py-1.5">
           <SearchNormal1 size={13} className="shrink-0 text-white/40" />
           <input
             value={query}
@@ -140,10 +140,10 @@ export function Palette({ onDragStart }: PaletteProps) {
           {/* Tools */}
           <Section title="Ferramentas">
             <div className="flex flex-wrap gap-1.5">
-              <ToolChip icon={Stickynote} label="Nota" className="border-amber-400/30 bg-amber-300/10 text-amber-300" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
-              <ToolChip icon={ImageIcon} label="Imagem" className="border-white/10 bg-white/[0.03] text-white/70" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
-              <ToolChip icon={Chart} label="Forecast" className="border-transparent bg-primary/20 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
-              <ToolChip icon={Filter} label="Funil" className="border-transparent bg-primary/20 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'funnelChartNode' })} />
+              <ToolChip icon={Stickynote} label="Nota" className="bg-amber-300/15 text-amber-200" onDragStart={(e) => onDragStart(e, { type: 'noteNode' })} />
+              <ToolChip icon={ImageIcon} label="Imagem" className="bg-white/[0.06] text-white/80" onDragStart={(e) => onDragStart(e, { type: 'imageNode' })} />
+              <ToolChip icon={Chart} label="Forecast" className="bg-primary/25 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'forecastNode' })} />
+              <ToolChip icon={Filter} label="Funil" className="bg-primary/25 text-white/90" onDragStart={(e) => onDragStart(e, { type: 'funnelChartNode' })} />
             </div>
           </Section>
         </div>
@@ -203,7 +203,7 @@ function ToolChip({
     <div
       draggable
       onDragStart={onDragStart}
-      className={`flex cursor-grab items-center gap-1 rounded-lg border px-2 py-1.5 active:cursor-grabbing ${className}`}
+      className={`flex cursor-grab items-center gap-1.5 rounded-full px-3 py-1.5 transition-transform duration-150 active:scale-[.97] active:cursor-grabbing ${className}`}
     >
       <Icon size={13} /> <span className="text-[11px] font-medium">{label}</span>
     </div>
