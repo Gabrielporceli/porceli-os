@@ -42,13 +42,13 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
           if (e.key === 'Enter') e.currentTarget.blur();
         }}
         placeholder="Nome do mapa"
-        className="w-48 rounded-lg bg-white/[0.03] px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
+        className="w-48 rounded-full bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/40 hover:bg-white/[0.06] focus:bg-white/[0.08] sm:w-56"
       />
 
       {/* Seletor de mapa: o menu aberto é o do sistema (Select), em cinza sólido
           como os cards do funil — o <select> nativo do navegador não é estilizável. */}
       <Select value={map.id} onValueChange={onSwitch}>
-        <SelectTrigger className="h-8 w-auto min-w-[9rem] max-w-[14rem] gap-2 rounded-lg border-0 bg-white/[0.06] px-3 py-0 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/10">
+        <SelectTrigger className="h-8 w-auto min-w-[9rem] max-w-[14rem] gap-2 rounded-full border-0 bg-white/[0.06] px-3 py-0 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-white/10">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -93,11 +93,11 @@ export function Toolbar({ map, maps, saved, onRename, onSwitch, onNew, onDelete,
           }}
         />
         <LiquidGlassButton
-          tint="danger"
           onClick={onDelete}
           disabled={maps.length <= 1}
           title={maps.length <= 1 ? 'Mantenha ao menos um mapa' : 'Excluir mapa'}
-          className="h-9 w-9 text-red-300"
+          aria-label="Excluir mapa"
+          className="h-9 w-9 text-white/65 hover:text-rose-300"
         >
           <Trash size={13} />
         </LiquidGlassButton>

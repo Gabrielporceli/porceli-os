@@ -3,6 +3,7 @@ import {
   AlignHorizontalDistributeCenter, AlignStartHorizontal, AlignStartVertical, AlignVerticalDistributeCenter,
   Copy, Grid3x3, LayoutDashboard, Redo2, Undo2,
 } from 'lucide-react';
+import { PillTabs } from '@/components/ui/pill-tabs';
 import type { AlignMode } from '../../lib/funnelAlign';
 import { SCENARIOS, type Scenario } from '../../lib/scenarios';
 
@@ -31,45 +32,27 @@ export function CanvasActions({
 }: CanvasActionsProps) {
   return (
     <div className="flex flex-col items-center gap-1.5">
-    <div className="nodrag nopan flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1c1c20]/90 p-1 shadow-lg" role="tablist" aria-label="Cenário da projeção">
-      {SCENARIOS.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          role="tab"
-          aria-selected={scenario === s.id}
-          onClick={() => onScenario(s.id)}
-          title={
-            s.id === 'mid'
-              ? 'Média entre o pessimista e o otimista. Editar aqui move os dois juntos'
-              : s.id === 'real'
-                ? 'Dados reais: taxas, visitas, investimento e ticket do que aconteceu. Onde não houver dado real, vale o médio'
-                : `Edite as taxas e visitas do cenário ${s.label.toLowerCase()}`
-          }
-          className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-            scenario === s.id
-              ? s.id === 'low'
-                ? 'bg-red-500/20 text-red-300'
-                : s.id === 'high'
-                  ? 'bg-emerald-500/20 text-emerald-300'
-                  : s.id === 'real'
-                    ? 'bg-[#6829C0] text-white'
-                    : 'bg-white/15 text-white'
-              : 'text-white/45 hover:bg-white/10 hover:text-white/80'
-          }`}
-        >
-          {s.label}
-        </button>
-      ))}
+    {/* Mesmas abas em pílula do resto do sistema (regra 4): a pílula de vidro
+        desliza de um cenário para o outro, sem cor própria por cenário. */}
+    <div className="nodrag nopan liquid-glass rounded-full p-0.5" aria-label="Cenário da projeção">
+      <PillTabs
+        items={SCENARIOS.map((s) => ({
+          value: s.id,
+          label: <span title={DICA_CENARIO[s.id] ?? `Edite as taxas e visitas do cenário ${s.label.toLowerCase()}`}>{s.label}</span>,
+        }))}
+        value={scenario}
+        onChange={(v) => onScenario(v as Scenario)}
+        className="flex-nowrap whitespace-nowrap bg-transparent"
+      />
     </div>
-    <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1c1c20]/90 p-1 shadow-lg">
+    <div className={BARRA}>
       <Btn title="Desfazer (Ctrl+Z)" disabled={!canUndo} onClick={onUndo}>
         <Undo2 size={14} />
       </Btn>
       <Btn title="Refazer (Ctrl+Shift+Z)" disabled={!canRedo} onClick={onRedo}>
         <Redo2 size={14} />
       </Btn>
-      <span className="mx-0.5 h-4 w-px bg-white/10" />
+      <span className="mx-1 h-4 w-px bg-white/10" />
       <Btn title="Duplicar selecionados (Ctrl+D)" disabled={!hasSelection} onClick={onDuplicate}>
         <Copy size={14} />
       </Btn>
@@ -82,7 +65,7 @@ export function CanvasActions({
     </div>
 
     {showAlign && (
-      <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1c1c20]/90 p-1 shadow-lg">
+      <div className={BARRA}>
         <Btn title="Alinhar à esquerda" onClick={() => onAlign('left')}><AlignStartVertical size={14} /></Btn>
         <Btn title="Centralizar na horizontal" onClick={() => onAlign('hcenter')}><AlignCenterVertical size={14} /></Btn>
         <Btn title="Alinhar à direita" onClick={() => onAlign('right')}><AlignEndVertical size={14} /></Btn>
@@ -99,6 +82,14 @@ export function CanvasActions({
   );
 }
 
+const DICA_CENARIO: Partial<Record<Scenario, string>> = {
+  mid: 'Média entre o pessimista e o otimista. Editar aqui move os dois juntos',
+  real: 'Dados reais: taxas, visitas, investimento e ticket do que aconteceu. Onde não houver dado real, vale o médio',
+};
+
+/** Barra de botões flutuante: pílula de vidro, sem borda (padrão das superfícies). */
+const BARRA = 'nodrag nopan liquid-glass flex items-center gap-0.5 rounded-full p-1';
+
 function Btn({
   title, disabled, active, onClick, children,
 }: { title: string; disabled?: boolean; active?: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -109,8 +100,8 @@ function Btn({
       aria-label={title}
       disabled={disabled}
       onClick={onClick}
-      className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
-        active ? 'bg-white/15 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'
+      className={`flex h-8 w-8 items-center justify-center rounded-full transition-[background-color,color,transform] duration-150 active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-30 disabled:active:scale-100 ${
+        active ? 'bg-white/[0.13] text-white' : 'text-white/65 hover:bg-white/[0.11] hover:text-white'
       }`}
     >
       {children}

@@ -615,7 +615,7 @@ function CanvasInner({ nodes: initialNodes, edges: initialEdges, onChange, heade
                 </Panel>
                 <AlignGuides x={guides.x} y={guides.y} />
                 <Controls showInteractive={false} />
-                <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.6)" />
+                <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.35)" nodeColor="rgba(255,255,255,0.22)" nodeBorderRadius={6} />
                 <Background variant={BackgroundVariant.Dots} gap={GRID} size={1.4} color="#2a2a30" />
               </ReactFlow>
             </FunnelActionsContext.Provider>
