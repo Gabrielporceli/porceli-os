@@ -5,7 +5,7 @@
 // cobrar" e "o que o Asaas realmente cobra" que causou boa parte dos bugs de
 // data desta sessão).
 
-import { calcFirstDueDate, effectiveDueDate, holidaysForRange } from "./businessDays";
+import { calcFirstDueDate, effectiveDueDate, holidaysForRange } from "./businessDays.ts";
 
 const monthNames = [
   'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
