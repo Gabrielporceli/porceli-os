@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "../../../src/lib/businessDays": "../../../src/lib/businessDays.ts"
-  }
-}
