@@ -89,14 +89,16 @@ export const FICHA: Record<string, Ferramenta> = {
     },
   },
   marcar_tarefa_de_metas: {
-    description: "Carimba que a tarefa de metas daquela ficha foi criada no Kanban (o script chama logo depois de criar).",
-    inputSchema: parametros({ cliente_id: { type: "string" } }, ["cliente_id"]),
-    executar: async ({ cliente_id }) => {
+    description: "Reserva a ficha para virar tarefa de metas, ANTES de criar a tarefa no Kanban. Devolve reservado: true "
+      + "só para quem reservou primeiro (outra cópia do script recebe false e não cria nada). desfazer: true devolve a "
+      + "ficha para a fila quando a tarefa não pôde ser criada.",
+    inputSchema: parametros({ cliente_id: { type: "string" }, desfazer: { type: "boolean" } }, ["cliente_id"]),
+    executar: async ({ cliente_id, desfazer }) => {
       const id = String(cliente_id ?? "");
       if (!UUID.test(id)) throw new Error("cliente_id inválido");
-      const { error } = await db.from("client_fichas").update({ metas_tarefa_em: new Date().toISOString() }).eq("client_id", id);
+      const { data, error } = await db.rpc("reservar_tarefa_de_metas", { p_client: id, p_desfazer: desfazer === true });
       if (error) throw new Error(error.message);
-      return { ok: true };
+      return { reservado: data === true };
     },
   },
 };
