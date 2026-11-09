@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { BLOCOS_FICHA, blocosDoModelo, cplMaximo, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
+import { BLOCOS_FICHA, blocosDoModelo, cplMaximo, ltv, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
 import { useFichaCliente, useSalvarFicha } from "@/hooks/useFichaCliente";
 
 const campo =
@@ -44,6 +44,7 @@ export function FichaClienteModal({
   }, [open, ficha]);
 
   const cpl = cplMaximo(valores);
+  const valorDoCliente = ltv(valores);
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +123,12 @@ export function FichaClienteModal({
                   <p className="text-xs text-white/50">
                     CPL máximo (ticket × margem × conversão):{" "}
                     <span className="font-bold text-white">{cpl !== null ? reais(cpl) : "preencha os três números"}</span>
+                  </p>
+                )}
+                {b.titulo === "Recompra" && (
+                  <p className="text-xs text-white/50">
+                    LTV (ticket × compras por cliente):{" "}
+                    <span className="font-bold text-white">{valorDoCliente !== null ? reais(valorDoCliente) : "preencha o ticket e as compras por cliente"}</span>
                   </p>
                 )}
               </div>
