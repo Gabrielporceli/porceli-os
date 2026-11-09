@@ -15,7 +15,7 @@
  * sobra?" em vez de "margem de lucro". O `rotulo` é o nome curto, para a tela
  * da agência e para os agentes.
  */
-export type TipoCampo = "texto" | "longo" | "reais" | "percentual" | "simnao" | "escolha";
+export type TipoCampo = "texto" | "longo" | "reais" | "percentual" | "numero" | "simnao" | "escolha";
 
 export type ModeloNegocio = "local" | "servico" | "ecommerce" | "infoproduto" | "alto_valor" | "b2b";
 
@@ -73,6 +73,7 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
     campos: [
       { chave: "instagram", rotulo: "Instagram", pergunta: "Qual é o @ do Instagram do negócio?", tipo: "texto", exemplo: "@seunegocio" },
       { chave: "site", rotulo: "Site", pergunta: "Tem site ou página de vendas? Qual o endereço?", tipo: "texto", exemplo: "www.seunegocio.com.br" },
+      { chave: "canais_venda", rotulo: "Onde vende", pergunta: "Por onde você vende hoje?", tipo: "texto", exemplo: "WhatsApp, Instagram, loja física, site, iFood…" },
       { chave: "outros_canais", rotulo: "Outros canais", pergunta: "Está em outros canais? (Google Meu Negócio, TikTok, iFood, YouTube…)", tipo: "longo" },
       {
         chave: "autoriza_analise_canais", rotulo: "Autoriza análise dos canais", tipo: "simnao",
@@ -84,10 +85,24 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
     titulo: "Números",
     campos: [
       { chave: "ticket_mediano", rotulo: "Ticket mediano", pergunta: "Quanto um cliente costuma gastar numa compra?", tipo: "reais", exemplo: "Ex.: 80" },
-      { chave: "margem_percentual", rotulo: "Margem", pergunta: "De cada R$ 100 vendidos, quanto sobra depois de pagar os custos?", tipo: "percentual", exemplo: "Ex.: 30 (se sobram R$ 30)" },
+      // Margem BRUTA, antes do marketing: é a que entra no CPL máximo e no ROAS/MER de equilíbrio. A pergunta
+      // antiga ("quanto sobra depois de pagar os custos") puxava a margem líquida, bem menor, e fazia campanha
+      // boa parecer prejuízo.
+      { chave: "margem_percentual", rotulo: "Margem bruta", pergunta: "De cada R$ 100 vendidos, quanto sobra depois de pagar o produto, os impostos, as taxas e a entrega, sem contar o marketing?", tipo: "percentual", exemplo: "Ex.: 40 (se sobram R$ 40)" },
+      { chave: "lucro_atual_percentual", rotulo: "Lucro atual", pergunta: "E hoje, de cada R$ 100 que entram, quanto vira lucro no fim do mês, depois de pagar tudo (aluguel, salários, marketing)?", tipo: "percentual", exemplo: "Ex.: 12 (se sobram R$ 12)" },
       { chave: "conversao_percentual", rotulo: "Conversão lead → venda", pergunta: "De cada 10 pessoas interessadas (que chamam no WhatsApp ou entram na página de vendas), quantas compram?", tipo: "percentual", exemplo: "Ex.: 3 de 10 → 30" },
       { chave: "meta_mensal", rotulo: "Meta do mês", pergunta: "Qual é a sua meta por mês? (vendas, pedidos ou faturamento)", tipo: "texto" },
       { chave: "capacidade_diaria", rotulo: "Capacidade por dia", pergunta: "Quantos pedidos ou atendimentos vocês dão conta por dia?", tipo: "texto", modelos: ["local", "servico"] },
+    ],
+  },
+  {
+    // LTV traduzido para o dono: quantos voltam, quantas vezes compram, de quanto em quanto tempo. O LTV em reais
+    // (ticket × compras por cliente) é calculado, não perguntado.
+    titulo: "Recompra",
+    campos: [
+      { chave: "recompra_percentual", rotulo: "Recompra", pergunta: "De cada 10 clientes que compram, quantos voltam a comprar?", tipo: "percentual", exemplo: "Ex.: 4 de 10 → 40" },
+      { chave: "compras_por_cliente", rotulo: "Compras por cliente", pergunta: "Somando tudo, quantas vezes um cliente costuma comprar de você?", tipo: "numero", exemplo: "Ex.: 3" },
+      { chave: "intervalo_recompra", rotulo: "Intervalo de recompra", pergunta: "Quem volta, volta depois de quanto tempo?", tipo: "texto", exemplo: "Toda semana, a cada 2 meses, uma vez por ano…" },
     ],
   },
   {
@@ -116,7 +131,6 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
       { chave: "produto_carro_chefe", rotulo: "Produto carro-chefe", pergunta: "Qual produto mais vende? E qual dá mais lucro?", tipo: "longo", modelos: ["ecommerce"] },
       { chave: "prazo_entrega", rotulo: "Prazo de entrega", pergunta: "Em quanto tempo o pedido chega no cliente?", tipo: "texto", modelos: ["ecommerce"] },
       { chave: "politica_frete", rotulo: "Frete", pergunta: "Como funciona o frete? (grátis acima de…, pago, por região)", tipo: "texto", modelos: ["ecommerce"] },
-      { chave: "taxa_recompra", rotulo: "Recompra", pergunta: "Os clientes costumam comprar de novo? Em quanto tempo?", tipo: "texto", modelos: ["ecommerce"] },
     ],
   },
   {
@@ -177,7 +191,7 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
 
 export const CAMPOS_FICHA: CampoFicha[] = BLOCOS_FICHA.flatMap((b) => b.campos);
 export const CHAVES_FICHA: string[] = CAMPOS_FICHA.map((c) => c.chave);
-export const CHAVES_NUMERICAS = new Set(CAMPOS_FICHA.filter((c) => c.tipo === "reais" || c.tipo === "percentual").map((c) => c.chave));
+export const CHAVES_NUMERICAS = new Set(CAMPOS_FICHA.filter((c) => c.tipo === "reais" || c.tipo === "percentual" || c.tipo === "numero").map((c) => c.chave));
 export const CHAVES_SIMNAO = new Set(CAMPOS_FICHA.filter((c) => c.tipo === "simnao").map((c) => c.chave));
 
 /** O campo aparece para este modelo? Sem modelo escolhido, só os comuns a todos. */
@@ -227,6 +241,14 @@ export function cplMaximo(f: Record<string, unknown>): number | null {
   const c = numeroDaResposta(f.conversao_percentual);
   if (t === null || m === null || c === null) return null;
   return Math.round(t * (m / 100) * (c / 100) * 100) / 100;
+}
+
+/** LTV = ticket mediano × quantas vezes um cliente compra. Mesma conta da coluna gerada `ltv`. */
+export function ltv(f: Record<string, unknown>): number | null {
+  const t = numeroDaResposta(f.ticket_mediano);
+  const n = numeroDaResposta(f.compras_por_cliente);
+  if (t === null || n === null) return null;
+  return Math.round(t * n * 100) / 100;
 }
 
 /** Quantos campos do modelo do cliente estão respondidos. */
