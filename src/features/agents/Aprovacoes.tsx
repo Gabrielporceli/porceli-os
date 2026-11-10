@@ -36,7 +36,7 @@ type Decisao = "aprovado" | "ajuste" | "recusado";
 const AGENTE: Record<string, string> = {
   elly: "Elly", analista: "Analista", estrategista: "Estrategista", "operador-meta": "Meta Ads",
   "operador-google": "Google Ads", cro: "CRO", pesquisa: "Pesquisa", "especialista-tracking": "Tracking",
-  "especialista-os": "Porceli OS",
+  "especialista-os": "Porceli OS", "presenca-local": "Presença Local",
 };
 
 /** Aprovações pendentes, recarregando a cada 30 s (e na hora, depois de decidir). */

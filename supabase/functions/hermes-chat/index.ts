@@ -20,7 +20,7 @@ const cors = {
 /** Profiles que existem no Hermes. Qualquer outro nome é recusado aqui. */
 const AGENTES = new Set([
   "elly", "especialista-tracking", "especialista-os", "analista", "estrategista",
-  "operador-meta", "operador-google", "cro", "pesquisa",
+  "operador-meta", "operador-google", "cro", "pesquisa", "presenca-local",
 ]);
 
 const json = (corpo: unknown, status = 200) =>
