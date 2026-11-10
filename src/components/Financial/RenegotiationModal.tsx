@@ -148,10 +148,24 @@ export function RenegotiationModal({
   ]);
 
   function addCustomPayment() {
-    setCustomPayments(prev => [...prev, {
-      id: crypto.randomUUID(), amountStr: "", dueDate: today, billingType: "PIX",
-    }]);
+    setCustomPayments(prev => {
+      const ultimo = prev[prev.length - 1];
+      return [...prev, {
+        id: crypto.randomUUID(), amountStr: "", billingType: ultimo?.billingType ?? "PIX",
+        dueDate: ultimo?.dueDate ? addMonths(ultimo.dueDate, 1) : today,
+      }];
+    });
   }
+
+  // Datas que aparecem em mais de um pagamento: quase sempre engano (em 05/11/2026 uma renegociação saiu com as 3
+  // parcelas no mesmo dia). Avisa na tela e pede um segundo clique para confirmar assim mesmo.
+  const datasRepetidas = useMemo(() => {
+    const vistas = new Map<string, number>();
+    for (const p of customPayments) if (p.dueDate) vistas.set(p.dueDate, (vistas.get(p.dueDate) ?? 0) + 1);
+    return [...vistas.entries()].filter(([, n]) => n > 1).map(([d]) => d).sort();
+  }, [customPayments]);
+  const [aceitouDatasRepetidas, setAceitouDatasRepetidas] = useState(false);
+  useEffect(() => { setAceitouDatasRepetidas(false); }, [customPayments]);
 
   function removeCustomPayment(id: string) {
     setCustomPayments(prev => prev.filter(p => p.id !== id));
@@ -269,6 +283,11 @@ export function RenegotiationModal({
       if (customPayments.length === 0) { toast.error("Adicione ao menos um pagamento."); return; }
       if (customPayments.some(p => !p.amountStr || !p.dueDate)) {
         toast.error("Preencha valor e data em todos os pagamentos.");
+        return;
+      }
+      if (datasRepetidas.length > 0 && !aceitouDatasRepetidas) {
+        setAceitouDatasRepetidas(true);
+        toast.warning(`Há pagamentos com o mesmo vencimento (${datasRepetidas.map(formatDateBR).join(", ")}). Confira as datas; se estiver certo, clique de novo para continuar.`);
         return;
       }
     } else {
@@ -593,6 +612,12 @@ export function RenegotiationModal({
                   ))}
 
                   <button type="button" onClick={addCustomPayment} className="acao-texto">Adicionar Pagamento</button>
+
+                  {datasRepetidas.length > 0 && (
+                    <p className="text-yellow-400 text-xs px-1">
+                      Mais de um pagamento vence em {datasRepetidas.map(formatDateBR).join(", ")}. Confira se é isso mesmo.
+                    </p>
+                  )}
 
                   {/* Total vs alvo */}
                   <div className={cn(
