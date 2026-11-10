@@ -1536,7 +1536,7 @@ export default function Calendar() {
           <DialogDescription className="px-5 pt-1 text-white/60">
             Preencha os detalhes da nova atividade
           </DialogDescription>
-          <div className="p-5 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
@@ -1611,7 +1611,8 @@ export default function Calendar() {
               />
             </div>
 
-            <div className="flex items-center justify-end gap-6 pt-4 mt-4 border-t border-white/[0.05]">
+          </div>
+          <div className="flex items-center justify-end gap-6 px-5 py-4 border-t border-white/[0.05] shrink-0">
               <motion.div 
               >
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="acao-texto">Cancelar</button>
@@ -1635,7 +1636,6 @@ export default function Calendar() {
                 </LiquidGlassButton>
               </motion.div>
             </div>
-          </div>
         </DialogContent>
       </Dialog>
 
@@ -1653,7 +1653,7 @@ export default function Calendar() {
             Altere os detalhes desta atividade
           </DialogDescription>
           
-          <div className="p-5 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Título</label>
               <input 
@@ -1752,7 +1752,8 @@ export default function Calendar() {
                </div>
             )}
 
-            <div className="flex items-center justify-between gap-6 pt-4 mt-4 border-t border-white/[0.05]">
+          </div>
+          <div className="flex items-center justify-between gap-6 px-5 py-4 border-t border-white/[0.05] shrink-0">
               <button
                 type="button"
                 onClick={handleDeleteActivity}
@@ -1770,7 +1771,6 @@ export default function Calendar() {
                 </LiquidGlassButton>
               </div>
             </div>
-        </div>
         </DialogContent>
       </Dialog>
 

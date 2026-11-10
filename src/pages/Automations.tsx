@@ -93,7 +93,7 @@ function EditModal({ automation, onClose }: { automation: Automation; onClose: (
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-md !p-0 !gap-0 overflow-hidden">
+      <DialogContent className="border-white/[0.05] shadow-2xl text-white w-full max-w-md !p-0 !gap-0">
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-white/[0.05] shrink-0">
           <div className="flex items-center gap-3">

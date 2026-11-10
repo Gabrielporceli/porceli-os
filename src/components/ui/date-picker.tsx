@@ -22,8 +22,23 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ date, setDate, className, placeholder = "Selecione uma data" }: DatePickerProps) {
+    // Fecha ao escolher o dia: aberto, o calendário ficava por cima do campo seguinte e parecia ser dele
+    // (renegociação da Luz Solar, 05/11/2026).
+    const [aberto, setAberto] = React.useState(false);
+    // Esc com o calendário aberto fecha só o calendário. Dentro de uma janela (Dialog), a janela é que pegava o Esc
+    // e fechava inteira, perdendo o que estava preenchido. Captura na janela do navegador, antes do Radix.
+    React.useEffect(() => {
+        if (!aberto) return;
+        const aoTeclar = (e: KeyboardEvent) => {
+            if (e.key !== "Escape") return;
+            e.stopPropagation();
+            setAberto(false);
+        };
+        window.addEventListener("keydown", aoTeclar, true);
+        return () => window.removeEventListener("keydown", aoTeclar, true);
+    }, [aberto]);
     return (
-        <Popover>
+        <Popover open={aberto} onOpenChange={setAberto}>
             <PopoverTrigger asChild>
                 <Button
                     type="button"
@@ -41,11 +56,16 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                     {date && isValid(date) ? format(date, "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="surface-modal !bg-[#2F2D2E] w-auto p-0 z-[9999999] pointer-events-auto" align="center" side="bottom">
+            <PopoverContent
+                className="surface-modal !bg-[#2F2D2E] w-auto p-0 z-[9999999] pointer-events-auto"
+                align="center"
+                side="bottom"
+            >
                 <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
+                    defaultMonth={date && isValid(date) ? date : undefined}
+                    onSelect={(d) => { setDate(d); if (d) setAberto(false); }}
                     initialFocus
                     locale={ptBR}
                     className="text-white rounded-xl w-full flex justify-center"
