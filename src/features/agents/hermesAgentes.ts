@@ -24,6 +24,7 @@ export const AGENTES_HERMES: AgenteHermes[] = [
   { perfil: "operador-google", nome: "Google Ads", papel: "Sobe e ajusta campanhas no Google (sempre pausado)", cor: "yellow" },
   { perfil: "cro", nome: "CRO", papel: "Auditoria de páginas e conversão", cor: "orange" },
   { perfil: "pesquisa", nome: "Pesquisa", papel: "Concorrência e mercado", cor: "pink" },
+  { perfil: "presenca-local", nome: "Presença Local", papel: "Google Meu Negócio: responde avaliações (com aprovação)", cor: "turquoise" },
 ];
 
 export const idHermes = (perfil: string) => `hermes:${perfil}`;
