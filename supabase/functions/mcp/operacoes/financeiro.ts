@@ -258,6 +258,22 @@ export const FINANCEIRO: Record<string, Ferramenta> = {
     }, ["cliente_id", "lancamento_ids"]),
     executar: renegociar,
   },
+  alterar_vencimento: {
+    description: "Muda o vencimento de lançamentos em aberto que têm boleto no Asaas: troca a data no boleto e no lançamento, "
+      + "conferindo antes que o boleto é do mesmo cliente, com o mesmo valor, vencimento e código, e não está pago. "
+      + "1ª chamada só confere e mostra o que muda; repita com confirmar: true para alterar.",
+    inputSchema: parametros({
+      itens: { type: "array", items: parametros({ lancamento_id: { type: "string" }, vencimento: { type: "string", description: "Data nova, YYYY-MM-DD (hoje ou depois)." } }, ["lancamento_id", "vencimento"]) },
+      confirmar: { type: "boolean" },
+    }, ["itens"]),
+    executar: async (a) => {
+      const itens = (a.itens as { lancamento_id: string; vencimento: string }[] ?? [])
+        .map((i) => ({ entry_id: i.lancamento_id, due_date: i.vencimento }));
+      if (!itens.length) throw new Error("Informe ao menos um item.");
+      const r = await invocar("asaas-renegotiation", { action: "update_due_date", itens, confirmar: a.confirmar === true });
+      return a.confirmar === true ? r : { ...r, precisa_confirmar: true, explicacao: "Nada mudou ainda. Repita com confirmar: true para alterar os que estão ok." };
+    },
+  },
   criar_despesa: {
     description: "Lança uma despesa (Financeiro → Nova despesa). Recorrente gera a próxima quando paga.",
     inputSchema: parametros({

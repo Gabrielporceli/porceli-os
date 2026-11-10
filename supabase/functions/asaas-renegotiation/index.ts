@@ -36,6 +36,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *     lançamento (os boletos novos já nascem ligados — nunca são removidos).
  *     Remove só os ids aprovados na revisão. Contrato antigo (sem código):
  *     nada é encontrado e nada é removido — a tela pede conferência manual.
+ *   • "update_due_date" — muda o vencimento de boletos em aberto (`itens`: [{entry_id, due_date}]) no Asaas e
+ *     no lançamento, com as travas de alterarVencimento; sem `confirmar: true` só confere.
  *   • "status" — só consulta `payment_ids` (não altera nada).
  *
  * Exige usuário logado: a função mexe em cobranças reais.
@@ -220,6 +222,52 @@ async function conferir(entryIds: string[], userId: string): Promise<Checagem[]>
   return out;
 }
 
+/**
+ * Muda o vencimento de UM boleto em aberto, no Asaas e no lançamento, com as mesmas travas da remoção:
+ * lançamento pendente e ligado ao boleto (nenhum outro aponta para ele), boleto do MESMO cliente, mesmo valor e
+ * vencimento que o sistema tem, mesmo código (externalReference) quando o sistema criou, não pago nem removido.
+ * `confirmar` falso só confere e mostra o que vai mudar.
+ */
+async function alterarVencimento(entryId: string, novo: string, confirmar: boolean, quem: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(novo) || isNaN(Date.parse(novo))) return { ok: false, motivo: "data nova inválida (AAAA-MM-DD)" };
+  if (novo < hojeBRT()) return { ok: false, motivo: "a data nova já passou" };
+
+  let q = db.from("financial_entries")
+    .select("id, client_id, user_id, amount, due_date, status, asaas_payment_id, asaas_external_ref, clients(cnpj)")
+    .eq("id", entryId);
+  if (quem !== "service") q = q.eq("user_id", quem);
+  const { data } = await q.maybeSingle();
+  const e = data as unknown as (Entrada & { status: string }) | null;
+  if (!e) return { ok: false, motivo: "lançamento não encontrado" };
+  const base = { entry_id: e.id, payment_id: e.asaas_payment_id, vencimento_atual: e.due_date, vencimento_novo: novo };
+  if (e.status === "paid") return { ...base, ok: false, motivo: "lançamento já está pago" };
+  if (!e.asaas_payment_id) return { ...base, ok: false, motivo: "lançamento sem boleto no Asaas" };
+
+  const { count } = await db.from("financial_entries").select("id", { count: "exact", head: true })
+    .eq("asaas_payment_id", e.asaas_payment_id).neq("id", e.id);
+  if ((count ?? 0) > 0) return { ...base, ok: false, motivo: "outro lançamento aponta para o mesmo boleto" };
+
+  const p = (await asaasGet(`/payments/${e.asaas_payment_id}`)) as Pay;
+  const cnpj = (e.clients?.cnpj ?? "").replace(/\D/g, "");
+  if (!cnpj) return { ...base, ok: false, motivo: "cliente sem CNPJ — não dá para confirmar o dono do boleto" };
+  const c = await asaasGet(`/customers?cpfCnpj=${cnpj}`);
+  if (!p.customer || p.customer !== (c.totalCount > 0 ? c.data[0].id : null)) return { ...base, ok: false, motivo: "o boleto é de OUTRO cliente no Asaas" };
+  if (![p.value, p.originalValue].some((v) => v != null && Math.abs(Number(v) - Number(e.amount)) <= 0.01)) {
+    return { ...base, ok: false, motivo: `valor diferente (sistema R$ ${Number(e.amount).toFixed(2)}, Asaas R$ ${Number(p.value).toFixed(2)})` };
+  }
+  if (p.dueDate !== e.due_date && p.originalDueDate !== e.due_date) return { ...base, ok: false, motivo: `vencimento diferente (sistema ${e.due_date}, Asaas ${p.dueDate})` };
+  if (e.asaas_external_ref && p.externalReference !== e.asaas_external_ref) return { ...base, ok: false, motivo: "o código do boleto no Asaas não é o que o sistema criou para este lançamento" };
+  if (p.deleted) return { ...base, ok: false, motivo: "boleto removido no Asaas" };
+  if (!["PENDING", "OVERDUE"].includes(p.status)) return { ...base, ok: false, motivo: `situação ${p.status} — só boleto em aberto muda de vencimento` };
+  if (!confirmar) return { ...base, ok: true, valor: p.value, situacao: p.status };
+
+  const atualizado = (await asaasPost(`/payments/${p.id}`, { dueDate: novo })) as Pay;
+  if (atualizado.dueDate !== novo) return { ...base, ok: false, motivo: `o Asaas não aceitou a data (ficou ${atualizado.dueDate})` };
+  const { error } = await db.from("financial_entries").update({ due_date: novo, status: "pending" }).eq("id", e.id);
+  if (error) return { ...base, ok: false, motivo: `boleto mudou no Asaas, mas o lançamento não: ${error.message}` };
+  return { ...base, ok: true, alterado: true, valor: atualizado.value };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -229,7 +277,19 @@ serve(async (req) => {
 
     const body = await req.json();
     const action = (body?.action ?? "create") as
-      "create" | "preview_removal" | "cancel" | "status" | "preview_contract_removal" | "cancel_contract_payments";
+      "create" | "preview_removal" | "cancel" | "status" | "preview_contract_removal" | "cancel_contract_payments" | "update_due_date";
+
+    // ── Mudar vencimento de boletos em aberto ─────────────────────────────
+    if (action === "update_due_date") {
+      const itens = (Array.isArray(body?.itens) ? body.itens : []) as { entry_id?: string; due_date?: string }[];
+      if (itens.length === 0) return json({ success: false, error: "itens vazio ([{entry_id, due_date}])" }, 400);
+      const resultados = [];
+      for (const it of itens) {
+        try { resultados.push(await alterarVencimento(String(it.entry_id ?? ""), String(it.due_date ?? ""), body?.confirmar === true, quem)); }
+        catch (e) { resultados.push({ entry_id: it.entry_id, ok: false, motivo: (e as Error).message }); }
+      }
+      return json({ success: resultados.every((r) => r.ok), resultados });
+    }
 
     // ── Só consulta ───────────────────────────────────────────────────────
     if (action === "status") {
