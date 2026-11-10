@@ -365,7 +365,8 @@ export function RenegotiationModal({
 
       if (mode === "personalizado") {
         for (const [i, p] of customPayments.entries()) {
-          const amount = parseInt(p.amountStr, 10) / 100;
+          const net = parseInt(p.amountStr, 10) / 100;
+          const amount = passFeesToClient ? Math.round((net + calcFeeAmount(net, p.billingType, 1)) * 100) / 100 : net;
           let criadas: Criada[] = [];
           const ref = novaRef();
           if (asaasClientData) {
@@ -752,6 +753,8 @@ export function RenegotiationModal({
                 )}
               </div>
 
+              </> )} {/* fim modo parcelamento */}
+
               {/* Toggle: Repassar taxas ao cliente */}
               <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                 <div className="space-y-0.5">
@@ -768,8 +771,6 @@ export function RenegotiationModal({
                   className="data-[state=checked]:bg-primary"
                 />
               </div>
-
-              </> )} {/* fim modo parcelamento */}
 
               {/* Resumo */}
               {(mode === "parcelamento" ? parsedAmount > 0 : customTotal > 0) && (

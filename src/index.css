@@ -469,6 +469,33 @@ button:focus-visible,
     flex-direction: column;
   }
 
+  /* Altura do modal (10/11/2026): a caixa de fora (.modal-notched) só tem max-height (85vh); o "h-full" de dentro não
+     resolve contra max-height, então o card crescia com o conteúdo, passava da tela e o overflow-hidden cortava o
+     rodapé com os botões (era preciso dar zoom out para salvar). Agora é tudo coluna flex encolhível: o card nunca
+     passa do max-height, a área de rolagem do modal (flex-1 min-h-0 overflow-y-auto) funciona e, nos modais sem área
+     própria, o corpo rola. */
+  .modal-notched {
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-notched > .dc-modal {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+  }
+  .dc-modal > .dc-single {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+  }
+  .dc-modal > .dc-single > .dc-body-content {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  }
+
   /* Modal: o mesmo cinza, bem mais sólido. O modal fica sobre a tela já
      escurecida e desfocada — com 72% o que passa por trás rouba contraste
      do texto. */
