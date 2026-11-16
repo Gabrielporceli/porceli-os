@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { MOBILE_SLOT, MOBILE_WINDOW, PILL_DEFAULTS, idlePillGeom, transferPillGeom, type PillGeom } from './mobilePillGeometry';
 import { MobilePillBlob } from './MobilePillBlob';
 import { useHeaderAnimSignal } from '@/components/ui/PageTransition';
+import { useAprovacoesPendentes } from '@/features/agents/Aprovacoes';
 
 // Ícones do Iconsax (iconsax-react). O estilo é escolhido em runtime pela
 // prop `variant`; sem ela, cada ícone cai no Linear, que é o traço fino
@@ -76,6 +77,15 @@ function useSideNavWallpaper(ref: React.RefObject<HTMLElement>, enabled: boolean
   }, [ref, enabled]);
 }
 
+/** Número de aprovações pendentes no canto do ícone "Agentes". */
+function BolinhaAprovacoes({ n }: { n: number }) {
+  return (
+    <span className="pointer-events-none absolute -right-1 -top-1 z-20 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6829c0] px-1 text-[9px] font-black tabular-nums text-white shadow-[0_0_8px_rgba(104,41,192,0.8)]">
+      {n > 9 ? "9+" : n}
+    </span>
+  );
+}
+
 export const Header = () => {
   const { logout } = useAuth();
   // Avisa o overlay de carregamento (PageTransition) quando a pílula vai
@@ -83,6 +93,10 @@ export const Header = () => {
   // estiver fora do CRMLayout (ex.: laboratório /dev/pill).
   const signalHeaderAnim = useHeaderAnimSignal();
   const location = useLocation();
+  // Aprovações dos agentes esperando o Gabriel: o item "Agentes" fica roxo, com o número, em qualquer página.
+  const { lista: aprovacoesPendentes } = useAprovacoesPendentes();
+  const pendentes = aprovacoesPendentes?.length ?? 0;
+  const avisoAgentes = (url: string) => (url === "/agents" && pendentes > 0 ? pendentes : 0);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -639,8 +653,11 @@ export const Header = () => {
                         data-nav-url={item.url}
                         className="flex h-10 w-10 shrink-0 snap-center items-center justify-center"
                       >
-                        <Icon className={cn("h-5 w-5 transition-colors duration-500", isHighlighted ? "lqg-text text-white" : "text-white/40")} />
-                        <span className="sr-only">{item.title}</span>
+                        <span className="relative">
+                          <Icon className={cn("h-5 w-5 transition-colors duration-500", isHighlighted ? "lqg-text text-white" : avisoAgentes(item.url) ? "text-[#a78bfa]" : "text-white/40")} />
+                          {avisoAgentes(item.url) > 0 && <BolinhaAprovacoes n={avisoAgentes(item.url)} />}
+                        </span>
+                        <span className="sr-only">{item.title}{avisoAgentes(item.url) > 0 && ` (${avisoAgentes(item.url)} aprovações pendentes)`}</span>
                       </Link>
                     );
                   })}
@@ -708,7 +725,7 @@ export const Header = () => {
               const Icon = item.icon;
 
               return (
-                <Link key={item.title} to={item.url} title={item.title} className="flex w-full shrink-0 items-center justify-center">
+                <Link key={item.title} to={item.url} title={avisoAgentes(item.url) ? `${item.title} · ${pendentes} aprovação(ões) pendente(s)` : item.title} className="flex w-full shrink-0 items-center justify-center">
                   <div
                     ref={(el) => {
                       if (el) itemRefs.current.set(item.url, el);
@@ -719,11 +736,15 @@ export const Header = () => {
                     {!isActive && (
                       <span className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-white/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                     )}
+                    {!isActive && avisoAgentes(item.url) > 0 && (
+                      <span className="pointer-events-none absolute inset-0 -z-10 animate-pulse rounded-full bg-[#6829c0]/35 shadow-[0_0_16px_rgba(104,41,192,0.6)]" />
+                    )}
                     <Icon className={cn(
                       "relative z-10 h-4 w-4 transition-colors sm:h-[18px] sm:w-[18px]",
-                      isActive ? "lqg-text text-white" : "text-white/40 group-hover:text-white/70"
+                      isActive ? "lqg-text text-white" : avisoAgentes(item.url) ? "text-[#c4b5fd]" : "text-white/40 group-hover:text-white/70"
                     )} />
-                    <span className="sr-only">{item.title}</span>
+                    {avisoAgentes(item.url) > 0 && <BolinhaAprovacoes n={avisoAgentes(item.url)} />}
+                    <span className="sr-only">{item.title}{avisoAgentes(item.url) > 0 && ` (${avisoAgentes(item.url)} aprovações pendentes)`}</span>
                   </div>
                 </Link>
               );
