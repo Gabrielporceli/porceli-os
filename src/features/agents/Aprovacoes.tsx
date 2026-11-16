@@ -39,6 +39,8 @@ const AGENTE: Record<string, string> = {
   "especialista-os": "Porceli OS", "presenca-local": "Presença Local",
 };
 
+const APROVACOES_MUDARAM = "aprovacoes-mudaram";
+
 /** Aprovações pendentes, recarregando a cada 30 s (e na hora, depois de decidir). */
 export function useAprovacoesPendentes() {
   const [lista, setLista] = useState<Aprovacao[] | null>(null);
@@ -53,7 +55,9 @@ export function useAprovacoesPendentes() {
   useEffect(() => {
     carregar();
     const t = setInterval(carregar, 30_000);
-    return () => clearInterval(t);
+    // Decidiu um pedido: o botão da Central e o item "Agentes" da barra lateral atualizam juntos, na hora.
+    window.addEventListener(APROVACOES_MUDARAM, carregar);
+    return () => { clearInterval(t); window.removeEventListener(APROVACOES_MUDARAM, carregar); };
   }, [carregar]);
   return { lista, carregar };
 }
@@ -197,8 +201,8 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
   );
 }
 
-export function Aprovacoes({ open, onClose, lista, onMudou }: {
-  open: boolean; onClose: () => void; lista: Aprovacao[] | null; onMudou: () => void;
+export function Aprovacoes({ open, onClose, lista }: {
+  open: boolean; onClose: () => void; lista: Aprovacao[] | null;
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -217,7 +221,7 @@ export function Aprovacoes({ open, onClose, lista, onMudou }: {
             <p className="py-10 text-center text-sm text-white/35">Nada esperando por você.</p>
           ) : (
             <div className="max-h-[calc(85vh-14rem)] space-y-3 overflow-y-auto scrollbar-hide">
-              {lista.map((a) => <Item key={a.id} a={a} onDecidido={onMudou} />)}
+              {lista.map((a) => <Item key={a.id} a={a} onDecidido={() => window.dispatchEvent(new Event(APROVACOES_MUDARAM))} />)}
             </div>
           )}
         </div>

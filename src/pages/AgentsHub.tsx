@@ -132,7 +132,7 @@ export default function AgentsHub() {
       />
 
       <AtividadeHermes open={atividade} onClose={() => setAtividade(false)} />
-      <Aprovacoes open={aprovacoes} onClose={() => setAprovacoes(false)} lista={pendentes.lista} onMudou={pendentes.carregar} />
+      <Aprovacoes open={aprovacoes} onClose={() => setAprovacoes(false)} lista={pendentes.lista} />
     </div>
   );
 }
