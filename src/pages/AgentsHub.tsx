@@ -7,7 +7,8 @@
  * cada terminal roda em modo demonstração (features/agents/terminal/session)
  * até o Hermes estar na VPS; aí entra a sessão por WebSocket, sem mudar a tela.
  */
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Cpu } from "iconsax-react";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
@@ -28,6 +29,14 @@ export default function AgentsHub() {
   const [fitVersion, setFitVersion] = useState(0);
   const [atividade, setAtividade] = useState(false);
   const [aprovacoes, setAprovacoes] = useState(false);
+  // Quem chega pelo aviso da ilha ou pela notificação do celular vem com
+  // ?aprovacoes=1: o painel já abre, e o parâmetro sai do endereço.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get("aprovacoes") !== "1") return;
+    setAprovacoes(true);
+    setParams({}, { replace: true });
+  }, [params, setParams]);
   const pendentes = useAprovacoesPendentes();
 
   const conversas = useMemo(
