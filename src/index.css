@@ -1698,3 +1698,15 @@ button.vidro-vermelho:hover:not(:disabled) {
     top: max(20px, calc(env(safe-area-inset-top) + 8px)) !important;
   }
 }
+
+/* Teclado do celular aberto (classe posta por useTecladoMobile): o modal
+   aberto passa a se centralizar e a caber na área visível acima do teclado,
+   em vez da tela inteira. `.modal-legivel.fixed` são os modais centralizados
+   (dialog.tsx e alert-dialog.tsx). Popovers e menus também têm
+   role="dialog", e o painel de filtros de Clientes também é .modal-legivel
+   (sem `fixed`): nenhum deles pode entrar aqui. O !important cobre os modais
+   que definem a própria altura máxima. */
+html.teclado-aberto .modal-legivel.fixed {
+  top: calc(var(--vv-top, 0px) + var(--vv-h, 100vh) / 2) !important;
+  max-height: calc(var(--vv-h, 100vh) - 16px) !important;
+}

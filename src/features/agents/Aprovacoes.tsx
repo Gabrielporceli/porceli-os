@@ -39,7 +39,7 @@ const AGENTE: Record<string, string> = {
   "especialista-os": "Porceli OS", "presenca-local": "Presença Local",
 };
 
-const APROVACOES_MUDARAM = "aprovacoes-mudaram";
+export const APROVACOES_MUDARAM = "aprovacoes-mudaram";
 
 /** Aprovações pendentes, recarregando a cada 30 s (e na hora, depois de decidir). */
 export function useAprovacoesPendentes() {

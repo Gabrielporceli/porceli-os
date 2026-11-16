@@ -59,8 +59,14 @@ export default function AgentsHub() {
   if (!isReady) return <PageLoader />;
 
   return (
-    <div ref={boxRef} data-shift={box.shift} className="relative" style={{ height: box.h, marginTop: box.shift }}>
-      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+    // Celular: os 5 botões não cabem flutuando sobre o canvas (somam 560px e
+    // os dois primeiros, Aprovações e MCP, saíam pela esquerda da tela). Aqui
+    // eles viram uma faixa própria e o canvas ocupa o que sobra. Pra caber
+    // em duas linhas, o `order` sobe "Criar agente" pro lado de Aprovações
+    // (linha 1) e deixa MCP, Ver todos e Organizar na linha 2. A partir de
+    // md volta o de sempre: flutuando no canto, na ordem do código.
+    <div ref={boxRef} data-shift={box.shift} className="relative flex flex-col gap-3 md:block" style={{ height: box.h, marginTop: box.shift }}>
+      <div className="z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 max-md:[&>*]:order-3 max-md:[&>*:first-child]:order-1 max-md:[&>*:last-child]:order-2 md:absolute md:right-4 md:top-4">
         <BotaoAprovacoes pendentes={pendentes.lista?.length ?? 0} onClick={() => setAprovacoes(true)} />
         <LiquidGlassButton
           onClick={() => setAtividade(true)}
@@ -100,7 +106,7 @@ export default function AgentsHub() {
       </div>
 
       {agents.length === 0 ? (
-        <section className="surface-flat no-elevation flex h-full flex-col items-center justify-center rounded-3xl px-4 text-center">
+        <section className="surface-flat no-elevation flex min-h-0 flex-1 flex-col items-center justify-center rounded-3xl px-4 text-center md:h-full">
           <Icon as={Cpu} size={28} className="mx-auto mb-3 text-white/25" />
           <p className="text-sm text-white/45">Nenhum agente ainda</p>
           <p className="mt-1 text-xs text-white/30">
@@ -108,6 +114,7 @@ export default function AgentsHub() {
           </p>
         </section>
       ) : (
+        <div className="min-h-0 flex-1 md:h-full">
         <AgentsCanvas
           fill
           variant="terminal"
@@ -121,6 +128,7 @@ export default function AgentsHub() {
           onRename={(id, nome) => updateAgent(id, { nome })}
           onColor={(id, cor) => updateAgent(id, { cor })}
         />
+        </div>
       )}
 
       <AgentDialog
