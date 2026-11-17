@@ -432,8 +432,6 @@ export default function Contracts() {
           selectedKey={effectiveClient}
           onSelect={setSelectedClientName}
           measureKey={expiringContracts.length}
-          rotuloLista="Contratos"
-          linhaNoDetalhe
           renderRow={(name, isSelected) => {
             const cc = clientGroups[name];
             return (
@@ -482,12 +480,12 @@ export default function Contracts() {
               {selectedContracts.map((contract) => (
                 <div
                   key={contract.id}
-                  className="bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors"
+                  className="bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] rounded-2xl px-4 py-4 sm:px-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors"
                 >
                   {/* Info */}
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
+                      "w-8 h-8 rounded-xl hidden sm:flex items-center justify-center shrink-0",
                       contract.status === 'active' && "bg-green-500/10",
                       contract.status === 'expiring' && "bg-yellow-500/10",
                       contract.status === 'concluded' && "bg-blue-500/10",
@@ -502,8 +500,10 @@ export default function Contracts() {
                       )} />
                     </div>
 
-                    <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6 items-center">
-                      <div>
+                    {/* Celular: sem o ícone da esquerda (era uma margem gigante), título
+                        e status numa linha e Valor | Vigência lado a lado. */}
+                    <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 lg:gap-6 items-start sm:items-center">
+                      <div className="col-span-2 sm:col-span-1">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="text-white font-bold text-sm truncate">{contract.type}</p>
                           {contract.contract_url && (
@@ -529,7 +529,7 @@ export default function Contracts() {
                       </div>
                       <div>
                         <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Vigência</p>
-                        <div className="flex items-center gap-1.5 text-white/50 text-xs">
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-white/50 text-xs">
                           <Calendar className="w-3 h-3 opacity-40 shrink-0" />
                           <span>{formatDate(contract.startDate)}</span>
                           <span className="opacity-30">→</span>

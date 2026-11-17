@@ -66,7 +66,14 @@ export default function AgentsHub() {
     const measure = () => {
       const el = boxRef.current;
       if (!el) return;
-      if (window.innerWidth < 768) return setBox({ h: Math.max(520, window.innerHeight - 160), shift: 0 });
+      if (window.innerWidth < 768) {
+        // Celular: a página inteira cabe na tela, SEM rolagem vertical. Altura =
+        // o que sobra da tela depois do topo do bloco e da faixa reservada
+        // embaixo (o padding do <main> que dá lugar à barra de ícones).
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        const reservaEmbaixo = parseFloat(getComputedStyle(el.closest("main") ?? document.body).paddingBottom) || 112;
+        return setBox({ h: Math.max(360, Math.floor(window.innerHeight - top - reservaEmbaixo)), shift: 0 });
+      }
       const top = el.getBoundingClientRect().top + window.scrollY - (Number(el.dataset.shift) || 0);
       setBox({ h: window.innerHeight - 32, shift: 16 - top });
     };

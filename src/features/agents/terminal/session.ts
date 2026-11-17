@@ -50,6 +50,8 @@ export const apelido = (a: Pick<StoredAgent, "nome">) => sem(a.nome).split(/\s+/
 export class DemoSession implements TerminalSession {
   private listeners = new Set<(d: string) => void>();
   protected buffer = "";
+  /** Colunas do terminal (o xterm avisa em `resize`); serve pra saber quantas linhas a digitação ocupa. */
+  protected cols = 80;
   private history: string[] = [];
   private histIdx = -1;
   /** Um turno assíncrono (resposta do Hermes) está em andamento. */
@@ -90,9 +92,29 @@ export class DemoSession implements TerminalSession {
     this.out(`${this.cor}${B}${apelido(this.agente ?? { nome: "agente" })}${R} ${DIM}❯${R} `);
   }
 
+  /** Largura visível do prompt ("nome ❯ "), pra contar onde a digitação quebra de linha. */
+  private get larguraPrompt() {
+    return apelido(this.agente ?? { nome: "agente" }).length + 3;
+  }
+
+  /** Quantas linhas da tela a linha digitada (prompt + texto) ocupa com `n` caracteres. */
+  private linhasOcupadas(n: number) {
+    return Math.max(1, Math.ceil((this.larguraPrompt + n) / Math.max(this.cols, 1)));
+  }
+
+  /**
+   * Apaga da tela a linha digitada INTEIRA, inclusive as que ela quebrou, e
+   * deixa o cursor no começo da linha do prompt. Só `\r` + "limpar a linha"
+   * apagava apenas a última linha visual: o que passou da largura ficava na tela.
+   */
+  private limparEntrada(n = this.buffer.length) {
+    const linhas = this.linhasOcupadas(n);
+    this.out("\r" + (linhas > 1 ? `\x1b[${linhas - 1}A` : "") + "\x1b[J");
+  }
+
   /** Imprime algo sem atropelar o que o usuário está digitando. */
   private interromper(texto: string) {
-    this.out("\r\x1b[2K");
+    this.limparEntrada();
     this.println(texto);
     this.prompt();
     this.out(this.buffer);
@@ -194,7 +216,7 @@ export class DemoSession implements TerminalSession {
           ? Math.max(0, (this.histIdx < 0 ? this.history.length : this.histIdx) - 1)
           : Math.min(this.history.length, this.histIdx + 1);
       const linha = this.history[this.histIdx] ?? "";
-      this.out("\r\x1b[2K");
+      this.limparEntrada();
       this.prompt();
       this.buffer = linha;
       this.out(linha);
@@ -225,8 +247,17 @@ export class DemoSession implements TerminalSession {
         this.prompt();
       } else if (ch === "\x7f" || ch === "\b") {
         if (this.buffer.length) {
+          const antes = this.buffer.length;
           this.buffer = this.buffer.slice(0, -1);
-          this.out("\b \b");
+          if (this.linhasOcupadas(antes) > 1) {
+            // A digitação já quebrou de linha: "\b \b" não volta pra linha de cima,
+            // então refaz a entrada inteira (prompt + texto) já sem o último caractere.
+            this.limparEntrada(antes);
+            this.prompt();
+            this.out(this.buffer);
+          } else {
+            this.out("\b \b");
+          }
         }
       } else if (ch === "\x03") {
         this.buffer = "";
@@ -251,8 +282,10 @@ export class DemoSession implements TerminalSession {
     return () => this.listeners.delete(cb);
   }
 
-  resize() {
-    /* o shell local não depende do tamanho; o da VPS vai repassar ao tmux */
+  resize(cols: number) {
+    // O shell local não depende do tamanho, exceto pra apagar texto que quebrou
+    // de linha (ver `limparEntrada`). O da VPS vai repassar ao tmux.
+    if (cols > 0) this.cols = cols;
   }
 
   dispose() {

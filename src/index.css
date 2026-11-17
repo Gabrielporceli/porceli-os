@@ -11,7 +11,7 @@
 */
 @font-face {
   font-family: 'Founders Grotesk';
-  src: url('/fonts/FoundersGrotesk-Light.otf') format('opentype');
+  src: url('/fonts/FoundersGrotesk-Light.otf?v=2') format('opentype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -22,7 +22,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk';
-  src: url('/fonts/FoundersGrotesk-Regular.otf') format('opentype');
+  src: url('/fonts/FoundersGrotesk-Regular.otf?v=2') format('opentype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk';
-  src: url('/fonts/FoundersGrotesk-Medium.otf') format('opentype');
+  src: url('/fonts/FoundersGrotesk-Medium.otf?v=2') format('opentype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -44,7 +44,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk';
-  src: url('/fonts/FoundersGrotesk-Semibold.otf') format('opentype');
+  src: url('/fonts/FoundersGrotesk-Semibold.otf?v=2') format('opentype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -55,7 +55,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk';
-  src: url('/fonts/FoundersGrotesk-Bold.otf') format('opentype');
+  src: url('/fonts/FoundersGrotesk-Bold.otf?v=2') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -66,7 +66,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk XCond';
-  src: url('/fonts/FoundersGroteskXCond-Lt.otf') format('opentype');
+  src: url('/fonts/FoundersGroteskXCond-Lt.otf?v=2') format('opentype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -77,7 +77,7 @@
 
 @font-face {
   font-family: 'Founders Grotesk XCond';
-  src: url('/fonts/FoundersGroteskXCond-Bold.otf') format('opentype');
+  src: url('/fonts/FoundersGroteskXCond-Bold.otf?v=2') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -1738,4 +1738,16 @@ html.teclado-aberto .agente-foco {
     mask-image: linear-gradient(to bottom, black calc(100% - 36px), transparent);
   }
   .lista-limitada::-webkit-scrollbar { display: none; }
+}
+
+/* Atividades do dia no calendário (até 1023px): 4 cartões à vista e o resto
+   rola por dentro, sem barra visível, pra não alongar a página. A partir de lg
+   a lista é a do painel lateral, com a altura da tela. */
+@media (max-width: 1023px) {
+  .lista-4 {
+    max-height: 520px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .lista-4::-webkit-scrollbar { display: none; }
 }

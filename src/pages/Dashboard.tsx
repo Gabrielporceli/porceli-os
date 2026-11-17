@@ -74,6 +74,11 @@ export default function Dashboard() {
       desenho não depender da ordem do código; abaixo disso a grade flui
       (`grid-flow-row-dense`).
 
+      Ordem no celular (`max-md:order-N`): o que se olha primeiro vem antes —
+      números do mês, A receber/Vencidos, O ano, gráfico de crescimento — e o
+      funil de prospecção e os indicadores menores descem. No computador a
+      posição é a do mapa acima (order não vale a partir de md).
+
       No celular a grade tem 2 colunas, não 1: com uma coluna só o bento
       virava uma lista comprida de cards iguais. Com duas, a mistura de
       formatos continua (quadradinhos lado a lado, blocos largos de 2).
@@ -90,7 +95,7 @@ export default function Dashboard() {
       {/* Faturamento previsto do mês — tudo que vence no mês (pago +
           pendente), destaque em cor chapada, 2×1. Lucro e margem saem da
           MESMA base, senão um usa o recebido e o outro o previsto. */}
-      <Card className="surface-accent flex h-full flex-col justify-between p-5 col-span-2 xl:col-start-1 xl:row-start-1">
+      <Card className="surface-accent flex h-full flex-col justify-between p-5 col-span-2 max-md:order-1 xl:col-start-1 xl:row-start-1">
         <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Faturamento previsto</p>
         <p className="text-3xl font-black tracking-tighter text-white">
           <AnimatedValue value={d.formatCurrency(d.faturamentoGeralMesAtual)} />
@@ -102,18 +107,18 @@ export default function Dashboard() {
       </Card>
 
       {/* Números principais — 1×1, borda curvada + círculo de vidro. */}
-      <StatsCard title={curto ? "MRR" : "MRR (Mensal)"} value={d.formatCurrency(d.monthlyRevenue)} icon={DollarCircle} description="Mensalidades valendo hoje" valueClassName={stat} className="h-full xl:col-start-3 xl:row-start-1" />
-      <StatsCard title={curto ? "12 meses" : "Previsão 12 meses"} value={d.formatCurrency(d.receitaPrevista12m)} icon={TrendUp} description={`${d.formatCurrency(d.receitaContratada12m)} já contratado`} valueClassName={stat} className="h-full xl:col-start-4 xl:row-start-1" />
-      <StatsCard title={curto ? "Clientes" : "Clientes Ativos"} value={d.activeClients.toString()} icon={Profile2User} description="Com mensalidade vigente" valueClassName={stat} className="h-full xl:col-start-3 xl:row-start-2" />
-      <StatsCard title={curto ? "A vencer" : "Contratos a vencer"} value={d.expiringIn30Days.toString()} icon={Calendar} description="30 dias, sem renovação" valueClassName={stat} className="h-full xl:col-start-4 xl:row-start-2" />
+      <StatsCard title={curto ? "MRR" : "MRR (Mensal)"} value={d.formatCurrency(d.monthlyRevenue)} icon={DollarCircle} description="Mensalidades valendo hoje" valueClassName={stat} className="h-full max-md:order-2 xl:col-start-3 xl:row-start-1" />
+      <StatsCard title={curto ? "12 meses" : "Previsão 12 meses"} value={d.formatCurrency(d.receitaPrevista12m)} icon={TrendUp} description={`${d.formatCurrency(d.receitaContratada12m)} já contratado`} valueClassName={stat} className="h-full max-md:order-3 xl:col-start-4 xl:row-start-1" />
+      <StatsCard title={curto ? "Clientes" : "Clientes Ativos"} value={d.activeClients.toString()} icon={Profile2User} description="Com mensalidade vigente" valueClassName={stat} className="h-full max-md:order-4 xl:col-start-3 xl:row-start-2" />
+      <StatsCard title={curto ? "A vencer" : "Contratos a vencer"} value={d.expiringIn30Days.toString()} icon={Calendar} description="30 dias, sem renovação" valueClassName={stat} className="h-full max-md:order-5 xl:col-start-4 xl:row-start-2" />
 
       {/* Funil — bloco alto, 2×3. */}
-      <FunnelCard etapas={d.funnelStages} className="h-full col-span-2 md:row-span-3 xl:col-start-5 xl:row-start-1" />
+      <FunnelCard etapas={d.funnelStages} className="h-full col-span-2 max-md:order-9 md:row-span-3 xl:col-start-5 xl:row-start-1" />
 
       {/* O ano — lista 2×2. */}
       <Lista
         titulo={`O ano de ${d.revenueKPIs.currentYear}`}
-        className="col-span-2 md:row-span-2 xl:col-start-1 xl:row-start-2"
+        className="col-span-2 max-md:order-7 md:row-span-2 xl:col-start-1 xl:row-start-2"
         linhas={[
           { label: "Total faturado", value: d.formatCurrency(d.revenueKPIs.totalCurrent) },
           { label: "Recebido", value: d.formatCurrency(d.revenueKPIs.totalPaidCurrentYear) },
@@ -132,7 +137,7 @@ export default function Dashboard() {
       />
 
       {/* Recebíveis — 2×1, os dois lados do mesmo assunto num card só. */}
-      <Card className="surface-light grid h-full grid-cols-2 divide-x divide-black/[0.08] p-5 col-span-2 xl:col-start-3 xl:row-start-3">
+      <Card className="surface-light grid h-full grid-cols-2 divide-x divide-black/[0.08] p-5 col-span-2 max-md:order-6 xl:col-start-3 xl:row-start-3">
         <div className="flex flex-col justify-between pr-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#2F2D2E]/50">A receber</p>
           <p className="text-xl font-black tracking-tight text-[#2F2D2E] 2xl:text-2xl">
@@ -152,14 +157,14 @@ export default function Dashboard() {
       {/* Gráfico — bloco grande, 4×4. */}
       <RevenueYoYChart
         financialEntries={d.financialEntries as any[]}
-        className="h-full col-span-2 md:col-span-4 xl:col-start-1 xl:row-start-4 xl:row-span-4"
+        className="h-full col-span-2 max-md:order-8 md:col-span-4 xl:col-start-1 xl:row-start-4 xl:row-span-4"
       />
 
       {/* Saúde do negócio — lista 2×2. */}
       <Lista
         titulo="Saúde do negócio"
         claro
-        className="col-span-2 md:row-span-2 xl:col-start-5 xl:row-start-4"
+        className="col-span-2 max-md:order-10 md:row-span-2 xl:col-start-5 xl:row-start-4"
         linhas={[
           { label: "LTV", value: d.formatCurrency(d.ltv) },
           { label: "Ticket médio", value: d.formatCurrency(d.ticketMedioContratosAtivos) },
@@ -175,7 +180,7 @@ export default function Dashboard() {
         value={pct(d.variacaoComparativoMensal)}
         trend={d.variacaoComparativoMensal >= 0 ? "up" : "down"}
         data={d.comparativoTrend}
-        className="h-full col-span-2 xl:col-start-5 xl:row-start-6"
+        className="h-full col-span-2 max-md:order-[11] xl:col-start-5 xl:row-start-6"
       />
 
       {/* Dois quadradinhos pra fechar. */}
@@ -186,7 +191,7 @@ export default function Dashboard() {
         // Churn subindo é ruim: verde só se a curva caiu no período.
         trend={d.churnTrend[d.churnTrend.length - 1].value <= d.churnTrend[0].value ? "up" : "down"}
         data={d.churnTrend}
-        className="h-full xl:col-start-5 xl:row-start-7"
+        className="h-full max-md:order-[12] xl:col-start-5 xl:row-start-7"
       />
       <MiniSparklineCard
         flat
@@ -195,7 +200,7 @@ export default function Dashboard() {
         trend={d.concentracaoReceita <= 30 ? "up" : "down"}
         color={d.concentracaoReceita <= 30 ? "#22c55e" : "#ef4444"}
         data={d.concentracaoTrend}
-        className="h-full xl:col-start-6 xl:row-start-7"
+        className="h-full max-md:order-[13] xl:col-start-6 xl:row-start-7"
       />
     </div>
   );

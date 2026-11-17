@@ -169,7 +169,8 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
       )}
 
       {/* Ações separadas do conteúdo; recusar fica à direita, longe do aprovar */}
-      <footer className="mt-5 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-4">
+      {/* Celular: os 3 botões dividem a linha em partes iguais; a partir de sm, lado a lado. */}
+      <footer className={cn("mt-5 gap-2 border-t border-white/[0.06] pt-4", ajustando ? "flex flex-wrap items-center" : "grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center")}>
         {ajustando ? (
           <>
             <LiquidGlassButton tint="primary" disabled={!!salvando} onClick={() => decidir("ajuste")}
@@ -183,18 +184,18 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
         ) : (
           <>
             <LiquidGlassButton tint="primary" disabled={!!salvando} onClick={() => decidir("aprovado")}
-              className="h-9 px-5 text-[11px] font-bold uppercase tracking-widest">
+              className="h-9 px-2 text-[11px] font-bold uppercase tracking-widest sm:px-5">
               {salvando === "aprovado" ? "Aprovando…" : "Aprovar"}
             </LiquidGlassButton>
             <LiquidGlassButton disabled={!!salvando} onClick={() => setAjustando(true)}
-              className="h-9 px-4 text-[11px] font-bold uppercase tracking-widest">
+              className="h-9 px-2 text-[11px] font-bold uppercase tracking-widest sm:px-4">
               Pedir ajuste
             </LiquidGlassButton>
-            <button type="button" disabled={!!salvando} onClick={() => decidir("recusado")}
-              className={cn("ml-auto px-2 text-[11px] font-bold uppercase tracking-widest text-rose-300/70 hover:text-rose-300",
-                salvando && "opacity-50")}>
-              Recusar
-            </button>
+            {/* Recusar é botão de vidro como os outros (era só um texto rosa, menor e torto). */}
+            <LiquidGlassButton tint="danger" disabled={!!salvando} onClick={() => decidir("recusado")}
+              className="h-9 px-2 text-[11px] font-bold uppercase tracking-widest sm:ml-auto sm:px-4">
+              {salvando === "recusado" ? "Recusando…" : "Recusar"}
+            </LiquidGlassButton>
           </>
         )}
       </footer>

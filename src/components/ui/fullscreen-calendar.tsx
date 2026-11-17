@@ -202,7 +202,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
         <div className="surface-flat no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
           {/* Compacto: alterna entre o mês inteiro e só a semana do dia escolhido. */}
           {compacto && (
-            <div className="flex justify-center px-3 pt-3">
+            <div className="flex justify-center px-3.5 pt-3.5">
               <PillTabs
                 items={[
                   { value: "mes", label: "Mês" },
@@ -214,7 +214,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </div>
           )}
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/60 px-1.5 pt-3 pb-1">
+          <div className="grid grid-cols-7 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/60 px-1.5 pt-3 pb-1 max-lg:px-3.5">
             <div>Dom</div>
             <div>Seg</div>
             <div>Ter</div>
@@ -226,7 +226,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
 
           {/* Calendar Days — cada dia é um card roxo flutuante, cor por quantidade */}
           <div className="flex text-xs leading-6 flex-auto min-h-0">
-            <div className="grid w-full grid-cols-7 auto-rows-fr gap-1.5 p-1.5">
+            <div className="grid w-full grid-cols-7 auto-rows-fr gap-1.5 p-1.5 max-lg:gap-1 max-lg:p-3.5 max-lg:pt-1">
               {days.map((day) => {
                 const dayEvents = data
                   .filter((item) => isSameDay(item.day, day))
@@ -265,13 +265,6 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                           <span className={cn("text-base font-black tabular-nums leading-none", count > 0 || selected || today ? "text-white" : "text-white/65")}>
                             {format(day, "d")}
                           </span>
-                          {/* Até 3 pontinhos (um por atividade); mais que isso vira "+". */}
-                          <div className="flex h-1.5 items-center gap-0.5">
-                            {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-                              <span key={i} className="h-1 w-1 rounded-full bg-white/90" />
-                            ))}
-                            {count > 3 && <span className="text-[9px] font-black leading-none text-white/90">+</span>}
-                          </div>
                           {isDayLocked?.(day) && (
                             <LockIcon size={8} className="absolute right-1 top-1 text-red-300" />
                           )}
