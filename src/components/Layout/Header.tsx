@@ -22,6 +22,7 @@ import { MobilePillBlob } from './MobilePillBlob';
 import { useHeaderAnimSignal } from '@/components/ui/PageTransition';
 import { useAprovacoesPendentes } from '@/features/agents/Aprovacoes';
 import { IlhaAprovacoes } from '@/features/ilha/IlhaAprovacoes';
+import { atualizarSelo, ouvirPushAbrir } from '@/features/push/push';
 
 // Ícones do Iconsax (iconsax-react). O estilo é escolhido em runtime pela
 // prop `variant`; sem ela, cada ícone cai no Linear, que é o traço fino
@@ -100,6 +101,12 @@ export const Header = () => {
   const avisoAgentes = (url: string) => (url === "/agents" && pendentes > 0 ? pendentes : 0);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  // Número de pendências no ícone do app instalado, e toque numa notificação
+  // com o app já aberto (o service worker pede a troca de tela).
+  useEffect(() => {
+    if (aprovacoesPendentes) atualizarSelo(pendentes);
+  }, [aprovacoesPendentes, pendentes]);
+  useEffect(() => ouvirPushAbrir((url) => navigate(url)), [navigate]);
 
   const navRef = useRef<HTMLElement>(null);
   const sideNavRef = useRef<HTMLElement>(null);
