@@ -37,7 +37,7 @@ type Decisao = "aprovado" | "ajuste" | "recusado";
 const AGENTE: Record<string, string> = {
   elly: "Elly", analista: "Analista", estrategista: "Estrategista", "operador-meta": "Meta Ads",
   "operador-google": "Google Ads", cro: "CRO", pesquisa: "Pesquisa", "especialista-tracking": "Tracking",
-  "especialista-os": "Porceli OS", "presenca-local": "Presença Local",
+  "especialista-os": "Porceli System", "presenca-local": "Presença Local",
 };
 
 export const APROVACOES_MUDARAM = "aprovacoes-mudaram";

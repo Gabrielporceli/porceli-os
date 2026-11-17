@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Porceli OS",
-  "short_name": "Porceli OS",
+  "name": "Porceli System",
+  "short_name": "Porceli System",
   "description": "Sistema interno da Porceli Company: CRM, funil, contratos, financeiro e agentes.",
   "lang": "pt-BR",
   "start_url": "/dashboard",

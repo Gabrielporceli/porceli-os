@@ -1,5 +1,5 @@
 /**
- * Notificações push do Porceli OS (aprovações dos agentes).
+ * Notificações push do Porceli System (aprovações dos agentes).
  *
  * No iPhone isso só existe com o app instalado na tela de início (iOS 16.4+):
  * numa aba do Safari o navegador nem expõe a API, e `pushSuportado()` volta
