@@ -20,6 +20,7 @@ export const AGENTES_HERMES: AgenteHermes[] = [
   { perfil: "estrategista", nome: "Estrategista", papel: "Plano de mídia e CPL máximo", cor: "purple" },
   { perfil: "especialista-tracking", nome: "Tracking", papel: "Especialista no Porceli Tracking", cor: "green" },
   { perfil: "especialista-os", nome: "Porceli System", papel: "Especialista no Porceli System", cor: "indigo" },
+  { perfil: "especialista-linksby", nome: "Linksby", papel: "Assinaturas, páginas, Instagram e números do Linksby", cor: "lime" },
   { perfil: "operador-meta", nome: "Meta Ads", papel: "Sobe e ajusta campanhas na Meta (sempre pausado)", cor: "blue" },
   { perfil: "operador-google", nome: "Google Ads", papel: "Sobe e ajusta campanhas no Google (sempre pausado)", cor: "yellow" },
   { perfil: "cro", nome: "CRO", papel: "Auditoria de páginas e conversão", cor: "orange" },
