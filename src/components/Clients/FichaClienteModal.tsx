@@ -109,7 +109,7 @@ export function FichaClienteModal({
             )}
             {blocosDoModelo(valores.modelo_negocio).map((b) => (
               <div key={b.titulo} className="space-y-5">
-                <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">{b.titulo}</h3>
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">{b.titulo}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {b.campos.map((c) => (
                     <div key={c.chave} className={`space-y-2 ${c.tipo === "longo" || c.tipo === "escolha" ? "md:col-span-2" : ""}`}>

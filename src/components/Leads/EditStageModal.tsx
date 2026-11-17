@@ -80,7 +80,7 @@ export function EditStageModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white max-w-md"
-        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Editar Etapa</DialogTitle>}
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Etapa</DialogTitle>}
       >
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
 

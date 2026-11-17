@@ -161,14 +161,14 @@ function PreviaTerminal({ nome, papel, cor, principal }: { nome: string; papel: 
         style={{ borderColor: comAlfa(cor, 0.18), background: `linear-gradient(90deg, ${comAlfa(cor, 0.16)}, ${comAlfa(cor, 0.04)})` }}
       >
         <span className="h-2 w-2 shrink-0 rounded-full bg-white/30" />
-        <span className="truncate text-[13px] font-bold text-white">{n}</span>
+        <span className="truncate text-sm font-bold text-white">{n}</span>
         {papel.trim() && <span className="truncate text-[11px] text-white/35">{papel.trim()}</span>}
         {principal && (
-          <span className="shrink-0 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-300">Principal</span>
+          <span className="shrink-0 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-black uppercase text-amber-300">Principal</span>
         )}
         <span className="ml-auto h-3 w-3 shrink-0 rounded-full ring-1 ring-white/30" style={{ background: cor }} />
       </div>
-      <div className="space-y-0.5 px-3 py-2.5 font-mono text-[12px] leading-relaxed">
+      <div className="space-y-0.5 px-3 py-2.5 font-mono text-xs leading-relaxed">
         <p>
           <span className="font-bold" style={{ color: cor }}>Hermes</span>
           <span className="text-white/40"> · </span>

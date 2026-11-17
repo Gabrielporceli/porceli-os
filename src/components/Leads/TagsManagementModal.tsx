@@ -78,7 +78,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           className="text-white max-w-2xl"
-          chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Gerenciar Tags</DialogTitle>}
+          chip={<DialogTitle className="truncate font-bold tracking-tight">Gerenciar Tags</DialogTitle>}
         >
           <div className="flex flex-col items-center gap-4 p-12">
             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -93,7 +93,7 @@ export function TagsManagementModal({ open, onOpenChange }: TagsManagementModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white max-w-2xl !overflow-hidden"
-        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Gerenciar Tags</DialogTitle>}
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Gerenciar Tags</DialogTitle>}
       >
         <div className="overflow-y-auto p-6" style={{ maxHeight: '65vh' }}>
           <div className="space-y-6">

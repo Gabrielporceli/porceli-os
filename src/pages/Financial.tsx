@@ -334,7 +334,7 @@ export default function Financial() {
         <Card className="surface-flat overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Pagamentos em Atraso</h3>
+              <h3 className="text-lg font-semibold text-white tracking-tight">Pagamentos em Atraso</h3>
               <p className="text-white/40 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
             </div>
             <span className="text-red-500 font-black text-xl">
@@ -424,7 +424,7 @@ export default function Financial() {
       <Card className="surface-flat overflow-hidden">
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Lançamentos Financeiros</h3>
+            <h3 className="text-lg font-semibold text-white tracking-tight">Lançamentos Financeiros</h3>
             <p className="text-white/40 text-sm mt-1">Todos os lançamentos do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -495,7 +495,7 @@ export default function Financial() {
       <Card className="surface-flat overflow-hidden">
         <div className="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Despesas</h3>
+            <h3 className="text-lg font-semibold text-white tracking-tight">Despesas</h3>
             <p className="text-white/40 text-sm mt-1">Todas as despesas do sistema</p>
           </div>
           <div className="flex flex-wrap gap-2">

@@ -63,7 +63,7 @@ export default function Dashboard() {
     </Card>
   );
 
-  const stat = "text-xl text-white 2xl:text-2xl";
+  const stat = "text-xl text-white md:text-xl 2xl:text-2xl";
 
   return (
     /*

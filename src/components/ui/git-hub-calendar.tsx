@@ -88,10 +88,7 @@ const GitHubCalendar = ({
             return (
               <div
                 key={index}
-                className={cn(
-                  "w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/[0.06]",
-                  isSameDay(day, today) && "ring-1 ring-white/80",
-                )}
+                className="w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/[0.06]"
                 style={{ backgroundColor: color }}
                 title={`${format(day, "PPP", { locale: ptBR })}: ${contribution?.count || 0} atividades`}
               />

@@ -32,7 +32,7 @@ function Calendar({
         table: "w-full border-collapse",
         head_row: "flex justify-center",
         head_cell:
-          "text-white/40 rounded-md w-10 font-medium text-[0.85rem] uppercase tracking-wider",
+          "text-white/40 rounded-md w-10 font-medium text-sm uppercase tracking-wider",
         row: "flex w-full mt-2",
         cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-transparent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(

@@ -376,7 +376,7 @@ export default function Contracts() {
         <div className="surface-flat no-elevation rounded-3xl overflow-hidden">
           <div className="p-6 border-b border-white/5 flex items-center gap-3">
             <Danger className="w-4 h-4 text-yellow-500" />
-            <h3 className="text-xl font-bold text-white tracking-tight">Atenção Prioritária</h3>
+            <h3 className="text-lg font-semibold text-white tracking-tight">Atenção Prioritária</h3>
           </div>
           <div className="divide-y divide-white/5">
             {expiringContracts.map((contract) => (
@@ -422,7 +422,7 @@ export default function Contracts() {
           <div className="w-20 h-20 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/5">
             <DocumentText className="w-10 h-10 text-white/20" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Vazio por aqui</h3>
+          <h3 className="text-lg font-semibold text-white mb-2 tracking-tight">Vazio por aqui</h3>
           <p className="text-white/40 text-sm max-w-xs mx-auto">Novos contratos aparecerão automaticamente ao fechar negócios com valores mensais.</p>
         </div>
       ) : (
@@ -442,7 +442,7 @@ export default function Contracts() {
                     <motion.p
                       animate={{ scale: isSelected ? 1.15 : 1 }}
                       transition={{ duration: 0.25 }}
-                      className={cn("font-semibold whitespace-nowrap leading-snug text-[13px] origin-left", isSelected ? "text-white" : "text-white/40")}
+                      className={cn("font-semibold whitespace-nowrap leading-snug text-sm origin-left", isSelected ? "text-white" : "text-white/40")}
                     >{name}</motion.p>
                   </div>
                   <div className="relative h-[14px] mt-0.5">

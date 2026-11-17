@@ -55,7 +55,7 @@ export function AddStageModal({ open, onOpenChange, onAddStage }: AddStageModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white max-w-md"
-        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Nova Etapa</DialogTitle>}
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Nova Etapa</DialogTitle>}
       >
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div className="space-y-2">

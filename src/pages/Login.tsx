@@ -105,7 +105,7 @@ const Login = () => {
                   transition={{ delay: 0.2 }}
                   className="text-xl font-bold gradient-text"
                 >
-                  Porceli Company
+                  Porceli System
                 </motion.h1>
                 
                 <motion.p

@@ -36,7 +36,7 @@ export function AlertCard({ className, limit, alerts = [] }: AlertCardProps) {
   return (
     <Card className={cn("surface-flat overflow-hidden h-full animate-premium-in shadow-2xl", className)}>
       <div className="p-6 border-b border-white/5">
-        <h3 className="text-xl font-bold text-white tracking-tight">Alertas & Notificações</h3>
+        <h3 className="text-lg font-semibold text-white tracking-tight">Alertas & Notificações</h3>
       </div>
 
       <div className="overflow-y-auto overflow-x-hidden max-h-[560px] scrollbar-hide">

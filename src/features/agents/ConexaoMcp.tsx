@@ -108,7 +108,7 @@ export function ConexaoMcp() {
       <div className="space-y-2">
         <p className={rotulo}>Endereço do MCP</p>
         <div className="flex items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded-xl bg-white/[0.04] px-3 py-2.5 font-mono text-[12px] text-white/80">
+          <code className="min-w-0 flex-1 truncate rounded-xl bg-white/[0.04] px-3 py-2.5 font-mono text-xs text-white/80">
             {URL_MCP}
           </code>
           <BotaoCopiar texto={URL_MCP} />
@@ -147,16 +147,16 @@ export function ConexaoMcp() {
           </div>
           <Switch checked={soFicha} onCheckedChange={setSoFicha} />
         </div>
-        {erro && <p className="text-[12px] text-rose-300/90">{erro}</p>}
+        {erro && <p className="text-xs text-rose-300/90">{erro}</p>}
 
         {/* A chave só existe aqui e agora: o banco guarda o hash. */}
         {nova && (
           <div className="space-y-3 rounded-2xl bg-amber-400/10 p-4">
-            <p className="text-[13px] text-white/85">
+            <p className="text-sm text-white/85">
               <strong>Copie agora.</strong> A chave “{nova.nome}” não aparece de novo. Se perder, revogue e gere outra.
             </p>
             <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 break-all rounded-xl bg-black/30 px-3 py-2.5 font-mono text-[12px] text-white">
+              <code className="min-w-0 flex-1 break-all rounded-xl bg-black/30 px-3 py-2.5 font-mono text-xs text-white">
                 {nova.chave}
               </code>
               <BotaoCopiar texto={nova.chave} />
@@ -188,7 +188,7 @@ export function ConexaoMcp() {
               return (
                 <div key={c.id} className={cn("flex items-center gap-3 px-4 py-3", revogada && "opacity-50")}>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] text-white">
+                    <p className="truncate text-sm text-white">
                       {c.nome}
                       <span className="ml-2 font-mono text-[11px] text-white/35">{c.prefixo}…</span>
                       {c.ferramentas?.length ? (

@@ -241,7 +241,7 @@ export function NewClientModal({
           <form id="new-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
@@ -323,7 +323,7 @@ export function NewClientModal({
 
             {/* Localização */}
             <div className="space-y-6">
-              <h3 className="text-sm font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
+              <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Localização
               </h3>
 

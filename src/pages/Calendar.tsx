@@ -1091,7 +1091,7 @@ export default function Calendar() {
       <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl surface-flat lg:w-[340px]">
         <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-white tracking-tight">{panelLabel}</h3>
+            <h3 className="text-lg font-semibold text-white tracking-tight">{panelLabel}</h3>
             <p className="text-white/65 text-xs mt-0.5 truncate first-letter:uppercase">
               {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </p>
@@ -1193,7 +1193,7 @@ export default function Calendar() {
         <DialogContent
           className="sm:max-w-[820px] h-[85vh] text-white !overflow-hidden"
           chip={
-            <DialogTitle className="truncate text-xl font-black tracking-tight">
+            <DialogTitle className="truncate font-bold tracking-tight">
               {selectedDay} de {MONTHS[currentDate.getMonth()]}
             </DialogTitle>
           }
@@ -1551,7 +1551,7 @@ export default function Calendar() {
         <DialogContent
           className="sm:max-w-[450px] max-h-[90vh] text-white"
           chip={
-            <DialogTitle className="truncate text-lg font-black tracking-tight">
+            <DialogTitle className="truncate font-bold tracking-tight">
               {createMeetLink ? "Novo Evento no Google" : "Nova Tarefa no Notion"}
             </DialogTitle>
           }
@@ -1667,7 +1667,7 @@ export default function Calendar() {
         <DialogContent
           className="sm:max-w-[450px] text-white"
           chip={
-            <DialogTitle className="truncate text-lg font-black tracking-tight">
+            <DialogTitle className="truncate font-bold tracking-tight">
               Editar {editingItem?.type === 'google' ? 'Evento' : editingItem?.type === 'notion' ? 'Tarefa Notion' : 'Atividade Recorrente'}
             </DialogTitle>
           }
@@ -1801,7 +1801,7 @@ export default function Calendar() {
         <DialogContent
           className="text-white max-w-sm !overflow-hidden"
           chip={
-            <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
+            <DialogTitle className="flex items-center gap-2 font-bold tracking-tight">
               <Warning2 className="w-5 h-5 text-red-500" />
               Confirmar Exclusão
             </DialogTitle>
