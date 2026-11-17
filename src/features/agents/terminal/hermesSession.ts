@@ -101,6 +101,13 @@ export class HermesSession extends DemoSession {
     setAgentStatus(this.agentId, "ativo");
     let escreveu = false;
     let erro = false;
+    // A linha "… aguardando o agente" está na tela? Some com a 1ª resposta, ao fim ou no erro.
+    let aguardando = false;
+    const tirarAviso = () => {
+      if (!aguardando) return;
+      aguardando = false;
+      this.out("\r\x1b[2K");
+    };
     try {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
@@ -117,6 +124,10 @@ export class HermesSession extends DemoSession {
         throw new Error(corpo.erro ?? `erro ${resp.status}`);
       }
 
+      // Enquanto o agente pensa não chega nada por vários segundos; sem isto o
+      // terminal parecia parado.
+      aguardando = true;
+      this.out(`${DIM}… enviado, aguardando o agente${R}`);
       // SSE: blocos separados por linha em branco; "event:" opcional, "data:" com JSON.
       const leitor = resp.body.pipeThrough(new TextDecoderStream()).getReader();
       let resto = "";
@@ -142,6 +153,7 @@ export class HermesSession extends DemoSession {
           }
           if (evento === "hermes.tool.progress") {
             if (j.status === "running") {
+              tirarAviso();
               if (escreveu) this.out("\r\n");
               this.println(`${DIM}${j.emoji ?? "⚙"} ${j.label ?? j.tool}${R}`);
               escreveu = false;
@@ -150,6 +162,7 @@ export class HermesSession extends DemoSession {
           }
           const parte = j.choices?.[0]?.delta?.content;
           if (parte) {
+            tirarAviso();
             this.out(parte.replace(/\r?\n/g, "\r\n"));
             escreveu = true;
           }
@@ -157,8 +170,10 @@ export class HermesSession extends DemoSession {
           if (fim === "error") erro = true;
         }
       }
+      tirarAviso();
       if (escreveu) this.out("\r\n");
     } catch (e) {
+      tirarAviso();
       if (escreveu) this.out("\r\n");
       if ((e as Error).name === "AbortError") {
         this.println(`${DIM}(interrompido)${R}`);

@@ -1136,7 +1136,7 @@ export default function Calendar() {
         <div
           ref={todayListRef}
           onScroll={updateTodayListFade}
-          className="px-4 pt-4 pb-6 space-y-3 custom-scrollbar scrollbar-hide lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-8"
+          className="px-4 pt-4 pb-6 space-y-3 custom-scrollbar scrollbar-hide lista-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-8"
           style={edgeFadeStyle(todayListFade)}
         >
           {todayItems.length === 0 ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { format, subDays, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfYear, endOfYear, differenceInWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,17 @@ const GitHubCalendar = ({
   className
 }: GitHubCalendarProps) => {
   const [contributions, setContributions] = useState<ContributionDay[]>([]);
+  // A grade tem o ano inteiro (53 colunas) e, no celular, rola de lado. Abria
+  // sempre em janeiro; agora abre com a semana de HOJE no meio da tela.
+  const rolagemRef = useRef<HTMLDivElement>(null);
+  const hojeRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const caixa = rolagemRef.current;
+    const hoje = hojeRef.current;
+    if (!caixa || !hoje) return;
+    const alvo = hoje.offsetLeft + hoje.offsetWidth / 2 - caixa.clientWidth / 2;
+    caixa.scrollLeft = Math.max(0, alvo);
+  }, [contributions.length]);
   const today = new Date();
   const startDate = startOfYear(today); 
   const endDate = endOfYear(today);
@@ -67,8 +78,9 @@ const GitHubCalendar = ({
         end: endOfWeek(currentWeekStart, { weekStartsOn: 0 }),
       });
 
+      const temHoje = weekDays.some((d) => isSameDay(d, today));
       weeksArray.push(
-        <div key={i} className="flex flex-col gap-[3px]">
+        <div key={i} ref={temHoje ? hojeRef : undefined} className="flex flex-col gap-[3px]">
           {weekDays.map((day, index) => {
             const contribution = contributions.find((c) => isSameDay(c.date, day));
             const color = contribution ? getColor(contribution.count) : colors[0];
@@ -76,7 +88,10 @@ const GitHubCalendar = ({
             return (
               <div
                 key={index}
-                className="w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/[0.06]"
+                className={cn(
+                  "w-[13px] h-[13px] rounded-[3px] transition-all duration-300 hover:scale-125 hover:brightness-125 cursor-pointer border border-white/[0.06]",
+                  isSameDay(day, today) && "ring-1 ring-white/80",
+                )}
                 style={{ backgroundColor: color }}
                 title={`${format(day, "PPP", { locale: ptBR })}: ${contribution?.count || 0} atividades`}
               />
@@ -99,7 +114,7 @@ const GitHubCalendar = ({
           <h3 className="text-xs font-black text-white/70 uppercase tracking-[0.2em]">Histórico de Produtividade</h3>
         </div>
 
-        <div className="flex overflow-x-auto pb-2 custom-scrollbar scrollbar-hide w-full">
+        <div ref={rolagemRef} className="flex overflow-x-auto pb-2 custom-scrollbar scrollbar-hide w-full">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex w-full">
               <div className="flex flex-col gap-[3px] mr-3 shrink-0 pt-[1px]">

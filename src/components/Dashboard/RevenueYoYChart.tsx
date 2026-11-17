@@ -1,5 +1,6 @@
 'use client';
 
+import { ChartKpis, CHART_ALTURA } from "@/components/ui/chart-kpis";
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/area-charts-2';
@@ -207,48 +208,32 @@ export function RevenueYoYChart({
 
       <CardContent className="px-2.5">
         <div className="@container px-2.5">
-          <div className="flex flex-wrap gap-6 mb-6 sm:gap-10 sm:mb-10">
-            {yearsToShow.map((y, i) => {
-              const yearTotal = getYearTotal(y);
-              const isCurrent = y === currentYear;
-              const color = chartConfig[String(y)].color;
-
-              return (
-                <div key={y} className="space-y-1">
-                  <div className="flex items-center gap-2.5">
-                    <div 
-                      className="w-0.5 h-12 rounded-full" 
-                      style={{ backgroundColor: color || 'var(--color-indigo-500)' }}
-                    ></div>
-                    <div className="flex flex-col gap-2">
-                      <div className="text-sm font-medium text-white/40">Total {y}</div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-2xl font-semibold leading-none text-white">
-                          {formatCurrency(yearTotal)}
-                        </span>
-                        {isCurrent && (
-                          <span className={cn(
-                            'inline-flex items-center gap-1 text-xs font-medium',
-                            yoyGrowth >= 0 ? 'text-green-500' : 'text-red-500'
-                          )}>
-                            {yoyGrowth >= 0 ? <TrendUp className="size-4" /> : <TrendDown className="size-4" />}
-                            {Math.abs(Math.round(yoyGrowth))}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ChartKpis
+            items={yearsToShow.map((y) => ({
+              label: `Total ${y}`,
+              value: formatCurrency(getYearTotal(y)),
+              color: chartConfig[String(y)].color || 'var(--color-indigo-500)',
+              extra:
+                y === currentYear ? (
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 text-xs font-medium',
+                      yoyGrowth >= 0 ? 'text-green-500' : 'text-red-500'
+                    )}
+                  >
+                    {yoyGrowth >= 0 ? <TrendUp className="size-4" /> : <TrendDown className="size-4" />}
+                    {Math.abs(Math.round(yoyGrowth))}%
+                  </span>
+                ) : undefined,
+            }))}
+          />
         </div>
 
         <ChartContainer
           config={chartConfig}
           // No celular 400px de gráfico num card de 343px de largura ficava
           // esticado (o card passava de 790px de altura).
-          className="h-[240px] w-full sm:h-[400px] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
+          className={cn(CHART_ALTURA, "w-full [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial")}
         >
           <AreaChart
             accessibilityLayer
