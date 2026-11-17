@@ -60,7 +60,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-porceli-dark relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-screen w-screen bg-porceli-dark relative overflow-hidden flex items-center justify-center px-4">
       {/* Wallpaper desfocado + escurecimento com grão.
           O grão NÃO pode voltar a ser uma camada com mix-blend-mode por cima:
           ver appBackground.ts. */}

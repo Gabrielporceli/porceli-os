@@ -1686,3 +1686,27 @@ button.vidro-vermelho:hover:not(:disabled) {
 .react-flow__resize-control.line.term-line.bottom {
   height: 8px;
 }
+
+/* ===== App na tela de início do iPhone (PWA, tela cheia) =====
+   Com viewport-fit=cover o conteúdo passa por trás do notch / ilha
+   dinâmica. O layout devolve o espaço em CRMLayout (pt/pb com
+   env(safe-area-inset-*)); aqui fica o que é fixo e mora fora dele.
+   Fora do iPhone os env() valem 0 e nada muda. */
+@media (max-width: 600px) {
+  /* Avisos (sonner) saem no topo no celular: descem pra baixo do notch. */
+  [data-sonner-toaster][data-y-position="top"] {
+    top: max(20px, calc(env(safe-area-inset-top) + 8px)) !important;
+  }
+}
+
+/* Teclado do celular aberto (classe posta por useTecladoMobile): o modal
+   aberto passa a se centralizar e a caber na área visível acima do teclado,
+   em vez da tela inteira. `.modal-legivel.fixed` são os modais centralizados
+   (dialog.tsx e alert-dialog.tsx). Popovers e menus também têm
+   role="dialog", e o painel de filtros de Clientes também é .modal-legivel
+   (sem `fixed`): nenhum deles pode entrar aqui. O !important cobre os modais
+   que definem a própria altura máxima. */
+html.teclado-aberto .modal-legivel.fixed {
+  top: calc(var(--vv-top, 0px) + var(--vv-h, 100vh) / 2) !important;
+  max-height: calc(var(--vv-h, 100vh) - 16px) !important;
+}

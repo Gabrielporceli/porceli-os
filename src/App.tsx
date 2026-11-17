@@ -31,12 +31,15 @@ const RoundTripLab = lazy(() => import("./pages/RoundTripLab"))
 const OrbLab = lazy(() => import("./pages/OrbLab"))
 const TerminaisLab = lazy(() => import("./pages/TerminaisLab"))
 const PadroesLab = lazy(() => import("./pages/PadroesLab"))
+const IlhaLab = lazy(() => import("./pages/IlhaLab"))
 const ModalTest = lazy(() => import("./pages/ModalTest"))
 import { CRMLayout } from "./components/Layout/CRMLayout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./hooks/useAuth"
 import { PlansProvider } from "./contexts/PlansContext"
 import { LiquidGlassFilter } from "./components/ui/liquid-glass-button"
+import { useAtualizarAoVoltar } from "./hooks/useAtualizarAoVoltar"
+import { useTecladoMobile } from "./hooks/useTecladoMobile"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +53,10 @@ const queryClient = new QueryClient({
 })
 
 function App() {
+  // App instalado na tela de início: rebusca os dados ao voltar pra ele.
+  useAtualizarAoVoltar(queryClient)
+  // Celular: modal aberto se ajusta à área que sobra acima do teclado.
+  useTecladoMobile()
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
@@ -74,6 +81,9 @@ function App() {
                   {/* Canvas de terminais da Central de Agentes com agentes de exemplo. Pública, sem layout. */}
                   <Route path="/dev/terminais" element={<TerminaisLab />} />
                   <Route path="/dev/padroes" element={<PadroesLab />} />
+                  {/* Gota da Ilha Dinâmica com uma ilha de mentira, pra ver a
+                      animação fora do iPhone. Pública, sem layout. */}
+                  <Route path="/dev/ilha" element={<IlhaLab />} />
                   {/* Mural, janelas e quadros das Notas com dados falsos —
                       a tela real fica atrás do login. Pública, sem layout. */}
                   <Route path="/dev/notas" element={<NotesLab />} />

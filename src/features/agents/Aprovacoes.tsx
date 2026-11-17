@@ -19,6 +19,7 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { ativarPush, desativarPush, estadoPush, type EstadoPush } from "@/features/push/push";
 
 interface Aprovacao {
   id: string;
@@ -39,7 +40,7 @@ const AGENTE: Record<string, string> = {
   "especialista-os": "Porceli OS", "presenca-local": "Presença Local",
 };
 
-const APROVACOES_MUDARAM = "aprovacoes-mudaram";
+export const APROVACOES_MUDARAM = "aprovacoes-mudaram";
 
 /** Aprovações pendentes, recarregando a cada 30 s (e na hora, depois de decidir). */
 export function useAprovacoesPendentes() {
@@ -201,6 +202,44 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
   );
 }
 
+/**
+ * Liga ou desliga a notificação push deste aparelho. Só aparece onde o push
+ * existe: no iPhone, com o app instalado na tela de início (iOS 16.4+). É um
+ * botão porque o iOS só deixa pedir a permissão num toque.
+ */
+function BotaoNotificacoes() {
+  const [estado, setEstado] = useState<EstadoPush | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  useEffect(() => {
+    estadoPush().then(setEstado).catch(() => setEstado("sem-suporte"));
+  }, []);
+  if (estado === null || estado === "sem-suporte") return null;
+  if (estado === "negado") {
+    return <span className="text-white/35"> · Notificações bloqueadas nos ajustes do aparelho</span>;
+  }
+  const alternar = async () => {
+    setOcupado(true);
+    try {
+      const novo = estado === "ativo" ? await desativarPush() : await ativarPush();
+      setEstado(novo);
+      if (novo === "ativo") toast.success("Notificações ligadas neste aparelho");
+      else if (novo === "negado") toast.error("Permissão de notificação negada");
+    } catch (e) {
+      toast.error((e as Error).message || "Não consegui ligar as notificações");
+    } finally {
+      setOcupado(false);
+    }
+  };
+  return (
+    <>
+      {" · "}
+      <button type="button" onClick={alternar} disabled={ocupado} className="font-bold text-white/55 underline underline-offset-2 transition-colors hover:text-white disabled:opacity-50">
+        {estado === "ativo" ? "Desligar notificações neste aparelho" : "Avisar neste aparelho"}
+      </button>
+    </>
+  );
+}
+
 export function Aprovacoes({ open, onClose, lista }: {
   open: boolean; onClose: () => void; lista: Aprovacao[] | null;
 }) {
@@ -214,6 +253,7 @@ export function Aprovacoes({ open, onClose, lista }: {
           <p className="text-[11px] text-white/35">
             O que os agentes só fazem com o seu ok. Você também pode responder pelo Telegram.
             {lista && lista.length > 0 && <span className="text-white/55"> · {lista.length} aguardando</span>}
+            <BotaoNotificacoes />
           </p>
           {lista === null ? (
             <p className="py-10 text-center text-sm text-white/35">Carregando…</p>

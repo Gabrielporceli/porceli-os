@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 /** Cor do painel e da aba selecionada: a mesma, pra as duas se fundirem. */
 export const PANEL_BG = 'rgba(255,255,255,0.07)';
 /** Altura de cada linha da coluna. As linhas renderizadas DEVEM ter esta altura. */
 export const MASTER_ROW_H = 52;
+/** Largura de cada aba no celular, onde a coluna vira uma faixa horizontal. */
+const MOBILE_TAB_W = 172;
 /** Esmaece o fim de um nome comprido em vez de cortá-lo seco. */
 export const NAME_FADE = {
   maskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent)',
   WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent)',
 };
 
-const fadeStyle = (fade: { top: boolean; bottom: boolean }) => {
-  const g = `linear-gradient(to bottom, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`;
+const fadeStyle = (fade: { top: boolean; bottom: boolean }, horizontal = false) => {
+  const g = `linear-gradient(to ${horizontal ? 'right' : 'bottom'}, transparent 0%, black ${fade.top ? '40px' : '0px'}, black calc(100% - ${fade.bottom ? '40px' : '0px'}), transparent 100%)`;
   return { maskImage: g, WebkitMaskImage: g };
 };
 
@@ -42,6 +45,13 @@ interface MasterDetailProps<T> {
  * descolaria do painel; a posição dela é (índice × altura da linha − rolagem).
  * A altura do bloco é o que sobra da janela abaixo dele, pra a página não
  * ganhar rolagem por causa dele.
+ *
+ * No celular a coluna de 220px não cabe ao lado do painel (sobravam ~95px
+ * pra ele). O MESMO desenho deita: a lista vira uma faixa de abas que rola
+ * de lado, em cima, e a aba selecionada se funde ao painel por baixo, com os
+ * mesmos cantos côncavos. O painel cresce com o conteúdo e quem rola é a
+ * página. Aqui `fade.top`/`fade.bottom` valem começo/fim da faixa, e
+ * `tabScroll`/`tabOffset` medem o eixo X.
  */
 export function MasterDetail<T>({
   items, getKey, selectedKey, onSelect, renderRow, children, minHeight = 280, measureKey,
@@ -50,19 +60,24 @@ export function MasterDetail<T>({
   const boxRef = useRef<HTMLDivElement>(null);
   const [fade, setFade] = useState({ top: false, bottom: false });
   const [height, setHeight] = useState<number>();
+  const isMobile = useIsMobile();
+  const step = isMobile ? MOBILE_TAB_W : MASTER_ROW_H;
 
   const tabScroll = useMotionValue(0);
   const tabOffset = useSpring(0, { stiffness: 420, damping: 38 });
   const tabTarget = useRef<number | null>(null);
   const tabY = useTransform(() => tabOffset.get() - tabScroll.get());
+  // Raio do canto do painel ANTES da aba (em cima no desktop, à esquerda no
+  // celular) e DEPOIS dela: zera quando a aba encosta naquele canto.
   const panelTopRadius = useTransform(() => {
     const y = tabY.get();
-    if (y + MASTER_ROW_H <= 0) return 16;
+    if (y + step <= 0) return 16;
     return y <= 0 ? 0 : Math.min(16, y);
   });
   const panelBottomRadius = useTransform(() => {
-    const h = listRef.current?.clientHeight ?? Infinity;
-    const gap = h - (tabY.get() + MASTER_ROW_H);
+    const el = listRef.current;
+    const h = (isMobile ? el?.clientWidth : el?.clientHeight) ?? Infinity;
+    const gap = h - (tabY.get() + step);
     if (tabY.get() >= h) return 16;
     return gap <= 0 ? 0 : Math.min(16, gap);
   });
@@ -70,12 +85,20 @@ export function MasterDetail<T>({
   const updateFade = useCallback(() => {
     const el = listRef.current;
     if (!el) return;
+    if (isMobile) {
+      tabScroll.set(el.scrollLeft);
+      setFade({
+        top: el.scrollLeft > 0,
+        bottom: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+      });
+      return;
+    }
     tabScroll.set(el.scrollTop);
     setFade({
       top: el.scrollTop > 0,
       bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 1,
     });
-  }, [tabScroll]);
+  }, [tabScroll, isMobile]);
   useEffect(() => {
     const raf = requestAnimationFrame(updateFade);
     return () => cancelAnimationFrame(raf);
@@ -85,6 +108,8 @@ export function MasterDetail<T>({
     const measure = () => {
       const el = boxRef.current;
       if (!el) return;
+      // Celular: o bloco tem a altura do conteúdo (ver o comentário do topo).
+      if (window.innerWidth < 768) return setHeight(undefined);
       const top = el.getBoundingClientRect().top + window.scrollY;
       setHeight(Math.max(minHeight, window.innerHeight - top - 32));
     };
@@ -93,11 +118,60 @@ export function MasterDetail<T>({
     return () => window.removeEventListener('resize', measure);
   }, [minHeight, measureKey]);
 
-  const target = Math.max(0, items.findIndex((i) => getKey(i) === selectedKey)) * MASTER_ROW_H;
+  const target = Math.max(0, items.findIndex((i) => getKey(i) === selectedKey)) * step;
   if (tabTarget.current !== target) {
     if (tabTarget.current === null) tabOffset.jump(target);
     else tabOffset.set(target);
     tabTarget.current = target;
+  }
+
+  // Celular: a aba escolhida vem pro meio da faixa.
+  useEffect(() => {
+    const el = listRef.current;
+    if (!isMobile || !el) return;
+    el.scrollTo({ left: target - (el.clientWidth - MOBILE_TAB_W) / 2, behavior: 'smooth' });
+  }, [isMobile, target]);
+
+  if (isMobile) {
+    return (
+      <div ref={boxRef} className="surface-flat no-elevation rounded-3xl p-3.5">
+        {/* Faixa de abas */}
+        <div className="relative h-[52px] overflow-hidden">
+          <motion.div
+            className="pointer-events-none absolute left-0 top-0 h-full rounded-t-2xl"
+            style={{ x: tabY, width: MOBILE_TAB_W, background: PANEL_BG }}
+          >
+            {/* Cantos côncavos que fundem a aba ao painel */}
+            <span className="absolute -left-4 bottom-0 h-4 w-4" style={{ background: `radial-gradient(circle at top left, transparent 15.5px, ${PANEL_BG} 16px)` }} />
+            <span className="absolute -right-4 bottom-0 h-4 w-4" style={{ background: `radial-gradient(circle at top right, transparent 15.5px, ${PANEL_BG} 16px)` }} />
+          </motion.div>
+          <div ref={listRef} onScroll={updateFade} className="relative flex h-full overflow-x-auto scrollbar-hide" style={fadeStyle(fade, true)}>
+            {items.map((item) => {
+              const key = getKey(item);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onSelect(key)}
+                  className="relative flex h-[52px] shrink-0 items-center gap-3 px-4 text-left"
+                  style={{ width: MOBILE_TAB_W }}
+                >
+                  {renderRow(item, key === selectedKey)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Painel — a aba selecionada se funde a ele por cima */}
+        <motion.div
+          className="min-w-0 overflow-hidden rounded-2xl"
+          style={{ background: PANEL_BG, borderTopLeftRadius: panelTopRadius, borderTopRightRadius: panelBottomRadius }}
+        >
+          <div className="space-y-3 p-4">{children}</div>
+        </motion.div>
+      </div>
+    );
   }
 
   return (

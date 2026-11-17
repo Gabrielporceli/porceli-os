@@ -340,7 +340,10 @@ export default function Notes() {
       ) : (
         <div className={cn("grid gap-4", aba !== "pauta" && "lg:grid-cols-[236px_1fr]")}>
           {aba !== "pauta" && (
-          <aside className="surface-flat space-y-4 overflow-y-auto p-3.5 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
+          // Abaixo de lg as pastas ficam EM CIMA das notas: sem um teto de
+          // altura, 14 pastas ocupavam a primeira tela inteira do celular.
+          // Com ele a lista rola por dentro e as notas já aparecem.
+          <aside className="surface-flat space-y-4 overflow-y-auto p-3.5 max-lg:max-h-[228px] lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
             <div className="space-y-2">
               <span className="px-1 text-[10px] font-black uppercase tracking-widest text-white/40">
                 Pastas

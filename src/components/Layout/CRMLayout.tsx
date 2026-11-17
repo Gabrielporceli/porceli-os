@@ -50,7 +50,11 @@ export function CRMLayout({ children }: CRMLayoutProps) {
                 vale pra todas as páginas — era a que o Kanban de Leads já
                 tinha. Sem largura máxima nem centralização: elas faziam o
                 conteúdo se afastar da barra em monitores largos. */}
-            <main className="flex-1 min-w-0 w-full pt-6 pb-28 md:pb-6 md:pl-[104px]">
+            {/* Áreas seguras do iPhone (app na tela de início, tela cheia):
+                o topo soma o notch/ilha e o fim soma a faixa do indicador
+                de início, que empurra a barra fixa pra cima. Fora do
+                iPhone os env() valem 0 e nada muda. */}
+            <main className="flex-1 min-w-0 w-full pt-[calc(1.5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 md:pl-[104px]">
               <div className="w-full px-4">
                 <SystemAlerts />
                 <QuandoPronto chave={pathname} tela>{children}</QuandoPronto>

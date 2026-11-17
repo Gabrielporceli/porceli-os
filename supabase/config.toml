@@ -136,3 +136,8 @@ verify_jwt = true
 # O acesso é o token do link (validado na função), não um JWT.
 [functions.ficha-publica]
 verify_jwt = false
+
+# Push das aprovações: GET entrega a chave pública; o POST confere o
+# segredo do gatilho por conta própria (ver o cabeçalho da função).
+[functions.avisar-aprovacao]
+verify_jwt = false

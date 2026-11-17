@@ -1,9 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: o app ocupa a tela inteira do iPhone (atrás do
+         notch e da barra inferior); quem devolve o espaço é o CSS, com
+         env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- iPhone: campo com letra menor que 16px faz o Safari dar zoom na
+         página ao focar, e a tela fica deslocada depois. maximum-scale=1
+         desliga esse zoom automático sem mexer no tamanho de nenhuma letra.
+         Só no iOS: no Android a mesma meta bloquearia o zoom com os dedos. -->
+    <script>
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+        document.querySelector('meta[name="viewport"]').setAttribute(
+          "content",
+          "width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+        );
+      }
+    </script>
     <title>Porceli Company</title>
+
+    <!-- App na tela de início (PWA): no iPhone, Safari > Compartilhar >
+         "Adicionar à Tela de Início" abre em tela cheia, sem barra do Safari. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Porceli OS" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- Fundo escuro antes do CSS carregar: sem isto o app abre com um
+         clarão branco na tela de início. -->
+    <style>html, body { background-color: #000; }</style>
     <meta name="description" content="Sistema de CRM para gestão de leads, clientes e contratos" />
     <meta name="author" content="Porceli Company" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
