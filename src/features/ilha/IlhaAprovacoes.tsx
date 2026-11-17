@@ -31,7 +31,8 @@ const marcarResumo = () => {
  *
  * Recebe a MESMA lista que o Header já busca a cada 30 s (não busca de novo):
  *   • ao abrir o app com pedidos esperando, mostra o resumo uma vez;
- *   • quando chega um pedido novo com o app aberto, mostra o título dele.
+ *   • quando chega um pedido novo com o app aberto, mostra o resumo de novo,
+ *     já com o número atualizado.
  * Tocar leva pra Central de Agentes com o painel de Aprovações aberto.
  */
 export function IlhaAprovacoes({ lista }: { lista: Pendente[] | null }) {
@@ -57,6 +58,8 @@ export function IlhaAprovacoes({ lista }: { lista: Pendente[] | null }) {
           mensagem: lista.length === 1 ? lista[0].titulo : "Toque para decidir",
           icone,
           selo: lista.length > 1 ? lista.length : undefined,
+          curto: lista.length === 1 ? "Aprovação" : "Aprovações",
+          direita: lista.length === 1 ? "1 pendente" : `${lista.length} pendentes`,
           aoTocar: abrir,
         });
       }, 1200);
@@ -71,9 +74,14 @@ export function IlhaAprovacoes({ lista }: { lista: Pendente[] | null }) {
       mensagem: novos.length === 1 ? novos[0].titulo : "Toque para decidir",
       icone,
       selo: lista.length > 1 ? lista.length : undefined,
+      // Na ilha vai sempre o resumo: quantas estão esperando no total.
+      curto: lista.length === 1 ? "Aprovação" : "Aprovações",
+      direita: lista.length === 1 ? "1 pendente" : `${lista.length} pendentes`,
       aoTocar: abrir,
     });
   }, [lista, navigate]);
 
-  return <IlhaDinamica ref={ilha} />;
+  // Escolha do Gabriel (16/11/2026): a ilha só alarga, com o resumo e o
+  // número. Sem ilha no aparelho, o componente cai sozinho no cartão.
+  return <IlhaDinamica ref={ilha} estilo="compacta" />;
 }

@@ -4,8 +4,7 @@ import { animate, useMotionValue, useMotionValueEvent, type AnimationPlaybackCon
 import { CONTENT_MIN_SCALE, TEMPOS, ilhaGeometria, ilhaLayout } from "./ilhaGeometria";
 
 /**
- * Aviso dentro do app no formato da Ilha Dinâmica do iPhone: uma gota preta
- * escorre da ilha, desce e se abre num cartão; depois recolhe de volta.
+ * Aviso dentro do app no formato da Ilha Dinâmica do iPhone.
  *
  * É só visual e só existe com o app ABERTO: a Ilha Dinâmica de verdade
  * (Live Activities) é exclusiva de app nativo e não existe para site nem
@@ -16,22 +15,33 @@ import { CONTENT_MIN_SCALE, TEMPOS, ilhaGeometria, ilhaLayout } from "./ilhaGeom
  * O site NÃO enxerga onde a ilha está. A posição sai das medidas do aparelho
  * (ilhaGeometria.ts): com a área segura do topo em ~59px (iPhone 14 Pro, 15,
  * 16...), a ilha tem 126×37 e fica a ~11px do topo. Só vale no app instalado;
- * numa aba do Safari o topo da tela é do navegador. Sem ilha, a gota desce
- * da borda de cima.
+ * numa aba do navegador o topo da tela é dele. Sem ilha, o aviso desce da
+ * borda de cima.
  *
- * O "líquido": ilha, pescoço e gota são três <div> pretas dentro de um
- * contêiner com filtro SVG (desfoque + limiar de alfa), que funde as três
- * numa forma só. Mesmo truque da pílula do menu (MobilePillBlob).
+ * Três animações (`estilo`):
+ *   • "expandir" — a própria ilha cresce e vira o cartão, como o iOS faz;
+ *   • "compacta" — a ilha só alarga, com o ícone de um lado e o número do
+ *                  outro (sem ilha, cai no "expandir");
+ *   • "gota"     — uma gota escorre da ilha e se abre num cartão. É a do
+ *                  rit3zh/expo-dynamic-notifications; ilha, pescoço e gota
+ *                  são três <div> pretas fundidas por um filtro SVG (desfoque
+ *                  + limiar de alfa), o mesmo truque da pílula do menu.
  */
+
+export type EstiloIlha = "expandir" | "compacta" | "gota";
 
 export interface AvisoIlha {
   id: string;
   titulo: string;
   mensagem?: string;
-  /** Ícone à esquerda (dentro do círculo roxo). */
+  /** Ícone (dentro do círculo roxo). */
   icone?: ReactNode;
   /** Número ou texto curto à direita. */
   selo?: string | number;
+  /** Estilo "compacta": texto à esquerda da ilha. Padrão: o título. */
+  curto?: string;
+  /** Estilo "compacta": texto à direita da ilha. Padrão: o selo. */
+  direita?: string;
   aoTocar?: () => void;
   /** ms aberto; `null` fica até ser tocado ou arrastado. Padrão: 3600. */
   duracao?: number | null;
@@ -43,6 +53,7 @@ export interface IlhaHandle {
 }
 
 interface IlhaProps {
+  estilo?: EstiloIlha;
   /** Força a existência da ilha (laboratório /dev/ilha). Padrão: detecta. */
   temIlha?: boolean;
   /** Força a área segura do topo, em px (laboratório). Padrão: mede. */
@@ -55,6 +66,17 @@ const FILTRO_ID = "ilha-goo";
 /** Desfoque do filtro gooey (px) e o quanto a ilha encolhe por baixo dele. */
 const GOO_BLUR = 8;
 const GOO_INSET = GOO_BLUR * 0.26;
+
+/** "expandir": faixa de conteúdo abaixo da ilha e raio do cartão aberto. */
+const EXPANDIR_CONTEUDO = 66;
+const EXPANDIR_RAIO = 40;
+/** "compacta": quanto a ilha cresce pra cada lado. */
+const COMPACTA_ABA = 112;
+
+type Mola = { duration: number; bounce: number; delay?: number };
+const mola = (t: Mola) => ({ type: "spring" as const, ...t });
+const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
+const mix = (t: number, a: number, b: number) => a + (b - a) * t;
 
 /** Área segura do topo, em px: o navegador só entrega isso via CSS. */
 function medirInsetTopo() {
@@ -71,7 +93,7 @@ const instalado = () =>
   (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinamica(
-  { temIlha, insetTopo, ilhaVisivel = false },
+  { estilo = "expandir", temIlha, insetTopo, ilhaVisivel = false },
   ref,
 ) {
   const [largura, setLargura] = useState(() => window.innerWidth);
@@ -92,6 +114,36 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
   // dos iPhones antigos dá ~47px; a ilha, 59 ou mais.
   const comIlha = temIlha ?? (instalado() && inset >= 51);
   const layout = useMemo(() => ilhaLayout(largura, inset, comIlha), [largura, inset, comIlha]);
+  // Sem ilha não há o que ladear: a compacta vira a expandida.
+  const modo: EstiloIlha = estilo === "compacta" && !comIlha ? "expandir" : estilo;
+
+  const ilhaX = layout.centerX - layout.islandWidth / 2;
+
+  // Onde a forma preta termina e onde o conteúdo mora, por estilo.
+  const alvo = useMemo(() => {
+    if (modo === "compacta") {
+      const w = Math.min(layout.width - 32, layout.islandWidth + COMPACTA_ABA * 2);
+      const caixa = { left: layout.centerX - w / 2, top: layout.islandTop, width: w, height: layout.islandHeight };
+      return { forma: { ...caixa, radius: layout.islandRadius }, caixa };
+    }
+    if (modo === "expandir") {
+      // Com ilha, o cartão começa no topo dela e o conteúdo fica na faixa de
+      // baixo (em cima está a câmera). Sem ilha é um cartão comum.
+      const top = comIlha ? layout.islandTop : layout.cardTop;
+      const height = comIlha ? layout.islandHeight + EXPANDIR_CONTEUDO + 6 : layout.cardHeight;
+      return {
+        forma: { left: layout.cardLeft, top, width: layout.cardWidth, height, radius: Math.min(EXPANDIR_RAIO, height / 2) },
+        caixa: {
+          left: layout.cardLeft,
+          top: comIlha ? layout.islandTop + layout.islandHeight : top,
+          width: layout.cardWidth,
+          height: comIlha ? EXPANDIR_CONTEUDO : layout.cardHeight,
+        },
+      };
+    }
+    const caixa = { left: layout.cardLeft, top: layout.cardTop, width: layout.cardWidth, height: layout.cardHeight };
+    return { forma: { ...caixa, radius: layout.cardRadius }, caixa };
+  }, [modo, layout, comIlha]);
 
   const drop = useMotionValue(0);
   const expand = useMotionValue(0);
@@ -106,39 +158,70 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
   // Escreve a geometria direto no estilo dos elementos: são ~60 quadros por
   // segundo, e passar isso por estado do React re-renderizaria tudo a cada um.
   const pintar = useCallback(() => {
-    const g = ilhaGeometria(drop.get(), expand.get(), layout);
+    const p = clamp01(reveal.get());
+    const e = expand.get();
+    let forma: { x: number; y: number; w: number; h: number; r: number };
+    let pescoco = { x: 0, y: 0, w: 0, h: 0 };
+    let sombra = 0;
+    let conteudo: { y: number; escala: number; desfoque: number };
+
+    if (modo === "gota") {
+      const g = ilhaGeometria(drop.get(), e, layout);
+      forma = { x: g.x, y: g.y, w: g.width, h: g.height, r: g.radius };
+      pescoco = { x: g.neckX, y: g.neckY, w: g.neckWidth, h: g.neckHeight };
+      sombra = clamp01(e);
+      const quique = Math.min(Math.max(g.widthRatio - 1, 0), 0.2);
+      conteudo = { y: g.offsetY, escala: CONTENT_MIN_SCALE + (1 - CONTENT_MIN_SCALE) * p + quique * p, desfoque: 0 };
+    } else {
+      // A ilha vira a forma final: mesma conta para "expandir" e "compacta".
+      const f = alvo.forma;
+      const w = Math.min(mix(e, layout.islandWidth, f.width), layout.width - 16);
+      const h = Math.max(mix(e, layout.islandHeight, f.height), 0);
+      forma = {
+        x: layout.centerX - w / 2,
+        y: mix(e, layout.islandTop, f.top),
+        w,
+        h,
+        r: Math.min(mix(e, layout.islandRadius, f.radius), Math.min(w, h) / 2),
+      };
+      sombra = modo === "expandir" ? clamp01(e) : 0;
+      conteudo = {
+        y: modo === "expandir" ? (1 - clamp01(e)) * -10 : 0,
+        escala: 0.94 + 0.06 * p,
+        desfoque: (1 - p) * 6,
+      };
+    }
+
     const gota = gotaRef.current;
     if (gota) {
-      gota.style.transform = `translate3d(${g.x}px, ${g.y}px, 0)`;
-      gota.style.width = `${g.width}px`;
-      gota.style.height = `${g.height}px`;
-      gota.style.borderRadius = `${g.radius}px`;
+      gota.style.transform = `translate3d(${forma.x}px, ${forma.y}px, 0)`;
+      gota.style.width = `${forma.w}px`;
+      gota.style.height = `${forma.h}px`;
+      gota.style.borderRadius = `${forma.r}px`;
     }
-    const pescoco = pescocoRef.current;
-    if (pescoco) {
-      pescoco.style.transform = `translate3d(${g.neckX}px, ${g.neckY}px, 0)`;
-      pescoco.style.width = `${g.neckWidth}px`;
-      pescoco.style.height = `${g.neckHeight}px`;
-      pescoco.style.borderRadius = `${g.neckWidth / 2}px`;
+    const elPescoco = pescocoRef.current;
+    if (elPescoco) {
+      elPescoco.style.transform = `translate3d(${pescoco.x}px, ${pescoco.y}px, 0)`;
+      elPescoco.style.width = `${pescoco.w}px`;
+      elPescoco.style.height = `${pescoco.h}px`;
+      elPescoco.style.borderRadius = `${pescoco.w / 2}px`;
     }
-    const sombra = sombraRef.current;
-    if (sombra) {
-      sombra.style.transform = `translate3d(${g.x}px, ${g.y}px, 0)`;
-      sombra.style.width = `${g.width}px`;
-      sombra.style.height = `${g.height}px`;
-      sombra.style.borderRadius = `${g.radius}px`;
-      sombra.style.opacity = String(Math.min(Math.max(expand.get(), 0), 1));
+    const elSombra = sombraRef.current;
+    if (elSombra) {
+      elSombra.style.transform = `translate3d(${forma.x}px, ${forma.y}px, 0)`;
+      elSombra.style.width = `${forma.w}px`;
+      elSombra.style.height = `${forma.h}px`;
+      elSombra.style.borderRadius = `${forma.r}px`;
+      elSombra.style.opacity = String(sombra);
     }
-    const conteudo = conteudoRef.current;
-    if (conteudo) {
-      const p = Math.min(Math.max(reveal.get(), 0), 1);
-      const quique = Math.min(Math.max(g.widthRatio - 1, 0), 0.2);
-      const escala = CONTENT_MIN_SCALE + (1 - CONTENT_MIN_SCALE) * p + quique * p;
-      conteudo.style.opacity = String(p);
-      conteudo.style.transform = `translate3d(0, ${g.offsetY + arrasto.get()}px, 0) scale(${escala})`;
-      conteudo.style.pointerEvents = p > 0.6 ? "auto" : "none";
+    const elConteudo = conteudoRef.current;
+    if (elConteudo) {
+      elConteudo.style.opacity = String(p);
+      elConteudo.style.transform = `translate3d(0, ${conteudo.y + arrasto.get()}px, 0) scale(${conteudo.escala})`;
+      elConteudo.style.filter = conteudo.desfoque > 0.05 ? `blur(${conteudo.desfoque}px)` : "none";
+      elConteudo.style.pointerEvents = p > 0.6 ? "auto" : "none";
     }
-  }, [drop, expand, reveal, arrasto, layout]);
+  }, [drop, expand, reveal, arrasto, layout, modo, alvo]);
 
   useMotionValueEvent(drop, "change", pintar);
   useMotionValueEvent(expand, "change", pintar);
@@ -151,6 +234,8 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
   const atual = useRef<AvisoIlha | null>(null);
   const naFila = useRef<AvisoIlha | null>(null);
   const saindo = useRef(false);
+  const modoRef = useRef(modo);
+  modoRef.current = modo;
 
   const parar = () => {
     animacoes.current.forEach((a) => a.stop());
@@ -163,23 +248,28 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
     if (!atual.current || saindo.current) return;
     saindo.current = true;
     parar();
-    const mola = (t: { duration: number; bounce: number; delay?: number }) => ({ type: "spring" as const, ...t });
-    animacoes.current = [
-      animate(reveal, 0, mola(TEMPOS.fade)),
-      animate(expand, 0, mola(TEMPOS.collapse)),
-      animate(drop, 0, {
-        ...mola(TEMPOS.volta),
-        onComplete: () => {
-          const proximo = naFila.current;
-          atual.current = null;
-          naFila.current = null;
-          saindo.current = false;
-          arrasto.set(0);
-          if (proximo) entrarRef.current(proximo);
-          else setAviso(null);
-        },
-      }),
-    ];
+    const aoTerminar = () => {
+      const proximo = naFila.current;
+      atual.current = null;
+      naFila.current = null;
+      saindo.current = false;
+      arrasto.set(0);
+      if (proximo) entrarRef.current(proximo);
+      else setAviso(null);
+    };
+    if (modoRef.current === "gota") {
+      animacoes.current = [
+        animate(reveal, 0, mola(TEMPOS.fade)),
+        animate(expand, 0, mola(TEMPOS.collapse)),
+        animate(drop, 0, { ...mola(TEMPOS.volta), onComplete: aoTerminar }),
+      ];
+    } else {
+      // O texto some primeiro; a ilha volta ao tamanho dela em seguida.
+      animacoes.current = [
+        animate(reveal, 0, { duration: 0.16, ease: "easeOut" }),
+        animate(expand, 0, { ...mola({ duration: 0.5, bounce: 0.12, delay: 0.08 }), onComplete: aoTerminar }),
+      ];
+    }
   }, [drop, expand, reveal, arrasto]);
 
   const entrar = useCallback(
@@ -192,16 +282,24 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
       expand.set(0);
       reveal.set(0);
       arrasto.set(0);
-      const mola = (t: { duration: number; bounce: number; delay?: number }) => ({ type: "spring" as const, ...t });
-      animacoes.current = [
-        animate(drop, 1, mola(TEMPOS.drop)),
-        animate(expand, 1, mola(TEMPOS.expand)),
-        animate(reveal, 1, mola(TEMPOS.reveal)),
-      ];
-      const vida = proximo.duracao === undefined ? TEMPOS.permanencia : proximo.duracao;
-      if (vida !== null) {
-        relogio.current = window.setTimeout(() => sair(), TEMPOS.reveal.delay * 1000 + vida);
+      let ateAparecer: number;
+      if (modoRef.current === "gota") {
+        animacoes.current = [
+          animate(drop, 1, mola(TEMPOS.drop)),
+          animate(expand, 1, mola(TEMPOS.expand)),
+          animate(reveal, 1, mola(TEMPOS.reveal)),
+        ];
+        ateAparecer = TEMPOS.reveal.delay * 1000;
+      } else {
+        // A ilha cresce com um leve quique e o texto entra logo depois.
+        animacoes.current = [
+          animate(expand, 1, mola({ duration: 0.6, bounce: 0.26 })),
+          animate(reveal, 1, { duration: 0.32, ease: "easeOut", delay: 0.2 }),
+        ];
+        ateAparecer = 200;
       }
+      const vida = proximo.duracao === undefined ? TEMPOS.permanencia : proximo.duracao;
+      if (vida !== null) relogio.current = window.setTimeout(() => sair(), ateAparecer + vida);
     },
     [drop, expand, reveal, arrasto, sair],
   );
@@ -260,11 +358,28 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
     }
   };
 
-  const ilhaX = layout.centerX - layout.islandWidth / 2;
   const montado = aviso !== null;
   if (!montado && !ilhaVisivel) return null;
 
   const forma: React.CSSProperties = { position: "absolute", left: 0, top: 0, background: "#000", willChange: "transform, width, height" };
+  const toques = {
+    onPointerDown: aoDescer,
+    onPointerMove: aoMover,
+    onPointerUp: aoSoltar,
+    onPointerCancel: () => {
+      toque.current = null;
+      arrasto.set(0);
+    },
+  };
+  const caixa: React.CSSProperties = {
+    left: alvo.caixa.left,
+    top: alvo.caixa.top,
+    width: alvo.caixa.width,
+    height: alvo.caixa.height,
+    opacity: 0,
+    transformOrigin: "center",
+    willChange: "transform, opacity",
+  };
 
   return createPortal(
     <div
@@ -287,25 +402,28 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
           {/* Sombra do cartão, fora do filtro (o limiar a apagaria). */}
           <div ref={sombraRef} style={{ position: "absolute", left: 0, top: 0, boxShadow: "0 10px 28px rgba(0,0,0,0.55)", opacity: 0 }} />
 
-          {/* Camada líquida: ilha (encolhida), pescoço e gota, fundidos. */}
-          <div className="absolute inset-0" style={{ filter: `url(#${FILTRO_ID})` }}>
-            <div
-              style={{
-                ...forma,
-                transform: `translate3d(${ilhaX + GOO_INSET}px, ${layout.islandTop + GOO_INSET}px, 0)`,
-                width: layout.islandWidth - GOO_INSET * 2,
-                height: layout.islandHeight - GOO_INSET * 2,
-                borderRadius: Math.max(layout.islandRadius - GOO_INSET, 0),
-              }}
-            />
+          {/* Formas pretas. Na "gota" o filtro funde ilha, pescoço e gota;
+              nos outros estilos é uma forma só, de borda nítida. */}
+          <div className="absolute inset-0" style={modo === "gota" ? { filter: `url(#${FILTRO_ID})` } : undefined}>
+            {modo === "gota" && (
+              <div
+                style={{
+                  ...forma,
+                  transform: `translate3d(${ilhaX + GOO_INSET}px, ${layout.islandTop + GOO_INSET}px, 0)`,
+                  width: layout.islandWidth - GOO_INSET * 2,
+                  height: layout.islandHeight - GOO_INSET * 2,
+                  borderRadius: Math.max(layout.islandRadius - GOO_INSET, 0),
+                }}
+              />
+            )}
             <div ref={pescocoRef} style={forma} />
             <div ref={gotaRef} style={forma} />
           </div>
         </>
       )}
 
-      {/* A ilha em si, nítida, por cima da camada líquida. No iPhone ela
-          coincide com o recorte do aparelho. */}
+      {/* A ilha em si, nítida, por cima. No iPhone ela coincide com o recorte
+          do aparelho. */}
       <div
         style={{
           position: "absolute",
@@ -318,24 +436,34 @@ export const IlhaDinamica = forwardRef<IlhaHandle, IlhaProps>(function IlhaDinam
         }}
       />
 
-      {montado && (
+      {montado && modo === "compacta" && (
+        // Ícone e texto de um lado da ilha, número do outro; o meio é a câmera.
         <div
           ref={conteudoRef}
           role="status"
-          onPointerDown={aoDescer}
-          onPointerMove={aoMover}
-          onPointerUp={aoSoltar}
-          onPointerCancel={() => { toque.current = null; arrasto.set(0); }}
+          {...toques}
+          className="absolute flex cursor-pointer touch-none select-none items-center justify-between pl-2 pr-3.5 text-white"
+          style={caixa}
+        >
+          <span className="flex min-w-0 items-center gap-1.5" style={{ maxWidth: COMPACTA_ABA - 10 }}>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#6829c0] [&>svg]:h-4 [&>svg]:w-4">
+              {aviso.icone}
+            </span>
+            <span className="truncate text-[12px] font-bold leading-none">{aviso.curto ?? aviso.titulo}</span>
+          </span>
+          <span className="truncate text-right text-[12px] font-bold leading-none tabular-nums text-[#c4b5fd]" style={{ maxWidth: COMPACTA_ABA - 18 }}>
+            {aviso.direita ?? aviso.selo}
+          </span>
+        </div>
+      )}
+
+      {montado && modo !== "compacta" && (
+        <div
+          ref={conteudoRef}
+          role="status"
+          {...toques}
           className="absolute flex cursor-pointer touch-none select-none items-center gap-3 pl-3.5 pr-5 text-white"
-          style={{
-            left: layout.cardLeft,
-            top: layout.cardTop,
-            width: layout.cardWidth,
-            height: layout.cardHeight,
-            opacity: 0,
-            transformOrigin: "center",
-            willChange: "transform, opacity",
-          }}
+          style={caixa}
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#6829c0] text-white shadow-[0_0_14px_rgba(104,41,192,0.55)]">
             {aviso.icone}
