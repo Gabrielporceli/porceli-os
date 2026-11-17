@@ -8,6 +8,10 @@
 // POST { id }              → chamado pelo gatilho `avisar_aprovacao_push` em
 //                            `agente_aprovacoes`; manda o push pros aparelhos
 //                            do dono daquele pedido
+// POST { aviso }           → chamado pelo gatilho `avisar_push_aviso` em
+//                            `avisos_push` (saldo, campanha acabando, contrato
+//                            assinado…, gravados pela ferramenta MCP
+//                            `avisar_no_celular`); manda o push do aviso
 //
 // O POST só vale com o cabeçalho `x-push-segredo` igual ao segredo guardado em
 // `push_config` (gerado dentro do banco pela migração; nunca sai de lá). O
@@ -63,6 +67,40 @@ async function chavesVapid() {
   return { publica: cfg.vapid_publica, privada: cfg.vapid_privada };
 }
 
+/** Manda o mesmo push pra todos os aparelhos do dono; tira os que cancelaram a inscrição. */
+async function enviar(vapid: { publica: string; privada: string }, userId: string, mensagem: Record<string, unknown>) {
+  const { data: inscricoes } = await db.from("push_inscricoes").select("id, endpoint, p256dh, auth").eq("user_id", userId);
+  if (!inscricoes || inscricoes.length === 0) return { enviados: 0, motivo: "nenhum aparelho inscrito" };
+  const corpo = JSON.stringify(mensagem);
+  let enviados = 0;
+  const mortas: string[] = [];
+  const falhas: string[] = [];
+  await Promise.all(
+    inscricoes.map(async (i) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: i.endpoint, keys: { p256dh: i.p256dh, auth: i.auth } },
+          corpo,
+          {
+            vapidDetails: { subject: ASSUNTO, publicKey: vapid.publica, privateKey: vapid.privada },
+            TTL: 60 * 60 * 24,
+            urgency: "high",
+          },
+        );
+        enviados++;
+      } catch (e) {
+        const status = (e as { statusCode?: number }).statusCode;
+        // 404/410: o aparelho cancelou a inscrição (app removido, permissão
+        // retirada). A linha sai pra não tentar de novo.
+        if (status === 404 || status === 410) mortas.push(i.id);
+        else falhas.push(String(status ?? (e as Error).message));
+      }
+    }),
+  );
+  if (mortas.length > 0) await db.from("push_inscricoes").delete().in("id", mortas);
+  return { enviados, removidos: mortas.length, falhas };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -95,7 +133,25 @@ Deno.serve(async (req) => {
       return json({ erro: "não autorizado" }, 401);
     }
 
-    const { id } = await req.json().catch(() => ({ id: null }));
+    const pedidoCorpo = await req.json().catch(() => ({}));
+
+    // Aviso importante (saldo, campanha acabando…): texto e dono vêm do banco.
+    if (typeof pedidoCorpo.aviso === "string") {
+      const { data: aviso } = await db
+        .from("avisos_push")
+        .select("id, user_id, titulo, corpo, url, tag")
+        .eq("id", pedidoCorpo.aviso)
+        .maybeSingle();
+      if (!aviso) return json({ enviados: 0, motivo: "aviso não encontrado" });
+      return json(await enviar(vapid, aviso.user_id, {
+        titulo: String(aviso.titulo).slice(0, 80),
+        corpo: String(aviso.corpo ?? "").slice(0, 240),
+        url: aviso.url || "/",
+        tag: aviso.tag || `aviso-${aviso.id}`,
+      }));
+    }
+
+    const id = pedidoCorpo.id;
     if (typeof id !== "string") return json({ erro: "id ausente" }, 400);
 
     const { data: pedido } = await db
@@ -105,52 +161,19 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!pedido || pedido.status !== "pendente") return json({ enviados: 0, motivo: "sem pedido pendente" });
 
-    const [{ data: inscricoes }, { count: pendentes }] = await Promise.all([
-      db.from("push_inscricoes").select("id, endpoint, p256dh, auth").eq("user_id", pedido.user_id),
-      db
-        .from("agente_aprovacoes")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", pedido.user_id)
-        .eq("status", "pendente"),
-    ]);
-    if (!inscricoes || inscricoes.length === 0) return json({ enviados: 0, motivo: "nenhum aparelho inscrito" });
+    const { count: pendentes } = await db
+      .from("agente_aprovacoes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", pedido.user_id)
+      .eq("status", "pendente");
 
-    const corpo = JSON.stringify({
+    return json(await enviar(vapid, pedido.user_id, {
       titulo: "Aprovação pendente",
       corpo: String(pedido.titulo).slice(0, 180),
       url: "/agents?aprovacoes=1",
       tag: `aprovacao-${pedido.id}`,
       pendentes: pendentes ?? 1,
-    });
-
-    let enviados = 0;
-    const mortas: string[] = [];
-    const falhas: string[] = [];
-    await Promise.all(
-      inscricoes.map(async (i) => {
-        try {
-          await webpush.sendNotification(
-            { endpoint: i.endpoint, keys: { p256dh: i.p256dh, auth: i.auth } },
-            corpo,
-            {
-              vapidDetails: { subject: ASSUNTO, publicKey: vapid.publica, privateKey: vapid.privada },
-              TTL: 60 * 60 * 24,
-              urgency: "high",
-            },
-          );
-          enviados++;
-        } catch (e) {
-          const status = (e as { statusCode?: number }).statusCode;
-          // 404/410: o aparelho cancelou a inscrição (app removido, permissão
-          // retirada). A linha sai pra não tentar de novo.
-          if (status === 404 || status === 410) mortas.push(i.id);
-          else falhas.push(String(status ?? (e as Error).message));
-        }
-      }),
-    );
-    if (mortas.length > 0) await db.from("push_inscricoes").delete().in("id", mortas);
-
-    return json({ enviados, removidos: mortas.length, falhas });
+    }));
   } catch (e) {
     console.error("avisar-aprovacao", e);
     return json({ erro: (e as Error).message }, 500);

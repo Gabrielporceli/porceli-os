@@ -66,6 +66,29 @@ export const APROVACOES: Record<string, Ferramenta> = {
     },
   },
 
+  avisar_no_celular: {
+    description: "Manda uma notificação para o celular do Gabriel (app Porceli OS na tela de início). Só para o que é "
+      + "importante e pede atenção dele: saldo ou limite de gastos acabando, campanha acabando, contrato assinado, falha "
+      + "ao executar algo. Não use para rotina nem para pedir aprovação (pedir_aprovacao já avisa). Texto curto.",
+    inputSchema: parametros({
+      titulo: { type: "string", description: "Até ~60 caracteres, ex.: 'Saldo acabando · Mayke Arruda'." },
+      corpo: { type: "string", description: "Uma ou duas frases com o número que importa." },
+      url: { type: "string", description: "Tela do OS que abre ao tocar (padrão /)." },
+      tag: { type: "string", description: "Mesma tag substitui a notificação anterior em vez de empilhar." },
+      origem: { type: "string", description: "Quem avisou (script ou agente)." },
+    }, ["titulo"]),
+    executar: async (a) => {
+      exigir(a.titulo, "titulo é obrigatório");
+      const { id: user_id } = await dono();
+      const { data, error } = await db.from("avisos_push").insert({
+        user_id, titulo: String(a.titulo).slice(0, 120), corpo: a.corpo ? String(a.corpo).slice(0, 500) : null,
+        url: a.url ? String(a.url) : "/", tag: a.tag ? String(a.tag) : null, origem: a.origem ? String(a.origem) : null,
+      }).select("id").single();
+      if (error) throw new Error(error.message);
+      return { id: data.id, aviso: "Notificação enviada aos aparelhos inscritos." };
+    },
+  },
+
   atualizar_aprovacao: {
     description: "Atualiza uma aprovação. Agente: use status 'resolvido_fora' quando o Gabriel decidiu pelo Telegram, "
       + "ou 'cancelado' se o pedido perdeu o sentido. O script da VPS usa processado, kanban_task, relatado e resultado.",
