@@ -30,17 +30,20 @@ import { atualizarSelo, ouvirPushAbrir } from '@/features/push/push';
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: Category },
   { title: "Calendário", url: "/calendar", icon: Calendar },
-  { title: "Funil", url: "/leads", icon: Filter },
-  // Some do menu no mobile — a rota /funnel-maps continua existindo,
-  // só não precisa de espaço na barra de ícones do celular.
+  // `hideOnMobile`: a página some da barra de ícones do celular. A rota
+  // continua existindo (dá pra abrir pelo endereço), só não ocupa lugar no
+  // menu. Escolha do Gabriel (16/11/2026): no celular ficam Dashboard,
+  // Calendário, Clientes, Contratos, Financeiro e Agentes; Funil, Mapas de
+  // Funil, Notas, Automações e Agendamentos são telas de computador.
+  { title: "Funil", url: "/leads", icon: Filter, hideOnMobile: true },
   { title: "Mapas de Funil", url: "/funnel-maps", icon: Hierarchy, hideOnMobile: true },
   { title: "Clientes", url: "/clients", icon: Profile2User },
   { title: "Contratos", url: "/contracts", icon: DocumentText },
   { title: "Financeiro", url: "/financial", icon: DollarCircle },
-  { title: "Notas", url: "/notes", icon: NoteText },
+  { title: "Notas", url: "/notes", icon: NoteText, hideOnMobile: true },
   { title: "Agentes", url: "/agents", icon: AgentIcon },
-  { title: "Automações",   url: "/automations",        icon: Flash },
-  { title: "Agendamentos", url: "/scheduled-messages", icon: Clock },
+  { title: "Automações",   url: "/automations",        icon: Flash, hideOnMobile: true },
+  { title: "Agendamentos", url: "/scheduled-messages", icon: Clock, hideOnMobile: true },
 ];
 
 /**

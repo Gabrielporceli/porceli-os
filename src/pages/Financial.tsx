@@ -18,8 +18,10 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
 import { motion } from "framer-motion";
 import { PillTabs } from "@/components/ui/pill-tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Financial() {
+  const isMobile = useIsMobile();
   const { data: clients = [] } = useClients();
   const { data: contracts = [], refetch } = useContracts();
   const { expenses, createExpense, payExpense, deleteExpense, isLoading: expensesLoading, isPaying, isDeleting } = useExpenses();
@@ -427,6 +429,8 @@ export default function Financial() {
           </div>
           <div className="flex flex-wrap gap-2">
             <PillTabs
+              fill={isMobile}
+              className={isMobile ? "w-full" : undefined}
               items={[
                 { value: 'all', label: 'Todos' },
                 { value: 'pending', label: 'Em Aberto' },
@@ -454,17 +458,19 @@ export default function Financial() {
                 const statusTag = getStatusTag(entry);
                 return (
                   <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-8 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
-                    <h4 className="text-white font-semibold text-lg w-full sm:w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
-                    <div className="flex flex-wrap items-center gap-x-8 gap-y-3 flex-1">
-                      <div>
+                    <h4 className="text-white font-semibold text-base sm:text-lg w-full sm:w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
+                    {/* Celular: Valor e Vencimento lado a lado, Referência
+                        embaixo; antes cada campo ocupava uma linha inteira. */}
+                    <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-x-8">
+                      <div className="order-1">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
                         <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
                       </div>
-                      <div>
+                      <div className="order-3 col-span-2 min-w-0 sm:order-none sm:col-span-1">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
                         <p className="text-white/70 font-medium">{entry.reference}</p>
                       </div>
-                      <div>
+                      <div className="order-2 sm:order-none">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
                         <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
                       </div>
@@ -494,6 +500,8 @@ export default function Financial() {
           </div>
           <div className="flex flex-wrap gap-2">
             <PillTabs
+              fill={isMobile}
+              className={isMobile ? "w-full" : undefined}
               items={[
                 { value: 'all', label: 'Todos' },
                 { value: 'currentMonth', label: 'Mês Atual' },

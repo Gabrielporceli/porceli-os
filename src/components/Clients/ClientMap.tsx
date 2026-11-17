@@ -100,7 +100,10 @@ export function ClientMap({ markers }: ClientMapProps) {
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{ center: [-52, -15], scale: 720 }}
-        style={{ width: '100%', height: '420px' }}
+        // A altura acompanha a proporção do mapa (viewBox 800×620): num
+        // celular de 295px de largura os 420px fixos deixavam uma faixa
+        // vazia em cima e embaixo. No computador o teto de 420px é o de antes.
+        style={{ width: '100%', height: 'auto', aspectRatio: '800 / 620', maxHeight: '420px' }}
         viewBox="0 0 800 620"
       >
         <ZoomableGroup center={[-50, -16]} zoom={1.3}>
