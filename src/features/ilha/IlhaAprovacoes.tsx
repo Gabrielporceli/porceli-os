@@ -57,6 +57,8 @@ export function IlhaAprovacoes({ lista }: { lista: Pendente[] | null }) {
           mensagem: lista.length === 1 ? lista[0].titulo : "Toque para decidir",
           icone,
           selo: lista.length > 1 ? lista.length : undefined,
+          curto: lista.length === 1 ? "Aprovação" : "Aprovações",
+          direita: lista.length === 1 ? "1 pendente" : `${lista.length} pendentes`,
           aoTocar: abrir,
         });
       }, 1200);
@@ -71,6 +73,8 @@ export function IlhaAprovacoes({ lista }: { lista: Pendente[] | null }) {
       mensagem: novos.length === 1 ? novos[0].titulo : "Toque para decidir",
       icone,
       selo: lista.length > 1 ? lista.length : undefined,
+      curto: novos.length === 1 ? "Aprovação" : "Aprovações",
+      direita: novos.length === 1 ? "1 nova" : `${novos.length} novas`,
       aoTocar: abrir,
     });
   }, [lista, navigate]);
