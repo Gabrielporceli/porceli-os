@@ -64,9 +64,9 @@ export function useAprovacoesPendentes() {
 }
 
 /** Botão do topo da Central de Agentes: mesmo padrão dos outros, com o número de pendentes. */
-export function BotaoAprovacoes({ pendentes, onClick }: { pendentes: number; onClick: () => void }) {
+export function BotaoAprovacoes({ pendentes, onClick, className }: { pendentes: number; onClick: () => void; className?: string }) {
   return (
-    <LiquidGlassButton onClick={onClick} className="h-11 gap-2 px-5 text-xs font-bold uppercase tracking-widest">
+    <LiquidGlassButton onClick={onClick} className={cn("h-11 gap-2 px-5 text-xs font-bold uppercase tracking-widest", className)}>
       Aprovações
       {pendentes > 0 && (
         <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black tabular-nums text-white">

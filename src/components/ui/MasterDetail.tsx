@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { appBackgroundStyle } from '@/lib/appBackground';
 
 /** Cor do painel e da aba selecionada: a mesma, pra as duas se fundirem. */
 export const PANEL_BG = 'rgba(255,255,255,0.07)';
@@ -31,6 +32,10 @@ interface MasterDetailProps<T> {
   minHeight?: number;
   /** Muda quando algo ACIMA do bloco muda de tamanho: refaz a medida da altura. */
   measureKey?: unknown;
+  /** Celular: nome da lista, mostrado no botão de voltar do detalhe ("← Clientes"). */
+  rotuloLista?: string;
+  /** Celular: repete a linha do item (nome e resumo) no topo do detalhe, p/ quem não traz o nome no painel. */
+  linhaNoDetalhe?: boolean;
 }
 
 /**
@@ -45,19 +50,22 @@ interface MasterDetailProps<T> {
  * ganhar rolagem por causa dele.
  *
  * No celular a coluna de 220px não cabe ao lado do painel (sobravam ~95px
- * pra ele). Lá vira uma lista vertical: cada item é uma linha e o painel do
- * selecionado abre logo embaixo da própria linha, no mesmo cinza (um
- * "sanfonado"). Quem rola é a página; é o mesmo `renderRow` e os mesmos
- * `children`, só em outra disposição.
+ * pra ele), e abrir o detalhe embaixo da linha (um "sanfonado") deixava a
+ * página comprida e confusa. Lá são duas telas, como nos apps do iPhone:
+ * primeiro a LISTA (uma linha por item, com o resumo à vista); tocar numa
+ * linha abre o DETALHE sozinho, com "← Voltar" no topo. O botão voltar do
+ * aparelho (ou o gesto de arrastar da borda) também volta pra lista, porque o
+ * detalhe aberto ganha uma entrada no histórico. É o mesmo `renderRow` e os
+ * mesmos `children`, só em outra disposição.
  */
 export function MasterDetail<T>({
-  items, getKey, selectedKey, onSelect, renderRow, children, minHeight = 280, measureKey,
+  items, getKey, selectedKey, onSelect, renderRow, children, minHeight = 280, measureKey, rotuloLista = 'Voltar', linhaNoDetalhe = false,
 }: MasterDetailProps<T>) {
   const isMobile = useIsMobile();
   const listRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const linhaSelecionada = useRef<HTMLDivElement>(null);
-  const primeiraSelecao = useRef(true);
+  // Celular: o detalhe está aberto? (a lista é a tela de entrada)
+  const [detalheAberto, setDetalheAberto] = useState(false);
   const [fade, setFade] = useState({ top: false, bottom: false });
   const [height, setHeight] = useState<number>();
 
@@ -110,46 +118,83 @@ export function MasterDetail<T>({
     tabTarget.current = target;
   }
 
-  // Celular: ao trocar de item, a linha escolhida sobe pro topo da tela
-  // (senão o painel abre fora de vista, embaixo do dedo).
+  // Celular: abrir o detalhe cria uma entrada no histórico; o botão/gesto de
+  // voltar do aparelho a desfaz e a tela volta pra lista em vez de sair da página.
   useEffect(() => {
     if (!isMobile) return;
-    if (primeiraSelecao.current) {
-      primeiraSelecao.current = false;
-      return;
+    const aoVoltar = () => setDetalheAberto(false);
+    window.addEventListener('popstate', aoVoltar);
+    return () => window.removeEventListener('popstate', aoVoltar);
+  }, [isMobile]);
+  // Sai do celular (girou a tela, redimensionou) com o detalhe aberto: fecha.
+  useEffect(() => {
+    if (!isMobile) setDetalheAberto(false);
+  }, [isMobile]);
+
+  const abrirDetalhe = (key: string) => {
+    onSelect(key);
+    setDetalheAberto(true);
+    try {
+      window.history.pushState({ masterDetail: true }, '');
+    } catch {
+      /* sem histórico: o botão "Voltar" da tela continua funcionando */
     }
-    const t = window.setTimeout(() => {
-      const el = linhaSelecionada.current;
-      if (!el) return;
-      const y = el.getBoundingClientRect().top + window.scrollY - 16;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }, 60);
-    return () => window.clearTimeout(t);
-  }, [isMobile, selectedKey]);
+    window.scrollTo({ top: 0 });
+  };
+  const fecharDetalhe = () => {
+    // Se há a entrada que criamos, desfaz pelo histórico; senão só fecha.
+    if (window.history.state?.masterDetail) window.history.back();
+    else setDetalheAberto(false);
+  };
 
   if (isMobile) {
+    if (detalheAberto) {
+      return (
+        // Tela própria: cobre a página inteira (busca, números e filtros ficam
+        // por baixo) e rola sozinha; a barra de ícones (z-60) continua por cima.
+        <div
+          ref={boxRef}
+          className="fixed inset-0 z-[55] space-y-3 overflow-y-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]"
+          style={appBackgroundStyle}
+        >
+          <button
+            type="button"
+            onClick={fecharDetalhe}
+            className="flex h-10 items-center gap-2 rounded-full bg-white/10 pl-3 pr-4 text-xs font-bold uppercase tracking-widest text-white"
+          >
+            <span aria-hidden="true">←</span>
+            {rotuloLista}
+          </button>
+          {linhaNoDetalhe && (() => {
+            const atual = items.find((i) => getKey(i) === selectedKey);
+            return atual ? (
+              <div className="surface-flat no-elevation relative flex h-[60px] items-center gap-3 rounded-2xl px-4">{renderRow(atual, true)}</div>
+            ) : null;
+          })()}
+          <div className="surface-flat no-elevation rounded-3xl p-2.5">
+            <div className="space-y-3 rounded-2xl p-2.5" style={{ background: PANEL_BG }}>
+              {children}
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
-      <div ref={boxRef} className="surface-flat no-elevation space-y-1 rounded-3xl p-2.5">
+      <div ref={boxRef} className="space-y-2">
         {items.map((item) => {
           const key = getKey(item);
-          const aberto = key === selectedKey;
           return (
-            <div
+            <button
               key={key}
-              ref={aberto ? linhaSelecionada : undefined}
-              className="overflow-hidden rounded-2xl"
-              style={aberto ? { background: PANEL_BG } : undefined}
+              type="button"
+              onClick={() => abrirDetalhe(key)}
+              className="surface-flat no-elevation relative flex h-[60px] w-full items-center gap-3 rounded-2xl px-4 text-left active:brightness-125"
             >
-              <button
-                type="button"
-                onClick={() => onSelect(key)}
-                aria-expanded={aberto}
-                className="relative flex h-[52px] w-full items-center gap-3 px-4 text-left"
-              >
-                {renderRow(item, aberto)}
-              </button>
-              {aberto && <div className="space-y-3 px-3 pb-3 pt-1">{children}</div>}
-            </div>
+              {/* `true`: na lista todos aparecem como "escolhidos" (nome em
+                  branco e o resumo à vista, não o texto apagado de aba). */}
+              {renderRow(item, true)}
+              <span aria-hidden="true" className="relative ml-auto shrink-0 text-lg text-white/30">›</span>
+            </button>
           );
         })}
       </div>

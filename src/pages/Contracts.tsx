@@ -432,6 +432,8 @@ export default function Contracts() {
           selectedKey={effectiveClient}
           onSelect={setSelectedClientName}
           measureKey={expiringContracts.length}
+          rotuloLista="Contratos"
+          linhaNoDetalhe
           renderRow={(name, isSelected) => {
             const cc = clientGroups[name];
             return (

@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar } from "@/components/ui/calendar";
 import {
     Popover,
@@ -22,6 +23,9 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ date, setDate, className, placeholder = "Selecione uma data" }: DatePickerProps) {
+    // Celular: "20/11/2026" no lugar de "20 de novembro de 2026", que passava
+    // por cima do campo ao lado (ex.: o ícone do horário).
+    const curto = useIsMobile();
     // Fecha ao escolher o dia: aberto, o calendário ficava por cima do campo seguinte e parecia ser dele
     // (renegociação da Luz Solar, 05/11/2026).
     const [aberto, setAberto] = React.useState(false);
@@ -53,7 +57,7 @@ export function DatePicker({ date, setDate, className, placeholder = "Selecione 
                     )}
                 >
                     <CalendarIcon className="mr-2 h-4 w-4 text-primary opacity-60" />
-                    {date && isValid(date) ? format(date, "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
+                    {date && isValid(date) ? format(date, curto ? "dd/MM/yyyy" : "PPP", { locale: ptBR }) : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
             <PopoverContent

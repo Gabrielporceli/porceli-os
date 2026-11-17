@@ -76,14 +76,16 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
           )}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <motion.div>
-          <button type="button" onClick={copiar} className="acao-vidro" title="Copia as perguntas para mandar ao dono do negócio pelo WhatsApp">
+      {/* Celular: os dois botões dividem a largura da linha (juntos passavam da
+          borda do card); a partir de lg ficam do tamanho do texto, à direita. */}
+      <div className="flex w-full items-center gap-2 lg:w-auto lg:shrink-0">
+        <motion.div className="min-w-0 flex-1 lg:flex-none">
+          <button type="button" onClick={copiar} className="acao-vidro max-lg:w-full max-lg:justify-center max-lg:px-2" title="Copia as perguntas para mandar ao dono do negócio pelo WhatsApp">
             <Copy size={14} /> Copiar perguntas
           </button>
         </motion.div>
-        <motion.div>
-          <button type="button" onClick={() => setAberta(true)} className="acao-vidro">
+        <motion.div className="min-w-0 flex-1 lg:flex-none">
+          <button type="button" onClick={() => setAberta(true)} className="acao-vidro max-lg:w-full max-lg:justify-center max-lg:px-2">
             <DocumentText size={14} /> Abrir ficha
           </button>
         </motion.div>

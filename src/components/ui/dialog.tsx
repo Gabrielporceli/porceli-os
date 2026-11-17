@@ -92,7 +92,20 @@ const DialogContent = React.forwardRef<
       {isOpen && (
         <DialogPortal forceMount>
           <DialogOverlay forceMount />
-          <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
+          <DialogPrimitive.Content
+            ref={ref}
+            asChild
+            forceMount
+            {...props}
+            // Celular: o Radix foca o PRIMEIRO campo ao abrir, e isso levanta o
+            // teclado antes de a pessoa ter tocado em qualquer campo (o modal
+            // "abria já escrevendo"). Em tela de toque o foco fica por conta do
+            // dedo; com mouse/teclado nada muda.
+            onOpenAutoFocus={(e) => {
+              props.onOpenAutoFocus?.(e)
+              if (!e.defaultPrevented && window.matchMedia("(pointer: coarse)").matches) e.preventDefault()
+            }}
+          >
             {chip ? (
               <NotchedFromClickOrigin style={style} className={className} chip={chip}>
                 {children}
