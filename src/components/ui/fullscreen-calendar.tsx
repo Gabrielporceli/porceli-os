@@ -16,6 +16,7 @@ import {
   startOfToday,
   startOfWeek,
 } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -106,7 +107,9 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
     <div className="flex flex-1 flex-col">
       {/* Calendar Header */}
       <div className="flex flex-col space-y-4 p-4 md:flex-row md:items-center md:justify-between md:space-y-0 lg:flex-none border-b border-white/5">
-        <div className="flex items-center gap-4">
+        {/* Celular: a cápsula de navegação fica à esquerda e o mês à direita,
+            na mesma linha (o mês nem aparecia: era `hidden sm:block`). */}
+        <div className="flex items-center justify-between gap-3 md:justify-start md:gap-4">
           {leftActions}
           {/* Cápsula de navegação do mês — mesma lente de vidro líquido
               (refração SVG + bevel) dos botões Google/Notion */}
@@ -137,18 +140,22 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
           </div>
 
-          <h2 className="text-lg font-black text-white tracking-tight leading-none ml-2 hidden sm:block">
-            {format(firstDayCurrentMonth, "MMMM, yyyy")}
+          <h2 className="text-base font-black text-white tracking-tight leading-none capitalize sm:ml-2 sm:text-lg">
+            {format(firstDayCurrentMonth, "MMMM, yyyy", { locale: ptBR })}
           </h2>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">          {rightActions}
+        {/* Celular: Google, Notion e Novo evento numa linha só, em 3 colunas
+            iguais (antes eram 3 linhas de botões largos). */}
+        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:items-center md:gap-3">
+          {rightActions}
           <LiquidGlassButton
             tint="primary"
             onClick={() => onAddEvent?.(selectedDay)}
-            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+            className="h-10 px-2 text-[11px] font-bold uppercase tracking-widest md:h-11 md:px-6 md:text-xs"
           >
-            <span>Novo Evento</span>
+            <span className="md:hidden">Novo</span>
+            <span className="hidden md:inline">Novo Evento</span>
           </LiquidGlassButton>
         </div>
       </div>
@@ -193,7 +200,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                                 "#6829c0";
 
                 return (
-                  <div key={day.toISOString()} className={cn(outside && "opacity-30 pointer-events-none")}>
+                  <div key={day.toISOString()} className={cn("min-h-[58px] md:min-h-0", outside && "opacity-30 pointer-events-none")}>
                     <div
                       onClick={() => { setSelectedDay(day); onDaySelect?.(day); }}
                       className={cn(

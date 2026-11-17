@@ -15,6 +15,7 @@ import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Icon } from "@/components/ui/icon";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AgentsCanvas, resetTerminalLayout } from "@/components/ui/agents-canvas";
 import { AgentDialog } from "@/features/agents/AgentDialog";
 import { AtividadeHermes } from "@/features/agents/AtividadeHermes";
@@ -29,6 +30,16 @@ export default function AgentsHub() {
   const [fitVersion, setFitVersion] = useState(0);
   const [atividade, setAtividade] = useState(false);
   const [aprovacoes, setAprovacoes] = useState(false);
+  // Celular: dois toques num terminal o levam pra tela cheia, acima do teclado.
+  const isMobile = useIsMobile();
+  const [foco, setFoco] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isMobile) setFoco(null);
+  }, [isMobile]);
+  const sairDoFoco = () => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    setFoco(null);
+  };
   // Quem chega pelo aviso da ilha ou pela notificação do celular vem com
   // ?aprovacoes=1: o painel já abre, e o parâmetro sai do endereço.
   const [params, setParams] = useSearchParams();
@@ -123,7 +134,19 @@ export default function AgentsHub() {
           </p>
         </section>
       ) : (
-        <div className="min-h-0 flex-1 md:h-full">
+        <div className={foco ? "agente-foco fixed inset-x-0 z-[80] flex flex-col gap-2 bg-black" : "min-h-0 flex-1 md:h-full"}>
+        {foco && (
+          // Só o celular chega aqui. O nome do agente já está na barra do
+          // próprio terminal; aqui fica só o caminho de volta.
+          <button
+            type="button"
+            onClick={sairDoFoco}
+            className="flex h-10 shrink-0 items-center gap-2 self-start rounded-full bg-white/10 px-4 text-xs font-bold uppercase tracking-widest text-white"
+          >
+            ← Voltar
+          </button>
+        )}
+        <div className={foco ? "min-h-0 flex-1" : "h-full"}>
         <AgentsCanvas
           fill
           variant="terminal"
@@ -133,10 +156,13 @@ export default function AgentsHub() {
           conversas={conversas}
           layoutVersion={layoutVersion}
           fitVersion={fitVersion}
+          foco={foco}
+          onFoco={isMobile ? setFoco : undefined}
           onEdit={(id) => setDialogo({ open: true, editar: id })}
           onRename={(id, nome) => updateAgent(id, { nome })}
           onColor={(id, cor) => updateAgent(id, { cor })}
         />
+        </div>
         </div>
       )}
 

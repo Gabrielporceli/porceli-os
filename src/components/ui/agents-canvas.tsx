@@ -106,7 +106,32 @@ type TerminalNodeData = AgentNodeData & {
   onSelect?: (id: string) => void;
   onRename?: (id: string, nome: string) => void;
   onColor?: (id: string, cor: AvatarColor) => void;
+  /** Celular: dois toques no terminal o põem em foco (ver `foco` em Props). */
+  onFoco?: (id: string) => void;
 };
+
+/**
+ * Dois toques seguidos (até 350 ms e 30 px de distância). O `dblclick` do
+ * iPhone não é confiável com o zoom desligado, então a conta é feita aqui, em
+ * cima dos eventos de ponteiro. Só vale para toque: com o mouse seguem os
+ * cliques de sempre.
+ */
+function useDuploToque(aoDuplo?: (e: React.PointerEvent) => void) {
+  const ultimo = useRef<{ t: number; x: number; y: number } | null>(null);
+  return aoDuplo
+    ? (e: React.PointerEvent) => {
+        if (e.pointerType !== "touch") return;
+        const agora = performance.now();
+        const u = ultimo.current;
+        if (u && agora - u.t < 350 && Math.hypot(e.clientX - u.x, e.clientY - u.y) < 30) {
+          ultimo.current = null;
+          aoDuplo(e);
+        } else {
+          ultimo.current = { t: agora, x: e.clientX, y: e.clientY };
+        }
+      }
+    : undefined;
+}
 
 /** Bolinha da cor na barra de título; abre a paleta com as 12 cores dos agentes. */
 function SeletorCor({ atual, valor, onEscolher }: { atual: string; valor?: AvatarColor; onEscolher: (c: AvatarColor) => void }) {
@@ -205,10 +230,21 @@ const STATUS_DOT: Record<AgentStatus, string> = {
 
 /** Janela de terminal: arrasta pela barra de título, redimensiona pelas bordas. */
 function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
-  const { agent: a, selected, onEdit, onSelect, onRename, onColor } = data;
+  const { agent: a, selected, onEdit, onSelect, onRename, onColor, onFoco } = data;
   const { fitView } = useReactFlow();
   const cor = corDoAgente(a);
   const focar = () => fitView({ nodes: [{ id }], padding: 0.12, maxZoom: 1.3, duration: 350 });
+  // Celular: dois toques levam o terminal pra tela cheia, com o campo de
+  // digitação já focado. O `focus()` TEM de ser síncrono, dentro do toque: o
+  // iPhone só abre o teclado assim.
+  const duploToque = useDuploToque(
+    onFoco
+      ? (e) => {
+          (e.currentTarget as HTMLElement).closest("[data-id]")?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+          onFoco(id);
+        }
+      : undefined,
+  );
   return (
     <>
       <NodeResizer
@@ -241,6 +277,7 @@ function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
             background: `linear-gradient(90deg, ${comAlfa(cor, 0.16)}, ${comAlfa(cor, 0.04)})`,
           }}
           onDoubleClick={focar}
+          onPointerUp={duploToque}
           title="Arraste para mover · duplo clique para ampliar"
         >
           <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_DOT[a.status])} />
@@ -273,7 +310,7 @@ function TerminalNode({ id, data }: NodeProps<Node<TerminalNodeData>>) {
             )}
           </div>
         </div>
-        <div className="nodrag nowheel nopan min-h-0 flex-1 cursor-text">
+        <div className="nodrag nowheel nopan min-h-0 flex-1 cursor-text" onPointerUp={duploToque}>
           <AgentTerminal agentId={id} cor={cor} onFocus={() => onSelect?.(id)} />
         </div>
       </div>
@@ -429,6 +466,14 @@ interface Props {
   layoutVersion?: number;
   /** Ao mudar, só afasta o zoom para mostrar todos, sem mexer nas posições (botão "Ver todos"). */
   fitVersion?: number;
+  /**
+   * Celular: terminal em foco. Ele ocupa o canvas inteiro, em zoom 100%, e o
+   * canvas é quem se ajusta à área visível (a página põe o contêiner acima do
+   * teclado). `null` volta à visão geral. Só vale com `variant="terminal"`.
+   */
+  foco?: string | null;
+  /** Dois toques num terminal pedem o foco (só o celular passa isto). */
+  onFoco?: (id: string) => void;
 }
 
 function Inner({
@@ -445,9 +490,11 @@ function Inner({
   onColor,
   layoutVersion = 0,
   fitVersion = 0,
+  foco = null,
+  onFoco,
 }: Props) {
   const term = variant === "terminal";
-  const { fitView } = useReactFlow();
+  const { fitView, setViewport } = useReactFlow();
 
   const toNode = useCallback(
     (agent: CanvasAgent, i: number, old?: Node<AgentNodeData>, resetPos = false): Node<AgentNodeData> => {
@@ -469,7 +516,7 @@ function Inner({
       }
       const size =
         !resetPos && old?.width && old?.height ? { width: old.width, height: old.height } : termSize(agent.id);
-      const data: TerminalNodeData = { agent, selected: selectedId === agent.id, onEdit, onSelect, onRename, onColor };
+      const data: TerminalNodeData = { agent, selected: selectedId === agent.id, onEdit, onSelect, onRename, onColor, onFoco };
       return {
         id: agent.id,
         type: "terminal",
@@ -480,7 +527,7 @@ function Inner({
         data,
       };
     },
-    [term, selectedId, onEdit, onSelect, onRename, onColor],
+    [term, selectedId, onEdit, onSelect, onRename, onColor, onFoco],
   );
 
   const built = useMemo<Node<AgentNodeData>[]>(
@@ -490,6 +537,8 @@ function Inner({
     [],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<AgentNodeData>>(built);
+  /** Id do terminal em foco (celular); só lido dentro de efeitos e observadores. */
+  const focoRef = useRef<string | null>(null);
 
   // Agentes que entram/saem ou mudam de estado, sem perder posição nem tamanho.
   useEffect(() => {
@@ -503,7 +552,11 @@ function Inner({
   const initialized = useNodesInitialized();
   useEffect(() => {
     if (!initialized) return;
-    const t = setTimeout(() => fitView(fitOpts), 80);
+    // Em foco (celular) o terminal já está em tela cheia e zoom 100%: não
+    // reenquadra por cima (os nós voltam a ser medidos ao trocarem de tamanho).
+    const t = setTimeout(() => {
+      if (!focoRef.current) fitView(fitOpts);
+    }, 80);
     return () => clearTimeout(t);
   }, [initialized, agents.length, fitView, fitOpts]);
 
@@ -524,16 +577,63 @@ function Inner({
 
   // Se o canvas nasceu sem largura (aba/painel escondido), enquadra quando ganhar uma.
   const boxRef = useRef<HTMLDivElement>(null);
+
+  // Foco (celular): o terminal escolhido vira o canvas inteiro. Guarda onde
+  // ele estava e com que tamanho pra devolver ao sair.
+  const antesDoFoco = useRef<{ id: string; position: { x: number; y: number }; width?: number; height?: number } | null>(null);
+  /** Põe o terminal em foco do tamanho EXATO da área útil do canvas, em zoom 100%. */
+  const aplicarFoco = useCallback(() => {
+    const el = boxRef.current;
+    const id = focoRef.current;
+    if (!el || !id) return;
+    // 6px de recorte de cada lado (ver o `inset-1.5` mais abaixo).
+    const width = el.clientWidth - 12;
+    const height = el.clientHeight - 12;
+    if (width < 100 || height < 100) return;
+    setNodes((cur) => cur.map((n) => (n.id === id ? { ...n, position: { x: 0, y: 0 }, width, height, measured: undefined } : n)));
+    setViewport({ x: 0, y: 0, zoom: 1 });
+  }, [setNodes, setViewport]);
+
+  useEffect(() => {
+    if (!term) return;
+    if (foco) {
+      focoRef.current = foco;
+      setNodes((cur) => {
+        const n = cur.find((x) => x.id === foco);
+        if (n && antesDoFoco.current?.id !== foco) {
+          antesDoFoco.current = { id: foco, position: n.position, width: n.width, height: n.height };
+        }
+        return cur;
+      });
+      const t = setTimeout(aplicarFoco, 30);
+      return () => clearTimeout(t);
+    }
+    const antes = antesDoFoco.current;
+    focoRef.current = null;
+    antesDoFoco.current = null;
+    if (antes) {
+      setNodes((cur) =>
+        cur.map((n) => (n.id === antes.id ? { ...n, position: antes.position, width: antes.width, height: antes.height, measured: undefined } : n)),
+      );
+      const t = setTimeout(() => fitView(fitOpts), 80);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foco, term]);
+
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
     // Reenquadra quando o canvas muda de tamanho (e ao ganhar o primeiro tamanho).
+    // Em foco, quem muda de tamanho é o terminal (o teclado subiu ou desceu).
     const ro = new ResizeObserver(() => {
-      if (el.clientWidth > 0) fitView(fitOpts);
+      if (el.clientWidth <= 0) return;
+      if (focoRef.current) aplicarFoco();
+      else fitView(fitOpts);
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [fitView, fitOpts]);
+  }, [fitView, fitOpts, aplicarFoco]);
 
   // Linha fina do principal para cada agente; linha viva para quem conversou.
   const edges = useMemo<Edge[]>(() => {

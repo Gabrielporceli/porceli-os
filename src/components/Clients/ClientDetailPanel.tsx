@@ -65,7 +65,7 @@ type Icon = ComponentType<{ className?: string }>;
 
 function Field({ icon: Ic, label, children }: { icon: Icon; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 md:gap-4">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">
         <Ic className="h-4 w-4 text-primary" />
       </div>
@@ -131,7 +131,7 @@ export function ClientDetailPanel({ client, planColors = {}, onEdit, onDelete }:
       </div>
 
       <div className={card}>
-        <div className="grid grid-cols-1 gap-x-10 gap-y-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-10 gap-y-3 md:grid-cols-2 md:gap-y-5">
           <Field icon={Building} label="CNPJ">{client.cnpj || 'Não definido'}</Field>
           <Field icon={Sms} label="Email">{client.email || 'Não definido'}</Field>
           <Field icon={Call} label="Responsável">{client.responsible || 'Não definido'}</Field>

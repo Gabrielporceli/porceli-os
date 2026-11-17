@@ -230,7 +230,9 @@ export default function Clients() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in">
+    // flex-col + order (e não space-y): no celular a lista de clientes vem
+    // ANTES do mapa, que é só consulta e ocupava a primeira tela inteira.
+    <div className="flex flex-col gap-6 md:gap-8 animate-fade-in">
       <ClientsSearch
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -240,7 +242,7 @@ export default function Clients() {
 
       <ClientsKPIs clients={clientsForKPIs} />
 
-      <div className="surface-flat p-5">
+      <div className="surface-flat order-last p-5 md:order-none">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-white font-semibold text-sm">Mapa de Clientes</span>
           <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">

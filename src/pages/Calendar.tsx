@@ -1035,7 +1035,7 @@ export default function Calendar() {
           card com `.liquid-glass` voltar para o topo desta tela, a tarja
           volta junto. A correção de verdade é o header sem `backdrop-filter`
           (avaliado e recusado por custo visual). */}
-      <div className="h-[70vh] min-h-[420px] md:h-[calc(100vh-80px)] md:min-h-[650px] flex gap-4">
+      <div className="md:h-[calc(100vh-80px)] md:min-h-[650px] flex gap-4">
       {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
           calendário, criando "pontas" escuras nos cantos. */}
       <div className="flex-1 min-w-0 flex">
@@ -1045,12 +1045,14 @@ export default function Calendar() {
           onToggleLock={(date: Date) => toggleLockDay(date.getDate())}
           isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
-            <div className="flex items-center gap-2 flex-wrap">
+            // `contents` no celular: os botões viram filhos diretos da grade de
+            // 3 colunas do cabeçalho do calendário (fullscreen-calendar.tsx).
+            <div className="contents md:flex md:items-center md:gap-2 md:flex-wrap">
               {/* Botão Google Calendar — Apple Tahoe Liquid Glass */}
               <LiquidGlassButton
                 onClick={googleConnected ? fetchGoogleEvents : handleConnectGoogle}
                 disabled={googleConnected ? loadingGoogle : connectingGoogle}
-                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+                className="px-2 h-10 text-[11px] font-bold uppercase tracking-widest md:px-5 md:h-11 md:text-xs"
               >
                 {(googleConnected ? loadingGoogle : connectingGoogle)
                   ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -1062,7 +1064,7 @@ export default function Calendar() {
               <LiquidGlassButton
                 onClick={notionConnected ? () => fetchNotionTasks() : handleConnectNotion}
                 disabled={notionConnected ? loadingNotion : connectingNotion}
-                className="px-5 h-11 text-xs font-bold uppercase tracking-widest"
+                className="px-2 h-10 text-[11px] font-bold uppercase tracking-widest md:px-5 md:h-11 md:text-xs"
               >
                 {(notionConnected ? loadingNotion : connectingNotion)
                   ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -1178,8 +1180,11 @@ export default function Calendar() {
             </DialogTitle>
           }
         >
-          {/* Body — 2 colunas (empilha em telas pequenas) */}
-          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden border-t border-white/[0.05]">
+          {/* Body — 2 colunas (empilha em telas pequenas). No celular as duas
+              partes (lista e formulário) NÃO rolam cada uma no seu quadradinho:
+              o corpo todo rola junto, uma coluna só. A rolagem própria de cada
+              lado só vale a partir de md. */}
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden border-t border-white/[0.05]">
             <style>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
@@ -1210,7 +1215,7 @@ export default function Calendar() {
             <div
               ref={dayModalListRef}
               onScroll={updateDayModalFade}
-              className="flex-1 min-h-0 overflow-y-auto custom-scrollbar scrollbar-hide p-5 border-b md:border-b-0 md:border-r border-white/[0.05]"
+              className="shrink-0 md:shrink md:flex-1 md:min-h-0 md:overflow-y-auto custom-scrollbar scrollbar-hide p-4 md:p-5 border-b md:border-b-0 md:border-r border-white/[0.05]"
               style={edgeFadeStyle(dayModalFade)}
             >
               <div>
@@ -1437,7 +1442,7 @@ export default function Calendar() {
             </div>
 
             {/* Direita: formulário + trancar dia */}
-            <div className="w-full md:w-[300px] flex-1 md:flex-none min-h-0 md:min-h-0 shrink-0 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-4">
+            <div className="w-full md:w-[300px] shrink-0 md:overflow-y-auto custom-scrollbar p-4 md:p-5 flex flex-col gap-4">
 
               {/* Trancar dia */}
               <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedDay && isDayLocked(selectedDay) ? 'bg-red-500/10 border-red-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>

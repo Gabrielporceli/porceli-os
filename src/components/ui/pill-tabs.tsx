@@ -128,6 +128,9 @@ export function PillTabs({ items, value, onChange, className, size = "sm", fill 
               "relative z-20 rounded-full font-bold uppercase tracking-[0.08em] transition-colors duration-500",
               fill && "flex-1",
               size === "md" ? "px-5 py-2 text-xs" : "px-4 py-1.5 text-[11px]",
+              // `fill` reparte a largura entre as abas (uma linha só, no
+              // celular): o respiro lateral encolhe pra caberem 4 rótulos.
+              fill && "px-1 text-[10px] tracking-[0.04em]",
               ativa ? "lqg-text text-white" : "text-white/50 hover:text-white/80"
             )}
           >

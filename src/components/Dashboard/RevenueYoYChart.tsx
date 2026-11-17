@@ -207,7 +207,7 @@ export function RevenueYoYChart({
 
       <CardContent className="px-2.5">
         <div className="@container px-2.5">
-          <div className="flex flex-wrap gap-10 mb-10">
+          <div className="flex flex-wrap gap-6 mb-6 sm:gap-10 sm:mb-10">
             {yearsToShow.map((y, i) => {
               const yearTotal = getYearTotal(y);
               const isCurrent = y === currentYear;
@@ -246,7 +246,9 @@ export function RevenueYoYChart({
 
         <ChartContainer
           config={chartConfig}
-          className="h-[400px] w-full [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
+          // No celular 400px de gráfico num card de 343px de largura ficava
+          // esticado (o card passava de 790px de altura).
+          className="h-[240px] w-full sm:h-[400px] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
         >
           <AreaChart
             accessibilityLayer

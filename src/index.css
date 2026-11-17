@@ -1710,3 +1710,18 @@ html.teclado-aberto .modal-legivel.fixed {
   top: calc(var(--vv-top, 0px) + var(--vv-h, 100vh) / 2) !important;
   max-height: calc(var(--vv-h, 100vh) - 16px) !important;
 }
+
+/* Terminal de agente em foco no celular (AgentsHub): ocupa a tela inteira e,
+   com o teclado aberto, só a área visível acima dele. As variáveis vêm de
+   useTecladoMobile, que só as atualiza com o teclado aberto; por isso o ramo
+   "aberto" só vale sob a classe `teclado-aberto`. */
+.agente-foco {
+  top: 0;
+  height: 100dvh;
+  padding: calc(env(safe-area-inset-top) + 8px) 8px 8px;
+}
+html.teclado-aberto .agente-foco {
+  top: var(--vv-top, 0px);
+  height: var(--vv-h, 100dvh);
+  padding-top: 8px;
+}
