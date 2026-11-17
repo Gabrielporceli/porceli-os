@@ -1,4 +1,4 @@
-// Service worker do Porceli OS: só notificações push.
+// Service worker do Porceli System: só notificações push.
 //
 // De propósito NÃO há handler de `fetch` nem cache: o app continua vindo
 // sempre da rede, e um deploy novo na Vercel aparece na hora, sem versão
@@ -21,7 +21,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       // O iOS exige que todo push mostre uma notificação visível.
-      await self.registration.showNotification(d.titulo || "Porceli OS", {
+      await self.registration.showNotification(d.titulo || "Porceli System", {
         body: d.corpo || "",
         icon: "/icons/icon-192.png",
         badge: "/icons/icon-192.png",
