@@ -116,17 +116,19 @@ export function ProjectionChart({ contracts = [], activeContractsCount, financia
 
       <CardContent className="px-2.5">
         <div className="@container px-2.5">
-          <div className="flex flex-wrap gap-10 mb-10">
+          {/* Celular: os 3 números na MESMA linha (em 3 colunas), menores; antes
+              quebravam em duas linhas. A partir de sm é o de sempre. */}
+          <div className="grid grid-cols-3 gap-3 mb-6 sm:flex sm:flex-wrap sm:gap-10 sm:mb-10">
             {kpis.map((kpi) => (
-              <div key={kpi.label} className="space-y-1">
-                <div className="flex items-center gap-2.5">
+              <div key={kpi.label} className="min-w-0 space-y-1">
+                <div className="flex items-center gap-1.5 sm:gap-2.5">
                   <div
-                    className="w-0.5 h-12 rounded-full"
+                    className="w-0.5 h-10 shrink-0 rounded-full sm:h-12"
                     style={{ backgroundColor: kpi.color }}
                   />
-                  <div className="flex flex-col gap-2">
-                    <div className="text-sm font-medium text-white/40">{kpi.label}</div>
-                    <div className="text-2xl font-semibold leading-none text-white">{kpi.value}</div>
+                  <div className="flex min-w-0 flex-col gap-1.5 sm:gap-2">
+                    <div className="text-[10px] font-medium leading-tight text-white/40 sm:text-sm">{kpi.label}</div>
+                    <div className="truncate text-[13px] font-semibold leading-none text-white sm:text-2xl">{kpi.value}</div>
                   </div>
                 </div>
               </div>
@@ -137,7 +139,7 @@ export function ProjectionChart({ contracts = [], activeContractsCount, financia
         {data.length > 0 ? (
           <ChartContainer
             config={chartConfig}
-            className="h-[400px] w-full [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
+            className="h-[210px] w-full sm:h-[400px] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-initial"
           >
             <AreaChart
               accessibilityLayer

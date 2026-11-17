@@ -81,23 +81,28 @@ export default function AgentsHub() {
   return (
     // Celular: os 5 botões não cabem flutuando sobre o canvas (somam 560px e
     // os dois primeiros, Aprovações e MCP, saíam pela esquerda da tela). Aqui
-    // eles viram uma faixa própria e o canvas ocupa o que sobra. Pra caber
-    // em duas linhas, o `order` sobe "Criar agente" pro lado de Aprovações
-    // (linha 1) e deixa MCP, Ver todos e Organizar na linha 2. A partir de
-    // md volta o de sempre: flutuando no canto, na ordem do código.
+    // eles viram uma faixa própria, numa grade de 6 colunas: linha 1 com
+    // Aprovações e Criar agente (3 colunas cada, mesma largura) e linha 2 com
+    // MCP, Ver todos e Organizar (2 colunas cada). O `order` sobe "Criar
+    // agente" pro lado de Aprovações. A partir de md volta o de sempre:
+    // flutuando no canto, na ordem do código.
     <div ref={boxRef} data-shift={box.shift} className="relative flex flex-col gap-3 md:block" style={{ height: box.h, marginTop: box.shift }}>
-      <div className="z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 max-md:[&>*]:order-3 max-md:[&>*:first-child]:order-1 max-md:[&>*:last-child]:order-2 md:absolute md:right-4 md:top-4">
-        <BotaoAprovacoes pendentes={pendentes.lista?.length ?? 0} onClick={() => setAprovacoes(true)} />
+      <div className="z-20 grid shrink-0 grid-cols-6 gap-2 max-md:[&>*]:order-3 max-md:[&>*:first-child]:order-1 max-md:[&>*:last-child]:order-2 md:absolute md:right-4 md:top-4 md:flex md:flex-wrap md:items-center md:justify-end">
+        <BotaoAprovacoes
+          pendentes={pendentes.lista?.length ?? 0}
+          onClick={() => setAprovacoes(true)}
+          className="max-md:col-span-3 max-md:h-10 max-md:w-full max-md:px-2 max-md:text-[11px]"
+        />
         <LiquidGlassButton
           onClick={() => setAtividade(true)}
-          className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+          className="h-11 px-5 text-xs font-bold uppercase tracking-widest max-md:col-span-2 max-md:h-10 max-md:w-full max-md:px-2 max-md:text-[11px]"
         >
           MCP
         </LiquidGlassButton>
         {agents.length > 1 && (
           <LiquidGlassButton
             onClick={() => setFitVersion((v) => v + 1)}
-            className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+            className="h-11 px-5 text-xs font-bold uppercase tracking-widest max-md:col-span-2 max-md:h-10 max-md:w-full max-md:px-2 max-md:text-[11px]"
           >
             Ver todos
           </LiquidGlassButton>
@@ -108,17 +113,16 @@ export default function AgentsHub() {
               resetTerminalLayout(agents.map((a) => a.id));
               setLayoutVersion((v) => v + 1);
             }}
-            className="h-11 px-5 text-xs font-bold uppercase tracking-widest"
+            className="h-11 px-5 text-xs font-bold uppercase tracking-widest max-md:col-span-2 max-md:h-10 max-md:w-full max-md:px-2 max-md:text-[11px]"
           >
             Organizar
           </LiquidGlassButton>
         )}
-        <motion.div
-        >
+        <motion.div className="max-md:col-span-3">
           <LiquidGlassButton
             tint="primary"
             onClick={() => setDialogo({ open: true })}
-            className="h-11 px-6 text-xs font-bold uppercase tracking-widest"
+            className="h-11 px-6 text-xs font-bold uppercase tracking-widest max-md:h-10 max-md:w-full max-md:px-2 max-md:text-[11px]"
           >
             Criar agente
           </LiquidGlassButton>

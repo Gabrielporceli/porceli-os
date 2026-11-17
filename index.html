@@ -32,6 +32,9 @@
     <!-- Fundo escuro antes do CSS carregar: sem isto o app abre com um
          clarão branco na tela de início. -->
     <style>html, body { background-color: #000; }</style>
+    <!-- O wallpaper das telas internas começa a baixar já aqui, não só quando
+         o layout monta: sem isto o app abria preto e o fundo "acendia" depois. -->
+    <link rel="preload" as="image" href="/app-bg.webp" type="image/webp" />
     <meta name="description" content="Sistema de CRM para gestão de leads, clientes e contratos" />
     <meta name="author" content="Porceli Company" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">

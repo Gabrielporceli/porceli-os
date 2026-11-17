@@ -495,6 +495,8 @@ function Inner({
 }: Props) {
   const term = variant === "terminal";
   const { fitView, setViewport } = useReactFlow();
+  /** Id do terminal em foco (celular); lido em efeitos, observadores e em `toNode`. */
+  const focoRef = useRef<string | null>(null);
 
   const toNode = useCallback(
     (agent: CanvasAgent, i: number, old?: Node<AgentNodeData>, resetPos = false): Node<AgentNodeData> => {
@@ -521,6 +523,8 @@ function Inner({
         id: agent.id,
         type: "terminal",
         dragHandle: ".term-drag",
+        // Em foco, só o escolhido aparece (ver `aplicarFoco`).
+        hidden: focoRef.current ? agent.id !== focoRef.current : false,
         ...size,
         ...measured,
         position: pos ?? termInitialPos(agent.id, i),
@@ -537,8 +541,6 @@ function Inner({
     [],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<AgentNodeData>>(built);
-  /** Id do terminal em foco (celular); só lido dentro de efeitos e observadores. */
-  const focoRef = useRef<string | null>(null);
 
   // Agentes que entram/saem ou mudam de estado, sem perder posição nem tamanho.
   useEffect(() => {
@@ -590,7 +592,13 @@ function Inner({
     const width = el.clientWidth - 12;
     const height = el.clientHeight - 12;
     if (width < 100 || height < 100) return;
-    setNodes((cur) => cur.map((n) => (n.id === id ? { ...n, position: { x: 0, y: 0 }, width, height, measured: undefined } : n)));
+    // Os outros terminais somem (`hidden`): ficavam à mostra logo abaixo do
+    // escolhido, que agora é do tamanho do canvas e está em (0,0).
+    setNodes((cur) =>
+      cur.map((n) =>
+        n.id === id ? { ...n, hidden: false, position: { x: 0, y: 0 }, width, height, measured: undefined } : { ...n, hidden: true },
+      ),
+    );
     setViewport({ x: 0, y: 0, zoom: 1 });
   }, [setNodes, setViewport]);
 
@@ -613,7 +621,11 @@ function Inner({
     antesDoFoco.current = null;
     if (antes) {
       setNodes((cur) =>
-        cur.map((n) => (n.id === antes.id ? { ...n, position: antes.position, width: antes.width, height: antes.height, measured: undefined } : n)),
+        cur.map((n) =>
+          n.id === antes.id
+            ? { ...n, hidden: false, position: antes.position, width: antes.width, height: antes.height, measured: undefined }
+            : { ...n, hidden: false },
+        ),
       );
       const t = setTimeout(() => fitView(fitOpts), 80);
       return () => clearTimeout(t);

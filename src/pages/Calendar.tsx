@@ -1,3 +1,4 @@
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Card } from "@/components/ui/card";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { usePageReady } from "@/hooks/usePageReady";
@@ -125,6 +126,8 @@ export default function Calendar() {
   const [connectingNotion, setConnectingNotion] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [panelDate, setPanelDate] = useState(new Date()); // dia exibido no painel lateral
+  // Até 1023px o calendário é compacto e as atividades do dia vêm embaixo (sem modal).
+  const compacto = !useMediaQuery("(min-width: 1024px)");
 
   // Fade do topo/base de listas de atividade roláveis (modal do dia +
   // painel lateral "Atividades de Hoje"): só mostra o fade de um lado se
@@ -1035,13 +1038,15 @@ export default function Calendar() {
           card com `.liquid-glass` voltar para o topo desta tela, a tarja
           volta junto. A correção de verdade é o header sem `backdrop-filter`
           (avaliado e recusado por custo visual). */}
-      <div className="md:h-[calc(100vh-80px)] md:min-h-[650px] flex gap-4">
+      {/* Até 1023px: o calendário e, logo abaixo, as atividades do dia escolhido.
+          A partir de lg: lado a lado, com a altura da tela, como sempre foi. */}
+      <div className="flex flex-col gap-4 lg:h-[calc(100vh-80px)] lg:min-h-[650px] lg:flex-row">
       {/* Sem overflow-hidden: clipava a sombra externa do card de vidro do
           calendário, criando "pontas" escuras nos cantos. */}
       <div className="flex-1 min-w-0 flex">
         <FullScreenCalendar
           data={calendarData}
-          onDaySelect={(date: Date) => setSelectedDay(date.getDate())}
+          onDaySelect={(date: Date) => (compacto ? setPanelDate(date) : setSelectedDay(date.getDate()))}
           onToggleLock={(date: Date) => toggleLockDay(date.getDate())}
           isDayLocked={(date: Date) => isDayLocked(date.getDate())}
           rightActions={
@@ -1083,15 +1088,28 @@ export default function Calendar() {
       </div>
 
       {/* Painel lateral — Atividades do dia (navegável) */}
-      <aside className="hidden lg:flex w-[340px] shrink-0 surface-flat rounded-3xl overflow-hidden flex-col">
+      <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-3xl surface-flat lg:w-[340px]">
         <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-white tracking-tight">{panelLabel}</h3>
-            <p className="text-white/65 text-xs mt-0.5 capitalize truncate">
+            <p className="text-white/65 text-xs mt-0.5 truncate first-letter:uppercase">
               {panelDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {/* Trancar o dia (o modal do dia, que tinha isto, só existe a partir de lg). */}
+            {compacto && panelDate.getMonth() === currentDate.getMonth() && panelDate.getFullYear() === currentDate.getFullYear() && (
+              <button
+                onClick={() => toggleLockDay(panelDate.getDate())}
+                title={isDayLocked(panelDate.getDate()) ? "Destrancar dia" : "Trancar dia"}
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                  isDayLocked(panelDate.getDate()) ? "bg-red-500/20 text-red-300" : "text-white/65 hover:text-white hover:bg-white/10",
+                )}
+              >
+                {isDayLocked(panelDate.getDate()) ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              </button>
+            )}
             <button
               onClick={() => shiftPanelDay(-1)}
               title="Dia anterior"
@@ -1118,11 +1136,11 @@ export default function Calendar() {
         <div
           ref={todayListRef}
           onScroll={updateTodayListFade}
-          className="flex-1 overflow-y-auto custom-scrollbar scrollbar-hide px-4 pt-4 pb-8 space-y-3 min-h-0"
+          className="px-4 pt-4 pb-6 space-y-3 custom-scrollbar scrollbar-hide lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-8"
           style={edgeFadeStyle(todayListFade)}
         >
           {todayItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
+            <div className="flex flex-col items-center justify-center py-10 gap-3 opacity-60 lg:py-16">
               <CalendarIcon className="w-10 h-10" />
               <p className="text-sm text-white text-center">Nenhuma atividade<br />neste dia</p>
             </div>

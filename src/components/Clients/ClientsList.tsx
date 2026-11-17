@@ -54,6 +54,7 @@ export function ClientsList({ clients, onEditClient, onDeleteClient, planColors 
       selectedKey={selected.id}
       onSelect={setSelectedId}
       minHeight={520}
+      rotuloLista="Clientes"
       measureKey={clients.length}
       renderRow={(client, isSelected) => (
         <>

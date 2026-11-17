@@ -453,7 +453,7 @@ export default function Financial() {
               <p className="text-white/50">Nenhum lançamento encontrado</p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-white/5 lista-limitada">
               {normalEntries.map((entry) => {
                 const statusTag = getStatusTag(entry);
                 return (
@@ -536,7 +536,7 @@ export default function Financial() {
             }
 
             return (
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-white/5 lista-limitada">
                 {filteredExpenses.map((expense) => (
                   <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
                     <div className="w-full sm:w-1/3 min-w-0 sm:pr-6">

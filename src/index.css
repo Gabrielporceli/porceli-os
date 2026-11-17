@@ -1725,3 +1725,17 @@ html.teclado-aberto .agente-foco {
   height: var(--vv-h, 100dvh);
   padding-top: 8px;
 }
+
+/* Listas compridas no celular (Financeiro: lançamentos e despesas): mostram uns
+   3 itens e rolam por dentro, sem barra visível; o esmaecido embaixo avisa que
+   tem mais. No computador a lista continua inteira, como sempre foi. */
+@media (max-width: 767px) {
+  .lista-limitada {
+    max-height: 540px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to bottom, black calc(100% - 36px), transparent);
+  }
+  .lista-limitada::-webkit-scrollbar { display: none; }
+}

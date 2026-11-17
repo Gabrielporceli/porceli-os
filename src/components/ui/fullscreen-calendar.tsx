@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button"
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button"
 import { Separator } from "@/components/ui/separator"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { PillTabs } from "@/components/ui/pill-tabs"
 import { motion, AnimatePresence } from "framer-motion"
 
 export interface CalendarEvent {
@@ -79,20 +80,49 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
     format(today, "MMM-yyyy"),
   )
   const firstDayCurrentMonth = parse(currentMonth, "MMM-yyyy", new Date())
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+  // Telas até 1023px (celular e tablet em pé) usam a visão compacta, no estilo
+  // do app Calendário do iPhone: o mês vira uma grade enxuta (número e pontos)
+  // e as atividades do dia escolhido aparecem logo abaixo, sem abrir modal.
+  const compacto = !useMediaQuery("(min-width: 1024px)")
+  // Só no compacto: mês inteiro ou só a semana do dia escolhido.
+  const [visao, setVisao] = React.useState<"mes" | "semana">("mes")
+  const semana = compacto && visao === "semana"
 
-  const days = eachDayOfInterval({
-    start: startOfWeek(firstDayCurrentMonth),
-    end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
-  })
+  const days = semana
+    ? eachDayOfInterval({ start: startOfWeek(selectedDay), end: endOfWeek(selectedDay) })
+    : eachDayOfInterval({
+        start: startOfWeek(firstDayCurrentMonth),
+        end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
+      })
 
+  /** Escolhe um dia e avisa a página (ela mostra as atividades dele). */
+  function escolherDia(dia: Date) {
+    setSelectedDay(dia)
+    onDaySelect?.(dia)
+  }
+
+  // Na visão por semana as setas andam de 7 em 7 dias; na do mês, de mês em mês.
   function previousMonth() {
+    if (semana) {
+      const d = add(selectedDay, { days: -7 })
+      setCurrentMonth(format(d, "MMM-yyyy"))
+      onDateChange?.(d)
+      escolherDia(d)
+      return
+    }
     const firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
     setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
     onDateChange?.(firstDayNextMonth)
   }
 
   function nextMonth() {
+    if (semana) {
+      const d = add(selectedDay, { days: 7 })
+      setCurrentMonth(format(d, "MMM-yyyy"))
+      onDateChange?.(d)
+      escolherDia(d)
+      return
+    }
     const firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
     setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
     onDateChange?.(firstDayNextMonth)
@@ -101,6 +131,8 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
   function goToToday() {
     setCurrentMonth(format(today, "MMM-yyyy"))
     onDateChange?.(today)
+    // Compacto: "Hoje" também leva o dia escolhido (e a lista de baixo) pra hoje.
+    if (compacto) escolherDia(today)
   }
 
   return (
@@ -125,7 +157,9 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
             <Button
               onClick={goToToday}
-              className="px-6 rounded-full shadow-none hover:bg-white/5 text-white/85 border-none h-10 font-bold text-[11px] uppercase tracking-[0.2em]"
+              // pl compensa o espaço que o letter-spacing deixa DEPOIS da última letra
+              // (sem isso o texto fica 1px deslocado pra esquerda).
+              className="px-6 pl-[calc(1.5rem+0.2em)] rounded-full shadow-none hover:bg-white/5 text-white/85 border-none h-10 font-bold text-[11px] uppercase tracking-[0.2em]"
               variant="ghost"
             >
               Hoje
@@ -166,6 +200,19 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
           card e o canto quadrado do clip). O card interno já se auto-clipa. */}
       <div className="lg:flex lg:flex-auto lg:flex-col min-h-0">
         <div className="surface-flat no-elevation rounded-3xl overflow-hidden flex flex-col h-full isolate">
+          {/* Compacto: alterna entre o mês inteiro e só a semana do dia escolhido. */}
+          {compacto && (
+            <div className="flex justify-center px-3 pt-3">
+              <PillTabs
+                items={[
+                  { value: "mes", label: "Mês" },
+                  { value: "semana", label: "Semana" },
+                ]}
+                value={visao}
+                onChange={(v) => setVisao(v as "mes" | "semana")}
+              />
+            </div>
+          )}
           {/* Week Days Header */}
           <div className="grid grid-cols-7 text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/60 px-1.5 pt-3 pb-1">
             <div>Dom</div>
@@ -187,7 +234,8 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                 const count = dayEvents.length;
                 const selected = isEqual(day, selectedDay);
                 const today = isToday(day);
-                const outside = !isSameMonth(day, firstDayCurrentMonth);
+                // Na visão por semana nenhum dia é "de fora": a semana pode cruzar o mês.
+                const outside = !semana && !isSameMonth(day, firstDayCurrentMonth);
 
                 // Intensidade do roxo conforme a quantidade de atividades.
                 // Roxo escuro da marca (#6829c0) com rampa forte: níveis nítidos
@@ -200,17 +248,36 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                                 "#6829c0";
 
                 return (
-                  <div key={day.toISOString()} className={cn("min-h-[58px] md:min-h-0", outside && "opacity-30 pointer-events-none")}>
+                  <div key={day.toISOString()} className={cn(compacto ? (semana ? "min-h-[88px]" : "min-h-[54px]") : "", outside && "opacity-30 pointer-events-none")}>
                     <div
-                      onClick={() => { setSelectedDay(day); onDaySelect?.(day); }}
+                      onClick={() => escolherDia(day)}
                       className={cn(
                         "relative h-full rounded-2xl border flex flex-col cursor-pointer transition-all overflow-hidden hover:brightness-125 group",
+                        compacto && "items-center justify-center gap-1",
                         selected ? "border-white/60 ring-1 ring-white/25"
                           : today ? "border-white/35"
                           : "border-white/[0.06]"
                       )}
                       style={{ background: bg }}
                     >
+                      {compacto ? (
+                        <>
+                          <span className={cn("text-base font-black tabular-nums leading-none", count > 0 || selected || today ? "text-white" : "text-white/65")}>
+                            {format(day, "d")}
+                          </span>
+                          {/* Até 3 pontinhos (um por atividade); mais que isso vira "+". */}
+                          <div className="flex h-1.5 items-center gap-0.5">
+                            {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+                              <span key={i} className="h-1 w-1 rounded-full bg-white/90" />
+                            ))}
+                            {count > 3 && <span className="text-[9px] font-black leading-none text-white/90">+</span>}
+                          </div>
+                          {isDayLocked?.(day) && (
+                            <LockIcon size={8} className="absolute right-1 top-1 text-red-300" />
+                          )}
+                        </>
+                      ) : (
+                      <>
                       <header className="flex items-center justify-between px-2.5 pt-2 shrink-0">
                         <span className={cn(
                           "text-sm font-black tabular-nums",
@@ -262,6 +329,8 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                           </span>
                         )}
                       </div>
+                      </>
+                      )}
                     </div>
                   </div>
                 );

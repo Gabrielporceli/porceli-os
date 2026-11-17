@@ -242,7 +242,9 @@ export default function Clients() {
 
       <ClientsKPIs clients={clientsForKPIs} />
 
-      <div className="surface-flat order-last p-5 md:order-none">
+      {/* Celular: sem o mapa. É só consulta, ocupava a tela e a lista de
+          clientes é o que se usa por lá (escolha do Gabriel, 17/11/2026). */}
+      <div className="surface-flat order-last hidden p-5 md:order-none md:block">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-white font-semibold text-sm">Mapa de Clientes</span>
           <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
