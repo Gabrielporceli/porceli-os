@@ -181,7 +181,7 @@ export function EditContractModal({ isOpen, contract, onClose, onSave }: EditCon
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-3xl h-[85dvh] max-h-[85dvh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Contrato</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Editar Contrato</DialogTitle>}
       >
           {/* Content */}
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">

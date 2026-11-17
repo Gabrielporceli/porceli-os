@@ -108,7 +108,7 @@ export function ExpenseModal({ onAddExpense, open: externalOpen, onOpenChange: e
           </LiquidGlassButton>
         </DialogTrigger>
       )}
-      <DialogContent className="text-white max-w-md max-h-[85vh] !overflow-hidden" chip={<DialogTitle className="truncate font-bold tracking-tight">Nova Despesa</DialogTitle>}>
+      <DialogContent className="text-white max-w-md max-h-[85vh] !overflow-hidden" chip={<DialogTitle className="truncate font-semibold tracking-tight">Nova Despesa</DialogTitle>}>
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         <form id="expense-form" onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="space-y-2">

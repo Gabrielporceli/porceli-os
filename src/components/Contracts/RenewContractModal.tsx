@@ -131,7 +131,7 @@ export function RenewContractModal({ isOpen, contract, onClose, onConfirm, isPen
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent
               className="text-white max-w-3xl !overflow-hidden"
-              chip={<DialogTitle className="truncate font-bold tracking-tight">Renovação de Contrato</DialogTitle>}
+              chip={<DialogTitle className="truncate font-semibold tracking-tight">Renovação de Contrato</DialogTitle>}
             >
                     {/* Content */}
                     <div className="overflow-y-auto custom-scrollbar p-6" style={{ maxHeight: '65vh' }}>

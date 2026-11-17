@@ -248,7 +248,7 @@ export function Aprovacoes({ open, onClose, lista }: {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="max-w-2xl text-white"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Aprovações</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Aprovações</DialogTitle>}
       >
         <div className="space-y-4 p-6">
           <p className="text-[11px] text-white/35">

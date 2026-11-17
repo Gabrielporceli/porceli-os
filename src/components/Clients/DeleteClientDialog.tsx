@@ -58,7 +58,7 @@ export function DeleteClientDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-lg"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Excluir Cliente</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Excluir Cliente</DialogTitle>}
       >
           {/* Content */}
           <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar">

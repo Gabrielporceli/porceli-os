@@ -130,7 +130,7 @@ function NewMessageModal({ onClose, onCreate, isCreating, clients }: NewMessageM
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-lg max-h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Agendar Mensagem</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Agendar Mensagem</DialogTitle>}
       >
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           <style>{`

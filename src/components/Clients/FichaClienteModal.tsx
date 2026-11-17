@@ -98,7 +98,7 @@ export function FichaClienteModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="text-white max-w-3xl h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Ficha · {empresa}</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Ficha · {empresa}</DialogTitle>}
       >
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
           <form id="ficha-cliente-form" onSubmit={enviar} className="p-6 space-y-8">

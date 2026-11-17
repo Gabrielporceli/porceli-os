@@ -108,7 +108,7 @@ const GitHubCalendar = ({
     <div className={cn("surface-flat p-6 !rounded-3xl overflow-hidden", className)}>
       <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black text-white/70 uppercase tracking-[0.2em]">Histórico de Produtividade</h3>
+          <h3 className="text-sm font-black text-white/60 uppercase tracking-widest">Histórico de Produtividade</h3>
         </div>
 
         <div ref={rolagemRef} className="flex overflow-x-auto pb-2 custom-scrollbar scrollbar-hide w-full">

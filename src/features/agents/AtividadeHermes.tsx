@@ -141,7 +141,7 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="text-white max-w-2xl"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">MCP do Hermes</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">MCP do Hermes</DialogTitle>}
       >
         {/* Mesmo respiro (p-6) dos outros modais do sistema: o DialogContent
             com chip não tem padding próprio. */}

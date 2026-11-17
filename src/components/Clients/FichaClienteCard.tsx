@@ -63,7 +63,7 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
         </div>
         <div className="min-w-0">
           <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-white/40">Ficha do cliente</span>
-          <span className="block truncate font-medium text-white">
+          <span className="block truncate text-sm font-medium text-white">
             {situacao}
             {rotuloDoModelo(ficha?.modelo_negocio) ? ` · ${rotuloDoModelo(ficha?.modelo_negocio)}` : ""}
             {ficha?.nicho ? ` · ${ficha.nicho}` : ""}

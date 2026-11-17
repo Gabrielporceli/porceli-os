@@ -67,7 +67,7 @@ export function FunnelCard({ etapas, className }: Props) {
                   background: `rgba(244, 244, 244, ${intensidade})`,
                 }}
               >
-                <span className="text-lg font-black leading-none tabular-nums text-white">
+                <span className="text-lg font-semibold leading-none tabular-nums text-white">
                   {e.count}
                 </span>
                 <span className="mt-1 max-w-[70%] truncate text-[10px] font-black uppercase tracking-widest text-white/60">

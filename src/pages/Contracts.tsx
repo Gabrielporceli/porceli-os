@@ -398,7 +398,7 @@ export default function Contracts() {
                 <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
                   <div className="text-right">
                     <p className="text-[10px] text-yellow-500/60 font-black uppercase tracking-widest">Restam</p>
-                    <p className="text-white font-black">{getDaysUntilExpiration(contract.endDate)} dias</p>
+                    <p className="text-base font-semibold text-white">{getDaysUntilExpiration(contract.endDate)} dias</p>
                   </div>
                   <motion.div>
                     <LiquidGlassButton
@@ -505,7 +505,7 @@ export default function Contracts() {
                     <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 lg:gap-6 items-start sm:items-center">
                       <div className="col-span-2 sm:col-span-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-white font-bold text-sm truncate">{contract.type}</p>
+                          <p className="text-white font-semibold text-sm truncate">{contract.type}</p>
                           {contract.contract_url && (
                             <motion.a
                               href={contract.contract_url}
@@ -523,7 +523,7 @@ export default function Contracts() {
                       <div>
                         <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1">Valor</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-white font-bold">{formatCurrency(contract.monthlyValue)}</span>
+                          <span className="text-sm font-semibold text-white">{formatCurrency(contract.monthlyValue)}</span>
                           <span className="text-white/20 text-xs">/mês</span>
                         </div>
                       </div>

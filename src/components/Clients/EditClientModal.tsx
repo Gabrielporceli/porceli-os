@@ -112,7 +112,7 @@ export function EditClientModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Cliente</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Editar Cliente</DialogTitle>}
       >
         <style>{`
           .custom-scrollbar::-webkit-scrollbar {

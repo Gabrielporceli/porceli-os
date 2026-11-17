@@ -37,7 +37,7 @@ export function MiniSparklineCard({
       <div className="p-5 pb-2">
         <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1">{title}</p>
         <div className="flex flex-col gap-1">
-          <p className="text-xl font-bold text-white tracking-tight leading-none 2xl:text-2xl">
+          <p className="text-xl font-semibold text-white tracking-tight leading-none 2xl:text-2xl">
             <AnimatedValue value={value} />
           </p>
           {description && <p className="text-xs text-white/40 font-medium">{description}</p>}

@@ -64,7 +64,7 @@ export function AgentDialog({ open, onClose, agent, isFirst, onCreated }: Props)
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="text-white max-w-2xl h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">{agent ? "Editar agente" : "Novo agente"}</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">{agent ? "Editar agente" : "Novo agente"}</DialogTitle>}
       >
         <form onSubmit={submit} className="contents">
           <div className="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto p-6">

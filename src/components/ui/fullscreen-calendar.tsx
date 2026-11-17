@@ -174,7 +174,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
             </Button>
           </div>
 
-          <h2 className="text-base font-black text-white tracking-tight leading-none capitalize sm:ml-2 sm:text-lg">
+          <h2 className="text-lg font-semibold text-white tracking-tight leading-none capitalize sm:ml-2">
             {format(firstDayCurrentMonth, "MMMM, yyyy", { locale: ptBR })}
           </h2>
         </div>
@@ -262,7 +262,7 @@ export function FullScreenCalendar({ data, onAddEvent, onEventClick, onDaySelect
                     >
                       {compacto ? (
                         <>
-                          <span className={cn("text-base font-black tabular-nums leading-none", count > 0 || selected || today ? "text-white" : "text-white/65")}>
+                          <span className={cn("text-base font-semibold tabular-nums leading-none", count > 0 || selected || today ? "text-white" : "text-white/65")}>
                             {format(day, "d")}
                           </span>
                           {isDayLocked?.(day) && (

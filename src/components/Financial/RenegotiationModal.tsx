@@ -470,7 +470,7 @@ export function RenegotiationModal({
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-xl max-h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Renegociar Pagamentos</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Renegociar Pagamentos</DialogTitle>}
       >
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           <style>{`

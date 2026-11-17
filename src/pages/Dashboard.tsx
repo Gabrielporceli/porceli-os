@@ -54,7 +54,7 @@ export default function Dashboard() {
         {linhas.map((l) => (
           <div key={l.label} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
             <span className={`text-xs ${claro ? "text-[#2F2D2E]/60" : "text-white/55"}`}>{l.label}</span>
-            <span className={`text-base font-black tabular-nums tracking-tight ${corTom(l.tone, claro)}`}>
+            <span className={`text-sm font-semibold tabular-nums tracking-tight ${corTom(l.tone, claro)}`}>
               <AnimatedValue value={l.value} />
             </span>
           </div>
@@ -97,7 +97,7 @@ export default function Dashboard() {
           MESMA base, senão um usa o recebido e o outro o previsto. */}
       <Card className="surface-accent flex h-full flex-col justify-between p-5 col-span-2 max-md:order-1 xl:col-start-1 xl:row-start-1">
         <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Faturamento previsto</p>
-        <p className="text-3xl font-black tracking-tighter text-white">
+        <p className="text-3xl font-semibold tracking-tighter text-white">
           <AnimatedValue value={d.formatCurrency(d.faturamentoGeralMesAtual)} />
         </p>
         <div className="flex gap-5 text-xs text-white/60">
@@ -140,14 +140,14 @@ export default function Dashboard() {
       <Card className="surface-light grid h-full grid-cols-2 divide-x divide-black/[0.08] p-5 col-span-2 max-md:order-6 xl:col-start-3 xl:row-start-3">
         <div className="flex flex-col justify-between pr-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#2F2D2E]/50">A receber</p>
-          <p className="text-xl font-black tracking-tight text-[#2F2D2E] 2xl:text-2xl">
+          <p className="text-xl font-semibold tracking-tight text-[#2F2D2E] 2xl:text-2xl">
             <AnimatedValue value={d.formatCurrency(d.aReceberMesAtual)} />
           </p>
           <p className="text-[10px] text-[#2F2D2E]/50">Este mês, no prazo</p>
         </div>
         <div className="flex flex-col justify-between pl-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#2F2D2E]/50">Vencidos</p>
-          <p className={`text-xl font-black tracking-tight 2xl:text-2xl ${d.vencidos > 0 ? "text-red-600" : "text-[#2F2D2E]"}`}>
+          <p className={`text-xl font-semibold tracking-tight 2xl:text-2xl ${d.vencidos > 0 ? "text-red-600" : "text-[#2F2D2E]"}`}>
             <AnimatedValue value={d.formatCurrency(d.vencidos)} />
           </p>
           <p className="text-[10px] text-[#2F2D2E]/50">Qualquer mês</p>
