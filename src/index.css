@@ -1587,6 +1587,9 @@ button.vidro-vermelho:hover:not(:disabled) {
   white-space: nowrap;
   transition: background-color 200ms ease, color 200ms ease, transform 150ms ease;
 }
+/* O ícone nunca encolhe: com o texto em `nowrap` o flex espremia o <svg> até
+   largura 0 e o ícone sumia (ex.: "Copiar perguntas" no celular). */
+.acao-vidro > svg { flex-shrink: 0; }
 .acao-vidro.so-icone { width: 2rem; flex-shrink: 0; padding: 0; color: rgba(255, 255, 255, .65); }
 .acao-vidro:hover:not(:disabled) { background: rgba(255, 255, 255, .11); color: #fff; }
 .acao-vidro.perigo:hover:not(:disabled) { color: rgb(253, 164, 175); background: rgba(244, 63, 94, .14); }

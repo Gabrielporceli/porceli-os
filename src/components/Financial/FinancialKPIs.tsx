@@ -13,7 +13,7 @@ export function FinancialKPIs({ previsaoMes, receitasMes, despesasMes, lucroMes 
   // Celular: 2 colunas (eram 4 cards de ~150px empilhados, uma tela inteira
   // só de números) e título/valor menores pra caberem nos ~166px de cada um.
   const curto = useIsMobile();
-  const valor = "text-xl text-white md:text-3xl";
+  const valor = "text-white";
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
       <StatsCard
@@ -42,7 +42,7 @@ export function FinancialKPIs({ previsaoMes, receitasMes, despesasMes, lucroMes 
         value={`R$ ${lucroMes.toLocaleString('pt-BR')}`}
         icon={DollarCircle}
         className="[animation-delay:400ms]"
-        valueClassName={`text-xl md:text-3xl ${lucroMes >= 0 ? "text-green-400" : "text-red-400"}`}
+        valueClassName={lucroMes >= 0 ? "text-green-400" : "text-red-400"}
       />
     </div>
   );

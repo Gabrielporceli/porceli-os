@@ -190,7 +190,7 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
                         ? <TickCircle size={16} color="currentColor" className="shrink-0 text-emerald-300/80" />
                         : <CloseCircle size={16} color="currentColor" className="shrink-0 text-rose-300/90" />}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] text-white">
+                        <p className="truncate text-sm text-white">
                           {ROTULOS[c.ferramenta] ?? c.ferramenta}
                           {detalhe && <span className="text-white/45"> · {detalhe}</span>}
                         </p>
@@ -213,7 +213,7 @@ export function AtividadeHermes({ open, onClose }: { open: boolean; onClose: () 
                           {` · ferramenta ${c.ferramenta}`}
                         </p>
                         {c.erro && (
-                          <p className="whitespace-pre-wrap rounded-xl bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200/90">{c.erro}</p>
+                          <p className="whitespace-pre-wrap rounded-xl bg-rose-500/10 px-3 py-2 text-xs text-rose-200/90">{c.erro}</p>
                         )}
                         <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-xl bg-black/30 px-3 py-2 font-mono text-[11px] text-white/70 scrollbar-hide">
                           {JSON.stringify(c.argumentos ?? {}, null, 2)}

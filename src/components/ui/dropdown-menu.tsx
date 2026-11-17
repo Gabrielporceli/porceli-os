@@ -221,7 +221,7 @@ const DropdownMenuShortcut = ({ className, ...props }: React.HTMLAttributes<HTML
   return (
     <span
       className={cn(
-        "-me-1 ms-auto inline-flex h-5 max-h-full items-center rounded border border-Porceli-gray-600 bg-Porceli-gray-700 px-1 font-[inherit] text-[0.625rem] font-medium text-white/70",
+        "-me-1 ms-auto inline-flex h-5 max-h-full items-center rounded border border-Porceli-gray-600 bg-Porceli-gray-700 px-1 font-[inherit] text-[10px] font-medium text-white/70",
         className,
       )}
       {...props}

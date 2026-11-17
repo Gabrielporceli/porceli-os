@@ -144,7 +144,7 @@ export function EditLeadModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white w-full max-w-[500px] !overflow-hidden"
-        chip={<DialogTitle className="truncate text-xl font-black tracking-tight">Editar Lead</DialogTitle>}
+        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Lead</DialogTitle>}
       >
         {/* QR de acesso rápido à conversa — só desktop, flutuando à direita.
             Tile branco + módulos escuros (estilo QR de pagamento): contraste
@@ -194,7 +194,7 @@ export function EditLeadModal({
                       dentro de um painel com backdrop-filter, isso acende a
                       "tarja" nos vidros ao redor. Ver src/lib/appBackground.ts. */}
                   <span className="pointer-events-none absolute -inset-2 flex items-center justify-center rounded-[26px] bg-transparent transition-colors duration-300 group-hover:bg-[#0d0b12]/[0.82]">
-                    <span className="flex items-center gap-1.5 rounded-full bg-transparent px-3.5 py-2 text-[12px] font-semibold text-transparent transition-colors duration-300 group-hover:bg-white group-hover:text-[#18181d]">
+                    <span className="flex items-center gap-1.5 rounded-full bg-transparent px-3.5 py-2 text-xs font-semibold text-transparent transition-colors duration-300 group-hover:bg-white group-hover:text-[#18181d]">
                       Abrir conversa
                       <ArrowRight className="w-3.5 h-3.5" />
                     </span>

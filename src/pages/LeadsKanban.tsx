@@ -731,7 +731,7 @@ export default function LeadsKanban() {
                                               })}
                                             </span>
                                             {lead.meeting_date && !lead.reuniao_realizada && (
-                                              <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-white/90">
+                                              <span className="shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-white/90">
                                                 {new Date(lead.meeting_date).toLocaleString('pt-BR', {
                                                   day: '2-digit', month: '2-digit',
                                                   hour: '2-digit', minute: '2-digit'

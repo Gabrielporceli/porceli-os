@@ -39,7 +39,7 @@ export function StatsCard({ title, value, icon: IconCmp, trend, description, cla
         </span>
       }
     >
-      <p className={cn("text-3xl font-black tabular-nums tracking-tighter", valueClassName ?? "text-white")}>
+      <p className={cn("text-xl font-black tabular-nums tracking-tighter md:text-3xl", valueClassName ?? "text-white")}>
         <AnimatedValue value={String(value)} />
       </p>
       {description && (

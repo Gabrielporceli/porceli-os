@@ -26,7 +26,7 @@ export function ClientsKPIs({ clients }: ClientsKPIsProps) {
   // Celular: 2×2 em vez de 4 cards empilhados, com títulos curtos pra caber
   // nos ~166px de cada um.
   const curto = useIsMobile();
-  const valor = "text-2xl text-white md:text-3xl";
+  const valor = "text-white";
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
       <StatsCard

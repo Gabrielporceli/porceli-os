@@ -329,7 +329,7 @@ export default function Automations() {
                   {/* Card header */}
                   <div className="p-6 border-b border-white/5 flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white tracking-tight">
+                      <h3 className="text-lg font-semibold text-white tracking-tight">
                         {CATEGORY_LABELS[category] ?? category}
                       </h3>
                       <p className="text-white/40 text-sm mt-0.5">

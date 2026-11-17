@@ -41,7 +41,7 @@ export function ClientsList({ clients, onEditClient, onDeleteClient, planColors 
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2.5rem] border border-white/5 bg-white/5">
           <Profile2User className="h-10 w-10 text-white/20" />
         </div>
-        <h3 className="mb-2 text-xl font-bold tracking-tight text-white">Nenhum cliente por aqui</h3>
+        <h3 className="mb-2 text-lg font-semibold tracking-tight text-white">Nenhum cliente por aqui</h3>
         <p className="mx-auto max-w-xs text-sm text-white/40">Ajuste a busca e os filtros, ou cadastre um novo cliente.</p>
       </div>
     );
@@ -64,7 +64,7 @@ export function ClientsList({ clients, onEditClient, onDeleteClient, planColors 
                 animate={{ scale: isSelected ? 1.15 : 1 }}
                 transition={{ duration: 0.25 }}
                 className={cn(
-                  'origin-left whitespace-nowrap text-[13px] font-semibold leading-snug',
+                  'origin-left whitespace-nowrap text-sm font-semibold leading-snug',
                   isSelected ? 'text-white' : 'text-white/40',
                 )}
               >

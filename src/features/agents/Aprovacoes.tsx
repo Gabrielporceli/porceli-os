@@ -119,7 +119,7 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
     <article className="rounded-2xl bg-white/[0.035] p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
       {/* Cabeçalho: o que decidir, quem pede, de quem é e quando */}
       <header className="space-y-2">
-        <h3 className="text-[14px] font-semibold leading-snug text-white">{a.titulo}</h3>
+        <h3 className="text-sm font-semibold leading-snug text-white">{a.titulo}</h3>
         <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           <span className="rounded-full bg-primary/20 px-2.5 py-0.5 font-semibold text-white">{AGENTE[a.agente] ?? a.agente}</span>
           {a.cliente && <span className="rounded-full bg-white/[0.07] px-2.5 py-0.5 font-semibold text-white/80">{a.cliente}</span>}
@@ -128,7 +128,7 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
       </header>
 
       {a.resumo && (
-        <p className="mt-4 whitespace-pre-wrap text-[12.5px] leading-6 text-white/65">{a.resumo}</p>
+        <p className="mt-4 whitespace-pre-wrap text-xs leading-6 text-white/65">{a.resumo}</p>
       )}
 
       {temTexto && (
@@ -140,10 +140,10 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
                 autoFocus
                 value={publicar}
                 onChange={(e) => setPublicar(e.target.value)}
-                className="min-h-[110px] flex-1 rounded-lg border-white/[0.06] bg-white/[0.03] text-[13px] leading-6 text-white"
+                className="min-h-[110px] flex-1 rounded-lg border-white/[0.06] bg-white/[0.03] text-sm leading-6 text-white"
               />
             ) : (
-              <p className="flex-1 whitespace-pre-wrap text-[13px] leading-6 text-white/90">{publicar || "—"}</p>
+              <p className="flex-1 whitespace-pre-wrap text-sm leading-6 text-white/90">{publicar || "—"}</p>
             )}
             <button
               type="button"
@@ -164,7 +164,7 @@ function Item({ a, onDecidido }: { a: Aprovacao; onDecidido: () => void }) {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="O que precisa mudar?"
-          className="mt-5 min-h-[80px] rounded-xl border-white/[0.06] bg-white/[0.03] text-[13px] text-white placeholder:text-white/25"
+          className="mt-5 min-h-[80px] rounded-xl border-white/[0.06] bg-white/[0.03] text-sm text-white placeholder:text-white/25"
         />
       )}
 

@@ -35,7 +35,7 @@ export function DeleteLeadDialog({
       <DialogContent
         className="text-white max-w-md"
         chip={
-          <DialogTitle className="truncate text-xl font-black tracking-tight flex items-center gap-2">
+          <DialogTitle className="truncate font-bold tracking-tight flex items-center gap-2">
             <Trash className="w-4 h-4 text-red-400 shrink-0" />
             Excluir Lead
           </DialogTitle>

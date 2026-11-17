@@ -139,7 +139,7 @@ export function EditClientModal({
           <form id="edit-client-form" onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Informações Básicas */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Informações Básicas
               </h3>
 
@@ -221,7 +221,7 @@ export function EditClientModal({
 
             {/* Endereço */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white border-b border-white/[0.05] pb-2">
+              <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] border-b border-white/[0.05] pb-2">
                 Localização
               </h3>
 
