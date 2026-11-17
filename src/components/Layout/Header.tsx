@@ -21,7 +21,6 @@ import { MOBILE_SLOT, MOBILE_WINDOW, PILL_DEFAULTS, idlePillGeom, transferPillGe
 import { MobilePillBlob } from './MobilePillBlob';
 import { useHeaderAnimSignal } from '@/components/ui/PageTransition';
 import { useAprovacoesPendentes } from '@/features/agents/Aprovacoes';
-import { IlhaAprovacoes } from '@/features/ilha/IlhaAprovacoes';
 import { atualizarSelo, ouvirPushAbrir } from '@/features/push/push';
 
 // Ícones do Iconsax (iconsax-react). O estilo é escolhido em runtime pela
@@ -613,9 +612,6 @@ export const Header = () => {
       <div
         className="fixed bottom-0 left-0 right-0 z-[60] flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6"
       >
-        {/* Aviso de aprovação pendente no formato da Ilha Dinâmica: usa a
-            lista que o Header já tem e se desenha no topo, por portal. */}
-        <IlhaAprovacoes lista={aprovacoesPendentes} />
         <header
           className="liquid-glass flex h-16 w-full max-w-7xl items-center gap-1.5 px-3"
           style={{ willChange: "backdrop-filter, transform", transform: "translateZ(0)" }}
