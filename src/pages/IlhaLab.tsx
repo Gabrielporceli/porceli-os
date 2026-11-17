@@ -5,8 +5,8 @@ import { appBackgroundStyle } from "@/lib/appBackground";
 import { cn } from "@/lib/utils";
 
 const ESTILOS: { id: EstiloIlha; nome: string; descricao: string }[] = [
+  { id: "compacta", nome: "Compacta", descricao: "A ilha só alarga: ícone de um lado, número do outro. É a usada nas aprovações." },
   { id: "expandir", nome: "Expandir", descricao: "A ilha cresce e vira o cartão, como no iOS." },
-  { id: "compacta", nome: "Compacta", descricao: "A ilha só alarga: ícone de um lado, número do outro." },
   { id: "gota", nome: "Gota", descricao: "Uma gota escorre da ilha e se abre num cartão." },
 ];
 
@@ -19,7 +19,7 @@ const ESTILOS: { id: EstiloIlha; nome: string; descricao: string }[] = [
 export default function IlhaLab() {
   const ilha = useRef<IlhaHandle>(null);
   const [comIlha, setComIlha] = useState(true);
-  const [estilo, setEstilo] = useState<EstiloIlha>("expandir");
+  const [estilo, setEstilo] = useState<EstiloIlha>("compacta");
   const icone = <AgentIcon className="h-6 w-6" />;
   const botao = "rounded-full bg-white/10 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white";
 
@@ -59,7 +59,7 @@ export default function IlhaLab() {
               mensagem: "Responder avaliação de Neto Rocha no Google — Lapace",
               icone,
               curto: "Aprovação",
-              direita: "1 nova",
+              direita: "1 pendente",
             })
           }
         >
