@@ -196,7 +196,9 @@ async function atender(p: Pedido, chaveId: string, permitidas: Set<string> | nul
       const t0 = Date.now();
       try {
         const r = await f.executar(args);
-        await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: true, duracao_ms: Date.now() - t0, chave_id: chaveId });
+        if (!SEM_AUDITORIA.has(nome)) {
+          await db.from("mcp_audit").insert({ ferramenta: nome, argumentos: args, ok: true, duracao_ms: Date.now() - t0, chave_id: chaveId });
+        }
         return resposta(p.id, { content: [{ type: "text", text: texto(r) }] });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -211,6 +213,16 @@ async function atender(p: Pedido, chaveId: string, permitidas: Set<string> | nul
   }
 }
 
+const CHAVES = new Map<string, { chave: { id: string; ferramentas: string[] | null }; ate: number }>();
+
+async function sha256(texto: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Leitura de rotina (o robô roda a cada minuto): sem linha de auditoria, que só enchia a tabela e os logs.
+const SEM_AUDITORIA = new Set(["rodada_aprovacoes"]);
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("MCP do Porceli System: use POST (Streamable HTTP, sem estado).", {
@@ -220,8 +232,21 @@ Deno.serve(async (req) => {
 
   const enviado = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
   // Comparação por hash no banco: a chave em texto não fica guardada em lugar nenhum.
-  const { data: validas } = enviado ? await db.rpc("mcp_validar_chave_v2", { p_chave: enviado }) : { data: null };
-  const chave = (validas as { id: string; ferramentas: string[] | null }[] | null)?.[0];
+  // Chave validada fica 5 min na memória desta instância: o robô das aprovações chama a cada minuto e cada
+  // validação era uma ida ao banco a mais nos logs (17/11/2026).
+  let chave: { id: string; ferramentas: string[] | null } | undefined;
+  if (enviado) {
+    const hash = await sha256(enviado);
+    const guardada = CHAVES.get(hash);
+    if (guardada && guardada.ate > Date.now()) {
+      chave = guardada.chave;
+    } else {
+      const { data: validas } = await db.rpc("mcp_validar_chave_v2", { p_chave: enviado });
+      chave = (validas as { id: string; ferramentas: string[] | null }[] | null)?.[0];
+      if (chave) CHAVES.set(hash, { chave, ate: Date.now() + 5 * 60 * 1000 });
+      else CHAVES.delete(hash);
+    }
+  }
   const chaveId = chave?.id;
   const permitidas = chave?.ferramentas?.length ? new Set(chave.ferramentas) : null;
   if (!chaveId) {

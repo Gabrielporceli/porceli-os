@@ -1,6 +1,7 @@
 // Aprovações dos agentes: o agente pede, o Gabriel decide na Central de Agentes
 // (ou no Telegram) e o script da VPS executa a decisão pelo Kanban.
 import { db, dono, Ferramenta, parametros } from "../contexto.ts";
+import { FICHA } from "./ficha.ts";
 
 const exigir = (v: unknown, msg: string) => {
   if (v === undefined || v === null || String(v).trim() === "") throw new Error(msg);
@@ -63,6 +64,24 @@ export const APROVACOES: Record<string, Ferramenta> = {
       const { data, error } = await q;
       if (error) throw new Error(error.message);
       return { aprovacoes: data ?? [] };
+    },
+  },
+
+  rodada_aprovacoes: {
+    description: "Tudo o que o script das aprovações (VPS, a cada minuto) precisa numa chamada só: pendentes, "
+      + "decididas para processar, executadas para relatar e fichas com metas pendentes. Só leitura.",
+    inputSchema: parametros({}, []),
+    executar: async () => {
+      const [pendentes, para_processar, para_relatar, fichas] = await Promise.all([
+        APROVACOES.aprovacoes.executar({ situacao: "pendentes" }),
+        APROVACOES.aprovacoes.executar({ situacao: "para_processar" }),
+        APROVACOES.aprovacoes.executar({ situacao: "para_relatar" }),
+        FICHA.fichas_com_metas_pendentes.executar({}),
+      ]) as { aprovacoes?: unknown[]; fichas?: unknown[] }[];
+      return {
+        pendentes: pendentes.aprovacoes ?? [], para_processar: para_processar.aprovacoes ?? [],
+        para_relatar: para_relatar.aprovacoes ?? [], fichas: fichas.fichas ?? [],
+      };
     },
   },
 
