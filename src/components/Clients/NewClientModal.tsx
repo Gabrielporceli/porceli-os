@@ -214,7 +214,7 @@ export function NewClientModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-3xl max-h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Cliente</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Novo Cliente</DialogTitle>}
       >
         {/* Content with Custom Scrollbar */}
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">

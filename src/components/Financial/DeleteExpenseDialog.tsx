@@ -22,7 +22,7 @@ export function DeleteExpenseDialog({
 }: DeleteExpenseDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="text-white max-w-md" chip={<DialogTitle className="truncate font-bold tracking-tight">Excluir Despesa</DialogTitle>}>
+      <DialogContent className="text-white max-w-md" chip={<DialogTitle className="truncate font-semibold tracking-tight">Excluir Despesa</DialogTitle>}>
         <p className="text-white/70 text-sm leading-relaxed px-6 pb-2">
           Tem certeza que deseja excluir a despesa <span className="text-white font-bold">"{expenseDescription}"</span>? Essa ação não poderá ser desfeita e os dados serão removidos permanentemente.
         </p>

@@ -174,7 +174,7 @@ export function NewContractModal({ isOpen, onClose, onSave, isPending }: NewCont
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="text-white max-w-3xl h-[85dvh] max-h-[85dvh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Contrato</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Novo Contrato</DialogTitle>}
       >
         {/* Content with Custom Scrollbar */}
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">

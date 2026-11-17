@@ -96,7 +96,7 @@ export function DeleteContractDialog({
       <DialogContent
         className="text-white max-w-lg"
         chip={
-          <DialogTitle className="truncate font-bold tracking-tight">
+          <DialogTitle className="truncate font-semibold tracking-tight">
             {step === 'fine-form' ? 'Definir Multa Rescisória' : 'Cancelar Contrato'}
           </DialogTitle>
         }

@@ -144,7 +144,7 @@ export function EditLeadModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white w-full max-w-[500px] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Editar Lead</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Editar Lead</DialogTitle>}
       >
         {/* QR de acesso rápido à conversa — só desktop, flutuando à direita.
             Tile branco + módulos escuros (estilo QR de pagamento): contraste

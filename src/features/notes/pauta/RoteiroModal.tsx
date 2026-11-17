@@ -60,7 +60,7 @@ export function RoteiroModal({ ideia, formatos, onAtualizar, onClose }: Props) {
     <Dialog open={!!ideia} onOpenChange={(o) => !o && fechar()}>
       <DialogContent
         className="text-white max-w-3xl h-[85vh] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Roteiro</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Roteiro</DialogTitle>}
       >
         {rascunho && (
           <div className="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto p-6">

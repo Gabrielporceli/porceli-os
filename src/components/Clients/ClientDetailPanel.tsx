@@ -71,7 +71,7 @@ function Field({ icon: Ic, label, children }: { icon: Icon; label: string; child
       </div>
       <div className="min-w-0 flex-1">
         <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-white/40">{label}</span>
-        <span className="block truncate font-medium text-white">{children}</span>
+        <span className="block truncate text-sm font-medium text-white">{children}</span>
       </div>
     </div>
   );
@@ -106,7 +106,7 @@ export function ClientDetailPanel({ client, planColors = {}, onEdit, onDelete }:
       <div className={`${card} flex flex-col justify-between gap-4 lg:flex-row lg:items-center`}>
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h4 className="truncate text-lg font-bold text-white">{client.company}</h4>
+            <h4 className="truncate text-lg font-semibold text-white">{client.company}</h4>
             {status && (
               <Badge className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${getTagColor(status)}`}>{status}</Badge>
             )}
@@ -140,7 +140,7 @@ export function ClientDetailPanel({ client, planColors = {}, onEdit, onDelete }:
           <Field icon={Calendar} label="Fim do contrato">{formatDate(client.contractEnd)}</Field>
           <Field icon={Hashtag} label="Grupo ID">{client.grupoId || 'Não definido'}</Field>
           <Field icon={Calendar} label="Valor mensal">
-            <span className="text-lg font-bold tracking-tight">{formatMonthly(client.monthlyValue)}</span>
+            <span className="text-sm font-semibold tracking-tight">{formatMonthly(client.monthlyValue)}</span>
           </Field>
         </div>
       </div>

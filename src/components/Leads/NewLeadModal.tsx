@@ -134,7 +134,7 @@ export function NewLeadModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="text-white w-full max-w-[500px] !overflow-hidden"
-        chip={<DialogTitle className="truncate font-bold tracking-tight">Novo Lead</DialogTitle>}
+        chip={<DialogTitle className="truncate font-semibold tracking-tight">Novo Lead</DialogTitle>}
       >
         <div className="overflow-y-auto p-6" style={{ maxHeight: '60vh' }}>
           <div className="space-y-4">

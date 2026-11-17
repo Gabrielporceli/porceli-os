@@ -337,7 +337,7 @@ export default function Financial() {
               <h3 className="text-lg font-semibold text-white tracking-tight">Pagamentos em Atraso</h3>
               <p className="text-white/40 text-sm mt-0.5">{overdueEntries.length} {overdueEntries.length === 1 ? 'fatura' : 'faturas'}</p>
             </div>
-            <span className="text-red-500 font-black text-xl">
+            <span className="text-red-500 font-semibold text-xl">
               {formatCurrency(overdueEntries.reduce((sum: number, e: any) => sum + Number(e.amount), 0))}
             </span>
           </div>
@@ -368,7 +368,7 @@ export default function Financial() {
                             : <ArrowRight2 className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
                           }
                         </div>
-                        <h4 className="text-white font-semibold text-lg truncate">{clientName}</h4>
+                        <h4 className="text-white font-semibold text-base truncate">{clientName}</h4>
                         <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full shrink-0">
                           {entries.length} {entries.length === 1 ? 'fatura' : 'faturas'}
                         </span>
@@ -377,7 +377,7 @@ export default function Financial() {
                         <motion.div>
                           <button type="button" onClick={(e) => { e.stopPropagation(); const clientId = entries[0]?.client_id ?? ""; setRenegotiating({ clientName, clientId, entries }); }} className="acao-vidro">Renegociar</button>
                         </motion.div>
-                        <span className="text-red-500 font-bold text-sm">{formatCurrency(totalAmount)}</span>
+                        <span className="text-red-500 font-semibold text-sm">{formatCurrency(totalAmount)}</span>
                       </div>
                     </div>
 
@@ -393,15 +393,15 @@ export default function Financial() {
                               <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
                                 <div>
                                   <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                                  <p className="text-white/70 font-medium">{entry.reference}</p>
+                                  <p className="text-sm font-medium text-white/70">{entry.reference}</p>
                                 </div>
                                 <div>
                                   <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                                  <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
+                                  <p className="text-sm font-medium text-white/70">{formatDateBR(entry.due_date)}</p>
                                 </div>
                                 <div>
                                   <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                                  <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
+                                  <p className="text-sm font-semibold text-white">{formatCurrency(Number(entry.amount))}</p>
                                 </div>
                               </div>
                               <motion.div>
@@ -458,21 +458,21 @@ export default function Financial() {
                 const statusTag = getStatusTag(entry);
                 return (
                   <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-8 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
-                    <h4 className="text-white font-semibold text-base sm:text-lg w-full sm:w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
+                    <h4 className="text-white font-semibold text-base w-full sm:w-1/3 min-w-0 truncate shrink-0">{entry.name}</h4>
                     {/* Celular: Valor e Vencimento lado a lado, Referência
                         embaixo; antes cada campo ocupava uma linha inteira. */}
                     <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-x-8">
                       <div className="order-1">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                        <p className="text-white font-bold">{formatCurrency(Number(entry.amount))}</p>
+                        <p className="text-sm font-semibold text-white">{formatCurrency(Number(entry.amount))}</p>
                       </div>
                       <div className="order-3 col-span-2 min-w-0 sm:order-none sm:col-span-1">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Referência</p>
-                        <p className="text-white/70 font-medium">{entry.reference}</p>
+                        <p className="text-sm font-medium text-white/70">{entry.reference}</p>
                       </div>
                       <div className="order-2 sm:order-none">
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Vencimento</p>
-                        <p className="text-white/70 font-medium">{formatDateBR(entry.due_date)}</p>
+                        <p className="text-sm font-medium text-white/70">{formatDateBR(entry.due_date)}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -481,7 +481,7 @@ export default function Financial() {
                           <button type="button" onClick={() => handleMarkAsPaid(entry.id)} disabled={isMarkingAsPaid} className="acao-vidro">Confirmar</button>
                         </motion.div>
                       ) : (
-                        <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
+                        <span className="text-green-500/50 font-semibold text-sm tracking-tight">Pago</span>
                       )}
                     </div>
                   </div>
@@ -540,7 +540,7 @@ export default function Financial() {
                 {filteredExpenses.map((expense) => (
                   <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 hover:bg-white/[0.04] transition-all duration-300 group">
                     <div className="w-full sm:w-1/3 min-w-0 sm:pr-6">
-                      <h4 className="text-white font-semibold text-lg truncate">{expense.description}</h4>
+                      <h4 className="text-white font-semibold text-base truncate">{expense.description}</h4>
                       {expense.category && (
                         <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-0.5">{expense.category}</p>
                       )}
@@ -548,7 +548,7 @@ export default function Financial() {
                     <div className="flex flex-wrap items-center gap-x-8 gap-y-3 flex-1">
                       <div>
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Data</p>
-                        <p className="text-white/70 font-medium">{formatDateBR(expense.date)}</p>
+                        <p className="text-sm font-medium text-white/70">{formatDateBR(expense.date)}</p>
                       </div>
                       {expense.is_recurring && (
                         <div>
@@ -564,7 +564,7 @@ export default function Financial() {
                       )}
                       <div>
                         <p className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">Valor</p>
-                        <p className="text-white font-bold">{formatCurrency(Number(expense.amount))}</p>
+                        <p className="text-sm font-semibold text-white">{formatCurrency(Number(expense.amount))}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -573,7 +573,7 @@ export default function Financial() {
                           <button type="button" onClick={() => handlePayExpense(expense.id)} disabled={isPaying} className="acao-vidro">Pagar</button>
                         </motion.div>
                       ) : (
-                        <span className="text-green-500/50 font-bold text-sm tracking-tight">Pago</span>
+                        <span className="text-green-500/50 font-semibold text-sm tracking-tight">Pago</span>
                       )}
                       <motion.div className="flex-1 sm:flex-none">
                         <button type="button" onClick={() => handleDeleteExpense(expense.id, expense.description)} disabled={isDeleting} title="Excluir" aria-label="Excluir" className="acao-vidro so-icone perigo"><Trash size={14} /></button>
@@ -583,7 +583,7 @@ export default function Financial() {
                 ))}
                 <div className="flex justify-between items-center p-4 sm:p-6 gap-3">
                   <span className="text-white/40 font-bold uppercase tracking-widest text-xs">Total de Despesas Pendentes</span>
-                  <span className="text-white font-black text-xl sm:text-2xl tracking-tighter shrink-0">{formatCurrency(filteredExpenses.filter(e => e.status === 'pending').reduce((acc, e) => acc + Number(e.amount), 0))}</span>
+                  <span className="text-white font-semibold text-xl sm:text-2xl tracking-tighter shrink-0">{formatCurrency(filteredExpenses.filter(e => e.status === 'pending').reduce((acc, e) => acc + Number(e.amount), 0))}</span>
                 </div>
               </div>
             );
