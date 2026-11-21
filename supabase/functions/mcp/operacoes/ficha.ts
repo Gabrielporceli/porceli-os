@@ -27,7 +27,8 @@ async function acharCliente(ref: string): Promise<{ id: string; company: string 
 
 export const FICHA: Record<string, Ferramenta> = {
   ficha_do_cliente: {
-    description: "Ficha de negócio de um cliente (só leitura): nicho, onde vende, ticket mediano, margem bruta (antes do marketing), lucro atual, "
+    description: "Ficha de negócio de um cliente (só leitura): nicho, onde vende, ticket mediano, custos de cada venda (produto, embalagem, imposto, taxas, entrega, comissão), "
+      + "margem bruta (antes do marketing; calculada pelos custos quando eles existem), custo fixo e faturamento do mês, margem depois do custo fixo, lucro atual, "
       + "conversão lead → venda, CPL máximo calculado, recompra e LTV calculado (ticket × compras por cliente), meta, oferta, diferenciais, público, atendimento, restrições (inclusive regras de conselho) "
       + "e tom de voz. Use antes de planejar, analisar ou escrever para o cliente. Campo vazio = não informado: pergunte, não suponha.",
     inputSchema: parametros({ cliente: { type: "string", description: "Nome da empresa ou id do cliente." } }, ["cliente"]),
@@ -60,6 +61,8 @@ export const FICHA: Record<string, Ferramenta> = {
         ficha: respostas,
         cpl_maximo: f.cpl_maximo ?? null,
         ltv: f.ltv ?? null,
+        // Margem bruta − custo fixo ÷ faturamento: o que sobra de cada venda para o marketing com o mês pago.
+        margem_apos_custo_fixo: f.margem_apos_fixo ?? null,
         respondidos: `${respondidos} de ${total}`,
         nao_informado: faltando,
         preenchida_por: f.preenchido_por ?? null,

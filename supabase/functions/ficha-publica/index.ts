@@ -10,7 +10,7 @@
 // Nada do resto do sistema passa por aqui.
 // ─────────────────────────────────────────────────────────────────────────
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { CHAVES_FICHA, limparRespostas } from "../../../src/features/clients/fichaCampos.ts";
+import { CAMPOS_FICHA, CHAVES_FICHA, limparRespostas } from "../../../src/features/clients/fichaCampos.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
     if (!corpo.respostas || typeof corpo.respostas !== "object") return json({ erro: "Sem respostas." }, 400);
 
     const limpas = limparRespostas(corpo.respostas);
-    for (const k of ["margem_percentual", "conversao_percentual"]) {
+    // Todo percentual da ficha vai de 0 a 100, menos o lucro (pode ser negativo; o banco confere).
+    const percentuais = CAMPOS_FICHA.filter((c) => c.tipo === "percentual" && c.chave !== "lucro_atual_percentual").map((c) => c.chave);
+    for (const k of percentuais) {
       const v = limpas[k];
       if (typeof v === "number" && (v < 0 || v > 100)) return json({ erro: "Percentuais vão de 0 a 100." }, 400);
     }

@@ -82,13 +82,36 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
     ],
   },
   {
+    // A margem bruta aberta em partes (21/11/2026): o dono raramente sabe a margem de cabeça, mas sabe quanto
+    // custa o produto, o imposto e a taxa da maquininha. Com qualquer parte preenchida, o banco calcula a
+    // margem bruta = 100 − soma das partes (gatilho ficha_calcula_margem) e a pergunta direta vira reserva.
+    titulo: "Custos de cada venda",
+    campos: [
+      { chave: "custo_produto_percentual", rotulo: "Custo do produto", pergunta: "De cada R$ 100 vendidos, quanto vai para o produto em si? (ingredientes, mercadoria, matéria-prima, material do serviço)", tipo: "percentual", exemplo: "Ex.: 32 (se gasta R$ 32)" },
+      { chave: "custo_embalagem_percentual", rotulo: "Embalagem", pergunta: "E em embalagem? (caixa, sacola, sachês, etiqueta)", tipo: "percentual", exemplo: "Ex.: 5", modelos: ["local", "ecommerce"] },
+      { chave: "impostos_percentual", rotulo: "Imposto sobre a venda", pergunta: "Quanto vai de imposto sobre o que você vende? (no Simples, a alíquota da sua faixa)", tipo: "percentual", exemplo: "Ex.: 6" },
+      { chave: "taxas_venda_percentual", rotulo: "Taxas para vender", pergunta: "Quanto vai em taxas para vender e receber? (maquininha, Pix, comissão do iFood, da plataforma ou do gateway)", tipo: "percentual", exemplo: "Ex.: 4" },
+      { chave: "custo_entrega_percentual", rotulo: "Entrega", pergunta: "Quanto a entrega custa a mais do que o cliente paga de taxa? (motoboy, frete grátis)", tipo: "percentual", exemplo: "Ex.: 3 (0 se o cliente paga tudo)", modelos: ["local", "ecommerce"] },
+      { chave: "comissao_percentual", rotulo: "Comissão de venda", pergunta: "Quanto vai em comissão de vendedor, corretor ou afiliado?", tipo: "percentual", exemplo: "Ex.: 5", modelos: ["servico", "alto_valor", "b2b", "infoproduto"] },
+    ],
+  },
+  {
+    // Custo fixo (21/11/2026): sem ele o "equilíbrio" da régua só paga o custo de cada venda, e o negócio pode
+    // ter prejuízo no mês com o anúncio "no verde". Com o faturamento, vira % e sai da margem.
+    titulo: "Custos fixos",
+    campos: [
+      { chave: "custo_fixo_mensal", rotulo: "Custo fixo por mês", pergunta: "Quanto você gasta por mês com o que paga mesmo sem vender nada? (aluguel, salários, contas, sistemas, contador)", tipo: "reais", exemplo: "Ex.: 8000" },
+      { chave: "faturamento_mensal", rotulo: "Faturamento por mês", pergunta: "Quanto o negócio fatura num mês normal?", tipo: "reais", exemplo: "Ex.: 40000" },
+    ],
+  },
+  {
     titulo: "Números",
     campos: [
       { chave: "ticket_mediano", rotulo: "Ticket mediano", pergunta: "Quanto um cliente costuma gastar numa compra?", tipo: "reais", exemplo: "Ex.: 80" },
       // Margem BRUTA, antes do marketing: é a que entra no CPL máximo e no ROAS/MER de equilíbrio. A pergunta
       // antiga ("quanto sobra depois de pagar os custos") puxava a margem líquida, bem menor, e fazia campanha
       // boa parecer prejuízo.
-      { chave: "margem_percentual", rotulo: "Margem bruta", pergunta: "De cada R$ 100 vendidos, quanto sobra depois de pagar o produto, os impostos, as taxas e a entrega, sem contar o marketing?", tipo: "percentual", exemplo: "Ex.: 40 (se sobram R$ 40)" },
+      { chave: "margem_percentual", rotulo: "Margem bruta", pergunta: "Só se não souber separar os custos acima: de cada R$ 100 vendidos, quanto sobra depois de pagar o produto, os impostos, as taxas e a entrega, sem contar o marketing? (com os custos preenchidos, ela é calculada sozinha)", tipo: "percentual", exemplo: "Ex.: 40 (se sobram R$ 40)" },
       { chave: "lucro_atual_percentual", rotulo: "Lucro atual", pergunta: "E hoje, de cada R$ 100 que entram, quanto vira lucro no fim do mês, depois de pagar tudo (aluguel, salários, marketing)?", tipo: "percentual", exemplo: "Ex.: 12 (se sobram R$ 12)" },
       { chave: "conversao_percentual", rotulo: "Conversão lead → venda", pergunta: "De cada 10 pessoas interessadas (que chamam no WhatsApp ou entram na página de vendas), quantas compram?", tipo: "percentual", exemplo: "Ex.: 3 de 10 → 30" },
       { chave: "meta_mensal", rotulo: "Meta do mês", pergunta: "Qual é a sua meta por mês? (vendas, pedidos ou faturamento)", tipo: "texto" },
@@ -237,10 +260,40 @@ export function numeroDaResposta(v: unknown): number | null {
 /** CPL máximo = ticket mediano × margem × conversão (as notas de Fórmulas). */
 export function cplMaximo(f: Record<string, unknown>): number | null {
   const t = numeroDaResposta(f.ticket_mediano);
-  const m = numeroDaResposta(f.margem_percentual);
+  const m = margemBruta(f);
   const c = numeroDaResposta(f.conversao_percentual);
   if (t === null || m === null || c === null) return null;
   return Math.round(t * (m / 100) * (c / 100) * 100) / 100;
+}
+
+/** As partes do custo de cada venda: a margem bruta sai delas quando alguma está preenchida. */
+export const CHAVES_CUSTO_VENDA = [
+  "custo_produto_percentual", "custo_embalagem_percentual", "impostos_percentual",
+  "taxas_venda_percentual", "custo_entrega_percentual", "comissao_percentual",
+];
+
+/** Margem bruta = 100 − soma das partes preenchidas. Mesma conta do gatilho `ficha_calcula_margem`. */
+export function margemPelosCustos(f: Record<string, unknown>): number | null {
+  const partes = CHAVES_CUSTO_VENDA.map((k) => numeroDaResposta(f[k])).filter((n): n is number => n !== null);
+  if (!partes.length) return null;
+  return Math.round((100 - partes.reduce((a, b) => a + b, 0)) * 100) / 100;
+}
+
+/** A margem que vale: a das partes; sem partes, a resposta direta. */
+export function margemBruta(f: Record<string, unknown>): number | null {
+  return margemPelosCustos(f) ?? numeroDaResposta(f.margem_percentual);
+}
+
+/**
+ * Margem depois do custo fixo = margem bruta − custo fixo ÷ faturamento. É o que sobra de cada venda para
+ * pagar o marketing com o mês inteiro pago. Mesma conta da coluna gerada `margem_apos_fixo`.
+ */
+export function margemAposFixo(f: Record<string, unknown>): number | null {
+  const m = margemBruta(f);
+  const fixo = numeroDaResposta(f.custo_fixo_mensal);
+  const fat = numeroDaResposta(f.faturamento_mensal);
+  if (m === null || fixo === null || fat === null || fat <= 0) return null;
+  return Math.round((m - (fixo / fat) * 100) * 100) / 100;
 }
 
 /** LTV = ticket mediano × quantas vezes um cliente compra. Mesma conta da coluna gerada `ltv`. */
