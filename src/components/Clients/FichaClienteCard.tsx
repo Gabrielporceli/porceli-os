@@ -2,34 +2,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Copy, DocumentText } from "iconsax-react";
-import { blocosDoModelo, completude, rotuloDoModelo } from "@/features/clients/fichaCampos";
+import { completude, perguntasParaWhatsApp, rotuloDoModelo } from "@/features/clients/fichaCampos";
 import { useFichaCliente } from "@/hooks/useFichaCliente";
 import { FichaClienteModal } from "./FichaClienteModal";
 
 const card = "rounded-2xl border border-white/[0.06] bg-white/[0.04] px-5 py-4";
 const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-/**
- * As perguntas da ficha em texto, prontas para colar no WhatsApp do cliente.
- * Quem responde é o dono; a agência passa as respostas para o modal.
- */
-function perguntasParaWhatsApp(empresa: string, responsavel?: string, modelo?: unknown): string {
-  const nome = responsavel?.split(" ")[0];
-  let n = 0;
-  const blocos = blocosDoModelo(modelo).map((b) => [
-    `*${b.titulo}*`,
-    ...b.campos.map((c) => c.tipo === "escolha"
-      ? [`${++n}. ${c.pergunta}`, ...(c.opcoes ?? []).map((o) => `   • ${o.rotulo}`)].join("\n")
-      : `${++n}. ${c.pergunta}`),
-  ].join("\n"));
-  const fim = modelo ? [] : ["Depois que você me disser qual é o seu modelo de negócio, te mando mais algumas perguntas específicas."];
-  return [
-    `Oi${nome ? `, ${nome}` : ""}! Para a gente acertar ainda mais nos anúncios da ${empresa}, preciso que você responda `
-      + "estas perguntas sobre o seu negócio. Só você sabe responder. Pode ser por texto ou áudio, e o que não souber pode pular.",
-    ...blocos,
-    ...fim,
-  ].join("\n\n");
-}
 
 /**
  * Cartão da ficha no cadastro do cliente: quanto já foi respondido, o CPL
@@ -48,8 +26,15 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
 
   const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(perguntasParaWhatsApp(empresa, responsavel, ficha?.modelo_negocio));
-      toast.success("Perguntas copiadas. Cole no WhatsApp do cliente e depois registre as respostas em \"Abrir ficha\".");
+      const texto = perguntasParaWhatsApp(empresa, ficha as Record<string, unknown> | null | undefined, responsavel);
+      if (!texto) {
+        toast.success("A ficha já está completa: não há pergunta pendente para mandar.");
+        return;
+      }
+      await navigator.clipboard.writeText(texto);
+      toast.success(respondidos > 0
+        ? "Perguntas que faltam copiadas. Cole no WhatsApp do cliente e depois registre as respostas em \"Abrir ficha\"."
+        : "Perguntas copiadas. Cole no WhatsApp do cliente e depois registre as respostas em \"Abrir ficha\".");
     } catch {
       toast.error("Não consegui copiar. Tente de novo.");
     }
@@ -80,7 +65,7 @@ export function FichaClienteCard({ clientId, empresa, responsavel }: { clientId:
           borda do card); a partir de lg ficam do tamanho do texto, à direita. */}
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto lg:shrink-0">
         <motion.div className="min-w-0 sm:flex-1 lg:flex-none">
-          <button type="button" onClick={copiar} className="acao-vidro max-lg:w-full max-lg:justify-center" title="Copia as perguntas para mandar ao dono do negócio pelo WhatsApp">
+          <button type="button" onClick={copiar} className="acao-vidro max-lg:w-full max-lg:justify-center" title="Copia as perguntas ainda em branco para mandar ao dono do negócio pelo WhatsApp">
             <Copy size={14} /> Copiar perguntas
           </button>
         </motion.div>

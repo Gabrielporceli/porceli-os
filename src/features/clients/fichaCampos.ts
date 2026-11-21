@@ -339,3 +339,44 @@ export function limparRespostas(entrada: Record<string, unknown>): Record<string
   }
   return saida;
 }
+
+/** Resposta preenchida? `false` (respondeu "não") conta como respondida; vazio não. */
+const respondida = (v: unknown) => v !== null && v !== undefined && String(v).trim() !== "";
+
+/**
+ * As perguntas da ficha em texto, prontas para colar no WhatsApp do cliente.
+ * Quem responde é o dono; a agência passa as respostas para o modal.
+ *
+ * Só vai o que ainda está em branco (21/11/2026): mandar de novo o que o dono já
+ * respondeu cansa e faz parecer que ninguém leu. Bloco sem pergunta pendente some.
+ * `null` = não há nada a perguntar.
+ */
+export function perguntasParaWhatsApp(empresa: string, ficha: Record<string, unknown> | null | undefined, responsavel?: string): string | null {
+  const modelo = ficha?.modelo_negocio;
+  const nome = responsavel?.split(" ")[0];
+  let n = 0;
+  let jaRespondidas = 0;
+  const blocos = blocosDoModelo(modelo)
+    .map((b) => {
+      const pendentes = b.campos.filter((c) => {
+        if (respondida(ficha?.[c.chave])) { jaRespondidas++; return false; }
+        return true;
+      });
+      if (!pendentes.length) return null;
+      return [
+        `*${b.titulo}*`,
+        ...pendentes.map((c) => c.tipo === "escolha"
+          ? [`${++n}. ${c.pergunta}`, ...(c.opcoes ?? []).map((o) => `   • ${o.rotulo}`)].join("\n")
+          : `${++n}. ${c.pergunta}`),
+      ].join("\n");
+    })
+    .filter((b): b is string => b !== null);
+  if (!blocos.length) return null;
+  const fim = modelo ? [] : ["Depois que você me disser qual é o seu modelo de negócio, te mando mais algumas perguntas específicas."];
+  const abertura = jaRespondidas > 0
+    ? `Oi${nome ? `, ${nome}` : ""}! Obrigado pelas respostas que você já mandou sobre a ${empresa}. Para fechar a análise, `
+      + "faltam só estas. Pode ser por texto ou áudio, e o que não souber pode pular."
+    : `Oi${nome ? `, ${nome}` : ""}! Para a gente acertar ainda mais nos anúncios da ${empresa}, preciso que você responda `
+      + "estas perguntas sobre o seu negócio. Só você sabe responder. Pode ser por texto ou áudio, e o que não souber pode pular.";
+  return [abertura, ...blocos, ...fim].join("\n\n");
+}
