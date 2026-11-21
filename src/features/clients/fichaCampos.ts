@@ -47,6 +47,8 @@ export interface BlocoFicha {
 
 const LOCAIS: ModeloNegocio[] = ["local", "servico", "alto_valor"];
 
+// 21/11/2026: saíram "Assuntos proibidos" (repetia "Não pode prometer") e "Palavras a evitar" (o dono não
+// sabe responder; vira observação). As colunas ficam no banco com as respostas antigas.
 export const BLOCOS_FICHA: BlocoFicha[] = [
   {
     titulo: "Modelo de negócio",
@@ -197,7 +199,6 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
     campos: [
       { chave: "restricoes", rotulo: "Não pode prometer", pergunta: "O que NÃO pode ser prometido ou mostrado nos anúncios?", tipo: "longo" },
       { chave: "regras_conselho", rotulo: "Regras do conselho", pergunta: "Seu ramo tem regras de conselho profissional (CRM, CRO, OAB, CRECI…)? Quais?", tipo: "longo" },
-      { chave: "assuntos_proibidos", rotulo: "Assuntos proibidos", pergunta: "Algum assunto, palavra ou imagem que não pode aparecer?", tipo: "longo" },
     ],
   },
   {
@@ -205,7 +206,6 @@ export const BLOCOS_FICHA: BlocoFicha[] = [
     campos: [
       { chave: "tom_de_voz", rotulo: "Tom de voz", pergunta: "Como vocês falam com os clientes? (formal, descontraído, com gírias…)", tipo: "longo" },
       { chave: "palavras_usar", rotulo: "Palavras que usam", pergunta: "Palavras ou expressões que a marca gosta de usar", tipo: "texto" },
-      { chave: "palavras_evitar", rotulo: "Palavras a evitar", pergunta: "Palavras ou expressões que vocês evitam", tipo: "texto" },
       { chave: "concorrentes", rotulo: "Concorrentes", pergunta: "Quem são seus 3 principais concorrentes?", tipo: "longo" },
       { chave: "observacoes", rotulo: "Observações", pergunta: "Tem mais alguma coisa que a agência precisa saber?", tipo: "longo" },
     ],
