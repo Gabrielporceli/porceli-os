@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { BLOCOS_FICHA, blocosDoModelo, cplMaximo, ltv, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
+import { BLOCOS_FICHA, blocosDoModelo, cplMaximo, ltv, margemAposFixo, margemPelosCustos, simNaoDaResposta, type CampoFicha } from "@/features/clients/fichaCampos";
 import { useFichaCliente, useSalvarFicha } from "@/hooks/useFichaCliente";
 
 const campo =
@@ -45,6 +45,9 @@ export function FichaClienteModal({
 
   const cpl = cplMaximo(valores);
   const valorDoCliente = ltv(valores);
+  const margemCustos = margemPelosCustos(valores);
+  const margemFixo = margemAposFixo(valores);
+  const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +122,21 @@ export function FichaClienteModal({
                     </div>
                   ))}
                 </div>
+                {b.titulo === "Custos de cada venda" && (
+                  <p className="text-xs text-white/50">
+                    Margem bruta (100 − custos de cada venda):{" "}
+                    <span className="font-bold text-white">{margemCustos !== null ? pct(margemCustos) : "preencha os custos"}</span>
+                  </p>
+                )}
+                {b.titulo === "Custos fixos" && (
+                  <p className="text-xs text-white/50">
+                    Margem depois do custo fixo (margem bruta − custo fixo ÷ faturamento):{" "}
+                    <span className={`font-bold ${margemFixo !== null && margemFixo <= 0 ? "text-red-300" : "text-white"}`}>
+                      {margemFixo !== null ? pct(margemFixo) : "preencha a margem, o custo fixo e o faturamento"}
+                    </span>
+                    {margemFixo !== null && margemFixo <= 0 && " · o custo fixo come toda a margem: o negócio não se paga nem sem anúncio"}
+                  </p>
+                )}
                 {b.titulo === "Números" && (
                   <p className="text-xs text-white/50">
                     CPL máximo (ticket × margem × conversão):{" "}
