@@ -115,7 +115,14 @@ serve(async (req) => {
     const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     const since = sixMonthsAgo.toISOString().slice(0, 10);
 
-    const received = (await asaasGetAll(`/payments?status=RECEIVED&dueDateGe=${since}`)) as AsaasPayment[];
+    // Pago = RECEIVED (Pix/boleto compensado), CONFIRMED (cartão de crédito aprovado:
+    // o dinheiro cai ~30 dias depois de cada parcela, mas o cliente já pagou) ou
+    // RECEIVED_IN_CASH (baixa manual no Asaas). Só RECEIVED deixava quem pagou no
+    // cartão como inadimplente no relatório (Midbox, renegociação de out/2026).
+    const received = ([] as AsaasPayment[]).concat(
+      ...(await Promise.all(["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"].map((st) =>
+        asaasGetAll(`/payments?status=${st}&dueDateGe=${since}`)))) as AsaasPayment[][],
+    );
     const { data: pendingEntries } = await supabase.from("financial_entries").select("*").eq("status", "pending");
 
     // Pagamentos do Asaas já vinculados a alguma financial_entries (paga ou
