@@ -226,12 +226,15 @@ const NotchedFromClickOrigin = React.forwardRef<
       ref={ref}
       style={style}
       className={cn(
-        "modal-notched modal-legivel fixed left-[50%] top-[50%] z-50 w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto scrollbar-hide",
+        "modal-notched modal-legivel fixed left-[50%] top-[50%] z-50 w-[calc(100%-2rem)] max-w-lg max-h-[85vh]",
         className,
         // Depois do className de propósito: o chamador costuma mandar
         // shadow-2xl/borda, que aqui desenhariam um retângulo em volta do
         // recorte. A elevação vem do drop-shadow do próprio card.
-        "!border-0 !shadow-none !bg-transparent"
+        // Sem corte aqui (o Calendário manda overflow-hidden): a sombra do círculo
+        // de fechar passa da caixa e, cortada, desenhava uma quina quadrada no topo.
+        // O card já tem o recorte dele e a rolagem fica no corpo.
+        "!border-0 !shadow-none !bg-transparent !overflow-visible"
       )}
       initial={{ opacity: 0, x: origin.x, y: origin.y, scale: 0.15 }}
       animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
