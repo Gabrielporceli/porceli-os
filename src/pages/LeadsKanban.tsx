@@ -676,7 +676,9 @@ export default function LeadsKanban() {
                                     <div
                                       className={cn(
                                         "transition-all duration-200 hover:-translate-y-0.5",
-                                        snapshot.isDragging && "ring-2 ring-white/30 rounded-[20px]"
+                                        // Sombra que segue o recorte (como no Calendário): o ring era um retângulo
+                                        // e passava por cima da mordida do card.
+                                        snapshot.isDragging && "drop-shadow-2xl"
                                       )}
                                     >
                                       <DeconstructedCard

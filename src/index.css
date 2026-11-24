@@ -1199,7 +1199,9 @@ button:focus-visible,
 .alert,
 .system-message,
 [data-state="success"],
-[data-state="open"],
+/* Menos o que embrulha um card desconstruído (modal, gatilho do menu de botão direito
+   no Kanban): a sombra é retangular e aparece na mordida do card. */
+[data-state="open"]:not([role="dialog"]):not(:has(.dc-single)),
 [data-type="success"],
 .Toastify__toast--success,
 .Toastify__toast,
