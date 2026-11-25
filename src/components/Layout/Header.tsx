@@ -617,9 +617,11 @@ export const Header = () => {
           style={{ willChange: "backdrop-filter, transform", transform: "translateZ(0)" }}
         >
           {/* Logo */}
-          <div className="flex shrink-0 items-center border-r border-white/5 pr-1.5">
+          <div className="flex shrink-0 items-center pr-1.5">
             <img src="/logo.png" alt="Porceli" className="h-7 w-7 object-contain" />
           </div>
+          {/* Divisória curta no centro: marca a separação sem parecer um corte na barra. */}
+          <span aria-hidden="true" className="h-6 w-px shrink-0 rounded-full bg-white/10" />
 
           {/* Wrapper EXTERNO, sem overflow próprio — é nele que a pílula
               fica ancorada (irmã do <nav>, não filha). O <nav> tem
@@ -677,7 +679,8 @@ export const Header = () => {
           </div>
 
           {/* Sair */}
-          <div className="flex shrink-0 items-center border-l border-white/5 pl-1.5">
+          <span aria-hidden="true" className="h-6 w-px shrink-0 rounded-full bg-white/10" />
+          <div className="flex shrink-0 items-center pl-1.5">
             <button
               onClick={() => logout()}
               className="p-1.5 text-white/40 transition-all duration-300 hover:text-red-500"
@@ -710,9 +713,11 @@ export const Header = () => {
         className="side-nav flex w-[72px] flex-col items-center gap-3 py-4"
       >
         {/* Logo */}
-        <div className="flex w-full shrink-0 items-center justify-center border-b border-white/5 pb-3">
+        <div className="flex w-full shrink-0 items-center justify-center">
           <img src="/logo.png" alt="Porceli" className="h-8 w-8 object-contain" />
         </div>
+        {/* Divisória curta no centro (mesmo padrão do Porceli Tracking): marca a separação sem parecer um corte na barra. */}
+        <span aria-hidden="true" className="h-px w-10 shrink-0 rounded-full bg-white/10" />
 
         {/* Wrapper EXTERNO (sem overflow) segurando a pílula — o <nav> tem
             overflow-y-auto e cortaria o blur do filtro gooey numa borda
@@ -763,7 +768,8 @@ export const Header = () => {
         </div>
 
         {/* Sair */}
-        <div className="flex w-full shrink-0 items-center justify-center border-t border-white/5 pt-3">
+        <span aria-hidden="true" className="h-px w-10 shrink-0 rounded-full bg-white/10" />
+        <div className="flex w-full shrink-0 items-center justify-center">
           <button
             onClick={() => logout()}
             className="p-2 text-white/40 transition-all duration-300 hover:text-red-500"
